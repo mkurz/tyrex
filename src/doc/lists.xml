@@ -6,6 +6,7 @@
       <p>Medium volume (possibly more than 5 messages a day) mailing list dedicated to the developers of Tyrex.</p>
 
       <p><mailing-list name="tyrex-dev" description="The Tyrex Developer's Mailing List"
+                       archive="http://tyrex.exolab.org/list-archive/" 
                        server="exolab.org" manager="minimalist"/></p>
 
     </header>
