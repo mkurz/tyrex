@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: MemoryBinding.java,v 1.8 2001/05/02 00:48:42 mohammed Exp $
+ * $Id: MemoryBinding.java,v 1.9 2001/05/02 00:57:05 mohammed Exp $
  */
 
 
@@ -74,7 +74,7 @@ import javax.naming.spi.NamingManager;
  * This object is thread-safe.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.8 $ $Date: 2001/05/02 00:48:42 $
+ * @version $Revision: 1.9 $ $Date: 2001/05/02 00:57:05 $
  */
 public final class MemoryBinding
 {
@@ -441,7 +441,7 @@ public final class MemoryBinding
      * created based of a {@link MemoryBinding}.
      *
      * @author <a href="arkin@intalio.com">Assaf Arkin</a>
-     * @version $Revision: 1.8 $ $Date: 2001/05/02 00:48:42 $
+     * @version $Revision: 1.9 $ $Date: 2001/05/02 00:57:05 $
      * @see MemoryBinding
      */
     private final class MemoryBindingEnumeration
@@ -516,10 +516,9 @@ public final class MemoryBinding
                 return true;    
             }
             
-            entry = _entry;
             table = _hashTable;
             index = _index;
-            while ( entry == null && index > 0 ) {
+            while ( index > 0 ) {
                 entry = table[ --index ];
                 if ( entry != null ) {
                     _entry = entry;
