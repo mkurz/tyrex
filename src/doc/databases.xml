@@ -2,7 +2,7 @@
 <!DOCTYPE document SYSTEM "document.dtd">
 <document url="http://tyrex.exolab.org/databases.xml">
   <properties>
-    <title>Databases</title>
+    <title>Databases and XA support</title>
     <author email="mohammed@intalio.com">Riad Mohammed</author>
   </properties>
   <body>
