@@ -51,16 +51,26 @@ import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 
-
 /**
  * This class describes various methods to help the transaction
- * manipulate XA resources from Oracle.
+ * manipulate XA resources from Oracle. This class has been
+ * tested with Oracle 8.1.6, 8.1.7, 9.0.1. For Oracle 8.1.6 the
+ * oracle classes (classes12.zip) must be in the Tyrex classpath because
+ * Oracle 8.1.6 requires the xid to be oracle.jdbc.xa.OracleXid.
+ * For Oracle 8.1.7 and above the oracle classes (classes12.zip) may optionally
+ * be in the Tyrex classpath.
  *
  * @author <a href="mohammed@intalio.com">Riad Mohammed</a>
  */
-public final class OracleXAResourceHelper
+final class OracleXAResourceHelper
     extends XAResourceHelper
 {
+
+
+    /**
+     * The name of the XID implementation class required by Oracle.
+     */
+    public static final String XID_CLASS_NAME = "oracle.jdbc.xa.OracleXid";
 
 
     /**
@@ -88,14 +98,13 @@ public final class OracleXAResourceHelper
         Class       byteArrayClass;
 
         try {
-            xidClass = Class.forName( "oracle.jdbc.xa.OracleXid" );
+            xidClass = Class.forName( XID_CLASS_NAME );
             byteArrayClass = Class.forName( "[B" );
             xidConstructor = xidClass.getDeclaredConstructor( new Class[]{ Integer.TYPE, byteArrayClass, byteArrayClass } );
         } catch ( Exception except ) {
             // Oracle classes not found, this helper will assume the
-            // default behavior.
+            // default behavior for creating the xid.
         }
-        
         _xidConstructor = xidConstructor;
         if ( null == xidConstructor )
             _contructorArgs = null;        
@@ -107,14 +116,25 @@ public final class OracleXAResourceHelper
     public Xid getXid( Xid xid )
         throws XAException
     {
-        if ( null == _xidConstructor )
+        if ( null == _xidConstructor ) {
+            if ( ( null == xid.getBranchQualifier() ) || 
+                 ( 0 == xid.getBranchQualifier().length ) ) {
+                return new OracleXidWrapper( xid );
+            }
+
             return xid;    
+        }
 
         try {
             // populate the constructor args
             _contructorArgs[ 0 ] = new Integer( xid.getFormatId() );
             _contructorArgs[ 1 ] = xid.getGlobalTransactionId();
-            _contructorArgs[ 2 ] = xid.getBranchQualifier();
+            if ( ( null == xid.getBranchQualifier() ) || ( 0 == xid.getBranchQualifier().length ) ) {
+                _contructorArgs[ 2 ] = xid.getGlobalTransactionId();    
+            }
+            else {
+                _contructorArgs[ 2 ] = xid.getBranchQualifier();
+            }
             return (Xid) _xidConstructor.newInstance( _contructorArgs );
         } catch ( Throwable thrw ) {
             if ( thrw instanceof XAException )
@@ -132,5 +152,76 @@ public final class OracleXAResourceHelper
         xaResource.end( xid, XAResource.TMSUCCESS );
     }
 
+    /**
+     * Helper Xid class if oracle.jdbc.xa.OracleXid is not in the
+     * classpath. This wont work for Oracle 8.1.6
+     */
+    private static class OracleXidWrapper 
+        implements Xid 
+    {
+        
+        /**
+         * The uderlying xid
+         */
+        private final Xid _xid;
 
+        /**
+         * Create the OracleXidWrapper
+         *
+         * @param xid the uderlying xid (required)
+         */
+        private OracleXidWrapper( Xid xid ) 
+        {
+            _xid = xid;
+        }
+
+        public byte[] getBranchQualifier() 
+        {
+            return getGlobalTransactionId();
+        }
+        
+        public int getFormatId() 
+        {
+            return _xid.getFormatId();
+        }
+        
+        public byte[] getGlobalTransactionId() 
+        {
+            return _xid.getGlobalTransactionId();
+        }
+    }
+
+    /**
+     * Return true if shared xa resources must use 
+     * different branches when enlisted in the transaction.The 
+     * resource may still be treated as shared in that prepare/commit
+     * is only called once on a single xa resource 
+     * (@see #treatDifferentBranchesForSharedResourcesAsShared}).
+     * The default implementation returns false.
+     *
+     * @return true if shared xa resources must use 
+     * different branches when enlisted in the transaction. 
+     * @see #treatDifferentBranchesForSharedResourcesAsShared
+     */
+    public boolean useDifferentBranchesForSharedResources() {
+        return true;
+    }
+
+    /**
+     * Return true if shared xa resources can be treated as shared 
+     * even if they use different branches so that these xa resources
+     * are not prepared/committed separately even if they don't have the same
+     * xid. This method is only used if 
+     * {@link #useDifferentBranchesForSharedResources} returns true.
+     * The default implementation returns false.
+     *
+     * @return true if shared xa resources can be treated as shared 
+     * even if they use different branches so that these xa resources
+     * are not prepared separately even if they don't have the same
+     * xid.
+     * @see #useDifferentBranchesForSharedResources
+     */
+    public boolean treatDifferentBranchesForSharedResourcesAsShared() {
+        return false; // true does not work in all cases
+    }
 }

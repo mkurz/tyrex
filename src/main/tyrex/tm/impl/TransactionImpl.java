@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionImpl.java,v 1.27 2001/09/06 15:52:20 jdaniel Exp $
+ * $Id: TransactionImpl.java,v 1.28 2001/09/20 23:08:14 mohammed Exp $
  */
 
 
@@ -73,6 +73,7 @@ import org.omg.CORBA.TRANSACTION_ROLLEDBACK;
 import tyrex.tm.Heuristic;
 import tyrex.tm.TyrexTransaction;
 import tyrex.tm.xid.BaseXid;
+import tyrex.tm.xid.XidUtils;
 import tyrex.services.Clock;
 import tyrex.util.Messages;
 
@@ -88,7 +89,7 @@ import tyrex.util.Messages;
  * they are added.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.27 $ $Date: 2001/09/06 15:52:20 $
+ * @version $Revision: 1.28 $ $Date: 2001/09/20 23:08:14 $
  * @see XAResourceHolder
  * @see TransactionManagerImpl
  * @see TransactionDomain
@@ -2539,24 +2540,38 @@ final class TransactionImpl
     private boolean shareResource( XAResource xaResource, XAResourceHolder resHolder )
         throws XAException, SystemException
     {
-        XAResourceHolder newHolder;
-        
+        XAResourceHolder newResHolder;
+        Xid              xid;
+        boolean          differentBranches;
+        XAResourceHelper helper;
+
         // Check to see whether we have two resources sharing the same
         // resource manager, in which case use one Xid for both.
         try {
             while ( resHolder != null ) {
-                if ( resHolder._xaResource.isSameRM( xaResource ) ) {
-                    newHolder = new XAResourceHolder( xaResource, resHolder._xid, true );
-                    try {
-                        newHolder._xaResource.start( newHolder._xid, XAResource.TMJOIN );
-                        newHolder._nextHolder = _enlisted;
-                        _enlisted = newHolder;
-                        return true;
-                    } catch ( XAException except ) {
-                        throw except;
-                    } catch ( Exception except ) {
-                        throw new NestedSystemException( except );
+                if ( !resHolder._shared && resHolder._xaResource.isSameRM( xaResource ) ) {
+                    helper = XAResourceHelperManager.getHelper( xaResource );
+                    differentBranches = helper.useDifferentBranchesForSharedResources();
+                    if ( differentBranches ) {
+                        newResHolder = new XAResourceHolder( xaResource, XAResourceHelperManager.getHelper( xaResource ).getXid( XidUtils.newBranch( resHolder._xid ) ), 
+                                                             helper.treatDifferentBranchesForSharedResourcesAsShared() );
+                    } else {
+                        newResHolder = new XAResourceHolder( xaResource, resHolder._xid, true );
                     }
+                    
+                    if ( differentBranches ) { 
+                        newResHolder._xaResource.start( newResHolder._xid, XAResource.TMNOFLAGS );
+                    } else {
+                        if ( XAResource.TMSUSPEND == resHolder._endFlag ) {
+                            resHolder._xaResource.start( resHolder._xid, XAResource.TMRESUME );
+                            resHolder._endFlag = XAResource.TMNOFLAGS;
+                        }
+                        
+                        newResHolder._xaResource.start( newResHolder._xid, XAResource.TMJOIN );
+                    }
+                    newResHolder._nextHolder = _enlisted;
+                    _enlisted = newResHolder;
+                    return true;
                 }
                 resHolder = resHolder._nextHolder;
             }

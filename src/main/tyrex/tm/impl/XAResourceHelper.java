@@ -103,4 +103,37 @@ public class XAResourceHelper
     }
 
 
+    /**
+     * Return true if shared xa resources must use 
+     * different branches when enlisted in the transaction.The 
+     * resource may still be treated as shared in that prepare/commit
+     * is only called once on a single xa resource 
+     * (@see #treatDifferentBranchesForSharedResourcesAsShared}).
+     * The default implementation returns false.
+     *
+     * @return true if shared xa resources must use 
+     * different branches when enlisted in the transaction. 
+     * @see #treatDifferentBranchesForSharedResourcesAsShared
+     */
+    public boolean useDifferentBranchesForSharedResources() {
+        return false;
+    }
+
+    /**
+     * Return true if shared xa resources can be treated as shared 
+     * even if they use different branches so that these xa resources
+     * are not prepared/committed separately even if they don't have the same
+     * xid. This method is only used if 
+     * {@link #useDifferentBranchesForSharedResources} returns true.
+     * The default implementation returns false.
+     *
+     * @return true if shared xa resources can be treated as shared 
+     * even if they use different branches so that these xa resources
+     * are not prepared separately even if they don't have the same
+     * xid.
+     * @see useDifferentBranchesForSharedResources
+     */
+    public boolean treatDifferentBranchesForSharedResourcesAsShared() {
+        return false;
+    }
 }

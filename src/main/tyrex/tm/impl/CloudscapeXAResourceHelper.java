@@ -46,80 +46,65 @@
 package tyrex.tm.impl;
 
 
+import java.lang.reflect.Constructor;
+import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
-
+import javax.transaction.xa.Xid;
 
 /**
- * Class for creating and managing {@link XAResourceHelper} object.
+ * This class describes various methods to help the transaction
+ * manipulate XA resources from Oracle. This class has been
+ * tested with Oracle 8.1.6, 8.1.7, 9.0.1. For Oracle 8.1.6 the
+ * oracle classes (classes12.zip) must be in the Tyrex classpath because
+ * Oracle 8.1.6 requires the xid to be oracle.jdbc.xa.OracleXid.
+ * For Oracle 8.1.7 and above the oracle classes (classes12.zip) may optionally
+ * be in the Tyrex classpath.
  *
  * @author <a href="mohammed@intalio.com">Riad Mohammed</a>
  */
-final class XAResourceHelperManager 
+final class CloudscapeXAResourceHelper
+    extends XAResourceHelper
 {
-
-
+    
     /**
-     * The default instance of XAResourceHelper
+     * Default constructor
      */
-    private static final XAResourceHelper _defaultHelper = new XAResourceHelper();
-
-
-    /**
-     * The Oracle XA resource helper
-     */
-    private static XAResourceHelper       _oracleHelper;
-
-    /**
-     * The Cloudscape XA resource helper
-     */
-    private static XAResourceHelper       _cloudscapeHelper;
-
-    /**
-     * The oracle resource class name
-     */
-    private static final String           _oracleXAResourceClassName = "oracle.jdbc.xa.client.OracleXAResource";
-
-
-    /**
-     * The oracle resource class name
-     */
-    private static final String           _cloudscapeXAResourceClassName = "c8e.bm.a";
-
-    /**
-     * Private constructor
-     */
-    private XAResourceHelperManager()
+    public CloudscapeXAResourceHelper()
     {
+        
     }
-
-
+    
     /**
-     * Get the XAResourceHelperManager for the specified xa resource.
+     * Return true if shared xa resources must use 
+     * different branches when enlisted in the transaction.The 
+     * resource may still be treated as shared in that prepare/commit
+     * is only called once on a single xa resource 
+     * (@see #treatDifferentBranchesForSharedResourcesAsShared}).
+     * The default implementation returns false.
      *
-     * @param xaResource the xa resource.
-     * @return the XAResourceHelperManager
+     * @return true if shared xa resources must use 
+     * different branches when enlisted in the transaction. 
+     * @see #treatDifferentBranchesForSharedResourcesAsShared
      */
-    static XAResourceHelper getHelper(XAResource xaResource)
-    {
-        String className;
-
-        className = xaResource.getClass().getName();
-
-        if ( className.equals( _oracleXAResourceClassName ) ) {
-            synchronized ( _oracleXAResourceClassName ) {
-                if ( null == _oracleHelper )
-                    _oracleHelper = new OracleXAResourceHelper();
-                return _oracleHelper;
-            }
-        } if ( className.equals( _cloudscapeXAResourceClassName ) ) {
-            synchronized ( _cloudscapeXAResourceClassName ) {
-                if ( null == _cloudscapeHelper )
-                    _cloudscapeHelper = new CloudscapeXAResourceHelper();
-                return _cloudscapeHelper;
-            }
-        } else
-            return _defaultHelper;
+    public boolean useDifferentBranchesForSharedResources() {
+        return true;
     }
 
-
+    /**
+     * Return true if shared xa resources can be treated as shared 
+     * even if they use different branches so that these xa resources
+     * are not prepared/committed separately even if they don't have the same
+     * xid. This method is only used if 
+     * {@link #useDifferentBranchesForSharedResources} returns true.
+     * The default implementation returns false.
+     *
+     * @return true if shared xa resources can be treated as shared 
+     * even if they use different branches so that these xa resources
+     * are not prepared separately even if they don't have the same
+     * xid.
+     * @see #useDifferentBranchesForSharedResources
+     */
+    public boolean treatDifferentBranchesForSharedResourcesAsShared() {
+        return true; // true does not work in all cases
+    }
 }
