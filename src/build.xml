@@ -1,291 +1,243 @@
-<project name="Tyrex" default="all" basedir="..">
+<project name="Tyrex" default="main" basedir="..">
 
-  <target name="init">
-    <property name="project" value="tyrex" />
+  <property name="source.dir" value="src" />
+  <property name="source.main" value="${source.dir}/main" />
+  <property name="source.etc" value="${source.dir}/etc" />
+  <property name="source.schema" value="${source.dir}/schema" />
+  <property name="source.tests" value="${source.dir}/tests" />
+  <property name="source.doc" value="${source.dir}/doc" />
+  
+  <property name="build.dir" value="build" />
+  <property name="build.classes" value="${build.dir}/classes" />
+  <property name="build.schema" value="${build.dir}/schema" />
+  <property name="build.tests" value="${build.dir}/tests" />
+  <property name="build.doc" value="${build.dir}/doc" />
+  <property name="build.javadoc" value="${build.doc}/javadoc" />
+  <property name="build.api" value="${build.doc}/api" />
+  <property name="dist.dir" value="dist" />
 
-    <property name="source" value="src" />
-    <property name="main" value="${source}/main" />
-    <property name="etc" value="src/etc" />
-    <property name="build" value="build" />
-    <property name="classes" value="${build}/classes" />
-    <property name="dist" value="dist" />
-    <property name="lib" value="lib" />
-    <property name="doc" value="src/doc" />
-    <property name="schema" value="${source}/schema" />
+  <property file="${source.etc}/VERSION" />
+  <property name="build.compiler" value="modern" />
+  <property name="deprecation" value="false" />
 
-    <property name="classpath" value="${classpath}:${classes}" />
-    <property name="build.compiler" file="classic" />
-    <property name="deprecation" value="true" />
-    <property file="${etc}/VERSION" />
-    <property name="archive" value="${project}-${version}" />
-     
-  </target>
 
-<!-- 
-<property name="build.compiler" value="jikes" />      
--->
- 
-  <!-- ================================================================== -->
-  <!--            The pattern for the support files that need             -->
-  <!--                to be copied when compiling classes                 -->
-  <!-- ================================================================== -->
   <patternset id="support.files">
     <include name="**/*.xsd" />
     <include name="**/*.xml" />
     <include name="**/*.xsl" />
     <include name="**/*.properties" />
     <include name="**/*.dtd" />
+    <include name="**/tyrex.*" />
+  </patternset>
+  
+
+  <patternset id="jar.files">
+    <include name="LICENSE" />
+    <include name="README" />
+    <include name="CHANGELOG" />
+    <include name="*.properties" />
   </patternset>
 
 
-
-  <!-- Display all the targets -->
-  <target name="targets">
-    <echo message=""/>
-    <echo message="ANT build for ${project} ${version}"/>
-    <echo message=""/>
-    <echo message="The following targets are available:"/>
-    <echo message="  targets  Lists the build targets"/>
-    <echo message="  clean    Cleans the build and distribution directories"/>
-    <echo message="  all      Cleans and builds all the packages"/>
-    <echo message="  release  Cleans and builds all the release packages"/>
-    <echo message="           (JAR, source, doc, tarball) in the dist directory"/>
-    <echo message="  main     Builds the main packages (including debugging info)"/>
-    <echo message="  tests    Builds the test packages (including debugging info)"/>
-    <echo message="  jar      Builds the binary JAR in the dist directory"/>
-    <echo message="  doc      Builds the documentation"/>
-    <echo message="  api      Builds the API JavaDocs"/>
-    <echo message="  javadoc  Builds the full JavaDocs"/>
-    <echo message="  source   Builds the source tarball in the dist directory"/>
-    <echo message="  tarball  Builds the binary distribution in the dist directory"/>
-    <echo message="  cvs      Update the sources from the CVS"/>
-    <echo message=""/>
+  <target name="prepare">
+    <mkdir dir="${build.dir}"/>
+    <mkdir dir="${build.classes}"/>
+    <tstamp/>
   </target>
 
 
-  <!-- Prepare target directories -->
-  <target name="prepare" depends="init">
-    <mkdir dir="${build}"/>
-    <mkdir dir="${classes}"/>
-    <mkdir dir="${dist}"/>
-
-    <!-- Copy the DTD and schema to the schema directory -->
-    <delete  dir="${schema}" />
-    <mkdir   dir="${schema}" />
-
-    <copy todir="${schema}">
-       <fileset dir="${main}/tyrex/conf" includes="*.dtd,*.xsd" />
-    </copy>
-  </target>
-
-  <!-- Kill all the directories created in prepare -->
-  <target name="clean" depends="init">
-    <delete dir="${build}"/>
-    <delete dir="${dist}"/>
+  <target name="clean"
+          description="Clean the build and distribution package">
+    <delete dir="${build.dir}"/>
+    <delete dir="${dist.dir}"/>
   </target>
 
 
-  <!-- Build all the sources with debug and deprecation -->
-  <!--
-  <target name="main" depends="prepare">
-    <javac srcdir="${main}" destdir="${classes}" excludes="**/package.html"
-           classpath="${classpath}" debug="on" deprecation="${deprecation}"
-           includes="tyrex/concurrency/**,tyrex/interceptor/**,tyrex/naming/**,tyrex/util/**" />
-  </target> 
-  
-  -->
-  
-  <target name="main" depends="prepare">
-    <javac srcdir="${main}" destdir="${classes}" 
-           excludes="**/package.html,**/*.disabled,**/*.disable,**/*.old,tyrex/tools/Tomcat.java,tyrex/jdbc/util/*,tyrex/corba/*"
-           classpath="${classpath}" debug="on" deprecation="off" />
+  <target name="main" depends="prepare"
+          description="Build the main packages">
+    <!-- build the java files -->
+    <javac srcdir="${source.main}"
+           destdir="${build.classes}"
+           debug="off"
+           excludes="tyrex/corba/*"
+           includes="tyrex/tm/**,tyrex/util/**,tyrex/services/*,
+                     tyrex/resource/**,tyrex/conf/**,tyrex/naming/**,
+                     tyrex/jdbc/**"
+           deprecation="${deprecation}">
+    </javac>
+    
     <!-- copy the support files -->
-    <copy todir="${classes}">
-      <fileset dir="${main}">
+    <copy todir="${build.classes}">
+      <fileset dir="${source.main}">
         <patternset refid="support.files" />
       </fileset>
     </copy>
-  </target>
-
-  <!-- Same as main, but also cleans and additional targets -->
-  <target name="all" depends="clean,main,tests"/>
-
-  <!-- Same as main, but optimization, no debug and no deprecation -->
-  <target name="main-opt" depends="prepare">
-    <javac srcdir="${main}" destdir="${classes}" 
-           excludes="**/package.html,**/*.disabled,**/*.disable,**/*.old,tyrex/tools/Tomcat.java,tyrex/jdbc/util/*,tyrex/corba/*"
-           classpath="${classpath}" debug="off" deprecation="off" optimize="on" />
-    <!-- copy the support files -->
-    <copy todir="${classes}">
-      <fileset dir="${main}">
-        <patternset refid="support.files" />
+    <copy todir="${build.schema}">
+      <fileset dir="${source.schema}">
+        <include name="*" />
       </fileset>
-    </copy>
+    </copy> 
+
   </target>
 
-  <target name="main-iiop" depends="init">
-    <javac srcdir="${main}" destdir="${classes}" 
-           includes="tyrex/corba/*"/>
-    <!-- copy the support files -->
-    <copy todir="${classes}/tyrex/corba">
-      <fileset dir="${main}/tyrex/corba">
-        <patternset refid="support.files" />
-      </fileset>
-    </copy>
-  </target>
 
-  <!-- Build the test packages -->
-  <target name="tests" depends="prepare">
-    <mkdir dir="${build}/tests" />
-    <javac srcdir="${source}/tests" destdir="${build}/tests"
-           classpath="${classpath}" debug="on" deprecation="${deprecation}" 
-           excludes="hidden/**/*,jdbc/spi/*,ots/**,tyrex/tests/junit/ots/**" />
-    <!-- copy the support files -->
-    <copy todir="${build}/tests">
-      <fileset dir="${source}/tests">
-        <patternset refid="support.files" />
-      </fileset>
-    </copy>
-  </target>
-  
-  <target name="tests-transaction" depends="prepare">
-    <mkdir dir="${build}/tests" />
-    <javac srcdir="${source}/tests/transaction" destdir="${build}/tests"
-           classpath="${classpath}" debug="on" deprecation="${deprecation}" 
-           />
-  </target>
+  <target name="all" depends="clean,jar,tests"
+          description="Cleans and builds all the packages and examples" />
 
-  <!-- Build the test iiop packages -->
-  <target name="tests-iiop" depends="prepare">
-    <mkdir dir="${build}/tests" />
+
+  <target name="tests" depends="prepare"
+          description="Builds the tests packages (including debugging info)">
+    
+    <!-- create the builded tests directory -->
+    <mkdir dir="${build.tests}" />
+    
+    <!-- IDL Compiler -->
     <java classname="org.openorb.compiler.IdlCompiler" fork="yes">
     	<arg line="${source}/tests/ots/idl/test.idl -d ${build}/tests" />
     </java>
-    <javac srcdir="${build}/tests" destdir="${build}/tests"
-           classpath="${classpath}" debug="on" deprecation="${deprecation}" 
-           includes="otstests/**" />
-    <javac srcdir="${source}/tests" destdir="${build}/tests"
-           classpath="${classpath}" debug="on" deprecation="${deprecation}" 
-           includes="ots/**" />
-    <javac srcdir="${source}/tests" destdir="${build}/tests"
-           classpath="${classpath}" debug="on" deprecation="${deprecation}" 
-           includes="tyrex/tests/junit/ots/**" />               
+
+    <!-- build the java files -->
+    <javac srcdir="${source.tests}"
+           destdir="${build.tests}"
+           debug="on"
+           deprecation="${deprecation}">
+    </javac>
   </target>
 
-  <!-- Build the JAR file using main-opt -->
-  <target name="jar" depends="main-opt">
-    <delete   file="${dist}/${archive}.jar" />
 
-    <copyfile src="${source}/etc/MANIFEST.MF" dest="${classes}/MANIFEST.MF" />
-    <replace  file="${classes}/MANIFEST.MF" token="$$VERSION$$" value="${version}" />
-    <copydir  src="${source}/etc" dest="${classes}" includes="LICENSE,README,CHANGELOG" />
+  <target name="jar" depends="main"
+          description="Builds the binary JAR in the dist directory">
 
-    <jar      jarfile="${dist}/${archive}.jar" basedir="${classes}"
-              manifest="${classes}/MANIFEST.MF" includes="LICENSE,README,CHANGELOG,tyrex/**" excludes="tyrex/corba/*" />
-    <jar      jarfile="${dist}/connector.jar" basedir="${classes}"
-              manifest="${classes}/MANIFEST.MF" includes="tyrex/connector/*.java" />
-  </target>
+    <mkdir dir="${dist.dir}"/>
 
-  <target name="iiop" depends="main-iiop">
-    <delete   file="${dist}/${archive}-iiop.jar" />
+    <!-- set the name of the archive -->
+    <property name="archive" value="${project}-${version}" />
     
-    <jar      jarfile="${dist}/${archive}-iiop.jar" basedir="${classes}"
-              includes="tyrex/corba/*" />
+    <!-- remove the jar and the manifest -->
+    <delete file="${dist.dir}/${archive}.jar" />
+    <delete file="${build.classes}/MANIFEST.MF" />
+    
+    <!-- copy the manifest with the classes and set the version number, build number and title -->
+    <copy file="${source.etc}/MANIFEST.MF"
+          tofile="${build.classes}/MANIFEST.MF" />
+
+    <!-- Include other JAR files -->
+    <copy todir="${build.classes}">
+      <fileset dir="${source.etc}">
+        <patternset refid="jar.files" />
+      </fileset>
+    </copy>
+
+    <!-- Replace all the tokens -->
+    <property name="compile.replace" value="MANIFEST.MF,**/tyrex.config" />
+    <replace dir="${build.classes}" includes="${compile.replace}"
+             token="$$VERSION$$" value="${version}" />
+    <replace dir="${build.classes}" includes="${compile.replace}"
+             token="$$DATE$$" value="${TODAY}" />
+    <replace dir="${build.classes}" includes="${compile.replace}"
+             token="$$TIME$$" value="${TSTAMP}" />
+    <replace dir="${build.classes}" includes="${compile.replace}"
+             token="$$TITLE$$" value="${title}" />
+    <replace dir="${build.classes}" includes="${compile.replace}"
+             token="$$VENDOR.NAME$$" value="${vendor.name}" />
+    <replace dir="${build.classes}" includes="${compile.replace}"
+             token="$$VENDOR.URL$$" value="${vendor.url}" />
+    <replace dir="${build.classes}" includes="${compile.replace}"
+             token="$$COPYRIGHT$$" value="${copyright}" />        
+
+    <!-- create the Tyrex JAR -->
+    <jar jarfile="${dist.dir}/${archive}.jar"
+         basedir="${build.classes}"
+         manifest="${build.classes}/MANIFEST.MF"
+         excludes="MANIFEST.MF,tyrex/corba/*" />
+
+    <!-- create the IIOP JAR -->
+    <jar jarfile="${dist.dir}/${archive}-iiop.jar"
+         basedir="${build.classes}"
+         manifest="${build.classes}/MANIFEST.MF"
+         includes="tyrex/corba/*" />
   </target>
 
-  <!-- Build the documentation -->
-  <!-- doc without style
-  <target name="doc" depends="prepare">
-    <mkdir    dir="${build}/doc" />
-    <copydir  src="${doc}" dest="${build}/doc" includes="license.txt,document.dtd" />
-    <copydir  src="${doc}/images" dest="${build}/doc/images" />
-    <copydir  src="${doc}/style" dest="${build}/doc/style" includes="images/**,*.css" />
 
-    <mkdir    dir="${build}/doc/print" />
-    <copydir  src="${doc}" dest="${build}/doc/print" includes="license.txt,document.dtd" />
-    <copydir  src="${doc}/images" dest="${build}/doc/print/images" />
-
-    <copydir  src="${schema}" includes="*.dtd,*.xsd" dest="${build}/doc" />
-    <replace  file="${build}/doc/index.html" token="$$VERSION$$" value="${version}" />
-    <replace  file="${build}/doc/download.html" token="$$VERSION$$" value="${version}" />
-    <replace  file="${build}/doc/print/index.html" token="$$VERSION$$" value="${version}" />
-    <replace  file="${build}/doc/print/download.html" token="$$VERSION$$" value="${version}" />
-  </target>
-  -->
-  <!--
-  <target name="doc" depends="prepare">
-    <mkdir    dir="${build}/doc" />
-    <style    basedir="${doc}" destdir="${build}/doc" style="style/exolab.xsl"
-              includes="**.xml" excludes="style/**,project.xml" />
-    <copydir  src="${doc}" dest="${build}/doc" includes="license.txt,document.dtd" />
-    <copydir  src="${doc}/images" dest="${build}/doc/images" />
-    <copydir  src="${doc}/style" dest="${build}/doc/style" includes="images/**,*.css" />
-
-    <mkdir    dir="${build}/doc/print" />
-    <style    basedir="${doc}" destdir="${build}/doc/print" style="style/print.xsl"
-              includes="**.xml" excludes="style/**,project.xml" />
-    <copydir  src="${doc}" dest="${build}/doc/print" includes="license.txt,document.dtd" />
-    <copydir  src="${doc}/images" dest="${build}/doc/print/images" />
-
-    <copydir  src="${schema}" includes="*.dtd,*.xsd" dest="${build}/doc" />
-    <replace  file="${build}/doc/index.html" token="$$VERSION$$" value="${version}" />
-    <replace  file="${build}/doc/download.html" token="$$VERSION$$" value="${version}" />
-    <replace  file="${build}/doc/print/index.html" token="$$VERSION$$" value="${version}" />
-    <replace  file="${build}/doc/print/download.html" token="$$VERSION$$" value="${version}" />
-  </target>
-  -->
-  
-  <target name="doc" depends="prepare">
-    <mkdir    dir="${build}/doc" />
-    <style    basedir="${doc}" destdir="${build}/doc" style="style/exolab.xsl"
-              includes="**.xml" excludes="style/**,project.xml" processor="xslp" />
-    <copydir  src="${doc}" dest="${build}/doc" includes="license.txt,document.dtd" />
-    <copydir  src="${doc}/images" dest="${build}/doc/images" />
-    <copydir  src="${doc}/style/images" dest="${build}/doc/images" includes="*.gif" />
-    <copydir  src="${doc}/style" dest="${build}/doc/" includes="*.css" />
-
-    <copydir  src="${schema}" includes="*.dtd,*.xsd" dest="${build}/doc" />
-    <replace  file="${build}/doc/index.html" token="$$VERSION$$" value="${version}" />
-    <replace  file="${build}/doc/download.html" token="$$VERSION$$" value="${version}" />
-
-  </target>
-  
-  <!-- Build the full JavaDocs -->
-  <target name="javadoc" depends="prepare">
-    <mkdir    dir="${build}/doc" />
-    <mkdir    dir="${build}/doc/javadoc" />
-    <property name="copyright"
-              value="Intalio, Inc. (C) 1999-2001. All rights reserved  http://tyrex.exolab.org" />
-    <javadoc  sourcepath="${main}" destdir="${build}/doc/javadoc"
-              doctitle="Tyrex JavaDoc" windowtitle="Tyrex JavaDoc" bottom="${copyright}"
-              private="true" author="true" version="true" noindex="true"
-              packagenames="tyrex.client.*, tyrex.concurrency.*, tyrex.conf.*, tyrex.corba.*, tyrex.interceptor.*, tyrex.jdbc.*, tyrex.naming.*, tyrex.recovery.*, tyrex.resource.*,tyrex.server.*,tyrex.tm.*, tyrex.util.*" />
+  <target name="javadoc" depends="prepare"
+          description="Builds the full JavaDocs">
+    
+    <!-- create the javadoc repository -->
+    <mkdir dir="${build.doc}" />
+    <mkdir dir="${build.javadoc}" />
+    
+    <!-- build the javadoc -->
+    <javadoc sourcepath="${source.main}"
+             destdir="${build.javadoc}"
+             doctitle="${title} JavaDoc"
+             windowtitle="${title} JavaDoc"
+             bottom="${copyright}"
+             package="true"
+             author="true"
+             version="true"
+             noindex="true"
+             packagenames="${all.packages}">
+    </javadoc>
   </target>
 
-  <!-- Build the API JavaDocs -->
-  <target name="api" depends="prepare">
-    <mkdir    dir="${build}/doc" />
-    <mkdir    dir="${build}/doc/api" />
-    <property name="copyright"
-              value="Intalio, Inc. (C) 1999-2001. All rights reserved  http://tyrex.exolab.org" />
-    <javadoc  sourcepath="${main}" destdir="${build}/doc/api"
-              doctitle="Tyrex API" windowtitle="Tyrex API" bottom="${copyright}"
-              public="true" author="true" version="true" noindex="true"
-              packagenames="tyrex.client.*, tyrex.concurrency.*, tyrex.conf.*, tyrex.corba.*, tyrex.interceptor.*, tyrex.jdbc.*, tyrex.naming.*, tyrex.recovery.*, tyrex.resource.*,tyrex.server.*,tyrex.tm.*, tyrex.util.*" />
+
+  <target name="api" depends="prepare"
+          description="Builds the API JavaDocs">
+
+    <!-- create the javadoc repository -->
+    <mkdir dir="${build.doc}" />
+    <mkdir dir="${build.api}" />
+
+    <!-- build the javadoc -->
+    <javadoc sourcepath="${source.main}"
+             destdir="${build.api}"
+             doctitle="${title} API JavaDoc"
+             windowtitle="${title} API JavaDoc"
+             bottom="${copyright}"
+             package="true"
+             author="true"
+             version="true"
+             noindex="true"
+             packagenames="${api.packages}">
+    </javadoc>
   </target>
 
-  <!-- Build the docs, API and full JavaDocs, doc archives -->
-  <target name="docs" depends="doc,api,javadoc">
-    <zip    zipfile="${dist}/${archive}-doc.zip" basedir="${build}" includes="doc/**" />
-    <tar    tarfile="${dist}/${archive}-doc.tar" basedir="${build}" includes="doc/**" />
-    <gzip   src="${dist}/${archive}-doc.tar" zipfile="${dist}/${archive}-doc.tgz" />
-    <delete file="${dist}/${archive}-doc.tar" />
-  </target>
 
+  <target name="doc" depends="prepare"
+          description="Builds the documentation">
+    
+    <mkdir dir="${build.doc}" />
+    <style basedir="${source.doc}" destdir="${build.doc}"
+           style="style/exolab.xsl" processor="xslp">
+      <include name="**.xml" />
+      <exclude name="style/**" />
+      <exclude name="project.xml" />
+    </style>
+
+    <copy todir="${build.doc}">
+      <fileset dir="${source.doc}">
+        <include name="document.dtd" />
+        <include name="images/**" />
+        <include name="spec/**" />
+      </fileset>
+      <fileset dir="${source.doc}/style">
+        <include name="*.css" />
+        <include name="images/**" />
+      </fileset>
+    </copy>
+
+    <replace dir="${build.doc}" includes="*.html"
+             token="$$VERSION$" value="${version}" />
+    <replace dir="${build.doc}" includes="*.html"
+             token="$$DATE$" value="${TODAY}" />
+    <replace dir="${build.doc}" includes="*.html"
+             token="$$TIME$" value="${TSTAMP}" />
+  </target>                                          
 
 
   <!-- Build the source distribution -->
-  <target name="source" depends="prepare">
+  <target name="source" depends="prepare"
+          description="Builds the source distribution">
     <delete  file="${dist}/${archive}-src.tgz" />
     <delete  file="${dist}/${archive}-src.zip" />
     <deltree dir="${build}/${archive}" />
@@ -310,13 +262,40 @@
   </target>
 
 
+  <target name="release" depends="clean,jar,doc,api,javadoc,source,docs,tarball"
+          description="Cleans and builds all the release packages (JAR, source, doc, tarball) in the dist directory" />
 
-  <!-- Build a full release including JAR, zip/tarball, source and documentation -->
-  <target name="release" depends="clean,doc,jar,source,docs,tarball">
+
+  <!-- Build the source distribution -->
+  <target name="docs" depends="prepare"
+          description="Builds the source distribution">
+    <delete  file="${dist}/${archive}-src.tgz" />
+    <delete  file="${dist}/${archive}-src.zip" />
+    <deltree dir="${build}/${archive}" />
+
+    <mkdir   dir="${build}/${archive}" />
+    <mkdir   dir="${build}/${archive}/src" />
+    <copydir src="${source}" dest="${build}/${archive}/src"
+             defaultexcludes="true" />
+    <mkdir   dir="${build}/${archive}/lib" />
+    <copydir src="${lib}" dest="${build}/${archive}/lib"
+             defaultexcludes="true" />
+    <copydir src="." dest="${build}/${archive}"
+             includes="*.sh,*.bat" />
+
+    <tar     includes="${archive}/**" basedir="${build}"
+             tarfile="${dist}/${archive}-src.tar" />
+    <gzip    src="${dist}/${archive}-src.tar" zipfile="${dist}/${archive}-src.tgz"/>
+    <delete  file="${dist}/${archive}-src.tar" />
+    <zip     zipfile="${dist}/${archive}-src.zip" basedir="${build}"
+             includes="${archive}/**" />
+
   </target>
 
+
   <!-- Build the tarball including JAR and all dependent packages -->
-  <target name="tarball" depends="prepare,jar">
+  <target name="tarball" depends="prepare,jar"
+          description="Builds the binary distribution in the dist directory">
     <delete  file="${dist}/${archive}.tgz" />
     <delete  file="${dist}/${archive}.zip" />
     <deltree dir="${build}/${archive}" />
@@ -341,12 +320,6 @@
              includes="${archive}/**" excludes="${archive}/*.tar,${archive}/*.tgz" />
   </target>
 
-
-  <!-- Update the sources from the CVS -->
-  <target name="cvs" depends="clean">
-    <cvs cvsRoot=":pserver:anoncvs@virtuals.intalio.com:/cvs/${project}"
-         dest="." package="${project}" />
-  </target>
 
 </project>
 

@@ -1,6 +1,6 @@
 #! /bin/sh
 
-# $Id: test.sh,v 1.8 2001/02/23 19:35:19 omodica Exp $
+# $Id: test.sh,v 1.9 2001/02/27 00:39:11 arkin Exp $
 
 if [ -z "$JAVA_HOME" ] ; then
   JAVA=`which java`
@@ -17,6 +17,6 @@ JAVA=$JAVA_HOME/bin/java
 CLASSPATH=./build/classes:./build/tests:$CLASSPATH
 CLASSPATH=`echo lib/*.jar | tr ' ' ':'`:$CLASSPATH
 
-$JAVA -cp $CLASSPATH -Djava.security.manager -Djava.security.policy=./test.policy tests.RunTests $1 $2 $3 $4 $5 $6
+$JAVA -cp $CLASSPATH $1 $2 $3 $4 $5 $6
 
 
