@@ -48,7 +48,7 @@ package tyrex.corba;
  * This is the current interface implementation. This code is extracted from the OpenORB OTS source code.
  * 
  * @author <a href="mailto:jdaniel@intalio.com">Jerome Daniel &lt;daniel@intalio.com&gt;</a>
- * @version $Revision: 1.5 $ $Date: 2001/03/15 22:59:52 $ 
+ * @version $Revision: 1.6 $ $Date: 2001/04/10 22:39:43 $ 
  */
 public class Current extends org.omg.CORBA.LocalObject implements org.omg.CosTransactions.Current				     
 {
@@ -123,7 +123,7 @@ public class Current extends org.omg.CORBA.LocalObject implements org.omg.CosTra
 		{
 			try 
 			{
-				org.omg.CosTransactions.Control control = _tfactory.create(_time_out);
+				org.omg.CosTransactions.Control control = factory().create(_time_out);
 				
 				pctx = control.get_coordinator().get_txcontext();
 				
@@ -556,6 +556,31 @@ public class Current extends org.omg.CORBA.LocalObject implements org.omg.CosTra
         {
             tyrex.util.Logger.ots.warn(from + ": " + msg );
             throw new org.omg.CORBA.INTERNAL(msg);
+        }
+        
+        /**
+         * Returns the transaction factory
+         */
+        public org.omg.CosTransactions.TransactionFactory factory()
+        {
+            try
+            {
+               if ( _tfactory != null )                  
+               {
+                  org.omg.CORBA.Object obj = _info.resolve_initial_references("TransactionService");
+   						
+   			      _tfactory = org.omg.CosTransactions.TransactionFactoryHelper.narrow( obj );				
+               }
+               
+               return _tfactory;  
+            }
+            catch ( java.lang.Exception ex )
+            {
+               ex.printStackTrace();
+               fatal("Initializer", "Unable to resolve TransactionService");
+            }
+            
+            return null;
         }
         
 }

@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Initializer.java,v 1.6 2001/03/15 22:59:52 jdaniel Exp $
+ * $Id: Initializer.java,v 1.7 2001/04/10 22:39:43 jdaniel Exp $
  *
  * Date         Author  Changes
  */
@@ -86,15 +86,21 @@ public class Initializer extends org.omg.CORBA.LocalObject implements org.omg.Po
 	public void post_init(org.omg.PortableInterceptor.ORBInitInfo info)
 	{
 		try
-		{
-			org.omg.CORBA.Object obj = info.resolve_initial_references("TransactionService");
-						
-			org.omg.CosTransactions.TransactionFactory _tfactory = org.omg.CosTransactions.TransactionFactoryHelper.narrow( obj );
-				
+		{	
+		   org.omg.CosTransactions.TransactionFactory _tfactory = null;	   
+		   try
+		   {
+   			org.omg.CORBA.Object obj = info.resolve_initial_references("TransactionService");
+   						
+   			_tfactory = org.omg.CosTransactions.TransactionFactoryHelper.narrow( obj );
+		   }
+		   catch ( java.lang.Exception ex )
+		   { }
+		   
 			tyrex.corba.Current current = new tyrex.corba.Current(_tfactory, info, t_slot);
 			
 			info.register_initial_reference("TransactionCurrent", current);			
-	        }
+	   }
 		catch ( org.omg.PortableInterceptor.ORBInitInfoPackage.InvalidName ex ) 
 		{
 			fatal("Initializer", "Unable to resolve TransactionService");
@@ -102,21 +108,21 @@ public class Initializer extends org.omg.CORBA.LocalObject implements org.omg.Po
 					
 	}
                 
-        /**
-         * Displays a trace and throw a INTERNAL exception...
-         */
-        public void fatal( String from, String msg )
-        {
-            tyrex.util.Logger.ots.warn(from + ": " + msg );
-            throw new org.omg.CORBA.INTERNAL(msg);
-        }
-        
-        /**
-         * Displays a trace and throw a INTERNAL exception...
-         */
-        public void exception( String from, String msg, java.lang.Exception ex )
-        {
-            tyrex.util.Logger.ots.warn("EXCEPTION => " + from + ": " + msg );            
-        }
+  /**
+   * Displays a trace and throw a INTERNAL exception...
+   */
+  public void fatal( String from, String msg )
+  {
+      tyrex.util.Logger.ots.warn(from + ": " + msg );
+      throw new org.omg.CORBA.INTERNAL(msg);
+  }
+  
+  /**
+   * Displays a trace and throw a INTERNAL exception...
+   */
+  public void exception( String from, String msg, java.lang.Exception ex )
+  {
+      tyrex.util.Logger.ots.warn("EXCEPTION => " + from + ": " + msg );            
+  }
 }
 
