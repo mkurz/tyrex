@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: EnvContextTest.java,v 1.3 2001/08/10 07:18:01 mills Exp $
+ * $Id: EnvContextTest.java,v 1.4 2001/08/10 11:39:10 mills Exp $
  */
 
 
@@ -65,7 +65,7 @@ import java.io.PrintWriter;
 /**
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  */
 
 public class EnvContextTest extends TestCase
@@ -88,10 +88,89 @@ public class EnvContextTest extends TestCase
     }
 
 
-    public void testNone()
+    public void testCoverage()
+        throws Exception
     {
-        // Empty.
+        MemoryBinding binding = new MemoryBinding();
+        Integer i1 = new Integer(1);
+        binding.put("binding", i1);
+        binding.put("linkRef", new LinkRef("link"));
+        binding.put("memBind", new MemoryBinding());
+        Reference ref = new Reference("MemoryBinding");
+        binding.put("ref", ref);
+        Hashtable env = new Hashtable();
+        env.put(Context.INITIAL_CONTEXT_FACTORY,
+                tyrex.naming.MemoryContextFactory.class.getName());
+        env.put(Context.URL_PKG_PREFIXES, "tyrex.naming");
+        env.put("key", "value");
+        EnvContext context = new EnvContext(null);
+        context = new EnvContext(binding, null);
+        context = new EnvContext(binding, env);
+        assertEquals(i1, context.lookup("binding"));
+//        context.lookup("linkRef");
+        assertEquals("memBind", context.lookup("memBind").toString());
+        assertEquals(ref, context.lookup("ref"));
+        assertEquals(i1, context.lookupLink("binding"));
+        Enumeration enum = context.list("");
+        assert(enum.hasMoreElements());
+        NameClassPair pair = (NameClassPair)enum.nextElement();
+        assertEquals("memBind", pair.getName());
+        assertEquals(context.getClass().getName(), pair.getClassName());
+        assert(enum.hasMoreElements());
+        pair = (NameClassPair)enum.nextElement();
+        assertEquals("ref", pair.getName());
+        assertEquals("MemoryBinding", pair.getClassName());
+        assert(enum.hasMoreElements());
+        pair = (NameClassPair)enum.nextElement();
+        assertEquals("binding", pair.getName());
+        assertEquals(i1.getClass().getName(), pair.getClassName());
+        try
+        {
+            context.list("key");
+        }
+        catch (NotContextException e)
+        {
+            // Expected.
+        }
+        enum = context.listBindings("");
+        pair = (NameClassPair)enum.nextElement();
+        assertEquals("memBind", pair.getName());
+        assertEquals(context.getClass().getName(), pair.getClassName());
+        assert(enum.hasMoreElements());
+        pair = (NameClassPair)enum.nextElement();
+        assertEquals("ref", pair.getName());
+        assertEquals("MemoryBinding", pair.getClassName());
+        assert(enum.hasMoreElements());
+        pair = (NameClassPair)enum.nextElement();
+        assertEquals("binding", pair.getName());
+        assertEquals(i1.getClass().getName(), pair.getClassName());
+        try
+        {
+            context.listBindings("binding");
+        }
+        catch (NotContextException e)
+        {
+            // Expected.
+        }
+        try
+        {
+            context.createSubcontext("subcontext");
+        }
+        catch (OperationNotSupportedException e)
+        {
+            // Expected.
+        }
+        try
+        {
+            context.destroySubcontext("subcontext");
+        }
+        catch (OperationNotSupportedException e)
+        {
+            // Expected.
+        }
+        assertEquals("", context.toString());
     }
+
 
     /** Adds a message in the log (except if the log is null)*/
     private void logMessage(String message)
@@ -117,7 +196,7 @@ public class EnvContextTest extends TestCase
     {
         for( int i = 0 ; i < args.length ; i++ )
             if ( args[ i ].equals( "-verbose" ) )
-                VerboseStream.verbose = true;
+                tests.VerboseStream.verbose = true;
         junit.textui.TestRunner.run(new TestSuite(EnvContextTest.class));
     }
 }

@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: EnvContext_ContextImpl.java,v 1.2 2001/08/10 07:18:01 mills Exp $
+ * $Id: EnvContext_ContextImpl.java,v 1.3 2001/08/10 11:39:10 mills Exp $
  */
 
 package tyrex.naming;
@@ -65,7 +65,7 @@ import junit.framework.TestSuite;
  * 
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  */
 
 public class EnvContext_ContextImpl extends ContextTest
@@ -82,6 +82,8 @@ public class EnvContext_ContextImpl extends ContextTest
         throws Exception
     {
         Hashtable env = new Hashtable();
+        env.put("Key", "value");
+        initialEnvSize_++;
         return new EnvContext(env);
     }
 

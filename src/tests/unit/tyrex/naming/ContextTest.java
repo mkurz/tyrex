@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: ContextTest.java,v 1.3 2001/08/10 07:18:01 mills Exp $
+ * $Id: ContextTest.java,v 1.4 2001/08/10 11:39:10 mills Exp $
  */
 
 
@@ -65,7 +65,7 @@ import java.io.PrintWriter;
 /**
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  */
 
 public abstract class ContextTest extends TestCase
@@ -286,38 +286,77 @@ public abstract class ContextTest extends TestCase
         throws Exception
     {
         Context ctx = newContext();
+        Integer i1 = new Integer(1);
         try
         {
-            Integer i1 = new Integer(1);
             ctx.bind("name1", i1);
-            Integer i2 = new Integer(2);
+        }
+        catch (OperationNotSupportedException e)
+        {
+            // Expected in some cases.
+        }
+        Integer i2 = new Integer(2);
+        try
+        {
             ctx.bind("name2", i2);
             assertEquals("Val", i1, ctx.lookup("name1"));
             assertEquals("Val", i2, ctx.lookup("name2"));
-            Integer i3 = new Integer(3);
+        }
+        catch (OperationNotSupportedException e)
+        {
+            // Expected in some cases.
+        }
+        Integer i3 = new Integer(3);
+        try
+        {
             ctx.rebind("name2", i3);
             assertEquals("Val", i3, ctx.lookup("name2"));
+        }
+        catch (OperationNotSupportedException e)
+        {
+            // Expected in some cases.
+        }
+        try
+        {
             ctx.rename("name2", "name3");
-            try
-            {
-                ctx.lookup("name2");
-                fail("Can still access old name.");
-            }
-            catch (NameNotFoundException e)
-            {
-                // Expected.
-            }
+        }
+        catch (OperationNotSupportedException e)
+        {
+            // Expected in some cases.
+        }
+        try
+        {
+            ctx.lookup("name2");
+            fail("Can still access old name.");
+        }
+        catch (NameNotFoundException e)
+        {
+            // Expected.
+        }
+        catch (OperationNotSupportedException e)
+        {
+            // Expected in some cases.
+        }
+        if (!(ctx instanceof EnvContext))
+        {
             assertEquals("Val", i3, ctx.lookup("name3"));
+        }
+        try
+        {
             ctx.unbind("name3");
-            try
-            {
-                ctx.lookup("name3");
-                fail("Can still access unbound value.");
-            }
-            catch (NameNotFoundException e)
-            {
-                // Expected.
-            }
+        }
+        catch (OperationNotSupportedException e)
+        {
+            // Expected in some cases.
+        }
+        try
+        {
+            ctx.lookup("name3");
+            fail("Can still access unbound value.");
+        }
+        catch (NameNotFoundException e)
+        {
+            // Expected.
         }
         catch (OperationNotSupportedException e)
         {

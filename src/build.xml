@@ -119,6 +119,10 @@
            debug="on"
            excludes="ots/**"           
            deprecation="${deprecation}">
+                <classpath>
+                        <path refid="project.class.path"/>
+                        <pathelement location="${build.tests}" />
+                </classpath>
     </javac>
   </target>
  
@@ -389,6 +393,7 @@
                 fork="yes" failonerror="true">
                 <classpath>
                         <path refid="project.class.path"/>
+                        <pathelement location="${build.tests}" />
                         <pathelement location="${build.tests.unit}" />
                         <pathelement location="${source.etc}" />
                 </classpath>
