@@ -100,7 +100,7 @@
 
   <target name="all-iiop" depends="all, iiop-jar, jar-tests-iiop" />
   
-  <target name="tests" depends="prepare"
+  <target name="tests" depends="main"
           description="Builds the tests packages (including debugging info)">
     
     <!-- create the builded tests directory -->
@@ -378,6 +378,50 @@
              includes="${archive}/**" excludes="${archive}/*.tar,${archive}/*.tgz" />
   </target>
 
+    <!-- ================================================================== -->
+    <!--            Runs a Class with the proper classpath                  -->
+    <!-- ================================================================== -->
+    <target name="run"
+            depends="tests"
+            description="run a class. The class name is sepecified with -Dclass.name=the.class.name">
+
+          <java classname="${class.name}"
+                fork="yes" failonerror="true">
+                <classpath>
+                        <path refid="project.class.path"/>
+                        <pathelement location="${build.tests.unit}" />
+                        <pathelement location="${source.etc}" />
+                </classpath>
+                <jvmarg value="-Djava.security.policy=default.policy" />
+          </java>
+    </target>
+
+
+    <!-- =============================================================== -->
+    <!--        Unit Test Document                                       -->
+    <!-- =============================================================== -->
+
+    <target name="unittestdoc"
+            depends="prepare"
+            description="Build the Unit Test doc from tests package">
+
+        <javadoc packagenames="tyrex.*"
+            sourcepath="${source.tests.unit}"
+            destdir="${build.dir}/tests" >
+            <doclet name="com.intalio.build.FolioDoclet"
+                 path="${java.class.path}">
+                <param name="-name" value="TyrexUnitTest.xml"/>
+                <param name="-description" value="Tyrex Unit Test Document"/>
+                <param name="-include" value="${source.tests.unit}/tyrex/intro_unit.xml"/>
+             </doclet>
+             <classpath refid="project.class.path"/>
+        </javadoc>
+        <java classname="com.intalio.folio.pdf.Processor">
+            <arg value="${build.dir}/tests/TyrexUnitTest.xml" />
+            <arg value="${build.dir}/tests/IntalioPdf.xsl" />
+            <arg value="${build.dir}/tests/TyrexUnitTest.pdf" />
+        </java>
+
+    </target>
 
 </project>
-

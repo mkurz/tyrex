@@ -6,7 +6,7 @@
 * the terms and conditions stipulated in the agreement/contract
 * under which the program(s) have been supplied.
 *
-* $Id: MemoryContextTest.java,v 1.1 2001/07/31 01:06:50 mills Exp $
+* $Id: MemoryContextTest.java,v 1.2 2001/07/31 02:08:03 mills Exp $
 * Date        Author    Changes
 *
 * 2001/07/26  Mills     Created
@@ -23,7 +23,7 @@ import java.util.Vector;
 
 import javax.naming.*;
 import javax.naming.spi.ObjectFactory;
-import tyrex.runtime.RuntimeContext;
+import tyrex.tm.RuntimeContext;
 import tyrex.naming.EnvContext;
 
 import junit.framework.TestCase;
@@ -35,7 +35,7 @@ import java.io.PrintWriter;
 /**
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 
 public class MemoryContextTest extends TestCase

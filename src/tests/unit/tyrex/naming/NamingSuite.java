@@ -6,7 +6,7 @@
 * the terms and conditions stipulated in the agreement/contract
 * under which the program(s) have been supplied.
 *
-* $Id: NamingSuite.java,v 1.1 2001/07/31 01:06:50 mills Exp $
+* $Id: NamingSuite.java,v 1.2 2001/07/31 02:08:03 mills Exp $
 * Date        Author    Changes
 *
 * 2001/07/26  Mills     Created
@@ -22,7 +22,7 @@ import junit.framework.TestSuite;
 /**
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 
 public class NamingSuite
@@ -37,7 +37,6 @@ public class NamingSuite
         TestSuite suite = new TestSuite("NamingSuite test harness");
         suite.addTest(EnvContextTest.suite());
         suite.addTest(MemoryContextTest.suite());
-        suite.addTest(new Naming("Naming tests"));
         return suite;
     }
 
