@@ -148,6 +148,12 @@ public class ServerInterceptor
 	{
 		return "Tyrex-Transactional-Server-Interceptor";
 	}
+
+    /**
+     * Called to destroy the interceptor
+     */
+    public void destroy() 
+    {}
 	
         /**
          * Displays a trace and throw a INTERNAL exception...

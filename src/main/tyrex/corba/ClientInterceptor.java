@@ -149,6 +149,12 @@ public class ClientInterceptor
 		return "Tyrex-Transactional-Client-Interceptor";
 	}
 
+    /**
+     * Called to destroy the interceptor
+     */
+    public void destroy() 
+    {}
+
         /**
          * Displays a trace and throw a INTERNAL exception...
          */
