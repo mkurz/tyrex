@@ -1,29 +1,51 @@
-<jdbc name="Cloudscape and Postgres Test">
+<jdbc name="DB Test">
     <performance>
         (onephasecommit value=1600 relative=true/>
         <twophasecommit value=800 relative=true/>
         <rollback value=1600 relative=true/>
     </performance>
-    <datasource class="jdbc.CloudscapeDataSourceFactory"
-                name="cloudscapename1"
-                canReuseDelistedXAResources=false
-                userName="system"
-                password="manager"
-                numberOfTables=1 />
-    <datasource class="jdbc.CloudscapeDataSourceFactory"
-                canReuseDelistedXAResources=false
-                name="cloudscapename2"
-                userName="system"
-                password="manager"
-                numberOfTables=1 />
-    <datasource class="jdbc.PostgresDataSourceFactory"
-                canReuseDelistedXAResources=false
-                canTestPerformance=false
-                name="name"
-                userName="username"
-                password="password"
-                server="server"
-                portNumber=-1
-                numberOfTables=1 />
+    <config class="jdbc.CloudscapeDataSourceFactory"
+            description="Cloudscape 1" 
+            canReuseDelistedXAResources=false
+            userName="system"
+            password="manager"
+            numberOfTables=1>
+        <parameter key="name" value="cloudscapename1"/>
+    </config>
+                
+    <config class="jdbc.CloudscapeDataSourceFactory"
+            description="Cloudscape 2" 
+            canReuseDelistedXAResources=false
+            userName="system"
+            password="manager"
+            numberOfTables=1>
+        <parameter key="name" value="cloudscapename2"/>
+    </config>
+    
+    <config class="jdbc.PostgresDataSourceFactory"
+            description="Postgres" 
+            canReuseDelistedXAResources=false
+            canTestPerformance=false
+            userName="username"
+            password="password"
+            numberOfTables=1>
+        <parameter key="name" value="name"/>
+        <parameter key="server" value="server"/>
+        <parameter key="port" value="port"/>
+    </config>
+    
+    <config class="jdbc.OracleDataSourceFactory"
+            description="Oracle" 
+            canReuseDelistedXAResources=false
+            canTestPerformance=true
+            userName="username"
+            password="password"
+            numberOfTables=1>
+        <parameter key="name" value="name"/>
+        <parameter key="server" value="server"/>
+        <parameter key="port" value="port"/>
+        <parameter key="driver" value="thin"/>
+    </config>
+    
 </jdbc>
     

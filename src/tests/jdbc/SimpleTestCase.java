@@ -326,6 +326,9 @@ class SimpleTestCase
             } catch ( Exception e ) {
                 stream.writeVerbose( "Error: Failed one-phase commit" );
                 stream.writeVerbose( e.toString() );
+                if ( ( e instanceof SQLException ) && ( ( ( SQLException ) e ).getNextException() != null ) ) {
+                    ( ( SQLException ) e ).getNextException().printStackTrace();            
+                }
                 return false;
             }
 

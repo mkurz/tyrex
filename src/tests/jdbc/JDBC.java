@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: JDBC.java,v 1.1 2000/08/28 19:01:52 mohammed Exp $
+ * $Id: JDBC.java,v 1.2 2000/08/30 01:17:37 mohammed Exp $
  */
 
 
@@ -119,7 +119,7 @@ public class JDBC
             
             name = helper.toString() + "-" + i + "-" + ++caseCount;
             tc = new EnlistedResourceTestCase( name, helper );
-            add( tc.name(), tc, true );        
+            //add( tc.name(), tc, true );        
         }
     }
     

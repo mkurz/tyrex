@@ -182,9 +182,12 @@ public abstract class JDBCHelper
             for ( int xaDataSourceIndex = getNumberOfXADataSources(); --xaDataSourceIndex >= 0; ) {
                 xaConnection = getXAConnection( xaDataSourceIndex );
                 connection = xaConnection.getConnection();
-                if ( !connection.getAutoCommit() ) {
-                    connection.setAutoCommit(true);
-                }
+                /*if ( !connection.getAutoCommit() ) {
+                    try {
+                        connection.setAutoCommit(true);
+                    } catch ( SQLException e ) {
+                    }
+                }*/
                 statement = connection.createStatement();
 
                 for ( tableIndex = getNumberOfTables( xaDataSourceIndex ); --tableIndex >= 0; ) {
