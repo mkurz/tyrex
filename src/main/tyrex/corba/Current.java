@@ -48,7 +48,7 @@ package tyrex.corba;
  * This is the current interface implementation. This code is extracted from the OpenORB OTS source code.
  * 
  * @author <a href="mailto:jdaniel@intalio.com">Jerome Daniel &lt;daniel@intalio.com&gt;</a>
- * @version $Revision: 1.6 $ $Date: 2001/04/10 22:39:43 $ 
+ * @version $Revision: 1.7 $ $Date: 2001/09/17 15:58:43 $ 
  */
 public class Current extends org.omg.CORBA.LocalObject implements org.omg.CosTransactions.Current				     
 {
@@ -565,7 +565,7 @@ public class Current extends org.omg.CORBA.LocalObject implements org.omg.CosTra
         {
             try
             {
-               if ( _tfactory != null )                  
+               if ( _tfactory == null )                  
                {
                   org.omg.CORBA.Object obj = _info.resolve_initial_references("TransactionService");
    						
