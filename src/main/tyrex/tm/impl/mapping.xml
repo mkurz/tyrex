@@ -30,7 +30,7 @@
   <class name="tyrex.resource.Resources">
     <map-to xml="resources" />
     <field name="dataSource" type="tyrex.resource.jdbc.DataSourceConfig"
-           set-method="addConfiguration">
+           set-method="addConfiguration" collection="enumerate">
       <bind-xml name="dataSource" node="element" />
     </field>
     <field name="connector" type="tyrex.resource.jca.Connector"
