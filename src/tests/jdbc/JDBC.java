@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: JDBC.java,v 1.3 2000/09/08 23:03:11 mohammed Exp $
+ * $Id: JDBC.java,v 1.4 2000/09/29 01:25:20 mohammed Exp $
  */
 
 
@@ -119,7 +119,7 @@ public class JDBC
             
             name = helper.toString() + "-" + i + "-" + ++caseCount;
             tc = new EnlistedResourceTestCase( name, helper );
-            //add( tc.name(), tc, true );        
+            add( tc.name(), tc, true );        
         }
     }
     
@@ -223,27 +223,6 @@ public class JDBC
     }
 
 
-    /**
-     * Return true if the current transaction can be committed
-     * using 1PC.
-     *
-     * @param transactionManager the transaction manager
-     * @return true if the current transaction can be committed
-     *      using 1PC.
-     */
-    private static boolean canUseOnePhaseCommit( TransactionManager transactionManager )
-        throws Exception
-    {
-        // get the current transaction
-        Transaction transaction = transactionManager.getTransaction();
-
-        return ( null == transaction ) 
-                ? false 
-                : ( ( TyrexTransaction ) transaction ).canUseOnePhaseCommit();
-    }
-    
-
-    
     public static void main (String args[]) {
 
         class JDBCTest extends CWBaseApplication

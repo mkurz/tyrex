@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: XADataSourceImpl.java,v 1.11 2000/09/28 01:51:15 mohammed Exp $
+ * $Id: XADataSourceImpl.java,v 1.12 2000/09/29 01:24:17 mohammed Exp $
  */
 
 
@@ -110,6 +110,20 @@ public abstract class XADataSourceImpl
      * The default timeout for all new transactions.
      */
     private int                 _txTimeout = DEFAULT_TX_TIMEOUT;
+
+
+    /**
+     * The prune factor for reducing the size of pooled
+     * connections.
+     */
+    private float               _pruneFactor = DEFAULT_PRUNE_FACTOR;
+
+
+    /**
+     * The default prune factor for reducing the size of pooled
+     * connections - 10%.
+     */
+    private final static float  DEFAULT_PRUNE_FACTOR = (float)0.1;
 
 
     /**
@@ -209,7 +223,7 @@ public abstract class XADataSourceImpl
      *
      * @return the default timeout for all transactions.
      */
-    public int getTransactionTimeout()
+    public final int getTransactionTimeout()
     {
 	return _txTimeout;
     }
@@ -231,7 +245,7 @@ public abstract class XADataSourceImpl
      *
      * @param seconds The timeout in seconds
      */
-    public void setTransactionTimeout( int seconds )
+    public final void setTransactionTimeout( int seconds )
     {
 	if ( seconds <= 0 )
 	    _txTimeout = DEFAULT_TX_TIMEOUT;
@@ -410,6 +424,35 @@ public abstract class XADataSourceImpl
     }
 
 
+    /**
+     * Get the factor that specifies the number of
+     * connections that are released from the pool.
+     *
+     * @return the prune factor
+     */
+    public final float getPruneFactor()
+    {
+        return _pruneFactor;
+    }
+
+
+    /**
+     * Set the factor that specifies the number of
+     * connections that are released from the pool.
+     *
+     * @param pruneFactor the prune factor. 0 <= pruneFactor <= 1 
+     */
+    public final void setPruneFactor(float pruneFactor)
+    {
+        if ((0 > pruneFactor) ||
+            (1 < pruneFactor)) {
+            throw new IllegalArgumentException("The argument 'pruneFactor' " + pruneFactor + " does not lie between 0 and 1.");
+        }
+
+        _pruneFactor = pruneFactor;
+    }
+
+
     public void run()
     {
 	Enumeration  enum;
@@ -429,33 +472,35 @@ public abstract class XADataSourceImpl
         } catch ( InterruptedException except ) {
         }
 
-        synchronized ( _pool ) {
-            try {
-    		// Check to see if there are any pooled connections
-    		// we can release. We release 10% of the pooled
-                    // connections each time, so in a heavy loaded
-                    // environment we don't get to release that many, but
-                    // as load goes down we do. These are not actually
-                    // pooled connections, but connections that happen to
-                    // get in and out of a transaction, not that many.
-            size = _pool.size();
-    		reduce = size - ( size / 10 ) - 1;
-    		if ( reduce >= 0 && size > reduce ) {
-    		    if ( getLogWriter() != null )
-    			getLogWriter().println( "DataSource " + toString() +
-    						": Reducing internal connection pool size from " +
-    						size + " to " + reduce );
-
-                iterator = _pool.iterator();
-
-                do {
-                    try {
-                    ( (ConnectionEntry ) iterator.next( ) )._connection.close();
-    			    } catch ( SQLException except ) { }
-                    iterator.remove();
-                } while ( --size > reduce  );
+        if (_pruneFactor > 0) {
+            synchronized ( _pool ) {
+                try {
+        		// Check to see if there are any pooled connections
+        		// we can release. We release some of the pooled
+                        // connections each time, so in a heavy loaded
+                        // environment we don't get to release that many, but
+                        // as load goes down we do. These are not actually
+                        // pooled connections, but connections that happen to
+                        // get in and out of a transaction, not that many.
+                size = _pool.size();
+        		reduce = (1 == _pruneFactor ? size : size - (int)( size * _pruneFactor )) - 1;
+        		if ( reduce >= 0 && size > reduce ) {
+        		    if ( getLogWriter() != null )
+        			getLogWriter().println( "DataSource " + toString() +
+        						": Reducing internal connection pool size from " +
+        						size + " to " + reduce );
+    
+                    iterator = _pool.iterator();
+    
+                    do {
+                        try {
+                        ( (ConnectionEntry ) iterator.next( ) )._connection.close();
+        			    } catch ( SQLException except ) { }
+                        iterator.remove();
+                    } while ( --size > reduce  );
+                }
+        	    } catch ( Exception except ) { }
             }
-    	    } catch ( Exception except ) { }
         }
 
         // Look for all connections inside a transaction that

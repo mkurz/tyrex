@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TestHarness.java,v 1.6 2000/09/08 23:03:11 mohammed Exp $
+ * $Id: TestHarness.java,v 1.7 2000/09/29 01:26:37 mohammed Exp $
  */
 
 
@@ -67,6 +67,7 @@ public class TestHarness
     {
         _categories.addElement( concurrency.Concurrency.class.getName() );
         _categories.addElement( naming.Naming.class.getName() );
+        _categories.addElement( jdbc.DataSource.class.getName() );
     }
 
 
