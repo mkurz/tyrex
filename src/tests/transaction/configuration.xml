@@ -129,6 +129,10 @@
   name - the pretty name of the data source                                           
   create_drop_tables - true if the tables are created and dropped as part of initialization. The default is true.
   
+  The tables are of the form:
+  create table <table_name> (id varchar(255) primary key, value varchar(255)). In this example
+  the table name would be test
+  
   The specified uri, user name and password are passed to tyrex.jdbc.xa.EnabledDataSource so that the 
   JDBC 1.1 driver can be treated as an XADataSource. Attributes cannot be used for a JDBC 1.1 driver.
 -->  
