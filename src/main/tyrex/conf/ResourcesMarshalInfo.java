@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: ResourcesMarshalInfo.java,v 1.1 2000/01/11 00:33:46 roro Exp $
+ * $Id: ResourcesMarshalInfo.java,v 1.2 2000/01/17 22:16:40 arkin Exp $
  */
 
 
@@ -60,7 +60,7 @@ import org.exolab.castor.xml.SimpleMarshalDescriptor;
  * Marshalling information for {@link Resources}.
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2000/01/11 00:33:46 $
+ * @version $Revision: 1.2 $ $Date: 2000/01/17 22:16:40 $
  */
 public class ResourcesMarshalInfo
     extends SimpleMarshalInfo
@@ -83,54 +83,40 @@ public class ResourcesMarshalInfo
 	// since the getter method is called listXXX, not getXXX.
 	for ( i = 0 ; i < desc.length ; ++i ) {
 	    if ( "resource".equals( desc[ i ].getXMLName() ) ) {
-		addElementDescriptor( new ResourceDescriptor( desc[ i ] ) );
+		SimpleMarshalDescriptor smd;
+
+		smd = new SimpleMarshalDescriptor( Resource.class, "resource", "resource" );
+		try {
+		    smd.setWriteMethod( Resources.class.getMethod( "addResource",
+								   new Class[] { Resource.class } ) );
+		    smd.setReadMethod( Resources.class.getMethod( "listResources",
+								  new Class[ 0 ] ) );
+		} catch ( Exception except ) {
+		    // This should never happen
+		    throw new RuntimeException( "Internal error: " + except.toString() );
+		}
+		addElementDescriptor( smd );
 	    }
 	    if ( "env-entry".equals( desc[ i ].getXMLName() ) ) {
-		addElementDescriptor( new EnvEntryDescriptor( desc[ i ] ) );
+		SimpleMarshalDescriptor smd;
+
+		smd = new SimpleMarshalDescriptor( EnvEntry.class, "envEntry", "env-entry" );
+		try {
+		    smd.setWriteMethod( Resources.class.getMethod( "addEnvEntry",
+								   new Class[] { EnvEntry.class }  ) );
+		    smd.setReadMethod( Resources.class.getMethod( "listEnvEntries",
+								  new Class[ 0 ] ) );
+		} catch ( Exception except ) {
+		    // This should never happen
+		    throw new RuntimeException( "Internal error: " + except.toString() );
+		}
+		addElementDescriptor( smd );
 	    }
 	}
 	desc = info.getAttributeDescriptors();
 	for ( i = 0 ; i < desc.length ; ++i ) {
 	    addAttributeDescriptor( desc[ i ] );
 	}
-    }
-
-
-    static class ResourceDescriptor
-	extends SimpleMarshalDescriptor
-    {
-	
-	public ResourceDescriptor( MarshalDescriptor desc )
-	{
-	    super( desc.getName(), desc.getXMLName() );
-	    setWriteMethod( desc.getWriteMethod() );
-	    try {
-		setReadMethod( Resources.class.getMethod( "listResources",
-							   new Class[ 0 ] ) );
-	    } catch ( Exception except ) {
-		// This should never happen
-	    }
-	}
-	
-    }
-
-
-    static class EnvEntryDescriptor
-	extends SimpleMarshalDescriptor
-    {
-	
-	public EnvEntryDescriptor( MarshalDescriptor desc )
-	{
-	    super( desc.getName(), desc.getXMLName() );
-	    setWriteMethod( desc.getWriteMethod() );
-	    try {
-		setReadMethod( Resources.class.getMethod( "listEnvEntries",
-							   new Class[ 0 ] ) );
-	    } catch ( Exception except ) {
-		// This should never happen
-	    }
-	}
-	
     }
 
 

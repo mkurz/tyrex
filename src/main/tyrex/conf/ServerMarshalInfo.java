@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: ServerMarshalInfo.java,v 1.1 2000/01/11 00:33:46 roro Exp $
+ * $Id: ServerMarshalInfo.java,v 1.2 2000/01/17 22:16:40 arkin Exp $
  */
 
 
@@ -54,13 +54,14 @@ import org.exolab.castor.xml.MarshalDescriptor;
 import org.exolab.castor.xml.MarshalHelper;
 import org.exolab.castor.xml.SimpleMarshalInfo;
 import org.exolab.castor.xml.SimpleMarshalDescriptor;
+import tyrex.util.PoolManager;
 
 
 /**
  * Marshalling information for {@link Server}.
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2000/01/11 00:33:46 $
+ * @version $Revision: 1.2 $ $Date: 2000/01/17 22:16:40 $
  */
 public class ServerMarshalInfo
     extends SimpleMarshalInfo
@@ -83,7 +84,21 @@ public class ServerMarshalInfo
 	// LimitsMarshalInfo and not PoolMarshalInfo.
 	for ( i = 0 ; i < desc.length ; ++i ) {
 	    if ( "limits".equals( desc[ i ].getXMLName() ) ) {
-		addElementDescriptor( new LimitsDescriptor( desc[ i ] ) );
+		SimpleMarshalDescriptor smd;
+
+		smd = new SimpleMarshalDescriptor( PoolManager.class,
+						    desc[ i ].getName(), desc[ i ].getXMLName() );
+		try {
+		    smd.setWriteMethod( Server.class.getMethod( "setLimits",
+							    new Class[] { PoolManager.class }  ) );
+		    smd.setReadMethod( Server.class.getMethod( "getLimits",
+							   new Class[ 0 ] ) );
+		} catch ( Exception except ) {
+		    // This should never happen
+		    throw new RuntimeException( "Internal error: " + except.toString() );
+		}
+		smd.setMarshalInfo( new LimitsMarshalInfo() );
+		addElementDescriptor( smd );
 	    } else {
 		addElementDescriptor( desc[ i ] );
 	    }
@@ -92,30 +107,6 @@ public class ServerMarshalInfo
 	for ( i = 0 ; i < desc.length ; ++i ) {
 	    addAttributeDescriptor( desc[ i ] );
 	}
-    }
-
-
-    static class LimitsDescriptor
-	extends SimpleMarshalDescriptor
-    {
-	
-	public LimitsDescriptor( MarshalDescriptor desc )
-	{
-	    super( desc.getName(), desc.getXMLName() );
-	    setWriteMethod( desc.getWriteMethod() );
-	    setReadMethod( desc.getReadMethod() );
-	}
-
-	public MarshalInfo getMarshalInfo()
-	{
-	    try {
-		return new LimitsMarshalInfo();
-	    } catch ( IOException except ) {
-		// This should never happen
-		return null;
-	    }
-	}
-	
     }
 
 

@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: AppPathMarshalInfo.java,v 1.1 2000/01/11 00:33:46 roro Exp $
+ * $Id: AppPathMarshalInfo.java,v 1.2 2000/01/17 22:16:40 arkin Exp $
  */
 
 
@@ -63,7 +63,7 @@ import org.exolab.castor.xml.SimpleMarshalDescriptor;
  * descriptor.
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2000/01/11 00:33:46 $
+ * @version $Revision: 1.2 $ $Date: 2000/01/17 22:16:40 $
  */
 public class AppPathMarshalInfo
     extends SimpleMarshalInfo
@@ -75,35 +75,19 @@ public class AppPathMarshalInfo
 	throws IOException
     {
 	super( AppPath.class );
-    }
+	SimpleMarshalDescriptor smd;
 
-
-    public MarshalDescriptor getContentDescriptor()
-    {
-	return new ContentDescriptor();
-    }
-
-
-
-    static class ContentDescriptor
-	extends SimpleMarshalDescriptor
-    {
-	
-
-	public ContentDescriptor()
-	{
- 	    super( "Content", "#PCDATA" );
-	    try {
-		setReadMethod( AppPath.class.getMethod( "getContent",
+	smd = new SimpleMarshalDescriptor( String.class, "Content", "#PCDATA" );
+	try {
+	    smd.setReadMethod( AppPath.class.getMethod( "getContent",
 							new Class[0] ) );
-		setWriteMethod( AppPath.class.getMethod( "setContent",
+	    smd.setWriteMethod( AppPath.class.getMethod( "setContent",
 							 new Class[] { String.class } ) );
-	    } catch ( Exception except ) {
-		// This should never happen
-	    }
+	} catch ( Exception except ) {
+	    // This should never happen
+	    throw new RuntimeException( "Internal error: " + except.toString() );
 	}
-	
-
+	setContentDescriptor( smd );
     }
 
 

@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: ResourceMarshalInfo.java,v 1.1 2000/01/11 00:33:46 roro Exp $
+ * $Id: ResourceMarshalInfo.java,v 1.2 2000/01/17 22:16:40 arkin Exp $
  */
 
 
@@ -60,7 +60,7 @@ import org.exolab.castor.xml.SimpleMarshalDescriptor;
  * Marshalling information for {@link Resource}.
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2000/01/11 00:33:46 $
+ * @version $Revision: 1.2 $ $Date: 2000/01/17 22:16:40 $
  */
 public class ResourceMarshalInfo
     extends SimpleMarshalInfo
@@ -82,7 +82,20 @@ public class ResourceMarshalInfo
 	for ( i = 0 ; i < desc.length ; ++i ) {
 	    // Need a special descriptor just for the param element.
 	    if ( "param".equals( desc[ i ].getXMLName() ) ) {
-		addElementDescriptor( new ParamDescriptor( desc[ i ] ) );
+		SimpleMarshalDescriptor smd;
+
+		smd = new SimpleMarshalDescriptor( Object.class, "param", "param" );
+		try {
+		    smd.setReadMethod( Resource.class.getMethod( "getParam", new Class[ 0 ] ) );
+		    smd.setWriteMethod( Resource.class.getMethod( "setParam",
+								  new Class[] { Object.class } ) );
+		    smd.setCreateMethod( Resource.class.getMethod( "createParam",
+								   new Class[ 0 ] ) );
+		} catch ( Exception except ) {
+		    // This should never happen
+		    throw new RuntimeException( "Internal error: " + except.toString() );
+		}
+		addElementDescriptor( smd );
 	    } else
 		addElementDescriptor( desc[ i ] );
 	}
@@ -90,36 +103,6 @@ public class ResourceMarshalInfo
 	for ( i = 0 ; i < desc.length ; ++i ) {
 	    addAttributeDescriptor( desc[ i ] );
 	}
-    }
-
-
-    static class ParamDescriptor
-	extends SimpleMarshalDescriptor
-    {
-	
-	// A param cannot be created based on the object type
-	// since the descriptor specifies Object. Instead, this
-	// descriptor adds the getCreatedMethod() mechanism.
-
-	public ParamDescriptor( MarshalDescriptor desc )
-	{
-	    super( desc.getName(), desc.getXMLName() );
-	    setReadMethod( desc.getReadMethod() );
-	    setWriteMethod( desc.getWriteMethod() );
-	}
-	
-	
-	public Method getCreateMethod()
-	{
-	    try {
-		return Resource.class.getMethod( "createParam",
-						 new Class[ 0 ] );
-	    } catch ( NoSuchMethodException except ) {
-		return null;
-	    }
-	}
-
-
     }
 
 

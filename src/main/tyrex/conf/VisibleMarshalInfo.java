@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: VisibleMarshalInfo.java,v 1.1 2000/01/11 00:33:46 roro Exp $
+ * $Id: VisibleMarshalInfo.java,v 1.2 2000/01/17 22:16:40 arkin Exp $
  */
 
 
@@ -60,7 +60,7 @@ import org.exolab.castor.xml.SimpleMarshalDescriptor;
  * Marshalling information for {@link Visible}.
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2000/01/11 00:33:46 $
+ * @version $Revision: 1.2 $ $Date: 2000/01/17 22:16:40 $
  */
 public class VisibleMarshalInfo
     extends SimpleMarshalInfo
@@ -73,38 +73,20 @@ public class VisibleMarshalInfo
     {
 	super( Visible.class );
 
-	MarshalInfo         info;
-	MarshalDescriptor[] desc;
-        int                 i;
-
-	info = MarshalHelper.generateMarshalInfo( Visible.class );
-	desc = info.getElementDescriptors();
 	// Requires special descriptor since listAppPaths is used
 	// instead of getAppPath.
-	for ( i = 0 ; i < desc.length ; ++i ) {
-	    if ( "app-path".equals( desc[ i ].getXMLName() ) ) {
-		addElementDescriptor( new AppPathDescriptor( desc[ i ] ) );
-	    }
-	}
-    }
+	SimpleMarshalDescriptor smd;
 
-
-    static class AppPathDescriptor
-	extends SimpleMarshalDescriptor
-    {
-	
-	public AppPathDescriptor( MarshalDescriptor desc )
-	{
-	    super( desc.getName(), desc.getXMLName() );
-	    setWriteMethod( desc.getWriteMethod() );
-	    try {
-		setReadMethod( Visible.class.getMethod( "listAppPaths",
-							   new Class[ 0 ] ) );
-	    } catch ( Exception except ) {
-		// This should never happen
-	    }
+	smd = new SimpleMarshalDescriptor( AppPath.class, "appPath", "app-path" );
+	try {
+	    smd.setWriteMethod( Visible.class.getMethod( "addAppPath",
+							 new Class[] { AppPath.class }  ) );
+	    smd.setReadMethod( Visible.class.getMethod( "listAppPaths", new Class[ 0 ] ) );
+	} catch ( Exception except ) {
+	    // This should never happen
+	    throw new RuntimeException( "Internal error: " + except.toString() );
 	}
-		
+	addElementDescriptor( smd );
     }
 
 
