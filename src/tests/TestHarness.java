@@ -40,67 +40,67 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TestHarness.java,v 1.10 2000/11/09 23:52:03 mohammed Exp $
+ * $Id: TestHarness.java,v 1.11 2001/02/23 17:17:39 omodica Exp $
  */
 
+package tests;
 
 import java.util.Vector;
 import java.util.Enumeration;
-import org.exolab.jtf.CWTestCategory;
-import org.exolab.jtf.CWTestCase;
-import org.exolab.jtf.CWBaseApplication;
-import org.exolab.exceptions.CWClassConstructorException;
 
+import junit.framework.*;
+
+import concurrency.Concurrency;
+import naming.Naming;
+import util.BackgroundThreadTest;
+import jdbc.XADataSourceTestSuite;
+import transaction.Transaction;
 
 /**
- * Test harness for Castor.
+ * Test harness.
  */
 public class TestHarness
-    extends CWBaseApplication
 {
-
-
-    static Vector _categories = new Vector();
-
-
-    static
-    {
-        _categories.addElement( concurrency.Concurrency.class.getName() );
-        _categories.addElement( naming.Naming.class.getName() );
-        _categories.addElement( jdbc.XADataSourceTestCategory.class.getName() );
-        _categories.addElement( util.BackgroundThreadTest.class.getName() );
-    }
-
-
-
     static public void main( String args[] )
     {
         try {
-            TestHarness harness;
-            harness = new TestHarness();
-            harness.run( args );
-        } catch ( Exception except ) {
-            except.printStackTrace();
+            // define all the test suites
+            TestSuite main = new TestSuite("Tyrex Test Harness");
+            TestSuite concurrency = new Concurrency( "Concurrency service tests" );
+            TestSuite naming = new Naming( "JNDI service provider" );
+            TestSuite jdbc = new XADataSourceTestSuite( "XADataSource test" );
+            TestSuite util = new BackgroundThreadTest( "Background thread test" );
+            TestSuite transaction = new Transaction( "Transaction tests" );
+           
+            // set up the concurrency test suite
+            for( java.util.Enumeration e = concurrency.tests(); e.hasMoreElements(); )
+             main.addTest( (Test)e.nextElement());
+            
+            // set up the naming test suite
+            for( java.util.Enumeration e = naming.tests(); e.hasMoreElements(); )
+             main.addTest( (Test)e.nextElement());
+            
+            // set up the jdbc test suite
+            for( java.util.Enumeration e = jdbc.tests(); e.hasMoreElements(); )
+            main.addTest( (Test)e.nextElement());
+             
+            // set up the util test suite
+            for( java.util.Enumeration e = util.tests(); e.hasMoreElements(); )
+            main.addTest( (Test)e.nextElement());
+            
+            // set up the transaction test suite
+            for( java.util.Enumeration e = transaction.tests(); e.hasMoreElements(); )
+            main.addTest( (Test)e.nextElement());
+            
+            // Set up the verbose mode
+            for(int i=0;i<args.length;i++) if(args[i].equals("-verbose")) VerboseStream.verbose=true;
+          
+            junit.textui.TestRunner.run(main);
+                                                   
+
+        } catch (Exception exception) {
+            exception.printStackTrace();
         }
-    }
-
-
-    public TestHarness()
-        throws CWClassConstructorException
-    {
-        super( "Tyrex" );
-    }
-
-
-    protected Enumeration getCategoryClassNames()
-    {
-        return _categories.elements();
-    }
-
-
-    protected String getApplicationName()
-    {
-        return getClass().getName();
     }
 
 

@@ -42,6 +42,7 @@
  *
  */
 
+package tests;
 
 //import java.security.AccessControlContext;
 //import java.security.AccessController;                                
@@ -69,9 +70,10 @@ public final class RunTests
 {
     public static void main (final String args[]) 
     {
-        TestHarness.main((null == args) || (0 == args.length)
-                            ? new String[]{"-execute"} 
-                            : args);
+        // Set up the verbose mode
+            for(int i=0;i<args.length;i++) if(args[i].equals("-verbose")) VerboseStream.verbose=true;
+     
+        TestHarness.main(args);
         /*
         // Code for running tests without changing policy file - only works
         // for jdk 1.3

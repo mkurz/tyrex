@@ -40,51 +40,59 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: BackgroundThreadTest.java,v 1.1 2000/11/09 23:40:30 mohammed Exp $
+ * $Id: BackgroundThreadTest.java,v 1.2 2001/02/23 17:17:43 omodica Exp $
  */
-
 
 package util;
 
+import tests.*;
+
 import java.util.Enumeration;
 import java.util.Vector;
-import org.exolab.jtf.CWBaseApplication;
-import org.exolab.jtf.CWTestCategory;
-import org.exolab.jtf.CWTestCase;
-import org.exolab.jtf.CWVerboseStream;
-import org.exolab.exceptions.CWClassConstructorException;
+
+import junit.framework.*;
+
 import tyrex.util.BackgroundThread;
 
-
+/**
+ * Background thread test
+ */ 
 public class BackgroundThreadTest
-    extends CWTestCategory
+    extends TestSuite
 {
-    public BackgroundThreadTest()
-        throws CWClassConstructorException
+    public BackgroundThreadTest( String name )
     {
-        super("background thread test", "BackgroundThreadTest Test");
+        super( name );
         
-        CWTestCase tc;
+        TestCase tc;
         
-        tc = new TestCase();
-        add( tc.name(), tc, true );
+        tc = new ATestCase();
+        addTest( tc );
     }
 
-    private class TestCase
-        extends CWTestCase
+    private class ATestCase
+        extends TestCase
     {
         /**
          * Create TestCase.
          *
          */
-        private TestCase()
-            throws CWClassConstructorException
+        private ATestCase()
         {
-            super("BackgroundThreadTestCase", "BackgroundThreadTestCase");
+
+            super( "[TC01] BackgroundThread Test" );
         }
     
-        public boolean run(CWVerboseStream stream)
+         
+        /**
+         * Main test method - TC01
+         *  - background thread test
+         *
+         */
+        public void runTest()
         {
+           VerboseStream stream = new VerboseStream();
+         
             BackgroundThreadTestRunnable runnable = new BackgroundThreadTestRunnable();
             BackgroundThread thread = new BackgroundThread(runnable, 100);
             runnable.setThread(thread);
@@ -98,7 +106,7 @@ public class BackgroundThreadTest
             }
 
             if (!thread.isAlive()) {
-                return false;    
+                fail( "Error: Thread is not alive." );    
             }
 
             runnable = null;
@@ -114,10 +122,8 @@ public class BackgroundThreadTest
             if (thread.isAlive()) {
                 thread.stop();
 
-                return false;
+                fail( "Error: Thread was still alive." );
             }
-
-            return true;
         }
         
     }
@@ -146,43 +152,6 @@ public class BackgroundThreadTest
         public void run()
         {
             //System.out.println("running2");
-        }
-    }
-
-    public static void main (String args[]) {
-
-        class Test extends CWBaseApplication
-        {
-            private final Vector categories;
-
-            public Test(String s)
-                throws CWClassConstructorException
-            {
-                super(s);
-
-                categories = new Vector();
-                categories.addElement("util.BackgroundThreadTest");
-            }
-        
-            protected String getApplicationName()
-            {
-                return "BackgroundThreadTest";
-            }
-        
-            protected Enumeration getCategoryClassNames()
-            {
-                return categories.elements();
-            }
-        }
-
-        try
-        {
-            Test test = new Test("BackgroundThreadTest");
-            test.run(args);
-        }
-        catch(Exception exception)
-        {
-            exception.printStackTrace();
         }
     }
     

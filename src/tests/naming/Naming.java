@@ -40,47 +40,44 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Naming.java,v 1.4 2000/09/08 23:03:11 mohammed Exp $
+ * $Id: Naming.java,v 1.5 2001/02/23 17:17:41 omodica Exp $
  */
 
 
 package naming;
 
+import tests.*;
 
 import java.io.*;
 import java.util.Hashtable;
 import java.util.Enumeration;
 import java.util.Vector;
-import org.exolab.jtf.CWBaseApplication;
-import org.exolab.jtf.CWTestCategory;
-import org.exolab.jtf.CWTestCase;
-import org.exolab.jtf.CWVerboseStream;
-import org.exolab.exceptions.CWClassConstructorException;
+
+import junit.framework.*;
+
 import javax.naming.*;
 import javax.naming.spi.ObjectFactory;
 import tyrex.naming.EnvContext;
 import tyrex.naming.NamingPermission;
 
 
-
-public class Naming
-    extends CWTestCategory
+/**
+ * Naming test suite
+ */
+public class Naming extends TestSuite
 {
-
-
-    public Naming()
-        throws CWClassConstructorException
+    public Naming( String name )
     {
-        super( "naming", "JNDI service provider");
+        super( name );
         
-        CWTestCase tc;
+        TestCase tc;
         
         tc = new MemoryContextTest();
-        add( tc.name(), tc, true );
+        addTest( tc );
         tc = new EnvContextTest();
-        add( tc.name(), tc, true );
+        addTest( tc );
         tc = new ReferenceableTest();
-        add( tc.name(), tc, true );
+        addTest( tc );
     }
 
 
@@ -113,26 +110,20 @@ public class Naming
      * Tests the in-memory service provider (MemoryContext).
      */
     public static class MemoryContextTest
-        extends CWTestCase
+     extends TestCase
     {
 
         public MemoryContextTest()
-            throws CWClassConstructorException
         {
-            super( "TC01", "In-Memory Service Provider" );
+            super( "[TC01] In-Memory Service Provider" );
         }
 
-        public void preExecute()
-        {
-            super.preExecute();
-        }
-        
-        public void postExecute()
-        {
-            super.postExecute();
-        }
-        
-        public boolean run( CWVerboseStream stream )
+        /**
+         * Main test method - TC01
+         *  - in-memory service provider test
+         *
+         */
+        public void runTest()
         {
             String               value = "Just A Test";
             String               name = "test";
@@ -140,6 +131,8 @@ public class Naming
             InitialContext       initCtx;
             Context              ctx1;
             Context              ctx2;
+            
+            VerboseStream stream = new VerboseStream();
 
             try {
                 // Construct the same context from two perspsective
@@ -151,15 +144,13 @@ public class Naming
                 ctx2 = (Context) initCtx.lookup( name );
                 ctx1.bind( name, value );
                 if ( ctx2.lookup( name ) != value ) {
-                    stream.writeVerbose( "Error: Same testValue not bound in both contexts" );
-                    return false;
-                }
+                    fail( "Error: Same testValue not bound in both contexts" );
+                  }
                 ctx2 = ctx2.createSubcontext( sub );
                 ctx1 = (Context) ctx1.lookup( sub );
                 ctx1.bind( sub + name, value );
                 if ( ctx2.lookup( sub + name ) != value ) {
-                    stream.writeVerbose( "Error: Same testValue not bound in both contexts" );
-                    return false;
+                    fail( "Error: Same testValue not bound in both contexts" );
                 }
 
                 // Test that shared and non-shared spaces not the same.
@@ -168,11 +159,9 @@ public class Naming
                 try {
                     ctx2 = (Context) ctx2.lookup( name );
                     if ( ctx2.lookup( name ) == value ) {
-                        stream.writeVerbose( "Error: Same testValue bound to not-shared contexts" );
-                        return false;
+                        fail( "Error: Same testValue bound to not-shared contexts" );
                     }
-                    stream.writeVerbose( "Error: NameNotFoundException not reported" );
-                    return false;
+                    fail( "Error: NameNotFoundException not reported" );
                 } catch ( NameNotFoundException except ) {
                     ctx2.bind( name, value );
                 }
@@ -182,22 +171,15 @@ public class Naming
                 try {
                     ctx2 = (Context) ctx2.lookup( name );
                     if ( ctx2.lookup( name ) == value ) {
-                        stream.writeVerbose( "Error: Same testValue bound to not-shared contexts" );
-                        return false;
+                        fail( "Error: Same testValue bound to not-shared contexts" );
                     }
-                    stream.writeVerbose( "Error: NameNotFoundException not reported" );
-                    return false;
+                    fail( "Error: NameNotFoundException not reported" );
                 } catch ( NameNotFoundException except ) {
                     ctx2.bind( name, value );
                 }
 
-                return true;
-            } catch ( IOException except ) {
-                System.out.println( except );
-                return false;
             } catch ( NamingException except ) {
                 System.out.println( except );
-                return false;
             }
         }
 
@@ -209,33 +191,30 @@ public class Naming
      * Tests the environment naming context (EnvContext).
      */
     public static class EnvContextTest
-        extends CWTestCase
+        extends TestCase
     {
 
         public EnvContextTest()
-            throws CWClassConstructorException
         {
-            super( "TC02", "Environment Naming Context" );
-        }
-
-        public void preExecute()
-        {
-            super.preExecute();
+            super( "[TC02] Environment Naming Context" );
         }
         
-        public void postExecute()
-        {
-            super.postExecute();
-        }
         
-        public boolean run( CWVerboseStream stream )
+        /**
+         * Main test method - TC02
+         *  - environment naming context test
+         *
+         */
+        public void runTest()
         {
             String               value = "testValue";
             String               path = "comp/env";
             String               name = "test";
             InitialContext       initCtx;
             Context              ctx;
-            Context              enc;
+            Context              enc = null;
+            
+            VerboseStream stream = new VerboseStream();
 
             try {
                 stream.writeVerbose( "Constructing a context with comp/env/test as a test value" );
@@ -249,24 +228,20 @@ public class Naming
                 stream.writeVerbose( "Test ability to read from the ENC in variety of ways" );
                 try {
                     if ( initCtx.lookup( "java:" + path + "/" + name ) != value ) {
-                        stream.writeVerbose( "Error: Failed to lookup name" );
-                        return false;
+                        fail( "Error: Failed to lookup name" );
                     }
                 } catch ( NameNotFoundException except ) {
-                    stream.writeVerbose( "Error: Failed to lookup name" );
-                    return false;
+                    fail( "Error: Failed to lookup name" );
                 }
                 try {
                     enc = (Context) initCtx.lookup( "java:" );
                     enc = (Context) enc.lookup( "comp" );
                     enc = (Context) enc.lookup( "env" );
                     if ( enc.lookup( name ) != value ) {
-                        stream.writeVerbose( "Error: Failed to lookup name" );
-                        return false;
+                        fail( "Error: Failed to lookup name" );
                     }
                 } catch ( NameNotFoundException except ) {
-                    stream.writeVerbose( "Error: Failed to lookup name" );
-                    return false;
+                    fail( "Error: Failed to lookup name" );
                 }
 
 
@@ -274,47 +249,40 @@ public class Naming
                 ctx.unbind( path + "/" + name );
                 try {
                     enc.lookup( name );
-                    stream.writeVerbose( "Error: NameNotFoundException not reported" );
-                    return false;
-                } catch ( NameNotFoundException except ) { }
+                    fail( "Error: NameNotFoundException not reported" );
+                  } catch ( NameNotFoundException except ) { }
 
                 stream.writeVerbose( "Test that the JNDI ENC is read only" );
                 try {
                     enc.bind( name, value );
-                    stream.writeVerbose( "Error: JNDI ENC not read-only" );
-                    return false;
-                } catch ( OperationNotSupportedException except ) { }
+                    fail( "Error: JNDI ENC not read-only" );
+                  } catch ( OperationNotSupportedException except ) { }
 
                 ctx.bind( path + "/" + name, value );
                 try {
                     enc.unbind( name );
-                    stream.writeVerbose( "Error: JNDI ENC not read-only" );
-                    return false;
-                } catch ( OperationNotSupportedException except ) { }
+                    fail( "Error: JNDI ENC not read-only" );
+                 } catch ( OperationNotSupportedException except ) { }
 
 
                 stream.writeVerbose( "Test the stack nature of the JNDI ENC" );
                 EnvContext.setEnvContext( (Context) Naming.getInitialContext( null ).lookup( "" ) );
                 try {
                     initCtx.lookup( "java:" + path + "/" + name );
-                    stream.writeVerbose( "Error: NameNotFoundException not reported" );
-                    return false;
+                    fail( "Error: NameNotFoundException not reported" );
                 } catch ( NotContextException except ) { }
                 EnvContext.unsetEnvContext();
                 try {
                     if ( initCtx.lookup( "java:" + path + "/" + name ) != value ) {
-                        stream.writeVerbose( "Error: Failed to lookup name" );
-                        return false;
+                        fail( "Error: Failed to lookup name" );
                     }
                 } catch ( NameNotFoundException except ) {
-                    stream.writeVerbose( "Error: NameNotFoundException reported" );
-                    return false;
+                    fail( "Error: NameNotFoundException reported" );
                 }
                 EnvContext.unsetEnvContext();
                 try {
                     initCtx.lookup( "java:" + path + "/" + name );
-                    stream.writeVerbose( "Error: NamingException not reported" );
-                    return false;
+                    fail( "Error: NamingException not reported" );
                 } catch ( NamingException except ) { }
 
 
@@ -333,37 +301,27 @@ public class Naming
                     ois = new ObjectInputStream( new ByteArrayInputStream( aos.toByteArray() ) );
                     enc = (Context) ois.readObject();
                 } catch ( Exception except ) {
-                    stream.writeVerbose( "Error: Failed to (de)serialize: " + except );
+                    fail( "Error: Failed to (de)serialize: " + except );
                     System.out.println( except );
-                    return false;
                 }
                 EnvContext.unsetEnvContext();
                 try {
                     enc.lookup( name );
                     stream.writeVerbose( "Error: Managed to lookup name but java:comp not bound to thread" );
-                    return false;
                 } catch ( NamingException except ) { }{}
                 ctx = (Context) initCtx.lookup( "" );
                 EnvContext.setEnvContext( ctx );
                 try {
                     if ( enc.lookup( name ) != value ) {
-                        stream.writeVerbose( "Error: Failed to lookup name" );
-                        return false;
+                        fail( "Error: Failed to lookup name" );
                     }
                 } catch ( NameNotFoundException except ) {
-                    stream.writeVerbose( "Error: NameNotFoundException reported" );
-                    return false;
+                    fail( "Error: NameNotFoundException reported" );
                 }
-                
-                return true;
-            } catch ( IOException except ) {
-                System.out.println( except );
-                return false;
-            } catch ( NamingException except ) {
+             } catch ( NamingException except ) {
                 System.out.println( except );
                 except.printStackTrace();
-                return false;
-            }
+             }
         }
 
 
@@ -374,31 +332,27 @@ public class Naming
      * Test the handling of referencable objects.
      */
     public static class ReferenceableTest
-        extends CWTestCase
+        extends TestCase
     {
 
         public ReferenceableTest()
-            throws CWClassConstructorException
         {
-            super( "TC03", "Referenceable Object Handling" );
-        }
-
-        public void preExecute()
-        {
-            super.preExecute();
+            super( "[TC03] Referenceable Object Handling" );
         }
         
-        public void postExecute()
-        {
-            super.postExecute();
-        }
-        
-        public boolean run( CWVerboseStream stream )
+        /**
+         * Main test method - TC03
+         *  - handling of referencable objects test
+         *
+         */
+        public void runTest()
         {
             Context   ctx;
             String    name = "test";
             String    value = "Just A Test";
             Object    object;
+            
+            VerboseStream stream = new VerboseStream();
 
             try {
                 object = new TestObject( value );
@@ -408,12 +362,10 @@ public class Naming
                 ctx = (Context) Naming.getInitialContext( null ).lookup( "" );
                 ctx.bind( name, object );
                 if ( ctx.lookup( name ) == object ) {
-                    stream.writeVerbose( "Error: Same object instance returned in both cases" );
-                    return false;
+                    fail( "Error: Same object instance returned in both cases" );
                 }
                 if ( ! ctx.lookup( name ).equals( object ) ) {
-                    stream.writeVerbose( "Error: The two objects are not identical" );
-                    return false;
+                    fail( "Error: The two objects are not identical" );
                 }
                 stream.writeVerbose( "Bound one object, reconstructed another, both pass equality test" );
 
@@ -421,24 +373,17 @@ public class Naming
                 EnvContext.setEnvContext( ctx );
                 ctx = getEnvInitialContext();
                 if ( ctx.lookup( "java:" + name ) == object ) {
-                    stream.writeVerbose( "Error: Same object instance returned in both cases" );
-                    return false;
+                    fail( "Error: Same object instance returned in both cases" );
                 }
                 if ( ! ctx.lookup( "java:" + name ).equals( object ) ) {
-                    stream.writeVerbose( "Error: The two objects are not identical" );
-                    return false;
+                    fail( "Error: The two objects are not identical" );
                 }
                 EnvContext.unsetEnvContext();
                 stream.writeVerbose( "Bound one object, reconstructed another, both pass equality test" );
 
-                return true;
-            } catch ( IOException except ) {
-                System.out.println( except );
-                return false;
             } catch ( NamingException except ) {
                 System.out.println( except );
                 except.printStackTrace();
-                return false;
             }
         }
 
@@ -507,44 +452,6 @@ public class Naming
 
     }
 
-    /*
-    public static void main (String args[]) {
-
-        class NamingTest extends CWBaseApplication
-        {
-            private final Vector categories;
-
-            public NamingTest(String s)
-                throws CWClassConstructorException
-            {
-                super(s);
-
-                categories = new Vector();
-                categories.addElement("naming.Naming");
-            }
-        
-            protected String getApplicationName()
-            {
-                return "NamingTest";
-            }
-        
-            protected Enumeration getCategoryClassNames()
-            {
-                return categories.elements();
-            }
-        }
-
-        try
-        {
-            NamingTest test = new NamingTest("naming test");
-            test.run(args);
-        }
-        catch(Exception exception)
-        {
-            exception.printStackTrace();
-        }
-    }
-    */
 }
 
 

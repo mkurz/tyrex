@@ -2,7 +2,7 @@
  * This class was automatically generated with 
  * <a href="http://castor.exolab.org">Castor 0.8.10</a>, using an
  * XML Schema.
- * $Id: Type.java,v 1.1 2001/02/16 23:47:56 mohammed Exp $
+ * $Id: Type.java,v 1.2 2001/02/23 17:17:43 omodica Exp $
  */
 
 package transaction.configuration.types;
@@ -17,7 +17,7 @@ import org.exolab.castor.xml.*;
 
 /**
  * 
- * @version $Revision: 1.1 $ $Date: 2001/02/16 23:47:56 $
+ * @version $Revision: 1.2 $ $Date: 2001/02/23 17:17:43 $
 **/
 public class Type implements java.io.Serializable {
 
@@ -109,7 +109,7 @@ public class Type implements java.io.Serializable {
      * Returns a new Type based on the given String value.
      * @param string
     **/
-    public static transaction.configuration.types.Type valueOf(java.lang.String string)
+    public static Type valueOf(java.lang.String string)
     {
         Object obj = null;
         if (string != null) obj = _memberTable.get(string);

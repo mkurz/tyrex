@@ -2,7 +2,7 @@
  * This class was automatically generated with 
  * <a href="http://castor.exolab.org">Castor 0.8.10</a>, using an
  * XML Schema.
- * $Id: Rollback.java,v 1.1 2001/02/16 23:47:55 mohammed Exp $
+ * $Id: Rollback.java,v 1.2 2001/02/23 17:17:43 omodica Exp $
  */
 
 package transaction.configuration;
@@ -21,7 +21,7 @@ import org.xml.sax.DocumentHandler;
 
 /**
  * 
- * @version $Revision: 1.1 $ $Date: 2001/02/16 23:47:55 $
+ * @version $Revision: 1.2 $ $Date: 2001/02/23 17:17:43 $
 **/
 public class Rollback implements java.io.Serializable {
 
@@ -170,7 +170,8 @@ public class Rollback implements java.io.Serializable {
     public void validate()
         throws org.exolab.castor.xml.ValidationException
     {
-        org.exolab.castor.xml.Validator.validate(this, null);
+        org.exolab.castor.xml.Validator v = new org.exolab.castor.xml.Validator();
+        v.validate(this, null);
     } //-- void validate() 
 
 }

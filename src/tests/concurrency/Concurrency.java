@@ -40,20 +40,20 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Concurrency.java,v 1.3 2000/09/08 23:03:11 mohammed Exp $
+ * $Id: Concurrency.java,v 1.4 2001/02/23 17:17:40 omodica Exp $
  */
 
 
 package concurrency;
 
+import tests.*;
 
 import java.io.IOException;
 import java.util.Vector;
 import java.util.Enumeration;
-import org.exolab.jtf.CWTestCategory;
-import org.exolab.jtf.CWTestCase;
-import org.exolab.jtf.CWVerboseStream;
-import org.exolab.exceptions.CWClassConstructorException;
+
+import junit.framework.*;
+
 import tyrex.concurrency.LockSet;
 import tyrex.concurrency.LockSetFactory;
 import tyrex.concurrency.LockMode;
@@ -62,50 +62,47 @@ import tyrex.concurrency.engine.TyrexLockSetFactory;
 
 
 
-public class Concurrency
-    extends CWTestCategory
+public class Concurrency extends TestSuite
 {
 
 
-    public Concurrency()
-        throws CWClassConstructorException
+    public Concurrency( String name )
     {
-        super( "conc", "Concurrency service tests");
+        super( name);
         
-        CWTestCase tc;
+        TestCase tc;
         
         tc = new LockSetTest();
-        add( tc.name(), tc, true );
+        addTest( tc );
         tc = new DeadlockTest();
-        add( tc.name(), tc, true );
+        addTest( tc );
     }
 
-
+    /**
+     * LockSet test
+     * 
+     */
     public static class LockSetTest
-        extends CWTestCase
+        extends TestCase
     {
 
         public LockSetTest()
-            throws CWClassConstructorException
         {
-            super( "TC01", "LockSet Test" );
+            super( "[TC01] LockSet Test" );
         }
 
-        public void preExecute()
-        {
-            super.preExecute();
-        }
-        
-        public void postExecute()
-        {
-            super.postExecute();
-        }
-        
-        public boolean run( CWVerboseStream stream )
+        /**
+         * Main test method - TC01
+         *  - lockset test
+         *
+         */
+        public void runTest()
         {
             LockSetFactory factory;
             LockSet        lockSet;
             AcquireThread  acquire;
+            
+            VerboseStream stream = new VerboseStream();
 
             try {
                 factory = new TyrexLockSetFactory( null );
@@ -113,18 +110,18 @@ public class Concurrency
 
                 // Test acquiring read lock and two write locks
                 if ( ! lockSet.tryLock( LockMode.Read ) ) {
-                    stream.writeVerbose( "Error: Failed to acquire read lock" );
-                    return false;
+                    fail( "Error: Failed to acquire read lock" );
+                   
                 }
                 stream.writeVerbose( "Acquired read lock" );
                 if ( ! lockSet.tryLock( LockMode.Write ) ) {
-                    stream.writeVerbose( "Error: Failed to acquire write lock" );
-                    return false;
+                    fail( "Error: Failed to acquire write lock" );
+                    
                 }
                 stream.writeVerbose( "Acquired 1st write lock, same thread" );
                 if ( ! lockSet.tryLock( LockMode.Write ) ) {
-                    stream.writeVerbose( "Error: Failed to acquire write lock" );
-                    return false;
+                    fail( "Error: Failed to acquire write lock" );
+                   
                 }
                 stream.writeVerbose( "Acquired 1st write lock, same thread" );
 
@@ -134,8 +131,8 @@ public class Concurrency
                 acquire.start();
                 acquire.join( 100 );
                 if ( acquire.result() ) {
-                    stream.writeVerbose( "Error: Other thread managed to acquire write lock" );
-                    return false;
+                    fail( "Error: Other thread managed to acquire write lock" );
+            
                 } else
                     stream.writeVerbose( "OK: Other thread failed to acquire write lock" );
 
@@ -143,27 +140,27 @@ public class Concurrency
                 try {
                     lockSet.unlock( LockMode.Write );
                 } catch ( LockNotHeldException except ) {
-                    stream.writeVerbose( "Error: Write lock not held" );
-                    return false;
+                    fail( "Error: Write lock not held" );
+         
                 }
                 stream.writeVerbose( "Released 2nd write lock" );
                 acquire.join( 100 );
                 if ( acquire.result() ) {
-                    stream.writeVerbose( "Error: Other thread managed to acquire write lock" );
-                    return false;
+                    fail( "Error: Other thread managed to acquire write lock" );
+            
                 } else
                     stream.writeVerbose( "OK: Other thread couldn't acquire lock" );
                 try {
                     lockSet.unlock( LockMode.Write );
                 } catch ( LockNotHeldException except ) {
-                    stream.writeVerbose( "Error: Write lock not held" );
-                    return false;
+                    fail( "Error: Write lock not held" );
+               
                 }
                 stream.writeVerbose( "Released 1st write lock" );
                 acquire.join( 100 );
                 if ( acquire.result() ) {
-                    stream.writeVerbose( "Error: Second thread managed to acquire write lock" );
-                    return false;
+                    fail( "Error: Second thread managed to acquire write lock" );
+          
                 } else
                     stream.writeVerbose( "OK: Other thread couldn't acquire lock" );
 
@@ -171,31 +168,28 @@ public class Concurrency
                 try {
                     lockSet.unlock( LockMode.Read );
                 } catch ( LockNotHeldException except ) {
-                    stream.writeVerbose( "Error: Read lock not held" );
-                    return false;
+                    fail( "Error: Read lock not held" );
+          
                 }
                 stream.writeVerbose( "Released read lock" );
                 acquire.join( 100 );
                 if ( ! acquire.result() ) {
-                    stream.writeVerbose( "Error: Second thread could not manage to acquire write lock" );
-                    return false;
+                    fail( "Error: Second thread could not manage to acquire write lock" );
+         
                 }
                 stream.writeVerbose( "Other thread acquired write lock" );
 
                 // Make sure this thread cannot acquire a read lock
                 if ( lockSet.tryLock( LockMode.Read ) ) {
-                    stream.writeVerbose( "Error: This thread managed to acquire write lock" );
-                    return false;
+                    fail( "Error: This thread managed to acquire write lock" );
+       
                 } else
                     stream.writeVerbose( "OK: This thread failed to acquire write lock" );
 
-                return true;
-            } catch ( IOException except ) {
-                System.out.println( except );
-                return false;
+        
             } catch ( InterruptedException except ) {
                 System.out.println( except );
-                return false;
+ 
             }
         }
 
@@ -232,35 +226,34 @@ public class Concurrency
         }
 
     }
-
-
+ 
+    /**
+     * Deadlock detection test
+     */
     public static class DeadlockTest
-        extends CWTestCase
+        extends TestCase
     {
 
         public DeadlockTest()
-            throws CWClassConstructorException
         {
-            super( "TC02", "Deadlock Detection Test" );
-        }
-
-        public void preExecute()
-        {
-            super.preExecute();
+            super( "[TC02] Deadlock Detection Test" );
         }
         
-        public void postExecute()
-        {
-            super.postExecute();
-        }
         
-        public boolean run( CWVerboseStream stream )
+        /**
+         * Main test method - TC02
+         *  - deadlock detection test
+         *
+         */
+        public void runTest()
         {
             LockSetFactory factory;
             LockSet        lockSet1;
             LockSet        lockSet2;
             LockSet        parent;
             DeadlockThread deadlock;
+            
+            VerboseStream stream = new VerboseStream();
 
             try {
                 factory = new TyrexLockSetFactory( null );
@@ -280,31 +273,24 @@ public class Concurrency
                 if ( lockSet1.tryLock( LockMode.Upgrade ) )
                     stream.writeVerbose( "Main: Acquired upgrade lock (1)" );
                 else {
-                    stream.writeVerbose( "Error: Main: Could not acquired upgrade lock (1)" );
+                    fail( "Error: Main: Could not acquired upgrade lock (1)" );
                     parent.getCoordinator( null ).dropLocks();
                     deadlock.join();
-                    return false;
                 }
                 Thread.currentThread().sleep( 500 );
 
                 if ( lockSet2.tryLock( LockMode.Upgrade ) ) {
-                    stream.writeVerbose( "Error: Maing: Acquired upgrade lock (2)" );
+                    fail( "Error: Maing: Acquired upgrade lock (2)" );
                     parent.getCoordinator( null ).dropLocks();
                     deadlock.join();
-                    return false;
                 } else {
                     stream.writeVerbose( "OK: Main: Could not acquired upgrade lock (2) -- deadlock detected" );
                     parent.getCoordinator( null ).dropLocks();
                     deadlock.join();
-                    return true;
                 }
 
-            } catch ( IOException except ) {
-                System.out.println( except );
-                return false;
             } catch ( InterruptedException except ) {
                 System.out.println( except );
-                return false;
             }
         }
 
@@ -322,11 +308,11 @@ public class Concurrency
 
         LockSet         lockSet2;
 
-        CWVerboseStream stream;
+        VerboseStream stream;
         
         boolean         result;
         
-        DeadlockThread( LockSet parent, LockSet lockSet1, LockSet lockSet2, CWVerboseStream stream )
+        DeadlockThread( LockSet parent, LockSet lockSet1, LockSet lockSet2, VerboseStream stream )
         {
             this.parent = parent;
             this.lockSet1 = lockSet1;
@@ -386,9 +372,7 @@ public class Concurrency
                 stream.writeVerbose( "Second: Upgraded to write lock (1)" );
 
                 result = true;
-            } catch ( IOException except ) {
-                System.out.println( except );
-            } catch ( InterruptedException except ) {
+            }  catch ( InterruptedException except ) {
                 System.out.println( except );
             }
         }

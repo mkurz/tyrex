@@ -40,11 +40,13 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Transaction.java,v 1.4 2001/02/17 00:28:43 mohammed Exp $
+ * $Id: Transaction.java,v 1.5 2001/02/23 17:17:42 omodica Exp $
  */
 
 
 package transaction;
+
+import transaction.configuration.*;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -69,11 +71,9 @@ import javax.transaction.TransactionManager;
 import javax.transaction.xa.XAResource;
 import org.exolab.castor.xml.MarshalException;
 import org.exolab.castor.xml.ValidationException;
-import org.exolab.exceptions.CWClassConstructorException;
-//import org.exolab.jtf.CWBaseApplication;
-import org.exolab.jtf.CWTestCategory;
-import org.exolab.jtf.CWTestCase;
-import org.exolab.jtf.CWVerboseStream;
+
+import junit.framework.*;
+
 import transaction.configuration.Attribute;
 import transaction.configuration.Configuration;
 import transaction.configuration.Datasource;
@@ -182,7 +182,7 @@ import tyrex.tm.TyrexTransaction;
  * @author <a href="mohammed@intalio.com">Riad Mohammed</a>
  */
 public class Transaction
-    extends CWTestCategory
+  extends TestSuite
 {
     /**
      * The property defining the configuration file.
@@ -190,7 +190,7 @@ public class Transaction
      * The configuration file can be specified in as a java property 
      * java -tyrex.test.transaction.configuration=conf.xml
      */
-    public static final String CONFIGURATION_FILE_PROPERTY = "tyrex.test.transaction.configuration";
+    public static final String CONFIGURATION_FILE_PROPERTY = "transaction.configuration";
 
     /**
      * The name of the configuration file
@@ -210,43 +210,112 @@ public class Transaction
     /**
      * The database entry groups
      */
-    private final ArrayList _groups;
+    private ArrayList _groups;
 
-    public Transaction()
-        throws CWClassConstructorException
+    public Transaction( String name )
     {
-        super( "transaction", "Transaction Test");
-        
-        Constructor[] constructors;
-        String name;
-        int j;
-        DataSourceGroupEntry group;
-        Object[] arguments;
-        CWTestCase tc;
-        
-        arguments = new Object[1];
-        
-        try {
-            _groups = getDataSourceGroups();
-
-            constructors = TransactionTestCases.getTestClassConstructors();
-
-            for (int i = 0; i < _groups.size(); i++) {
-                group = (DataSourceGroupEntry)_groups.get(i);    
+        super();
                 
-                for (j = 0; j < constructors.length; ++j) {
-                    arguments[0] = group;
-                    tc = (CWTestCase)constructors[j].newInstance(arguments);
-                    //System.out.println("adding " + tc.name() + " " + tc);
-                    add( tc.name(), tc, true );  
-                }
-            }
+        try {
+         _groups = getDataSourceGroups();
+         
+         TransactionTestSuite trans = new TransactionTestSuite("Transaction Test Suite", _groups, new tests.VerboseStream()); 
+         
+         // add the initializer test
+         addTest( new TestInitializer(this) );
+         
+         // set up the transaction test suite
+         
+         for( java.util.Enumeration e = trans.tests(); e.hasMoreElements(); )
+           addTest( (Test)e.nextElement());
+ 
+         
+         // add the cleaner test
+         addTest( new TestCleaner(this) );
+        
         }
         catch(Exception e) {
             e.printStackTrace();
-            throw new CWClassConstructorException(e.toString());
-        }
+
+        }  
     }
+    
+    /**
+     * The test is used as an initializer 
+     */
+    static class TestInitializer
+        extends TestCase {
+        
+        /**
+         * The transaction test
+         */
+        private final Transaction _trans;
+
+        /**
+         * The name
+         */
+        static final String NAME = "Initializer";
+
+        /**
+         * Create the TestInitializer
+         *
+         *
+         *
+         * @param trans the transaction test(required)
+         */
+        TestInitializer(Transaction trans) {
+            
+            super(NAME);
+
+            _trans = trans;
+        }
+        
+        public void setUp() {
+         
+          _trans.dropAndCreateTables(true);
+        }
+        
+        public void runTest() {}
+     };
+     
+    /**
+     * The test is used as a cleaner
+     */
+    static class TestCleaner
+        extends TestCase {
+        
+        /**
+         * The transaction test
+         */
+        private final Transaction _trans;
+
+        /**
+         * The name
+         */
+        static final String NAME = "Clean";
+
+        /**
+         * Create the TestCleaner
+         *
+         *
+         *
+         * @param trans the transaction test(required)
+         */
+        TestCleaner(Transaction trans) {
+            
+            super(NAME);
+
+            _trans = trans;
+        }
+        
+        public void tearDown() {
+         
+          _trans.dropAndCreateTables(false);
+        }
+        
+        public void runTest() {}
+     };          
+
     
 
     public void postExecute() {
@@ -273,6 +342,8 @@ public class Transaction
      * @see #_groups
      */
     private void dropAndCreateTables(boolean create) {
+     
+     
         DataSourceGroupEntry group;
         DataSourceEntry entry;
         int j;
@@ -289,31 +360,37 @@ public class Transaction
             statement = null;
     
             transactionManager = Tyrex.getTransactionManager();
-
+                
             // make sure we're not in a stray trnasaction
             try {
+           
                 transactionManager.commit();
             }
             catch(Exception e) {
             }
-    
+            
             // set up the database tables
             for (int i = _groups.size(); --i >= 0;) {
                 group = (DataSourceGroupEntry)_groups.get(i);
-    
+                
                 for (j = group.getNumberOfDataSourceEntries(); --j >= 0;) {
+                    
+                    
                     entry = group.getDataSourceEntry(j);
                     
                     if (!visited.contains(entry)) {
                         try {
+                            
                             visited.add(entry);
-    
+                            
                             xaConnection = entry.getXAConnection();
+                            
                             connection = xaConnection.getConnection();
+                            
                             statement = connection.createStatement();
-    
+                                                        
                             transactionManager.begin();
-    
+                            
                             transactionManager.getTransaction().enlistResource(xaConnection.getXAResource());
     
                             try {
@@ -321,7 +398,8 @@ public class Transaction
                             }
                             catch(SQLException e) {
                             }
-    
+                            
+                           
                             if (create) {
                                 statement.execute( "create table " + entry.getTableName() + 
                                                    " (" + PRIMARY_KEY_COLUMN_NAME + 
@@ -334,6 +412,7 @@ public class Transaction
         
                         }
                         finally {
+                        
                             if (null != statement) {
                                 try{statement.close();}catch(SQLException e){}
                                 statement = null;
@@ -355,6 +434,7 @@ public class Transaction
             e.printStackTrace();
             throw new RuntimeException(e.toString());
         }
+        
     }
     
 
@@ -658,7 +738,7 @@ public class Transaction
 
     public static void main (String args[]) {
 
-        class TransactionTest 
+        /*class TransactionTest 
             extends org.exolab.jtf.CWBaseApplication {
             private final Vector _categories;
 
@@ -686,7 +766,10 @@ public class Transaction
         }
         catch(Exception exception) {
             exception.printStackTrace();
-        }
+        }*/
+        TestSuite main = new Transaction( "Transaction Test");
+        
+        junit.textui.TestRunner.run(main);
     }
     
 }

@@ -42,7 +42,6 @@
  *
  */
 
-
 package transaction;
 
 import java.io.IOException;
@@ -61,14 +60,16 @@ import javax.transaction.Synchronization;
 import javax.transaction.SystemException;
 import javax.transaction.TransactionManager;
 import javax.transaction.xa.XAResource;
-import org.exolab.exceptions.CWClassConstructorException;
-import org.exolab.jtf.CWTestCase;
-import org.exolab.jtf.CWVerboseStream;
+
+import junit.framework.*;
 import org.exolab.testing.Timing;
+
 import transaction.configuration.Performance;
 import tyrex.tm.AsyncCompletionCallback;
 import tyrex.tm.Tyrex;
 import tyrex.tm.TyrexTransaction;
+
+import tests.VerboseStream;
 
 
 /**
@@ -155,7 +156,8 @@ import tyrex.tm.TyrexTransaction;
  *
  * @author <a href="mohammed@intalio.com">Riad Mohammed</a>
  */
-class TransactionTestCases
+class TransactionTestSuite
+  extends TestSuite
     
 {
     /**
@@ -260,12 +262,53 @@ class TransactionTestCases
      * The parameter types for test class constructor
      */
     private static final Class[] TEST_CLASS_PARAMETER_TYPES = new Class[]{DataSourceGroupEntry.class};
+    
+    /**
+     * Verbose stream replacing the one from JTF
+     */
+    public static tests.VerboseStream stream;   
+
+    public TransactionTestSuite(String name, ArrayList groups, VerboseStream theStream)  //The database entry groups
+    {
+        super( name );
+        
+        stream = theStream;
+        
+        Constructor[] constructors;
+    
+        int j;
+        DataSourceGroupEntry group;
+        Object[] arguments;
+        TestCase tc;
+        
+        arguments = new Object[1];
+        
+        try {
+            
+            constructors = getTestClassConstructors();
+            
+            for (int i = 0; i < groups.size(); i++) {
+                group = (DataSourceGroupEntry)groups.get(i);    
+                
+              
+                for (j = constructors.length; --j>=0 ;) {
+                    arguments[0] = group;
+                    tc = (TestCase)constructors[j].newInstance(arguments);
+                    //System.out.println("adding " + tc.name() + " " + tc);
+                    addTest(tc);  
+                }
+            }
+        }
+        catch(Exception e) {
+            e.printStackTrace();
+            throw new IllegalArgumentException();
+        }
+    }
 
     /**
      * No instances
      */
-    private TransactionTestCases()
-        throws CWClassConstructorException {
+    private TransactionTestSuite() {
     }
 
     /**
@@ -299,11 +342,17 @@ class TransactionTestCases
 
         constructors = new Constructor[testClasses.length];
 
+        int j = 0;
         for (int i = constructors.length; --i >= 0;) {
             constructors[i] = getTestClassConstructor(testClasses[i]);    
         }
+        //for (int i = 0; i<constructors.length;i++) {
+        //    constructors[j++] = getTestClassConstructor(testClasses[i]);    
+        //}
 
-        return constructors;
+       return constructors;
+       //return new Constructor[] {getTestClassConstructor(testClasses[testClasses.length-2]),
+         //getTestClassConstructor(testClasses[testClasses.length-1])};
     }
 
     /**
@@ -318,12 +367,12 @@ class TransactionTestCases
         int index;
         int i;
 
-        classes = TransactionTestCases.class.getDeclaredClasses();
+        classes = TransactionTestSuite.class.getDeclaredClasses();
 
         removed = 0;
 
         for (i = classes.length; --i >= 0;) {
-            if (!CWTestCase.class.isAssignableFrom(classes[i])) {
+            if (!TestCase.class.isAssignableFrom(classes[i])) {
                 classes[i] = null;    
                 ++removed;
             }
@@ -358,7 +407,7 @@ class TransactionTestCases
      * Test two phase commit
      */
     static class Test2PC
-        extends CWTestCase {
+        extends TestCase {
         
         /**
          * The group
@@ -369,16 +418,16 @@ class TransactionTestCases
          * The name
          */
         static final String NAME = "Two-phase commit";
-
+        
         /**
          * Create the Test2PC
          *
          *
          * @param group the group (required)
          */
-        Test2PC(DataSourceGroupEntry group)
-            throws CWClassConstructorException {
-            super(NAME, "group(" + group.getGroupName() + ")");
+        Test2PC(DataSourceGroupEntry group) {
+            
+            super("[" + group.getGroupName() + "] " + NAME);
 
             if (null == group) {
                 throw new IllegalArgumentException("The argument 'group' is null.");
@@ -387,14 +436,15 @@ class TransactionTestCases
             _group = group;
         }
 
-        public boolean run(CWVerboseStream stream)
+        public void runTest()
         {
-            TransactionManager transactionManager;
-
+         
+            TransactionManager transactionManager = null;
+              
             try {
                 if (!_group.hasMultiple()) {
                     stream.writeVerbose("Cannot test two-phase commit");
-                    return true;
+                    return;
                 }
 
                 try {
@@ -403,38 +453,35 @@ class TransactionTestCases
                     transactionManager = Tyrex.getTransactionManager();
                 } 
                 catch (Exception e) {
-                    stream.writeVerbose( "Error: Failed to get transaction manager " );
-                    return false;
+                    fail("Error: Failed to get transaction manager");
                 }
     
                 try {
+                    
                     if (!testCommit(transactionManager, _group, stream, USE_2PC_COMMIT)) {
-                        stream.writeVerbose("Error: Failed two-phase commit");
-                        return false;    
+                        fail("Error: Failed two-phase commit");
                     } 
                 } 
                 catch (Exception e) {
-                    stream.writeVerbose( "Error: Failed two-phase commit" );
-                    stream.writeVerbose(e.toString());
                     e.printStackTrace();
-                    return false;
+                    fail( "Error: Failed two-phase commit" );
                 }
                 
-                return true;
+                return;
             }
-            catch(IOException e) {
+            catch(Exception e) {
                 e.printStackTrace();
-                return false;
+                fail(e.toString());
             }
         }
     }
-
-
+    
+   
     /**
      * Test one phase commit
      */
     static class Test1PC
-        extends CWTestCase {
+        extends TestCase {
         
         /**
          * The group
@@ -445,7 +492,7 @@ class TransactionTestCases
          * The name
          */
         static final String NAME = "One-phase commit";
-
+       
         /**
          * Create the Test1PC
          *
@@ -453,9 +500,9 @@ class TransactionTestCases
          *
          * @param group the group (required)
          */
-        Test1PC(DataSourceGroupEntry group)
-            throws CWClassConstructorException {
-            super(NAME, "group(" + group.getGroupName() + ")");
+         Test1PC(DataSourceGroupEntry group) {
+            
+            super("[" + group.getGroupName() + "] " + NAME);
 
             if (null == group) {
                 throw new IllegalArgumentException("The argument 'group' is null.");
@@ -464,38 +511,42 @@ class TransactionTestCases
             _group = group;
         }
 
-        public boolean run(CWVerboseStream stream)
+        public void runTest()
         {
-            TransactionManager transactionManager;
+              
+            TransactionManager transactionManager = null;
 
             try {
                 try {
                     
                     // get the transaction manager
+                    
                     transactionManager = Tyrex.getTransactionManager();
+                    
                 } 
                 catch (Exception e) {
-                    stream.writeVerbose( "Error: Failed to get transaction manager " );
-                    return false;
+                    e.printStackTrace();
+                    fail("Error: Failed to get transaction manager ");
                 }
     
                 try {
+                    
                     if (!testCommit(transactionManager, _group, stream, USE_1PC_COMMIT)) {
-                        stream.writeVerbose("Error: Failed one-phase commit");
-                        return false;    
-                    } 
-                    return true;
+                       fail("Error: Failed one-phase commit");    
+                    }
+
+                    return;
                 } 
                 catch (Exception e) {
-                    stream.writeVerbose( "Error: Failed one-phase commit" );
-                    stream.writeVerbose(e.toString());
-                    return false;
+                    e.printStackTrace();
+                    fail("Error: Failed one-phase commit");
                 }
             }
-            catch(IOException e) {
+            catch(Exception e) {
                 e.printStackTrace();
-                return false;
+                fail(e.toString());
             }
+            System.out.println("End1PC");
         }
     }
 
@@ -503,7 +554,7 @@ class TransactionTestCases
      * Test one phase commit optimization
      */
     static class Test1PCOptimization
-        extends CWTestCase {
+        extends TestCase {
         
         /**
          * The group
@@ -514,7 +565,7 @@ class TransactionTestCases
          * The name
          */
         static final String NAME = "One-phase commit optimization";
-
+        
         /**
          * Create the Test1PCOptimization
          *
@@ -522,9 +573,9 @@ class TransactionTestCases
          *
          * @param group the group (required)
          */
-        Test1PCOptimization(DataSourceGroupEntry group)
-            throws CWClassConstructorException {
-            super(NAME, "group(" + group.getGroupName() + ")");
+        Test1PCOptimization(DataSourceGroupEntry group) {
+            
+            super("[" + group.getGroupName() + "] " + NAME);
 
             if (null == group) {
                 throw new IllegalArgumentException("The argument 'group' is null.");
@@ -533,9 +584,9 @@ class TransactionTestCases
             _group = group;
         }
 
-        public boolean run(CWVerboseStream stream)
+        public void runTest()
         {
-            TransactionManager transactionManager;
+            TransactionManager transactionManager = null;
 
             try {
                 try {
@@ -544,25 +595,22 @@ class TransactionTestCases
                     transactionManager = Tyrex.getTransactionManager();
                 } 
                 catch (Exception e) {
-                    stream.writeVerbose( "Error: Failed to get transaction manager " );
-                    return false;
+                    fail( "Error: Failed to get transaction manager " );
                 }
     
                 try {
                     if (!testCommit(transactionManager, _group, stream, USE_1PC_COMMIT_OPTIMIZATION)) {
-                        stream.writeVerbose("Error: Failed two-phase commit, with one-phase commit optimization" );
-                        return false;    
+                        fail("Error: Failed two-phase commit, with one-phase commit optimization" );
                     }
-                    return true;
+                    return;
                 } catch ( Exception e ) {
-                    stream.writeVerbose( "Error: Failed two-phase commit, with one-phase commit optimization" );
-                    stream.writeVerbose( e.toString() );
-                    return false;
+                    e.printStackTrace();
+                    fail( "Error: Failed two-phase commit, with one-phase commit optimization" );
                 }
             }
-            catch(IOException e) {
+            catch(Exception e) {
                 e.printStackTrace();
-                return false;
+                fail(e.toString());
             }
         }
     }
@@ -572,7 +620,7 @@ class TransactionTestCases
      * Test rollback
      */
     static class TestRollback
-        extends CWTestCase {
+        extends TestCase {
         
         /**
          * The group
@@ -591,9 +639,9 @@ class TransactionTestCases
          *
          * @param group the group (required)
          */
-        TestRollback(DataSourceGroupEntry group)
-            throws CWClassConstructorException {
-            super(NAME, "group(" + group.getGroupName() + ")");
+        TestRollback(DataSourceGroupEntry group) {
+            
+            super("[" + group.getGroupName() + "] " + NAME);
 
             if (null == group) {
                 throw new IllegalArgumentException("The argument 'group' is null.");
@@ -602,9 +650,9 @@ class TransactionTestCases
             _group = group;
         }
 
-        public boolean run(CWVerboseStream stream)
+        public void runTest()
         {
-            TransactionManager transactionManager;
+            TransactionManager transactionManager = null;
             ArrayList entries;
 
             entries = null;
@@ -616,8 +664,8 @@ class TransactionTestCases
                     transactionManager = Tyrex.getTransactionManager();
                 } 
                 catch (Exception e) {
-                    stream.writeVerbose( "Error: Failed to get transaction manager " );
-                    return false;
+                    e.printStackTrace();
+                    fail( "Error: Failed to get transaction manager " );
                 }
                 
                 try {
@@ -626,20 +674,18 @@ class TransactionTestCases
                     insert(entries, stream);
 
                     if (!testRollback(transactionManager, entries, stream)) {
-                        stream.writeVerbose("Error: Failed rollback");
-                        return false;
+                        fail("Error: Failed rollback");
                     }
-                    return true;
+                    return;
                 } 
                 catch ( Exception e ) {
-                    stream.writeVerbose( "Error: Failed rollback" );
-                    stream.writeVerbose( e.toString() );
-                    return false;
+                    e.printStackTrace();
+                    fail( "Error: Failed rollback" );
                 }
             }
-            catch(IOException e) {
+            catch(Exception e) {
                 e.printStackTrace();
-                return false;
+                fail(e.toString());
             }
             finally {
                 close(entries);
@@ -652,7 +698,7 @@ class TransactionTestCases
      * Test mark for rollback on commits
      */
     static class TestMarkForRollbackOnCommit
-        extends CWTestCase {
+        extends TestCase {
         
         /**
          * The group
@@ -671,9 +717,9 @@ class TransactionTestCases
          *
          * @param group the group (required)
          */
-        TestMarkForRollbackOnCommit(DataSourceGroupEntry group)
-            throws CWClassConstructorException {
-            super(NAME, "group(" + group.getGroupName() + ")");
+        TestMarkForRollbackOnCommit(DataSourceGroupEntry group) {
+            
+            super("[" + group.getGroupName() + "] " + NAME);
 
             if (null == group) {
                 throw new IllegalArgumentException("The argument 'group' is null.");
@@ -682,9 +728,9 @@ class TransactionTestCases
             _group = group;
         }
 
-        public boolean run(CWVerboseStream stream)
+        public void runTest()
         {
-            TransactionManager transactionManager;
+            TransactionManager transactionManager = null;
             
             try {
                 try {
@@ -693,26 +739,24 @@ class TransactionTestCases
                     transactionManager = Tyrex.getTransactionManager();
                 } 
                 catch (Exception e) {
-                    stream.writeVerbose("Error: Failed to get transaction manager");
-                    return false;
+                    e.printStackTrace();
+                    fail("Error: Failed to get transaction manager");
                 }
                 
                 try {
                     if (!testMarkForRollback(transactionManager, _group, stream, true)) {
-                        stream.writeVerbose("Error: Failed mark for rollback on commit");
-                        return false;
+                        fail("Error: Failed mark for rollback on commit");
                     }
-                    return true;
+                    return;
                 } 
                 catch ( Exception e ) {
-                    stream.writeVerbose("Error: Failed mark for rollback on commit");
-                    stream.writeVerbose(e.toString());
-                    return false;
+                    e.printStackTrace();
+                    fail("Error: Failed mark for rollback on commit");
                 }
             }
-            catch(IOException e) {
+            catch(Exception e) {
                 e.printStackTrace();
-                return false;
+                fail(e.toString());;
             }
         }
     }
@@ -721,7 +765,7 @@ class TransactionTestCases
      * Test mark for rollback on rollbacks
      */
     static class TestMarkForRollbackOnRollback
-        extends CWTestCase {
+        extends TestCase {
         
         /**
          * The group
@@ -740,9 +784,9 @@ class TransactionTestCases
          *
          * @param group the group (required)
          */
-        TestMarkForRollbackOnRollback(DataSourceGroupEntry group)
-            throws CWClassConstructorException {
-            super(NAME, "group(" + group.getGroupName() + ")");
+        TestMarkForRollbackOnRollback(DataSourceGroupEntry group) {
+            
+            super("[" + group.getGroupName() + "] " + NAME);
 
             if (null == group) {
                 throw new IllegalArgumentException("The argument 'group' is null.");
@@ -751,9 +795,9 @@ class TransactionTestCases
             _group = group;
         }
 
-        public boolean run(CWVerboseStream stream)
+        public void runTest()
         {
-            TransactionManager transactionManager;
+            TransactionManager transactionManager = null;
             
             try {
                 try {
@@ -762,26 +806,24 @@ class TransactionTestCases
                     transactionManager = Tyrex.getTransactionManager();
                 } 
                 catch (Exception e) {
-                    stream.writeVerbose("Error: Failed to get transaction manager");
-                    return false;
+                    e.printStackTrace();
+                    fail("Error: Failed to get transaction manager");
                 }
                 
                 try {
                     if (!testMarkForRollback(transactionManager, _group, stream, false)) {
-                        stream.writeVerbose("Error: Failed mark for rollback on rollback");
-                        return false;
+                        fail("Error: Failed mark for rollback on rollback");
                     }
-                    return true;
+                    return;
                 } 
                 catch ( Exception e ) {
-                    stream.writeVerbose("Error: Failed mark for rollback on rollback");
-                    stream.writeVerbose(e.toString());
-                    return false;
+                    e.printStackTrace();
+                    fail("Error: Failed mark for rollback on rollback");
                 }
             }
-            catch(IOException e) {
+            catch(Exception e) {
                 e.printStackTrace();
-                return false;
+                fail(e.toString());
             }
         }
     }
@@ -791,7 +833,7 @@ class TransactionTestCases
      * Test resource delist on commits
      */
     static class TestResourceDelistOnCommit
-        extends CWTestCase {
+        extends TestCase {
         
         /**
          * The group
@@ -810,9 +852,9 @@ class TransactionTestCases
          *
          * @param group the group (required)
          */
-        TestResourceDelistOnCommit(DataSourceGroupEntry group)
-            throws CWClassConstructorException {
-            super(NAME, "group(" + group.getGroupName() + ")");
+        TestResourceDelistOnCommit(DataSourceGroupEntry group) {
+            
+            super("[" + group.getGroupName() + "] " + NAME);
 
             if (null == group) {
                 throw new IllegalArgumentException("The argument 'group' is null.");
@@ -821,10 +863,10 @@ class TransactionTestCases
             _group = group;
         }
 
-        public boolean run(CWVerboseStream stream)
+        public void runTest()
         {
-            TransactionManager transactionManager;
-            
+            TransactionManager transactionManager = null;
+
             try {
                 try {
                     
@@ -832,26 +874,23 @@ class TransactionTestCases
                     transactionManager = Tyrex.getTransactionManager();
                 } 
                 catch (Exception e) {
-                    stream.writeVerbose("Error: Failed to get transaction manager");
-                    return false;
-                }
-                
-                try {
-                    if (!testDelist(transactionManager, _group, stream, false, true, false)) {
-                        stream.writeVerbose("Error: Failed to commit with resource delist");
-                        return false;    
-                    }
-                } catch ( Exception e ) {
-                    stream.writeVerbose("Error: Failed to commit with resource delist" );
-                    stream.writeVerbose(e.toString());
-                    return false;
+                    e.printStackTrace();
+                    fail("Error: Failed to get transaction manager");
                 }
 
-                return true;
+                try {
+                    if (!testDelist(transactionManager, _group, stream, false, true, false)) {
+                        fail("Error: Failed to commit with resource delist");
+                    }
+                } catch ( Exception e ) {
+                    e.printStackTrace();
+                    fail("Error: Failed to commit with resource delist" );
+                }
+                return;
             }
-            catch(IOException e) {
+            catch(Exception e) {
                 e.printStackTrace();
-                return false;
+                fail(e.toString());
             }
         }
     }
@@ -861,7 +900,7 @@ class TransactionTestCases
      * Test resource delist on rollback
      */
     static class TestResourceDelistOnRollback
-        extends CWTestCase {
+        extends TestCase {
         
         /**
          * The group
@@ -880,9 +919,9 @@ class TransactionTestCases
          *
          * @param group the group (required)
          */
-        TestResourceDelistOnRollback(DataSourceGroupEntry group)
-            throws CWClassConstructorException {
-            super(NAME, "group(" + group.getGroupName() + ")");
+        TestResourceDelistOnRollback(DataSourceGroupEntry group) {
+            
+            super("[" + group.getGroupName() + "] " + NAME);
 
             if (null == group) {
                 throw new IllegalArgumentException("The argument 'group' is null.");
@@ -891,9 +930,9 @@ class TransactionTestCases
             _group = group;
         }
 
-        public boolean run(CWVerboseStream stream)
+        public void runTest()
         {
-            TransactionManager transactionManager;
+            TransactionManager transactionManager = null;
             
             try {
                 try {
@@ -902,26 +941,25 @@ class TransactionTestCases
                     transactionManager = Tyrex.getTransactionManager();
                 } 
                 catch (Exception e) {
-                    stream.writeVerbose("Error: Failed to get transaction manager");
-                    return false;
+                    e.printStackTrace();
+                    fail("Error: Failed to get transaction manager");
                 }
                 
                 try {
                     if (!testDelist(transactionManager, _group, stream, false, false, false)) {
-                        stream.writeVerbose("Error: Failed to rollback with resource delist");
-                        return false;    
+                        fail("Error: Failed to rollback with resource delist");
                     }
                 } 
                 catch (Exception e) {
-                    stream.writeVerbose("Error: Failed to rollback with resource delist");
-                    stream.writeVerbose(e.toString());
-                    return false;
+                    e.printStackTrace();
+                    fail("Error: Failed to rollback with resource delist");
+                  
                 }
-                return true;
+                return;
             }
-            catch(IOException e) {
+            catch(Exception e) {
                 e.printStackTrace();
-                return false;
+                fail(e.toString());
             }
         }
     }
@@ -931,7 +969,7 @@ class TransactionTestCases
      * Test resource delist and reuse on commit
      */
     static class TestResourceDelistAndReuseOnCommit
-        extends CWTestCase {
+        extends TestCase {
         
         /**
          * The group
@@ -950,9 +988,9 @@ class TransactionTestCases
          *
          * @param group the group (required)
          */
-        TestResourceDelistAndReuseOnCommit(DataSourceGroupEntry group)
-            throws CWClassConstructorException {
-            super(NAME, "group(" + group.getGroupName() + ")");
+        TestResourceDelistAndReuseOnCommit(DataSourceGroupEntry group) {
+            
+            super("[" + group.getGroupName() + "] " + NAME);
 
             if (null == group) {
                 throw new IllegalArgumentException("The argument 'group' is null.");
@@ -961,9 +999,9 @@ class TransactionTestCases
             _group = group;
         }
 
-        public boolean run(CWVerboseStream stream)
+        public void runTest()
         {
-            TransactionManager transactionManager;
+            TransactionManager transactionManager = null;
             
             try {
                 try {
@@ -972,27 +1010,26 @@ class TransactionTestCases
                     transactionManager = Tyrex.getTransactionManager();
                 } 
                 catch (Exception e) {
-                    stream.writeVerbose("Error: Failed to get transaction manager");
-                    return false;
+                    e.printStackTrace();
+                    fail("Error: Failed to get transaction manager");
                 }
                 
                 try {
                     if (!testDelist(transactionManager, _group, stream, false, true, true)) {
-                        stream.writeVerbose("Error: Failed to commit with resource delist and resource reuse");
-                        return false;    
+                        fail("Error: Failed to commit with resource delist and resource reuse");
                     }
                 } 
                 catch (Exception e) {
-                    stream.writeVerbose("Error: Failed to commit with resource delist and resource reuse");
-                    stream.writeVerbose(e.toString());
-                    return false;
+                    e.printStackTrace();
+                    fail("Error: Failed to commit with resource delist and resource reuse");
+                    
                 }
                 
-                return true;
+                return;
             }
-            catch(IOException e) {
+            catch(Exception e) {
                 e.printStackTrace();
-                return false;
+                fail(e.toString());
             }
         }
     }
@@ -1002,7 +1039,7 @@ class TransactionTestCases
      * Test resource delist and reuse on rollback
      */
     static class TestResourceDelistAndReuseOnRollback
-        extends CWTestCase {
+        extends TestCase {
         
         /**
          * The group
@@ -1021,10 +1058,10 @@ class TransactionTestCases
          *
          * @param group the group (required)
          */
-        TestResourceDelistAndReuseOnRollback(DataSourceGroupEntry group)
-            throws CWClassConstructorException {
-            super(NAME, "group(" + group.getGroupName() + ")");
-
+        TestResourceDelistAndReuseOnRollback(DataSourceGroupEntry group) {
+            
+            super("[" + group.getGroupName() + "] " + NAME);
+         
             if (null == group) {
                 throw new IllegalArgumentException("The argument 'group' is null.");
             }
@@ -1032,9 +1069,9 @@ class TransactionTestCases
             _group = group;
         }
 
-        public boolean run(CWVerboseStream stream)
+        public void runTest()
         {
-            TransactionManager transactionManager;
+            TransactionManager transactionManager = null;
             
             try {
                 try {
@@ -1043,27 +1080,27 @@ class TransactionTestCases
                     transactionManager = Tyrex.getTransactionManager();
                 } 
                 catch (Exception e) {
-                    stream.writeVerbose("Error: Failed to get transaction manager");
-                    return false;
+                    e.printStackTrace();
+                    fail("Error: Failed to get transaction manager");
                 }
                 
                 try {
                     if (!testDelist( transactionManager, _group, stream, false, false, true)) {
-                        stream.writeVerbose("Error: Failed to rollback with resource delist and resource reuse");
-                        return false;    
+                        fail("Error: Failed to rollback with resource delist and resource reuse");
+
                     }
                 } 
                 catch ( Exception e ) {
-                    stream.writeVerbose("Error: Failed to rollback with resource delist and resource reuse");
-                    stream.writeVerbose(e.toString());
-                    return false;
+                    e.printStackTrace();
+                    fail("Error: Failed to rollback with resource delist and resource reuse");
+                   
                 }
                 
-                return true;
+                return;
             }
-            catch(IOException e) {
+            catch(Exception e) {
                 e.printStackTrace();
-                return false;
+                fail(e.toString());
             }
         }
     }
@@ -1072,7 +1109,7 @@ class TransactionTestCases
      * Test resource delist on one phase commit optimization
      */
     static class TestResourceDelistOn1PCommit
-        extends CWTestCase {
+        extends TestCase {
         
         /**
          * The group
@@ -1091,9 +1128,9 @@ class TransactionTestCases
          *
          * @param group the group (required)
          */
-        TestResourceDelistOn1PCommit(DataSourceGroupEntry group)
-            throws CWClassConstructorException {
-            super(NAME, "group(" + group.getGroupName() + ")");
+        TestResourceDelistOn1PCommit(DataSourceGroupEntry group) {
+            
+            super("[" + group.getGroupName() + "] " + NAME);
 
             if (null == group) {
                 throw new IllegalArgumentException("The argument 'group' is null.");
@@ -1102,14 +1139,14 @@ class TransactionTestCases
             _group = group;
         }
 
-        public boolean run(CWVerboseStream stream)
+        public void runTest()
         {
-            TransactionManager transactionManager;
+            TransactionManager transactionManager = null;
 
             try {
                 if (!_group.hasMultiple()) {
                     stream.writeVerbose("Unable to test one-phase commit optimization, with resource delist.");
-                    return true;    
+                    return;
                 }
                 
                 try {
@@ -1118,27 +1155,26 @@ class TransactionTestCases
                     transactionManager = Tyrex.getTransactionManager();
                 } 
                 catch (Exception e) {
-                    stream.writeVerbose("Error: Failed to get transaction manager");
-                    return false;
+                    e.printStackTrace();
+                    fail("Error: Failed to get transaction manager");
                 }
                 
                 try {
                     if (!testDelist( transactionManager, _group, stream, true, true, false)) {
-                        stream.writeVerbose("Error: Failed to commit, using one-phase commit optimization, with resource delist");
-                        return false;    
+                        fail("Error: Failed to commit, using one-phase commit optimization, with resource delist");
                     }
                 } 
                 catch (Exception e) {
-                    stream.writeVerbose("Error: Failed to commit, using one-phase commit optimization, with resource delist");
-                    stream.writeVerbose(e.toString());
-                    return false;
+                    e.printStackTrace();
+                    fail("Error: Failed to commit, using one-phase commit optimization, with resource delist");
+                  
                 }
                 
-                return true;
+                return;
             }
-            catch(IOException e) {
+            catch(Exception e) {
                 e.printStackTrace();
-                return false;
+                fail(e.toString());
             }
         }
     }
@@ -1148,7 +1184,7 @@ class TransactionTestCases
      * Test resource delist and reuse on one phase commit optimization
      */
     static class TestResourceDelistAndReuseOn1PCommit
-        extends CWTestCase {
+        extends TestCase {
         
         /**
          * The group
@@ -1167,9 +1203,9 @@ class TransactionTestCases
          *
          * @param group the group (required)
          */
-        TestResourceDelistAndReuseOn1PCommit(DataSourceGroupEntry group)
-            throws CWClassConstructorException {
-            super(NAME, "group(" + group.getGroupName() + ")");
+        TestResourceDelistAndReuseOn1PCommit(DataSourceGroupEntry group) {
+            
+            super("[" + group.getGroupName() + "] " + NAME);
 
             if (null == group) {
                 throw new IllegalArgumentException("The argument 'group' is null.");
@@ -1178,14 +1214,14 @@ class TransactionTestCases
             _group = group;
         }
 
-        public boolean run(CWVerboseStream stream)
+        public void runTest()
         {
-            TransactionManager transactionManager;
+            TransactionManager transactionManager = null;
 
             try {
                 if (!_group.hasMultiple()) {
                     stream.writeVerbose("Unable to test one-phase commit optimization, with resource delist and resource reuse.");
-                    return true;    
+                    return;
                 }
                 
                 try {
@@ -1194,27 +1230,26 @@ class TransactionTestCases
                     transactionManager = Tyrex.getTransactionManager();
                 } 
                 catch (Exception e) {
-                    stream.writeVerbose("Error: Failed to get transaction manager");
-                    return false;
+                    e.printStackTrace();
+                    fail("Error: Failed to get transaction manager");
                 }
                 
                 try {
                     if (!testDelist(transactionManager, _group, stream, true, true, true)) {
-                        stream.writeVerbose("Error: Failed to commit, using one-phase commit optimization, with resource delist and resource reuse");
-                        return false;    
+                        fail("Error: Failed to commit, using one-phase commit optimization, with resource delist and resource reuse");
                     }
                 } 
                 catch (Exception e) {
-                    stream.writeVerbose("Error: Failed to commit, using one-phase commit optimization, with resource delist and resource reuse");
-                    stream.writeVerbose(e.toString());
-                    return false;
+                    e.printStackTrace();
+                    fail("Error: Failed to commit, using one-phase commit optimization, with resource delist and resource reuse");
+                   
                 }
                 
-                return true;
+                return;
             }
-            catch(IOException e) {
+            catch(Exception e) {
                 e.printStackTrace();
-                return false;
+                fail(e.toString());
             }
         }
     }
@@ -1223,7 +1258,7 @@ class TransactionTestCases
      * Test rollback with resource delist
      */
     static class TestRollbackWithResourceDelist
-        extends CWTestCase {
+        extends TestCase {
         
         /**
          * The group
@@ -1242,9 +1277,9 @@ class TransactionTestCases
          *
          * @param group the group (required)
          */
-        TestRollbackWithResourceDelist(DataSourceGroupEntry group)
-            throws CWClassConstructorException {
-            super(NAME, "group(" + group.getGroupName() + ")");
+        TestRollbackWithResourceDelist(DataSourceGroupEntry group){
+            
+            super("[" + group.getGroupName() + "] " + NAME);
 
             if (null == group) {
                 throw new IllegalArgumentException("The argument 'group' is null.");
@@ -1253,9 +1288,9 @@ class TransactionTestCases
             _group = group;
         }
 
-        public boolean run(CWVerboseStream stream)
+        public void runTest()
         {
-            TransactionManager transactionManager;
+            TransactionManager transactionManager = null;
             
             try {
                 try {
@@ -1264,28 +1299,28 @@ class TransactionTestCases
                     transactionManager = Tyrex.getTransactionManager();
                 } 
                 catch (Exception e) {
-                    stream.writeVerbose("Error: Failed to get transaction manager");
-                    return false;
+                    e.printStackTrace();
+                    fail("Error: Failed to get transaction manager");
+                    
                 }
                 
                 try {
                     if (!testRollbackWithFailedDelist( transactionManager, _group, stream)) {
-                        stream.writeVerbose("Error: Failed to rollback with resource delist");
-                        return false;    
+                        fail("Error: Failed to rollback with resource delist");
+                            
                     }
                 } 
                 catch (Exception e) {
                     e.printStackTrace();
-                    stream.writeVerbose("Error: Failed to rollback with resource delist");
-                    stream.writeVerbose(e.toString());
-                    return false;
+                    fail("Error: Failed to rollback with resource delist");
+                  
                 }
                 
-                return true;
+                return;
             }
-            catch(IOException e) {
+            catch(java.lang.Exception e) {
                 e.printStackTrace();
-                return false;
+                fail(e.toString());
             }
         }
     }
@@ -1295,7 +1330,7 @@ class TransactionTestCases
      * Test asynchronous commit
      */
     static class TestAsyncCommit
-        extends CWTestCase {
+        extends TestCase {
         
         /**
          * The group
@@ -1314,9 +1349,9 @@ class TransactionTestCases
          *
          * @param group the group (required)
          */
-        TestAsyncCommit(DataSourceGroupEntry group)
-            throws CWClassConstructorException {
-            super(NAME, "group(" + group.getGroupName() + ")");
+        TestAsyncCommit(DataSourceGroupEntry group){
+            
+            super("[" + group.getGroupName() + "] " + NAME);
 
             if (null == group) {
                 throw new IllegalArgumentException("The argument 'group' is null.");
@@ -1325,9 +1360,9 @@ class TransactionTestCases
             _group = group;
         }
 
-        public boolean run(CWVerboseStream stream)
+        public void runTest()
         {
-            TransactionManager transactionManager;
+            TransactionManager transactionManager = null;
             
             try {
                 try {
@@ -1336,27 +1371,26 @@ class TransactionTestCases
                     transactionManager = Tyrex.getTransactionManager();
                 } 
                 catch (Exception e) {
-                    stream.writeVerbose("Error: Failed to get transaction manager");
-                    return false;
+                    e.printStackTrace();
+                    fail("Error: Failed to get transaction manager");
                 }
                 
                 try {
                     if (!testAsynchronousTransaction(transactionManager, _group, stream, true)) {
-                        stream.writeVerbose("Error: Failed to commit asynchronously");
-                        return false;    
+                        fail("Error: Failed to commit asynchronously");
                     }
                 } 
                 catch (Exception e) {
-                    stream.writeVerbose("Error: Failed to commit asynchronously");
-                    stream.writeVerbose(e.toString());
-                    return false;
+                    e.printStackTrace();
+                    fail("Error: Failed to commit asynchronously");
+                  
                 }
                 
-                return true;
+                return;
             }
-            catch(IOException e) {
+            catch(Exception e) {
                 e.printStackTrace();
-                return false;
+                fail(e.toString());
             }
         }
     }
@@ -1366,7 +1400,7 @@ class TransactionTestCases
      * Test asynchronous rollback
      */
     static class TestAsyncRollback
-        extends CWTestCase {
+        extends TestCase {
         
         /**
          * The group
@@ -1385,9 +1419,9 @@ class TransactionTestCases
          *
          * @param group the group (required)
          */
-        TestAsyncRollback(DataSourceGroupEntry group)
-            throws CWClassConstructorException {
-            super(NAME, "group(" + group.getGroupName() + ")");
+        TestAsyncRollback(DataSourceGroupEntry group) {
+            
+            super("[" + group.getGroupName() + "] " + NAME);
 
             if (null == group) {
                 throw new IllegalArgumentException("The argument 'group' is null.");
@@ -1396,9 +1430,9 @@ class TransactionTestCases
             _group = group;
         }
 
-        public boolean run(CWVerboseStream stream)
+        public void runTest()
         {
-            TransactionManager transactionManager;
+            TransactionManager transactionManager = null;
             
             try {
                 try {
@@ -1407,27 +1441,26 @@ class TransactionTestCases
                     transactionManager = Tyrex.getTransactionManager();
                 } 
                 catch (Exception e) {
-                    stream.writeVerbose("Error: Failed to get transaction manager");
-                    return false;
+                    e.printStackTrace();
+                    fail("Error: Failed to get transaction manager");
                 }
                 
                 try {
                     if (!testAsynchronousTransaction(transactionManager, _group, stream, false)) {
-                        stream.writeVerbose("Error: Failed to rollback asynchronously");
-                        return false;    
+                        fail("Error: Failed to rollback asynchronously");
                     }
                 } 
                 catch (Exception e) {
-                    stream.writeVerbose("Error: Failed to rollback asynchronously");
-                    stream.writeVerbose(e.toString());
-                    return false;
+                    e.printStackTrace();
+                    fail("Error: Failed to rollback asynchronously");
+                  
                 }
                 
-                return true;
+                return;
             }
-            catch(IOException e) {
+            catch(Exception e) {
                 e.printStackTrace();
-                return false;
+                fail(e.toString());
             }
         }
     }
@@ -1437,7 +1470,7 @@ class TransactionTestCases
      * Test synchronization behaviour during commit
      */
     static class TestCommitSynchronization
-        extends CWTestCase {
+        extends TestCase {
         
         /**
          * The group
@@ -1456,9 +1489,9 @@ class TransactionTestCases
          *
          * @param group the group (required)
          */
-        TestCommitSynchronization(DataSourceGroupEntry group)
-            throws CWClassConstructorException {
-            super(NAME, "group(" + group.getGroupName() + ")");
+        TestCommitSynchronization(DataSourceGroupEntry group){
+            
+            super("[" + group.getGroupName() + "] " + NAME);
 
             if (null == group) {
                 throw new IllegalArgumentException("The argument 'group' is null.");
@@ -1467,9 +1500,9 @@ class TransactionTestCases
             _group = group;
         }
 
-        public boolean run(CWVerboseStream stream)
+        public void runTest()
         {
-            TransactionManager transactionManager;
+            TransactionManager transactionManager = null;
             
             try {
                 try {
@@ -1478,27 +1511,26 @@ class TransactionTestCases
                     transactionManager = Tyrex.getTransactionManager();
                 } 
                 catch (Exception e) {
-                    stream.writeVerbose("Error: Failed to get transaction manager");
-                    return false;
+                    e.printStackTrace();
+                    fail("Error: Failed to get transaction manager");
                 }
                 
                 try {
                     if (!testSynchronization(transactionManager, _group, stream, true)) {
-                        stream.writeVerbose("Error: Failed to test synchronization during commit");
-                        return false;    
-                    }
+                        fail("Error: Failed to test synchronization during commit");
+                     }
                 } 
                 catch (Exception e) {
-                    stream.writeVerbose("Error: Failed to Failed to test synchronization during commit");
-                    stream.writeVerbose(e.toString());
-                    return false;
+                    e.printStackTrace();
+                    fail("Error: Failed to Failed to test synchronization during commit");
+   
                 }
                 
-                return true;
+                return;
             }
-            catch(IOException e) {
+            catch(Exception e) {
                 e.printStackTrace();
-                return false;
+                fail(e.toString());
             }
         }
     }
@@ -1508,7 +1540,7 @@ class TransactionTestCases
      * Test synchronization behaviour during rollback
      */
     static class TestRollbackSynchronization
-        extends CWTestCase {
+        extends TestCase {
         
         /**
          * The group
@@ -1527,9 +1559,9 @@ class TransactionTestCases
          *
          * @param group the group (required)
          */
-        TestRollbackSynchronization(DataSourceGroupEntry group)
-            throws CWClassConstructorException {
-            super(NAME, "group(" + group.getGroupName() + ")");
+        TestRollbackSynchronization(DataSourceGroupEntry group) { 
+            
+            super("[" + group.getGroupName() + "] " + NAME);
 
             if (null == group) {
                 throw new IllegalArgumentException("The argument 'group' is null.");
@@ -1538,9 +1570,9 @@ class TransactionTestCases
             _group = group;
         }
 
-        public boolean run(CWVerboseStream stream)
+        public void runTest()
         {
-            TransactionManager transactionManager;
+            TransactionManager transactionManager = null;
             
             try {
                 try {
@@ -1549,27 +1581,27 @@ class TransactionTestCases
                     transactionManager = Tyrex.getTransactionManager();
                 } 
                 catch (Exception e) {
-                    stream.writeVerbose("Error: Failed to get transaction manager");
-                    return false;
+                    e.printStackTrace();
+                    fail("Error: Failed to get transaction manager");
                 }
                 
                 try {
                     if (!testSynchronization(transactionManager, _group, stream, false)) {
-                        stream.writeVerbose("Error: Failed to test synchronization during rollback");
-                        return false;    
+                        fail("Error: Failed to test synchronization during rollback");
+ 
                     }
                 } 
                 catch (Exception e) {
-                    stream.writeVerbose("Error: Failed to Failed to test synchronization during rollback");
-                    stream.writeVerbose(e.toString());
-                    return false;
+                    e.printStackTrace();
+                    fail("Error: Failed to Failed to test synchronization during rollback");
+                   
                 }
                 
-                return true;
+                return;
             }
-            catch(IOException e) {
+            catch(Exception e) {
                 e.printStackTrace();
-                return false;
+                fail(e.toString());
             }
         }
     }
@@ -1579,7 +1611,7 @@ class TransactionTestCases
      * Test synchronization behaviour with before completion failure during commit
      */
     static class TestSynchronizationWithBeforeFailureOnCommit
-        extends CWTestCase {
+        extends TestCase {
         
         /**
          * The group
@@ -1598,9 +1630,9 @@ class TransactionTestCases
          *
          * @param group the group (required)
          */
-        TestSynchronizationWithBeforeFailureOnCommit(DataSourceGroupEntry group)
-            throws CWClassConstructorException {
-            super(NAME, "group(" + group.getGroupName() + ")");
+        TestSynchronizationWithBeforeFailureOnCommit(DataSourceGroupEntry group){
+            
+            super("[" + group.getGroupName() + "] " + NAME);
 
             if (null == group) {
                 throw new IllegalArgumentException("The argument 'group' is null.");
@@ -1609,9 +1641,9 @@ class TransactionTestCases
             _group = group;
         }
 
-        public boolean run(CWVerboseStream stream)
+        public void runTest()
         {
-            TransactionManager transactionManager;
+            TransactionManager transactionManager = null;
             
             try {
                 try {
@@ -1620,28 +1652,27 @@ class TransactionTestCases
                     transactionManager = Tyrex.getTransactionManager();
                 } 
                 catch (Exception e) {
-                    stream.writeVerbose("Error: Failed to get transaction manager");
-                    return false;
+                    e.printStackTrace();
+                    fail("Error: Failed to get transaction manager");
                 }
                 
                 try {
                     if (!testSynchronizationWithFailure( transactionManager, _group, stream, true, 
                                                           BEFORE_COMPLETION_FAILURE)) {
-                        stream.writeVerbose( "Error: Failed to test synchronization (beforeCompletion failure) during commit" );
-                        return false;    
+                        fail( "Error: Failed to test synchronization (beforeCompletion failure) during commit" );
                     }
                 } 
                 catch (Exception e) {
-                    stream.writeVerbose("Error: Failed to test synchronization (beforeCompletion failure) during commit");
-                    stream.writeVerbose(e.toString());
-                    return false;
+                    e.printStackTrace();
+                    fail("Error: Failed to test synchronization (beforeCompletion failure) during commit");
+                    stream.writeVerbose(e.toString()); 
                 }
                 
-                return true;
+                return;
             }
-            catch(IOException e) {
+            catch(Exception e) {
                 e.printStackTrace();
-                return false;
+                fail(e.toString());
             }
         }
     }
@@ -1651,7 +1682,7 @@ class TransactionTestCases
      * Test synchronization behaviour with after completion failure during commit
      */
     static class TestSynchronizationWithAfterFailureOnCommit
-        extends CWTestCase {
+        extends TestCase {
         
         /**
          * The group
@@ -1670,9 +1701,9 @@ class TransactionTestCases
          *
          * @param group the group (required)
          */
-        TestSynchronizationWithAfterFailureOnCommit(DataSourceGroupEntry group)
-            throws CWClassConstructorException {
-            super(NAME, "group(" + group.getGroupName() + ")");
+        TestSynchronizationWithAfterFailureOnCommit(DataSourceGroupEntry group){
+            
+            super("[" + group.getGroupName() + "] " + NAME);
 
             if (null == group) {
                 throw new IllegalArgumentException("The argument 'group' is null.");
@@ -1681,9 +1712,9 @@ class TransactionTestCases
             _group = group;
         }
 
-        public boolean run(CWVerboseStream stream)
+        public void runTest()
         {
-            TransactionManager transactionManager;
+            TransactionManager transactionManager = null;
             
             try {
                 try {
@@ -1692,28 +1723,27 @@ class TransactionTestCases
                     transactionManager = Tyrex.getTransactionManager();
                 } 
                 catch (Exception e) {
-                    stream.writeVerbose("Error: Failed to get transaction manager");
-                    return false;
+                    e.printStackTrace();
+                    fail("Error: Failed to get transaction manager");
                 }
                 
                 try {
                     if (!testSynchronizationWithFailure( transactionManager, _group, stream, true, 
                                                           AFTER_COMPLETION_FAILURE)) {
-                        stream.writeVerbose( "Error: Failed to test synchronization (afterCompletion failure) during commit" );
-                        return false;    
+                        fail( "Error: Failed to test synchronization (afterCompletion failure) during commit" );
                     }
                 } 
                 catch (Exception e) {
-                    stream.writeVerbose("Error: Failed to test synchronization (afterCompletion failure) during commit");
-                    stream.writeVerbose(e.toString());
-                    return false;
+                    e.printStackTrace();
+                    fail("Error: Failed to test synchronization (afterCompletion failure) during commit");
+                   
                 }
                 
-                return true;
+                return;
             }
-            catch(IOException e) {
+            catch(Exception e) {
                 e.printStackTrace();
-                return false;
+                fail(e.toString());
             }
         }
     }
@@ -1723,7 +1753,7 @@ class TransactionTestCases
      * Test synchronization behaviour with before and after completion failure during commit
      */
     static class TestSynchronizationWithFailureOnCommit
-        extends CWTestCase {
+        extends TestCase {
         
         /**
          * The group
@@ -1742,9 +1772,9 @@ class TransactionTestCases
          *
          * @param group the group (required)
          */
-        TestSynchronizationWithFailureOnCommit(DataSourceGroupEntry group)
-            throws CWClassConstructorException {
-            super(NAME, "group(" + group.getGroupName() + ")");
+        TestSynchronizationWithFailureOnCommit(DataSourceGroupEntry group){
+            
+            super("[" + group.getGroupName() + "] " + NAME);
 
             if (null == group) {
                 throw new IllegalArgumentException("The argument 'group' is null.");
@@ -1753,9 +1783,9 @@ class TransactionTestCases
             _group = group;
         }
 
-        public boolean run(CWVerboseStream stream)
+        public void runTest()
         {
-            TransactionManager transactionManager;
+            TransactionManager transactionManager = null;
             
             try {
                 try {
@@ -1764,28 +1794,28 @@ class TransactionTestCases
                     transactionManager = Tyrex.getTransactionManager();
                 } 
                 catch (Exception e) {
-                    stream.writeVerbose("Error: Failed to get transaction manager");
-                    return false;
+                    e.printStackTrace();
+                    fail("Error: Failed to get transaction manager");
                 }
                 
                 try {
                     if (!testSynchronizationWithFailure( transactionManager, _group, stream, true, 
                                                           (byte) (BEFORE_COMPLETION_FAILURE | AFTER_COMPLETION_FAILURE))) {
-                        stream.writeVerbose( "Error: Failed to test synchronization (beforeCompletion and afterCompletion failure) during commit" );
-                        return false;    
+                        fail( "Error: Failed to test synchronization (beforeCompletion and afterCompletion failure) during commit" );
+          
                     }
                 } 
                 catch (Exception e) {
-                    stream.writeVerbose("Error: Failed to test synchronization (beforeCompletion and afterCompletion failure) during commit");
-                    stream.writeVerbose(e.toString());
-                    return false;
+                    e.printStackTrace();
+                    fail("Error: Failed to test synchronization (beforeCompletion and afterCompletion failure) during commit");
+                   
                 }
                 
-                return true;
+                return;
             }
-            catch(IOException e) {
+            catch(Exception e) {
                 e.printStackTrace();
-                return false;
+                fail(e.toString());
             }
         }
     }
@@ -1795,7 +1825,7 @@ class TransactionTestCases
      * Test synchronization behaviour with before completion failure during rollback
      */
     static class TestSynchronizationWithBeforeFailureOnRollback
-        extends CWTestCase {
+        extends TestCase {
         
         /**
          * The group
@@ -1814,9 +1844,9 @@ class TransactionTestCases
          *
          * @param group the group (required)
          */
-        TestSynchronizationWithBeforeFailureOnRollback(DataSourceGroupEntry group)
-            throws CWClassConstructorException {
-            super(NAME, "group(" + group.getGroupName() + ")");
+        TestSynchronizationWithBeforeFailureOnRollback(DataSourceGroupEntry group){
+            
+            super("[" + group.getGroupName() + "] " + NAME);
 
             if (null == group) {
                 throw new IllegalArgumentException("The argument 'group' is null.");
@@ -1825,9 +1855,9 @@ class TransactionTestCases
             _group = group;
         }
 
-        public boolean run(CWVerboseStream stream)
+        public void runTest()
         {
-            TransactionManager transactionManager;
+            TransactionManager transactionManager = null;
             
             try {
                 try {
@@ -1836,28 +1866,28 @@ class TransactionTestCases
                     transactionManager = Tyrex.getTransactionManager();
                 } 
                 catch (Exception e) {
-                    stream.writeVerbose("Error: Failed to get transaction manager");
-                    return false;
+                    e.printStackTrace();
+                    fail("Error: Failed to get transaction manager");
                 }
                 
                 try {
                     if (!testSynchronizationWithFailure( transactionManager, _group, stream, false, 
                                                           BEFORE_COMPLETION_FAILURE)) {
-                        stream.writeVerbose( "Error: Failed to test synchronization (beforeCompletion failure) during rollback" );
-                        return false;    
+                        fail( "Error: Failed to test synchronization (beforeCompletion failure) during rollback" );
+  
                     }
                 } 
                 catch (Exception e) {
-                    stream.writeVerbose("Error: Failed to test synchronization (beforeCompletion failure) during rollback");
-                    stream.writeVerbose(e.toString());
-                    return false;
+                    e.printStackTrace();
+                    fail("Error: Failed to test synchronization (beforeCompletion failure) during rollback");
+                  
                 }
                 
-                return true;
+                return;
             }
-            catch(IOException e) {
+            catch(Exception e) {
                 e.printStackTrace();
-                return false;
+                fail(e.toString());
             }
         }
     }
@@ -1867,7 +1897,7 @@ class TransactionTestCases
      * Test synchronization behaviour with after completion failure during rollback
      */
     static class TestSynchronizationWithAfterFailureOnRollback
-        extends CWTestCase {
+        extends TestCase {
         
         /**
          * The group
@@ -1886,9 +1916,9 @@ class TransactionTestCases
          *
          * @param group the group (required)
          */
-        TestSynchronizationWithAfterFailureOnRollback(DataSourceGroupEntry group)
-            throws CWClassConstructorException {
-            super(NAME, "group(" + group.getGroupName() + ")");
+        TestSynchronizationWithAfterFailureOnRollback(DataSourceGroupEntry group){
+            
+            super("[" + group.getGroupName() + "] " + NAME);
 
             if (null == group) {
                 throw new IllegalArgumentException("The argument 'group' is null.");
@@ -1897,9 +1927,9 @@ class TransactionTestCases
             _group = group;
         }
 
-        public boolean run(CWVerboseStream stream)
+        public void runTest()
         {
-            TransactionManager transactionManager;
+            TransactionManager transactionManager = null;
             
             try {
                 try {
@@ -1908,28 +1938,29 @@ class TransactionTestCases
                     transactionManager = Tyrex.getTransactionManager();
                 } 
                 catch (Exception e) {
-                    stream.writeVerbose("Error: Failed to get transaction manager");
-                    return false;
+                    e.printStackTrace();
+                    fail("Error: Failed to get transaction manager");
+    
                 }
                 
                 try {
                     if (!testSynchronizationWithFailure( transactionManager, _group, stream, false, 
                                                           AFTER_COMPLETION_FAILURE)) {
-                        stream.writeVerbose( "Error: Failed to test synchronization (afterCompletion failure) during rollback" );
-                        return false;    
+                        fail( "Error: Failed to test synchronization (afterCompletion failure) during rollback" );
+
                     }
                 } 
                 catch (Exception e) {
-                    stream.writeVerbose("Error: Failed to test synchronization (afterCompletion failure) during rollback");
-                    stream.writeVerbose(e.toString());
-                    return false;
+                    e.printStackTrace();
+                    fail("Error: Failed to test synchronization (afterCompletion failure) during rollback");
+                   
                 }
                 
-                return true;
+                return;
             }
-            catch(IOException e) {
+            catch(Exception e) {
                 e.printStackTrace();
-                return false;
+                fail(e.toString());
             }
         }
     }
@@ -1939,7 +1970,7 @@ class TransactionTestCases
      * Test synchronization behaviour with before and after completion failure during rollback
      */
     static class TestSynchronizationWithFailureOnRollback
-        extends CWTestCase {
+        extends TestCase {
         
         /**
          * The group
@@ -1958,9 +1989,9 @@ class TransactionTestCases
          *
          * @param group the group (required)
          */
-        TestSynchronizationWithFailureOnRollback(DataSourceGroupEntry group)
-            throws CWClassConstructorException {
-            super(NAME, "group(" + group.getGroupName() + ")");
+        TestSynchronizationWithFailureOnRollback(DataSourceGroupEntry group){
+            
+            super("[" + group.getGroupName() + "] " + NAME);
 
             if (null == group) {
                 throw new IllegalArgumentException("The argument 'group' is null.");
@@ -1969,9 +2000,9 @@ class TransactionTestCases
             _group = group;
         }
 
-        public boolean run(CWVerboseStream stream)
+        public void runTest()
         {
-            TransactionManager transactionManager;
+            TransactionManager transactionManager = null;
             
             try {
                 try {
@@ -1980,28 +2011,28 @@ class TransactionTestCases
                     transactionManager = Tyrex.getTransactionManager();
                 } 
                 catch (Exception e) {
-                    stream.writeVerbose("Error: Failed to get transaction manager");
-                    return false;
-                }
+                    e.printStackTrace();
+                    fail("Error: Failed to get transaction manager");
+                  }
                 
                 try {
                     if (!testSynchronizationWithFailure( transactionManager, _group, stream, false, 
                                                           (byte) (BEFORE_COMPLETION_FAILURE | AFTER_COMPLETION_FAILURE))) {
-                        stream.writeVerbose( "Error: Failed to test synchronization (beforeCompletion and afterCompletion failure) during rollback" );
-                        return false;    
+                        fail( "Error: Failed to test synchronization (beforeCompletion and afterCompletion failure) during rollback" );
+   
                     }
                 } 
                 catch (Exception e) {
-                    stream.writeVerbose("Error: Failed to test synchronization (beforeCompletion and afterCompletion failure) during rollback");
-                    stream.writeVerbose(e.toString());
-                    return false;
+                    e.printStackTrace();
+                    fail("Error: Failed to test synchronization (beforeCompletion and afterCompletion failure) during rollback");
+                    
                 }
                 
-                return true;
+                return;
             }
-            catch(IOException e) {
+            catch(Exception e) {
                 e.printStackTrace();
-                return false;
+                fail(e.toString());
             }
         }
     }
@@ -2011,7 +2042,7 @@ class TransactionTestCases
      * Test one phase commit optimization with multiple data sources
      */
     static class Test1PCOptimizationWithMultipleDataSources
-        extends CWTestCase {
+        extends TestCase {
         
         /**
          * The group
@@ -2030,9 +2061,9 @@ class TransactionTestCases
          *
          * @param group the group (required)
          */
-        Test1PCOptimizationWithMultipleDataSources(DataSourceGroupEntry group)
-            throws CWClassConstructorException {
-            super(NAME, "group(" + group.getGroupName() + ")");
+        Test1PCOptimizationWithMultipleDataSources(DataSourceGroupEntry group){
+            
+            super("[" + group.getGroupName() + "] " + NAME);
 
             if (null == group) {
                 throw new IllegalArgumentException("The argument 'group' is null.");
@@ -2041,15 +2072,16 @@ class TransactionTestCases
             _group = group;
         }
 
-        public boolean run(CWVerboseStream stream)
+        public void runTest()
         {
-            TransactionManager transactionManager;
+            TransactionManager transactionManager = null;
             int result;
             
             try {
                 if (!_group.hasMultiple()) {
+          
                     stream.writeVerbose("Unable to test one-phase commit optimization using multiple data sources.");
-                    return true;    
+                    return;
                 }
                 
                 try {
@@ -2058,8 +2090,8 @@ class TransactionTestCases
                     transactionManager = Tyrex.getTransactionManager();
                 } 
                 catch (Exception e) {
-                    stream.writeVerbose("Error: Failed to get transaction manager");
-                    return false;
+                    e.printStackTrace();
+                    fail("Error: Failed to get transaction manager");
                 }
                 
                 try {
@@ -2070,26 +2102,25 @@ class TransactionTestCases
                             //stream.writeVerbose( "Could not test one phase commit optimization." );
                             break;
                         case ONE_PHASE_COMMIT_TEST_FAILED:
-                            stream.writeVerbose( "Error: Failed to test one phase commit optimization using multiple data sources." );
-                            return false;    
+                            fail( "Error: Failed to test one phase commit optimization using multiple data sources." );
+                              
                         default:
                             if (ONE_PHASE_COMMIT_TEST_SUCCEEDED != result) {
-                                stream.writeVerbose( "Error: Unknown result from one phase commit optimization test using multiple data sources." );
-                                return false;        
+                                fail( "Error: Unknown result from one phase commit optimization test using multiple data sources." );
+                 
                             }
                     }
                 } 
                 catch ( Exception e ) {
-                    stream.writeVerbose("Error: Failed to test one phase commit optimization using multiple data sources");
-                    stream.writeVerbose(e.toString());
-                    return false;
+                    fail("Error: Failed to test one phase commit optimization using multiple data sources");
+                    
                 }
                 
-                return true;
+                return;
             }
-            catch(IOException e) {
+            catch(Exception e) {
                 e.printStackTrace();
-                return false;
+                fail(e.toString());
             }
         }
     }
@@ -2099,7 +2130,7 @@ class TransactionTestCases
      * Test two phase commit performance
      */
     static class Test2PCPerformance
-        extends CWTestCase {
+        extends TestCase {
         
         /**
          * The group
@@ -2118,9 +2149,9 @@ class TransactionTestCases
          *
          * @param group the group (required)
          */
-        Test2PCPerformance(DataSourceGroupEntry group)
-            throws CWClassConstructorException {
-            super(NAME, "group(" + group.getGroupName() + ")");
+        Test2PCPerformance(DataSourceGroupEntry group){
+            
+            super("[" + group.getGroupName() + "] " + NAME);
 
             if (null == group) {
                 throw new IllegalArgumentException("The argument 'group' is null.");
@@ -2129,15 +2160,15 @@ class TransactionTestCases
             _group = group;
         }
 
-        public boolean run(CWVerboseStream stream)
+        public void runTest()
         {
-            TransactionManager transactionManager;
+            TransactionManager transactionManager = null;
             int result;
             
             try {
                 if (!_group.hasMultiple()) {
                     stream.writeVerbose("Unable to test two-phase commit performance.");
-                    return true;    
+                    return;
                 }
                 
                 try {
@@ -2146,27 +2177,26 @@ class TransactionTestCases
                     transactionManager = Tyrex.getTransactionManager();
                 } 
                 catch (Exception e) {
-                    stream.writeVerbose("Error: Failed to get transaction manager");
-                    return false;
+                    fail("Error: Failed to get transaction manager");
+
                 }
                 
                 try {
                     if (!performance(transactionManager, _group, stream, TWO_PHASE_COMMIT_PERFORMANCE_TEST)) {
-                        stream.writeVerbose("Error: Performance two-phase commit failed");
-                        return false;    
+                        fail("Error: Performance two-phase commit failed");
+    
                     }
                 } 
                 catch (Exception e) {
-                    stream.writeVerbose("Error: Performance two-phase commit failed");
-                    stream.writeVerbose( e.toString() );
-                    return false;
+                    fail("Error: Performance two-phase commit failed");
+                 
                 }
                 
-                return true;
+                return;
             }
-            catch(IOException e) {
+            catch(Exception e) {
                 e.printStackTrace();
-                return false;
+                fail(e.toString());
             }
         }
     }
@@ -2176,7 +2206,7 @@ class TransactionTestCases
      * Test one phase commit performance
      */
     static class Test1PCPerformance
-        extends CWTestCase {
+        extends TestCase {
         
         /**
          * The group
@@ -2195,9 +2225,9 @@ class TransactionTestCases
          *
          * @param group the group (required)
          */
-        Test1PCPerformance(DataSourceGroupEntry group)
-            throws CWClassConstructorException {
-            super(NAME, "group(" + group.getGroupName() + ")");
+        Test1PCPerformance(DataSourceGroupEntry group){
+            
+            super("[" + group.getGroupName() + "] " + NAME);
 
             if (null == group) {
                 throw new IllegalArgumentException("The argument 'group' is null.");
@@ -2206,9 +2236,9 @@ class TransactionTestCases
             _group = group;
         }
 
-        public boolean run(CWVerboseStream stream)
+        public void runTest()
         {
-            TransactionManager transactionManager;
+            TransactionManager transactionManager = null;
             int result;
             
             try {
@@ -2218,27 +2248,26 @@ class TransactionTestCases
                     transactionManager = Tyrex.getTransactionManager();
                 } 
                 catch (Exception e) {
-                    stream.writeVerbose("Error: Failed to get transaction manager");
-                    return false;
+                    fail("Error: Failed to get transaction manager");
+
                 }
                 
                 try {
                     if (!performance(transactionManager, _group, stream, ONE_PHASE_COMMIT_PERFORMANCE_TEST)) {
-                        stream.writeVerbose("Error: Performance one-phase commit failed");
-                        return false;    
+                        fail("Error: Performance one-phase commit failed");
+    
                     }
                 } 
                 catch (Exception e) {
-                    stream.writeVerbose("Error: Performance one-phase commit failed");
-                    stream.writeVerbose( e.toString() );
-                    return false;
+                    fail("Error: Performance one-phase commit failed");
+                    
                 }
                 
-                return true;
+                return;
             }
-            catch(IOException e) {
+            catch(Exception e) {
                 e.printStackTrace();
-                return false;
+                fail(e.toString());
             }
         }
     }
@@ -2248,7 +2277,7 @@ class TransactionTestCases
      * Test rollback performance
      */
     static class TestRollbackPerformance
-        extends CWTestCase {
+        extends TestCase {
         
         /**
          * The group
@@ -2267,9 +2296,9 @@ class TransactionTestCases
          *
          * @param group the group (required)
          */
-        TestRollbackPerformance(DataSourceGroupEntry group)
-            throws CWClassConstructorException {
-            super(NAME, "group(" + group.getGroupName() + ")");
+        TestRollbackPerformance(DataSourceGroupEntry group){
+            
+            super("[" + group.getGroupName() + "] " + NAME);
 
             if (null == group) {
                 throw new IllegalArgumentException("The argument 'group' is null.");
@@ -2278,9 +2307,10 @@ class TransactionTestCases
             _group = group;
         }
 
-        public boolean run(CWVerboseStream stream)
+        public void runTest()
         {
-            TransactionManager transactionManager;
+            
+            TransactionManager transactionManager = null;
             int result;
             
             try {
@@ -2290,27 +2320,26 @@ class TransactionTestCases
                     transactionManager = Tyrex.getTransactionManager();
                 } 
                 catch (Exception e) {
-                    stream.writeVerbose("Error: Failed to get transaction manager");
-                    return false;
+                    fail("Error: Failed to get transaction manager");
+        
                 }
                 
                 try {
                     if (!performance(transactionManager, _group, stream, ROLLBACK_PERFORMANCE_TEST)) {
-                        stream.writeVerbose("Error: Performance rollback failed");
-                        return false;    
+                        fail("Error: Performance rollback failed");
+          
                     }
                 } 
                 catch (Exception e) {
-                    stream.writeVerbose("Error: Performance rollback failed");
-                    stream.writeVerbose( e.toString() );
-                    return false;
+                    fail("Error: Performance rollback failed");
+                   
                 }
                 
-                return true;
+                return;
             }
-            catch(IOException e) {
+            catch(Exception e) {
                 e.printStackTrace();
-                return false;
+                fail(e.toString());
             }
         }
     }
@@ -2327,7 +2356,7 @@ class TransactionTestCases
      *      if the current thread is still associated
      */
     static private boolean transactionBoundary( TransactionManager transactionManager,
-                                         CWVerboseStream stream,
+                                         VerboseStream stream,
                                          boolean commit )
         throws Exception
     {
@@ -2359,7 +2388,7 @@ class TransactionTestCases
      */
     static private boolean testRollbackWithFailedDelist(TransactionManager transactionManager,
                                                         DataSourceGroupEntry group,
-                                                        CWVerboseStream stream )
+                                                        VerboseStream stream )
         throws Exception
     {
         Entry entry;
@@ -2433,7 +2462,7 @@ class TransactionTestCases
      */
     static private boolean testMarkForRollback(TransactionManager transactionManager,
                                         DataSourceGroupEntry group,
-                                        CWVerboseStream stream,
+                                        VerboseStream stream,
                                         boolean commit)
         throws Exception
     {
@@ -2509,14 +2538,14 @@ class TransactionTestCases
      * @return true if the value in the database matches
      *      the value in the specified entries. Return false 
      *      otherwise.
-     * @throws IOException if there is a problem writing to
+     * @throws Exception if there is a problem writing to
      *      the logging stream
      * @throws SQLException if there is a problem checking the 
      *      value in the data source
      * @see Entry
      */
-    static private boolean checkValues(ArrayList entries, CWVerboseStream stream)
-        throws SQLException, IOException
+    static private boolean checkValues(ArrayList entries, VerboseStream stream)
+        throws SQLException, Exception
     {
         Entry entry;
 
@@ -2540,7 +2569,7 @@ class TransactionTestCases
      * @return true if the value in the database matches
      *      the specified value. Return false 
      *      otherwise.
-     * @throws IOException if there is a problem writing to
+     * @throws Exception if there is a problem writing to
      *      the logging stream
      * @throws SQLException if there is a problem checking the 
      *      value in the data source
@@ -2548,8 +2577,8 @@ class TransactionTestCases
      */
     static private boolean checkValue(Entry entry, 
                                String value, 
-                               CWVerboseStream stream)
-        throws SQLException, IOException
+                               VerboseStream stream)
+        throws SQLException, Exception
     {
         Connection connection = getConnection(entry);
 
@@ -2686,7 +2715,7 @@ class TransactionTestCases
      * @param stream the logging stream
      * @return true if the update happened. Return false otherwise.
      * @throws SQLException if there is a problem updating
-     * @throws IOException if there is a problem writing to the stream
+     * @throws Exception if there is a problem writing to the stream
      * @throws SystemException if there is a problem enlisting the resouce
      * @throws RollbackException if the current transaction is marked for rollback
      * @see Entry
@@ -2694,8 +2723,8 @@ class TransactionTestCases
     static private boolean update( TransactionManager transactionManager,
                             Entry entry, 
                             String value, 
-                            CWVerboseStream stream)
-        throws SQLException, IOException, SystemException, RollbackException
+                            VerboseStream stream)
+        throws SQLException, Exception, SystemException, RollbackException
     {
         Connection connection;
 
@@ -2748,7 +2777,7 @@ class TransactionTestCases
      */
     static private boolean testSynchronizationWithFailure(final TransactionManager transactionManager,
                                                           DataSourceGroupEntry group,
-                                                          CWVerboseStream stream,
+                                                          VerboseStream stream,
                                                           boolean commit,
                                                           final byte synchronizationFailure)
         throws Exception
@@ -2944,7 +2973,7 @@ class TransactionTestCases
      */
     static private int testOnePhaseCommitOptimizationUsingMultipleDatasources( final TransactionManager transactionManager,
                                                                      DataSourceGroupEntry group,
-                                                                     CWVerboseStream stream)
+                                                                     VerboseStream stream)
         throws Exception
     {
     
@@ -3063,7 +3092,7 @@ class TransactionTestCases
       */
     static private boolean testSynchronization( TransactionManager transactionManager,
                                           DataSourceGroupEntry group,
-                                          CWVerboseStream stream,
+                                          VerboseStream stream,
                                           boolean commit )
         throws Exception
     {
@@ -3164,7 +3193,7 @@ class TransactionTestCases
     static private boolean insert(TransactionManager transactionManager,
                                   Entry entry,
                                   String value,
-                                  CWVerboseStream stream)
+                                  VerboseStream stream)
         throws Exception {
         return insert(transactionManager, entry, entry._key, value, stream);
     }
@@ -3188,7 +3217,7 @@ class TransactionTestCases
                                   Entry entry,
                                   String key,
                                   String value,
-                                  CWVerboseStream stream)
+                                  VerboseStream stream)
         throws Exception
     {
         Connection connection;
@@ -3245,7 +3274,7 @@ class TransactionTestCases
      * @throws Exception if there is a problem inserting the data
      */
     static private boolean insert(ArrayList entries,
-                                  CWVerboseStream stream)
+                                  VerboseStream stream)
         throws Exception {
         for (int i = entries.size(); --i >= 0;) {
             if (!insert((Entry)entries.get(i), stream)) {
@@ -3266,10 +3295,10 @@ class TransactionTestCases
      * @throws Exception if there is a problem inserting the data
      */
     static private boolean insert(Entry entry,
-                                  CWVerboseStream stream)
+                                  VerboseStream stream)
         throws Exception
     {
-        TransactionManager transactionManager;
+        TransactionManager transactionManager = null;
         Connection connection;
         Statement stmt;
 
@@ -3346,7 +3375,7 @@ class TransactionTestCases
      */
     static private boolean testDelist(TransactionManager transactionManager,
                                       DataSourceGroupEntry group,
-                                      CWVerboseStream stream,
+                                      VerboseStream stream,
                                       boolean onePhaseCommit,
                                       boolean commit,
                                       boolean reuse)
@@ -3527,7 +3556,7 @@ class TransactionTestCases
      */
     static private boolean useDelistedXAResourcesInNewTransaction( final TransactionManager transactionManager,
                                                             final ArrayList entries,
-                                                            final CWVerboseStream stream )
+                                                            final VerboseStream stream )
         throws Exception
     {
         final Object lock = new Object();
@@ -3585,7 +3614,7 @@ class TransactionTestCases
      */
     static private boolean performance( TransactionManager transactionManager,
                                  DataSourceGroupEntry group,
-                                 CWVerboseStream stream,
+                                 VerboseStream stream,
                                  int performanceMode )
         throws Exception
     {
@@ -3714,7 +3743,7 @@ class TransactionTestCases
      */
     static private boolean testRollback( final TransactionManager transactionManager, 
                                   ArrayList entries,
-                                  CWVerboseStream stream )
+                                  VerboseStream stream )
             throws Exception
     {
         Entry entry;
@@ -3849,7 +3878,7 @@ class TransactionTestCases
      */
     static private boolean testAsynchronousTransaction(TransactionManager transactionManager, 
                                                        DataSourceGroupEntry group,
-                                                       CWVerboseStream stream,
+                                                       VerboseStream stream,
                                                        boolean commit)
         throws Exception
     {
@@ -3952,7 +3981,7 @@ class TransactionTestCases
      */
     private static boolean testCommit( final TransactionManager transactionManager, 
                                         DataSourceGroupEntry group,
-                                        CWVerboseStream stream,
+                                        VerboseStream stream,
                                         int commitMode)
         throws Exception
     {
@@ -4098,7 +4127,7 @@ class TransactionTestCases
      *      XA data sources, connections and/or resources.
      * @see Entry
      */
-    static private ArrayList getEntries(DataSourceGroupEntry group, boolean useOne, CWVerboseStream stream)
+    static private ArrayList getEntries(DataSourceGroupEntry group, boolean useOne, VerboseStream stream)
         throws Exception
     {
         ArrayList entries;
@@ -4138,9 +4167,9 @@ class TransactionTestCases
      * @return a random key
      */
     static private String generateKey(){
-        synchronized (TransactionTestCases.class) {
+        synchronized (TransactionTestSuite.class) {
             try {
-                TransactionTestCases.class.wait(50);
+                TransactionTestSuite.class.wait(50);
             }
             catch(InterruptedException e){
             }
@@ -4155,9 +4184,9 @@ class TransactionTestCases
      * @return a random value
      */
     static private String generateValue(){
-        synchronized (TransactionTestCases.class) {
+        synchronized (TransactionTestSuite.class) {
             try {
-                TransactionTestCases.class.wait(50);
+                TransactionTestSuite.class.wait(50);
             }
             catch(InterruptedException e){
             }

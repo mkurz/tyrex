@@ -40,12 +40,13 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: XADataSourceTestCategory.java,v 1.1 2000/11/09 23:57:44 mohammed Exp $
+ * $Id: XADataSourceTestSuite.java,v 1.1 2001/02/23 17:17:41 omodica Exp $
  */
 
 
 package jdbc;
 
+import tests.*;
 
 import java.io.IOException;
 import java.sql.Connection;
@@ -58,10 +59,9 @@ import javax.sql.XADataSource;
 import javax.transaction.TransactionManager;
 import jdbc.db.TestConnectionImpl;
 import jdbc.db.TestDriverImpl;
-import org.exolab.jtf.CWTestCategory;
-import org.exolab.jtf.CWTestCase;
-import org.exolab.jtf.CWVerboseStream;
-import org.exolab.exceptions.CWClassConstructorException;
+
+import junit.framework.*;
+
 import tyrex.jdbc.ServerDataSource;
 import tyrex.jdbc.xa.EnabledDataSource;
 import tyrex.tm.Tyrex;
@@ -70,8 +70,8 @@ import tyrex.tm.Tyrex;
 /**
  * Tests for tyrex.jdbc xa data source implementations
  */
-public class XADataSourceTestCategory
-    extends CWTestCategory
+public class XADataSourceTestSuite
+    extends TestSuite
 {
     /**
      * The test driver
@@ -79,28 +79,26 @@ public class XADataSourceTestCategory
     private TestDriverImpl _driver = null;
 
 
-    public XADataSourceTestCategory()
-        throws CWClassConstructorException
+    public XADataSourceTestSuite( String name)
     {
-        super( "XADataSourceTestCategory", "XADataSourceTestCategory");
+        super( name );
         
-        CWTestCase tc;
+        TestCase tc;
         
         tc = new EnabledDataSourceTest();
-        add( tc.name(), tc, true );
+        addTest( tc );
         
         tc = new ServerDataSourceTest();
-        add( tc.name(), tc, true );
+        addTest( tc );
 
         tc = new XAConnectionTest();
-        add( tc.name(), tc, true );
-
+        addTest( tc );
 
         tc = new PruneTest();
-        add( tc.name(), tc, true );
+        addTest( tc );
         
         tc = new TransactionTimeoutTest();
-        add( tc.name(), tc, true );
+        addTest( tc );
         
     }
 
@@ -116,7 +114,7 @@ public class XADataSourceTestCategory
      * @throws ClassNotFoundException if the test driver class is not found
      * @throws SQLException if there is a problem geting the test driver
      */
-    private TestDriverImpl getTestDriver(CWVerboseStream stream)
+    private TestDriverImpl getTestDriver(VerboseStream stream)
         throws IOException, ClassNotFoundException, SQLException
     {
         if (null == _driver) {
@@ -157,15 +155,14 @@ public class XADataSourceTestCategory
     }
 
     private class EnabledDataSourceTest
-        extends CWTestCase
+        extends TestCase
     {
         EnabledDataSourceTest()
-            throws CWClassConstructorException
         {
-            super( "TC01", "Enabled Data Source" );
+            super( "[TC01] Enabled Data Source" );
         }
     
-        public boolean run( CWVerboseStream stream )
+        public void runTest()
         {
             TransactionManager transactionManager;
             TestDriverImpl testDriver;
@@ -174,6 +171,8 @@ public class XADataSourceTestCategory
             XAConnection xaConnection;
             EnabledDataSource ds;
             int i;
+            
+            VerboseStream stream = new VerboseStream();
             
             try {
                 testDriver = getTestDriver(stream);
@@ -193,8 +192,7 @@ public class XADataSourceTestCategory
                         connection = xaConnection.getConnection();
     
                         if (!transactionManager.getTransaction().enlistResource(xaConnection.getXAResource())) {
-                            System.out.println("failed to enlist");
-                            return false;
+                            fail("Error: failed to enlist");
                         }
         
                         stmt = connection.createStatement();
@@ -213,37 +211,34 @@ public class XADataSourceTestCategory
                     stream.writeVerbose("failed at iteration " + i);
                     stream.writeVerbose(e.toString());
                     e.printStackTrace();
-                    return false;
+                    fail( "Error: failed at iteration " + i );
                 }
     
                 if (testDriver.getNumberOfCreatedConnections() != 1) {
-                    stream.writeVerbose("Driver created " + 
+                    fail("Driver created " + 
                                         testDriver.getNumberOfCreatedConnections() +
                                         " drivers. Expected 1.");
-                    return false;
                 }
     
-                return true;
                 
             }
             catch (Exception e) {
                 e.printStackTrace();
+                 fail( e.getMessage() );
             }
-            return false;
         }
     }
 
 
     private class PruneTest
-        extends CWTestCase
+        extends TestCase
     {
         PruneTest()
-            throws CWClassConstructorException
         {
-            super( "TC04", "Prune" );
+            super( "[TC04] Prune" );
         }
     
-        public boolean run( CWVerboseStream stream )
+        public void runTest()
         {
             TransactionManager transactionManager;
             TestDriverImpl testDriver;
@@ -251,6 +246,8 @@ public class XADataSourceTestCategory
             Statement stmt;
             XAConnection xaConnection;
             EnabledDataSource ds;
+            
+            VerboseStream stream = new VerboseStream();
             
             try {
                 testDriver = getTestDriver(stream);
@@ -271,10 +268,9 @@ public class XADataSourceTestCategory
                     connection.close();
 
                     if (testDriver.getNumberOfCreatedConnections() != 1) {
-                        stream.writeVerbose("Driver created " + 
+                        fail( "Driver created " + 
                                             testDriver.getNumberOfCreatedConnections() +
                                             " drivers. Expected 1.");
-                        return false;
                     }
 
                     Thread.currentThread().sleep(3000);
@@ -287,10 +283,9 @@ public class XADataSourceTestCategory
                     connection.close();
 
                     if (testDriver.getNumberOfCreatedConnections() != 2) {
-                        stream.writeVerbose("Driver created " + 
+                        fail("Driver created " + 
                                             testDriver.getNumberOfCreatedConnections() +
                                             " drivers. Expected 2.");
-                        return false;
                     }
                 
                 }
@@ -298,30 +293,27 @@ public class XADataSourceTestCategory
                 {
                     stream.writeVerbose(e.toString());
                     e.printStackTrace();
-                    return false;
+                    fail( e.getMessage() ); 
                 }
-    
-                return true;
                 
             }
             catch (Exception e) {
                 e.printStackTrace();
+                 fail( e.getMessage() );
             }
-            return false;
         }
     }
 
 
     private class ServerDataSourceTest
-        extends CWTestCase
+        extends TestCase
     {
         private ServerDataSourceTest()
-            throws CWClassConstructorException
         {
-            super( "TC02", "Server Data Source" );
+            super( "[TC02] Server Data Source" );
         }
     
-        public boolean run( CWVerboseStream stream )
+        public void runTest()
         {
             TransactionManager transactionManager;
             TestDriverImpl testDriver;
@@ -330,6 +322,8 @@ public class XADataSourceTestCategory
             EnabledDataSource ds;
             ServerDataSource pool;
             int i;
+            
+            VerboseStream stream = new VerboseStream();
             
             try {
                 testDriver = getTestDriver(stream);
@@ -366,38 +360,36 @@ public class XADataSourceTestCategory
                     stream.writeVerbose("failed at iteration " + i);
                     stream.writeVerbose(e.toString());
                     e.printStackTrace();
-                    return false;
+                    fail("Error: failed at iteration " + i );
                 }
     
                 if (testDriver.getNumberOfCreatedConnections() != 1) {
-                    stream.writeVerbose("Driver created " + 
+                    fail("Driver created " + 
                                         testDriver.getNumberOfCreatedConnections() +
                                         " drivers. Expected 1.");
-                    return false;
                 }
-    
-                return true;
             }
             catch (Exception e) {
                 e.printStackTrace();
+                fail( e.getMessage() );
             }
-            return false;
         }
     }
 
     private class TransactionTimeoutTest
-        extends CWTestCase
+        extends TestCase
     {
         private TransactionTimeoutTest()
-            throws CWClassConstructorException
         {
-            super( "TC05", "Transaction Timeout" );
+            super( "[TC05] Transaction Timeout" );
         }
     
-        public boolean run( CWVerboseStream stream )
+        public void runTest()
         {
             //int i;
             try {
+                 VerboseStream stream = new VerboseStream();
+             
                 final TestDriverImpl testDriver = getTestDriver(stream);
                 Thread thread;
                 final boolean[] result = new boolean[]{false};
@@ -455,7 +447,7 @@ public class XADataSourceTestCategory
                             
                             if (!result[0]) {
                                 //stream.writeVerbose("failed at iteration " + i);
-                                return false;    
+                                fail( "Error: failed to execute update" );   
                             }
                     //}
                 }
@@ -464,30 +456,28 @@ public class XADataSourceTestCategory
                     //stream.writeVerbose("failed at iteration " + i);
                     stream.writeVerbose(e.toString());
                     e.printStackTrace();
-                    return false;
+                    fail( e.getMessage() );
                 }
-    
-                return true;
             }
             catch (Exception e) {
                 e.printStackTrace();
+                fail( e.getMessage() );
             }
-            return false;
+
         }
     }
 
 
 
     private class XAConnectionTest
-        extends CWTestCase
+        extends TestCase
     {
         private XAConnectionTest()
-            throws CWClassConstructorException
         {
-            super( "TC03", "XA Connections with different user/passwords" );
+            super( "[TC03] XA Connections with different user/passwords" );
         }
     
-        public boolean run( CWVerboseStream stream )
+        public void runTest()
         {
             TransactionManager transactionManager;
             TestDriverImpl testDriver;
@@ -496,6 +486,8 @@ public class XADataSourceTestCategory
             EnabledDataSource ds;
             ServerDataSource pool;
             int i;
+            
+            VerboseStream stream = new VerboseStream();
             
             try {
                 testDriver = getTestDriver(stream);
@@ -542,26 +534,25 @@ public class XADataSourceTestCategory
                 {
                     stream.writeVerbose("failed at iteration " + i);
                     stream.writeVerbose(e.toString());
-                    e.printStackTrace();
-                    return false;
+                    //e.printStackTrace();
+                    fail( e.getMessage() );
                 }
     
                 if (testDriver.getNumberOfCreatedConnections() != 3) {
-                    stream.writeVerbose("Driver created " + 
+                    fail("Driver created " + 
                                         testDriver.getNumberOfCreatedConnections() +
                                         " drivers. Expected 3.");
-                    return false;
                 }
     
-                return true;
-            }
+             }
             catch (Exception e) {
                 e.printStackTrace();
+                fail( e.getMessage() );
             }
-            return false;
         }
     }
 
+   /*
     public static void main (String args[]) {
 
         class Test extends org.exolab.jtf.CWBaseApplication
@@ -597,7 +588,7 @@ public class XADataSourceTestCategory
         {
             exception.printStackTrace();
         }
-    }
+    }*/
     
 }
 

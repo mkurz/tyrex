@@ -40,18 +40,16 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  */
-package tests.ots;
+package ots;
 
-import org.exolab.jtf.CWTestCategory;
-import org.exolab.jtf.CWTestCase;
-import org.exolab.jtf.CWVerboseStream;
-import org.exolab.exceptions.CWClassConstructorException;
+import junit.framework.*;
+
 
 /**
  * This test case is inherited by all OTS test cases. It provides a simple way to directly have 
  * an ORB instance.
  */
-public abstract class OTSTestCase extends CWTestCase
+public abstract class OTSTestCase extends TestCase
 {
     protected org.omg.CORBA.ORB _client_orb;
     
@@ -59,13 +57,12 @@ public abstract class OTSTestCase extends CWTestCase
     
     private Thread _thread;
     
-    public OTSTestCase( String test_number, String test_comment )
-        throws CWClassConstructorException
+    public OTSTestCase( String test_name )
     {
-        super( test_number, test_comment );
+        super( test_name );
     }
     
-    public void preExecute()
+    public void setUp()
     {
         _client_orb = org.omg.CORBA.ORB.init( new String[] { "-ORBProfile=tyrex" }, null ); 
         
@@ -83,7 +80,7 @@ public abstract class OTSTestCase extends CWTestCase
         _thread.start();
     }
         
-    public void postExecute()
+    public void tearDown()
     {
         try
         {

@@ -1,67 +1,72 @@
-package tests.ots;
+package ots;
 
-import org.exolab.jtf.CWTestCategory;
-import org.exolab.jtf.CWTestCase;
-import org.exolab.jtf.CWVerboseStream;
-import org.exolab.exceptions.CWClassConstructorException;
+import tests.*;
 
-public class OTS extends CWTestCategory
-{
-    public OTS()
-        throws CWClassConstructorException
+import junit.framework.*;
+
+public class OTS extends TestSuite
+{   
+    public static VerboseStream stream = new VerboseStream();
+    
+    /**
+     * The TransactionCurrent (OTS Server)
+     */
+    public static org.omg.CosTransactions.Current current;
+    
+    public OTS( String name )
     {
-        super( "ots", "OTS tests");
+        super( name );
         
-        CWTestCase tc;
+        TestCase tc;
         
         tc = new BasicTransactionTest();
-        add( tc.name(), tc, true ); 
+        addTest( tc ); 
         tc = new IsTransactionTest();
-        add( tc.name(), tc, true ); 
+        addTest( tc ); 
         tc = new CommitTransactionTest();
-        add( tc.name(), tc, true ); 
+        addTest( tc ); 
         tc = new RollbackTransactionTest();
-        add( tc.name(), tc, true );
+        addTest( tc );
         tc = new RollbackOnlyTransactionTest();
-        add( tc.name(), tc, true );        
+        addTest( tc );        
         tc = new SynchronizationTransactionTest();
-        add( tc.name(), tc, true );
+        addTest( tc );
         tc = new CommitOnePhaseTransactionTest();
-        add( tc.name(), tc, true );
+        addTest( tc );
         tc = new CommitResourcesTransactionTest();
-        add( tc.name(), tc, true );
+        addTest( tc );
         tc = new RollbackResourcesTransactionTest();
-        add( tc.name(), tc, true );
+        addTest( tc );
         tc = new ReadOnlyTransactionTest();
-        add( tc.name(), tc, true );
+        addTest( tc );
         tc = new RollbackVoteTransactionTest();
-        add( tc.name(), tc, true );
+        addTest( tc );
         tc = new ComplexRollbackVoteTransactionTest();
-        add( tc.name(), tc, true );
+        addTest( tc );
         tc = new SuspendTransactionTest();
-        add( tc.name(), tc, true );
+        addTest( tc );
         tc = new ComplexSuspendTransactionTest();
-        add( tc.name(), tc, true );
+        addTest( tc );
         tc = new TimeOutTransactionTest();
-        add( tc.name(), tc, true );
+        addTest( tc );
         tc = new ExplicitTransactionTest();
-        add( tc.name(), tc, true );
+        addTest( tc );
         tc = new PropagationContextTransactionTest();
-        add( tc.name(), tc, true );
+        addTest( tc );
         //tc = new SubordinateTransactionTest();
-        //add( tc.name(), tc, true );
+        //addTest( tc );
         //tc = new SubordinateRollbackTransactionTest();
-        //add( tc.name(), tc, true );
+        //addTest( tc );
         tc = new BasicMultipleTransactionTest();
-        add( tc.name(), tc, true );
+        addTest( tc);
         tc = new MultipleTransactionTest();
-        add( tc.name(), tc, true );
+        addTest( tc );
         tc = new BasicSubTransactionTest();
-        add( tc.name(), tc, true );
+        addTest( tc );
         //tc = new SubtransactionTest();
-        //add( tc.name(), tc, true );
+        //addTest( tc );
         tc = new SubtransactionResourceTest();
-        add( tc.name(), tc, true );
+        addTest( tc );
     }
     
     /**
@@ -70,12 +75,19 @@ public class OTS extends CWTestCategory
     public static class BasicTransactionTest extends OTSTestCase
     {        
         public BasicTransactionTest()
-            throws CWClassConstructorException
         {
-            super( "TC01", "Basic transaction test" );
+            super( "[TC01] Basic transaction test" );
         }
-                
-        public boolean run( CWVerboseStream stream )
+        
+        /**
+         * Main test method - TC01
+         *  - check status is StatusNoTransaction
+         *  - begin the transaction
+         *  - check its status is StatusActive
+         *  - commit the transaction
+         *  - check its status is StatusNoTransaction
+         */        
+        public void runTest()
         {                       
             try
             {                                
@@ -84,16 +96,14 @@ public class OTS extends CWTestCategory
                                 
                 org.omg.CosTransactions.Status status = current.get_status();
          
-                if ( status.value() != org.omg.CosTransactions.Status._StatusNoTransaction )
-                    return false;
-                
+                assert( status.value() == org.omg.CosTransactions.Status._StatusNoTransaction );
+                 
                 stream.writeVerbose("Begin the transaction");
                 current.begin();
                 
                 status = current.get_status();
 
-                if ( status.value() != org.omg.CosTransactions.Status._StatusActive )
-                    return false;
+                assert( status.value() == org.omg.CosTransactions.Status._StatusActive );
                 
                 stream.writeVerbose("Transaction name " + current.get_transaction_name() );
                 
@@ -102,16 +112,13 @@ public class OTS extends CWTestCategory
                 
                 status = current.get_status();
                 
-                if ( status.value() != org.omg.CosTransactions.Status._StatusNoTransaction )
-                    return false;
-                
-                return true;
+                assert ( status.value() == org.omg.CosTransactions.Status._StatusNoTransaction );
             }
             catch ( Exception ex )
             {
                 ex.printStackTrace();
                 
-                return false;
+                fail( ex.getMessage() );
             }
         }
     }
@@ -122,12 +129,16 @@ public class OTS extends CWTestCategory
     public static class IsTransactionTest extends OTSTestCase
     {        
         public IsTransactionTest()
-            throws CWClassConstructorException
         {
-            super( "TC02", "Is transaction test" );
+            super( "[TC02] Is transaction test" );
         }
-                
-        public boolean run( CWVerboseStream stream )
+        
+        /**
+         * Main test method - TC02
+         *  - try to commit a transaction 
+         *  - catch the expected exception NoTransaction
+         */               
+        public void runTest()
         {                       
             try
             {                                
@@ -141,16 +152,16 @@ public class OTS extends CWTestCategory
                 }
                 catch ( org.omg.CosTransactions.NoTransaction e )
                 {
-                    return true;
+                    return;;
                 }
                 
-                return false;
+                fail("Transactioon not commited");
             }
             catch ( Exception ex )
             {
                 ex.printStackTrace();
                 
-                return false;
+                fail( ex.getMessage() );
             }
         }
     }
@@ -161,12 +172,18 @@ public class OTS extends CWTestCategory
     public static class CommitTransactionTest extends OTSTestCase
     {        
         public CommitTransactionTest()
-            throws CWClassConstructorException
         {
-            super( "TC03", "Simple commit test" );
+            super( "[TC03] Simple commit test" );
         }
-                
-        public boolean run( CWVerboseStream stream )
+        
+        /**
+         * Main test method - TC03
+         *  - begin the transaction
+         *  - do some operations (credit/debt)
+         *  - check the results
+         *  - commit the transaction
+         */                
+        public void runTest()
         {                       
             try
             {
@@ -185,19 +202,16 @@ public class OTS extends CWTestCategory
                 
                 bobj.debit( 500 );
                 
-                if ( bobj.balance() != 500 ) 
-                    return false;
+                assert ( "Balance is not equal to 500", bobj.balance() == 500 ); 
                 
                 stream.writeVerbose("Commit the transaction");
                 current.commit( true );    
-                
-                return true;
             }
             catch ( Exception ex )
             {
                 ex.printStackTrace();
                 
-                return false;
+                fail( ex.getMessage() );
             }
         }
     }
@@ -208,12 +222,19 @@ public class OTS extends CWTestCategory
     public static class RollbackTransactionTest extends OTSTestCase
     {        
         public RollbackTransactionTest()
-            throws CWClassConstructorException
         {
-            super( "TC04", "Simple rollback test" );
+            super( "[TC04] Simple rollback test" );
         }
-                
-        public boolean run( CWVerboseStream stream )
+        
+        
+        /**
+         * Main test method - TC04
+         *  - begin the transaction
+         *  - do some operations (credit/debt)
+         *  - check the results
+         *  - rollback the transaction
+         */     
+        public void runTest()
         {                       
             try
             {
@@ -232,19 +253,16 @@ public class OTS extends CWTestCategory
                 
                 bobj.debit( 500 );
                 
-                if ( bobj.balance() != 500 ) 
-                    return false;
+                assert ( "Balance is not equal to 500", bobj.balance() == 500 ); 
                 
                 stream.writeVerbose("rollback the transaction");
                 current.rollback();    
-                
-                return true;
             }
             catch ( Exception ex )
             {
                 ex.printStackTrace();
                 
-                return false;
+                fail( ex.getMessage() );
             }
         }
     }
@@ -255,12 +273,18 @@ public class OTS extends CWTestCategory
     public static class RollbackOnlyTransactionTest extends OTSTestCase
     {        
         public RollbackOnlyTransactionTest()
-            throws CWClassConstructorException
         {
-            super( "TC05", "Simple rollback only test" );
+            super( "[TC05] Simple rollback only test" );
         }
-                
-        public boolean run( CWVerboseStream stream )
+         
+        /**
+         * Main test method - TC05
+         *  - begin the transaction
+         *  - do some operations (credit/debt)
+         *  - try to commit
+         *  - transaction should have been rollbacked
+         */             
+        public void runTest()
         {                       
             try
             {
@@ -284,16 +308,16 @@ public class OTS extends CWTestCategory
                 }
                 catch ( org.omg.CORBA.TRANSACTION_ROLLEDBACK e )
                 {                
-                    return true;
+                    return;
                 }
                 
-                return false;
+                fail( "Transaction was not rollbacked" ); 
             }
             catch ( Exception ex )
             {
                 ex.printStackTrace();
                 
-                return false;
+                fail( ex.getMessage() );
             }
         }
     }
@@ -304,12 +328,20 @@ public class OTS extends CWTestCategory
     public static class SynchronizationTransactionTest extends OTSTestCase
     {        
         public SynchronizationTransactionTest()
-            throws CWClassConstructorException
         {
-            super( "TC06", "Simple synchronization test" );
+            super( "[TC06] Simple synchronization test" );
         }
-                
-        public boolean run( CWVerboseStream stream )
+        
+        /**
+         * Main test method - TC06
+         *  - begin the transaction
+         *  - register a synchronization object
+         *  - do some operations (credit/debt)
+         *  - check the results
+         *  - try to commit
+         *  - synchronization should have been invoked
+         */               
+        public void runTest()
         {                       
             try
             {
@@ -337,31 +369,27 @@ public class OTS extends CWTestCategory
                 catch ( java.lang.Exception e )
                 {
                     e.printStackTrace();
-                    return false;
+                    fail( e.getMessage() );
                 }                                
                 
                 bobj.credit( 1000 );
                 
                 bobj.debit( 500 );
                 
-                if ( bobj.balance() != 500 ) 
-                    return false;
+                assert ( "Balance is not equal to 500", bobj.balance() == 500 ); 
                 
                 stream.writeVerbose("commit the transaction");
                 current.commit( true );    
                 
                 stream.writeVerbose("check if the synchronization was used");
                 
-                if ( !synchro.isInvoked() )
-                    return false;
-                
-                return true;
+                assert( "Synchronization not invoked", synchro.isInvoked() );
             }
             catch ( Exception ex )
             {
                 ex.printStackTrace();
                 
-                return false;
+                fail( ex.getMessage() );
             }
         }
     }
@@ -372,12 +400,20 @@ public class OTS extends CWTestCategory
     public static class CommitOnePhaseTransactionTest extends OTSTestCase
     {        
         public CommitOnePhaseTransactionTest()
-            throws CWClassConstructorException
         {
-            super( "TC07", "Commit one phase test" );
+            super( "[TC07] Commit one phase test" );
         }
-                
-        public boolean run( CWVerboseStream stream )
+        
+        /**
+         * Main test method - TC07
+         *  - begin the transaction
+         *  - register a resource object
+         *  - do some operations (credit/debt)
+         *  - check the results
+         *  - try to commit using 1PC
+         *  - check 1PC was used
+         */                       
+        public void runTest()
         {                       
             try
             {
@@ -405,31 +441,27 @@ public class OTS extends CWTestCategory
                 catch ( java.lang.Exception e )
                 {
                     e.printStackTrace();
-                    return false;
+                    fail( e.getMessage() );
                 }                                
                 
                 bobj.credit( 1000 );
                 
                 bobj.debit( 500 );
                 
-                if ( bobj.balance() != 500 ) 
-                    return false;
+                assert ( "Balance is not equal to 500", bobj.balance() == 500 ); 
                 
                 stream.writeVerbose("commit the transaction");
                 current.commit( true );    
                 
                 stream.writeVerbose("check if the one phase commit was used");
-                
-                if ( !r.one_phase )
-                    return false;
-                
-                return true;
+                                
+                assert ( "One phase commit not used", r.one_phase ); 
             }
             catch ( Exception ex )
             {
                 ex.printStackTrace();
                 
-                return false;
+                fail( ex.getMessage() );
             }
         }
     }
@@ -440,12 +472,19 @@ public class OTS extends CWTestCategory
     public static class CommitResourcesTransactionTest extends OTSTestCase
     {        
         public CommitResourcesTransactionTest()
-            throws CWClassConstructorException
         {
-            super( "TC08", "Commit resources test" );
+            super( "[TC08] Commit resources test" );
         }
-                
-        public boolean run( CWVerboseStream stream )
+        
+        /**
+         * Main test method - TC08
+         *  - begin the transaction
+         *  - register 2 resource objects
+         *  - do some operations (credit/debt)
+         *  - check the results
+         *  - check the resources were commited
+         */                
+        public void runTest()
         {                       
             try
             {
@@ -479,31 +518,28 @@ public class OTS extends CWTestCategory
                 catch ( java.lang.Exception e )
                 {
                     e.printStackTrace();
-                    return false;
+                    fail( e.getMessage() );
                 }                                
                 
                 bobj.credit( 1000 );
                 
                 bobj.debit( 500 );
                 
-                if ( bobj.balance() != 500 ) 
-                    return false;
+                assert ( "Balance is not equal to 500", bobj.balance() == 500 ); 
                 
                 stream.writeVerbose("commit the transaction");
                 current.commit( true );    
                 
                 stream.writeVerbose("check if the resources have been commited");
                 
-                if ( !( r1.commit && r2.commit ) )
-                    return false;
-                
-                return true;
+                assert ( "Resources haven't been commited", ( r1.commit && r2.commit ) );
+              
             }
             catch ( Exception ex )
             {
                 ex.printStackTrace();
                 
-                return false;
+                fail( ex.getMessage() );
             }
         }
     }
@@ -514,12 +550,19 @@ public class OTS extends CWTestCategory
     public static class RollbackResourcesTransactionTest extends OTSTestCase
     {        
         public RollbackResourcesTransactionTest()
-            throws CWClassConstructorException
         {
-            super( "TC09", "Rollback resources test" );
+            super( "[TC09] Rollback resources test" );
         }
-                
-        public boolean run( CWVerboseStream stream )
+        
+        /**
+         * Main test method - TC09
+         *  - begin the transaction
+         *  - register 2 resource objects
+         *  - do some operations (credit/debt)
+         *  - check the results
+         *  - check the resources were rollbacked
+         */               
+        public void runTest()
         {                       
             try
             {
@@ -553,7 +596,7 @@ public class OTS extends CWTestCategory
                 catch ( java.lang.Exception e )
                 {
                     e.printStackTrace();
-                    return false;
+                    fail( e.getMessage() );
                 }                                
                 
                 bobj.debit( 500 );
@@ -567,17 +610,18 @@ public class OTS extends CWTestCategory
                 {                
                     stream.writeVerbose("check if the resources have been rolledback");
                 
-                    if ( ( r1.rollback && r2.rollback) )
-                        return true;
+                    assert ( "Resources haven't been rollbacked", ( r1.rollback && r2.rollback)  );
+                    
+                    return; 
                 }
                                                 
-                return false;
+                fail( "Error: resources weren't rollbacked" );
             }
             catch ( Exception ex )
             {
                 ex.printStackTrace();
                 
-                return false;
+                fail( ex.getMessage() );
             }
         }
     }
@@ -588,12 +632,20 @@ public class OTS extends CWTestCategory
     public static class ReadOnlyTransactionTest extends OTSTestCase
     {        
         public ReadOnlyTransactionTest()
-            throws CWClassConstructorException
         {
-            super( "TC10", "Readonly test" );
+            super( "[TC10] Readonly test" );
         }
-                
-        public boolean run( CWVerboseStream stream )
+        
+        /**
+         * Main test method - TC10
+         *  - begin the transaction
+         *  - register a resource object
+         *  - do some operations (credit/debt)
+         *  - check the results
+         *  - commit the transaction
+         *  - check the resource was commited
+         */                 
+        public void runTest()
         {                       
             try
             {
@@ -628,7 +680,7 @@ public class OTS extends CWTestCategory
                 catch ( java.lang.Exception e )
                 {
                     e.printStackTrace();
-                    return false;
+                    fail( e.getMessage() );
                 }                                
                 
                 bobj.credit( 500 );
@@ -637,16 +689,15 @@ public class OTS extends CWTestCategory
                 
                 current.commit( true );    
                 
-                if ( r1.commit )
-                   return false;               
-                                                
-                return true;
+                assert( "Resource wasn't commited",  !r1.commit );
+                                               
+                return;
             }
             catch ( Exception ex )
             {
                 ex.printStackTrace();
                 
-                return false;
+                fail( ex.getMessage() );
             }
         }
     }
@@ -657,12 +708,20 @@ public class OTS extends CWTestCategory
     public static class RollbackVoteTransactionTest extends OTSTestCase
     {        
         public RollbackVoteTransactionTest()
-            throws CWClassConstructorException
         {
-            super( "TC11", "Rollback vote test" );
+            super( "[TC11] Rollback vote test" );
         }
-                
-        public boolean run( CWVerboseStream stream )
+               
+        /**
+         * Main test method - TC11
+         *  - begin the transaction
+         *  - register a resource object
+         *  - do some operations (credit/debt)
+         *  - check the results
+         *  - vote rollback the transaction
+         *  - check the resource was rollbacked
+         */                
+        public void runTest()
         {                       
             try
             {
@@ -697,7 +756,7 @@ public class OTS extends CWTestCategory
                 catch ( java.lang.Exception e )
                 {
                     e.printStackTrace();
-                    return false;
+                    fail( e.getMessage() );
                 }                                
                 
                 bobj.credit( 500 );
@@ -710,19 +769,18 @@ public class OTS extends CWTestCategory
                 }
                 catch ( org.omg.CORBA.TRANSACTION_ROLLEDBACK e )
                 {
-                    if ( !r2.rollback )
-                        return false;               
-                    
-                    return true;
+                    assert ( "Resource not rollbacked", r2.rollback );
+                   
+                    return;
                 }                            
                 
-                return false;
+                fail("Error");
             }
             catch ( Exception ex )
             {
                 ex.printStackTrace();
                 
-                return false;
+                fail( ex.getMessage() );
             }
         }
     }
@@ -733,12 +791,20 @@ public class OTS extends CWTestCategory
     public static class ComplexRollbackVoteTransactionTest extends OTSTestCase
     {        
         public ComplexRollbackVoteTransactionTest()
-            throws CWClassConstructorException
         {
-            super( "TC12", "Complex rollback vote test" );
+            super( "[TC12] Complex rollback vote test" );
         }
-                
-        public boolean run( CWVerboseStream stream )
+        
+        /**
+         * Main test method - TC12
+         *  - begin the transaction
+         *  - register 2 resource objects
+         *  - do some operations (credit/debt)
+         *  - check the results
+         *  - vote rollback the transaction
+         *  - check the resources were rollbacked
+         */            
+        public void runTest()
         {                       
             try
             {
@@ -773,7 +839,7 @@ public class OTS extends CWTestCategory
                 catch ( java.lang.Exception e )
                 {
                     e.printStackTrace();
-                    return false;
+                    fail( e.getMessage() );
                 }                                
                 
                 bobj.credit( 500 );
@@ -786,19 +852,18 @@ public class OTS extends CWTestCategory
                 }
                 catch ( org.omg.CORBA.TRANSACTION_ROLLEDBACK e )
                 {
-                    if ( !r1.rollback )
-                        return false;               
-                    
-                    return true;
+                    assert ( "Resource not rollbacked", r1.rollback );
+                                 
+                    return;
                 }                            
                 
-                return false;
+                fail( "Error" );
             }
             catch ( Exception ex )
             {
                 ex.printStackTrace();
                 
-                return false;
+                fail( ex.getMessage() );
             }
         }
     }
@@ -809,12 +874,21 @@ public class OTS extends CWTestCategory
     public static class SuspendTransactionTest extends OTSTestCase
     {        
         public SuspendTransactionTest()
-            throws CWClassConstructorException
         {
-            super( "TC13", "Simple suspend test" );
+            super( "[TC13] Simple suspend test" );
         }
-                
-        public boolean run( CWVerboseStream stream )
+        
+        /**
+         * Main test method - TC13
+         *  - begin the transaction
+         *  - suspend the transaction
+         *  - begin a new transaction
+         *  - resume the transaction
+         *  - check the results
+         *  - vote rollback the transaction
+         *  - check the resources were rollbacked
+         */                    
+        public void runTest()
         {                       
             try
             {
@@ -846,13 +920,12 @@ public class OTS extends CWTestCategory
                 
                 current.commit( true );    
                 
-                return true;
             }
             catch ( Exception ex )
             {
                 ex.printStackTrace();
                 
-                return false;
+                fail( ex.getMessage() );
             }
         }
     }
@@ -863,12 +936,21 @@ public class OTS extends CWTestCategory
     public static class ComplexSuspendTransactionTest extends OTSTestCase
     {        
         public ComplexSuspendTransactionTest()
-            throws CWClassConstructorException
         {
-            super( "TC14", "Complex suspend test" );
+            super( "[TC14] Complex suspend test" );
         }
-                
-        public boolean run( CWVerboseStream stream )
+        
+        /**
+         * Main test method - TC14
+         *  - begin the transaction
+         *  - suspend the transaction
+         *  - begin a new transaction
+         *  - resume the transaction
+         *  - check the results
+         *  - vote rollback the transaction
+         *  - check the resources were rollbacked
+         */                    
+        public void runTest()
         {                       
             try
             {
@@ -916,16 +998,16 @@ public class OTS extends CWTestCategory
                 }
                 catch ( org.omg.CORBA.TRANSACTION_ROLLEDBACK e )
                 {
-                    return true;
+                    return;
                 }
                 
-                return false;
+                fail( "Error" );
             }
             catch ( Exception ex )
             {
                 ex.printStackTrace();
                 
-                return false;
+                fail( ex.getMessage() );
             }
         }
     }
@@ -936,12 +1018,18 @@ public class OTS extends CWTestCategory
     public static class TimeOutTransactionTest extends OTSTestCase
     {        
         public TimeOutTransactionTest()
-            throws CWClassConstructorException
         {
-            super( "TC15", "TimeOut test" );
+            super( "[TC15] TimeOut test" );
         }
-                
-        public boolean run( CWVerboseStream stream )
+        
+        /**
+         * Main test method - TC15
+         *  - begin the transaction
+         *  - set timeout to 5 secs
+         *  - wait 15 secs
+         *  - check the transaction was rollbacked
+         */                    
+        public void runTest()
         {                       
             try
             {
@@ -967,16 +1055,16 @@ public class OTS extends CWTestCategory
                 }
                 catch ( org.omg.CORBA.TRANSACTION_ROLLEDBACK e )
                 {
-                    return true;
+                    return;
                 }
                 
-                return false;
+                fail("Error");
             }
             catch ( Exception ex )
             {
                 ex.printStackTrace();
                 
-                return false;
+                fail( ex.getMessage() );
             }
         }
     }
@@ -987,12 +1075,18 @@ public class OTS extends CWTestCategory
     public static class ExplicitTransactionTest extends OTSTestCase
     {        
         public ExplicitTransactionTest()
-            throws CWClassConstructorException
         {
-            super( "TC16", "Explicit transaction test" );
+            super( "[TC16] Explicit transaction test" );
         }
-                
-        public boolean run( CWVerboseStream stream )
+        
+        /**
+         * Main test method - TC16
+         *  - begin the transaction
+         *  - set timeout to 5 secs
+         *  - wait 15 secs
+         *  - check the transaction was rollbacked
+         */                 
+        public void runTest()
         {                       
             try
             {
@@ -1031,7 +1125,7 @@ public class OTS extends CWTestCategory
                 catch ( java.lang.Exception e )
                 {
                     e.printStackTrace();
-                    return false;
+                    fail( e.getMessage() );
                 }                                
                 
                 bobj.credit( 500 );
@@ -1039,13 +1133,13 @@ public class OTS extends CWTestCategory
                 stream.writeVerbose("Commit the transaction");
                 ctrl.get_terminator().commit( true );
                 
-                return true;
+                return;
             }
             catch ( Exception ex )
             {
                 ex.printStackTrace();
                 
-                return false;
+                fail( ex.getMessage() );
             }
         }
     }
@@ -1056,12 +1150,17 @@ public class OTS extends CWTestCategory
     public static class PropagationContextTransactionTest extends OTSTestCase
     {        
         public PropagationContextTransactionTest()
-            throws CWClassConstructorException
         {
-            super( "TC17", "Propagation context test" );
+            super( "[TC17] Propagation context test" );
         }
                 
-        public boolean run( CWVerboseStream stream )
+        /**
+         * Main test method - TC17
+         *  - begin the transaction
+         *  - get propagation context
+         *  - check the propagation context
+         */                
+        public void runTest()
         {                       
             try
             {
@@ -1081,28 +1180,24 @@ public class OTS extends CWTestCategory
                 
                 org.omg.CosTransactions.PropagationContext pctx = ctrl.get_coordinator().get_txcontext();
                 
-                if ( !pctx.current.coord.equals( ctrl.get_coordinator() ) )
-                    return false;
+                assert ( pctx.current.coord.equals( ctrl.get_coordinator() ) );
                 
-                if ( !pctx.current.term.equals( ctrl.get_terminator() ) )
-                    return false;
+                assert ( pctx.current.term.equals( ctrl.get_terminator() ) );
                 
-                if ( pctx.timeout != 10 )
-                    return false;
-                
-                if ( pctx.parents.length != 0 )
-                    return false;
+                assert ( pctx.timeout == 10 );
+                 
+                assert ( pctx.parents.length == 0 );
                 
                 stream.writeVerbose("Commit the transaction");
                 ctrl.get_terminator().commit( true );
                 
-                return true;
+                return;
             }
             catch ( Exception ex )
             {
                 ex.printStackTrace();
                 
-                return false;
+                fail( ex.getMessage() );
             }
         }
     }
@@ -1113,12 +1208,20 @@ public class OTS extends CWTestCategory
     public static class SubordinateTransactionTest extends OTSTestCase
     {        
         public SubordinateTransactionTest()
-            throws CWClassConstructorException
         {
-            super( "TC18", "Subordinate test" );
+            super( "[TC18] Subordinate test" );
         }
-                
-        public boolean run( CWVerboseStream stream )
+        
+        /**
+         * Main test method - TC18
+         *  - create a transaction
+         *  - get propagation context
+         *  - recreate a transaction
+         *  - register a synchronization object
+         *  - commit the transaction
+         *  - check the synchronization object was invoked
+         */            
+        public void runTest()
         {                       
             try
             {
@@ -1155,22 +1258,21 @@ public class OTS extends CWTestCategory
                 catch ( java.lang.Exception e )
                 {
                     e.printStackTrace();
-                    return false;
+                    fail( e.getMessage() );
                 }          
                                 
                 stream.writeVerbose("Commit the transaction");
                 ctrl.get_terminator().commit( true );
                 
-                if ( !synchro.isInvoked() )
-                    return false;
+                assert ( "Synchronization not invoked", synchro.isInvoked() );
                 
-                return true;
+                return;
             }
             catch ( Exception ex )
             {
                 ex.printStackTrace();
                 
-                return false;
+                fail( ex.getMessage() );
             }
         }
     }
@@ -1181,12 +1283,20 @@ public class OTS extends CWTestCategory
     public static class SubordinateRollbackTransactionTest extends OTSTestCase
     {        
         public SubordinateRollbackTransactionTest()
-            throws CWClassConstructorException
         {
-            super( "TC19", "Subordinate rollback test" );
+            super( "[TC19] Subordinate rollback test" );
         }
-                
-        public boolean run( CWVerboseStream stream )
+         
+        /**
+         * Main test method - TC19
+         *  - create a transaction
+         *  - get propagation context
+         *  - recreate a transaction
+         *  - register a synchronization object
+         *  - rollback the transaction
+         *  - check the transaction was rollbacked
+         */          
+        public void runTest()
         {                       
             try
             {
@@ -1219,16 +1329,16 @@ public class OTS extends CWTestCategory
                 }
                 catch ( org.omg.CORBA.TRANSACTION_ROLLEDBACK e )
                 {
-                    return true;
+                    return;
                 }
                 
-                return false;
+                fail( "Error" );
             }
             catch ( Exception ex )
             {
                 ex.printStackTrace();
                 
-                return false;
+                fail( ex.getMessage() );
             }
         }
     }
@@ -1239,12 +1349,17 @@ public class OTS extends CWTestCategory
     public static class BasicMultipleTransactionTest extends OTSTestCase
     {        
         public BasicMultipleTransactionTest()
-            throws CWClassConstructorException
         {
-            super( "TC20", "Basic multiple transactions test" );
+            super( "[TC20] Basic multiple transactions test" );
         }
-                
-        public boolean run( CWVerboseStream stream )
+        
+        /**
+         * Main test method - TC20
+         *  - create a transaction
+         *  - create a transaction
+         *  - compares the 2 transactions 
+         */          
+        public void runTest()
         {                       
             try
             {
@@ -1270,26 +1385,23 @@ public class OTS extends CWTestCategory
                 
                 org.omg.CosTransactions.Coordinator coord2 = ctrl2.get_coordinator();
                 
-                if ( !coord1.is_same_transaction( coord1 ) )
-                    return false;
+                assert ( coord1.is_same_transaction( coord1 ) );
                 
-                if ( coord1.is_same_transaction( coord2 ) )
-                    return false;
+                assert ( !coord1.is_same_transaction( coord2 ) );
                 
-                if ( coord1.is_related_transaction( coord2 ) )
-                    return false;
-                
+                assert ( !coord1.is_related_transaction( coord2 ) );
+                   
                 ctrl.get_terminator().commit( true );
                 
                 ctrl2.get_terminator().commit( true );
                 
-                return true;
+                return;
             }
             catch ( Exception ex )
             {
                 ex.printStackTrace();
                 
-                return false;
+                fail( ex.getMessage() );
             }
         }
     }
@@ -1300,12 +1412,17 @@ public class OTS extends CWTestCategory
     public static class MultipleTransactionTest extends OTSTestCase
     {        
         public MultipleTransactionTest()
-            throws CWClassConstructorException
         {
-            super( "TC21", "Multiple transactions test" );
+            super( "[TC21] Multiple transactions test" );
         }
-                
-        public boolean run( CWVerboseStream stream )
+         
+        /**
+         * Main test method - TC21
+         *  - create a transaction
+         *  - create a transaction
+         *  - compares the 2 transactions  
+         */          
+        public void runTest()
         {                       
             try
             {
@@ -1337,16 +1454,16 @@ public class OTS extends CWTestCategory
                 }
                 catch ( org.omg.CORBA.TRANSACTION_ROLLEDBACK e )
                 {
-                    return true;
+                    return;
                 }
                 
-                return false;
+                fail( "Error" );
             }
             catch ( Exception ex )
             {
                 ex.printStackTrace();
                 
-                return false;
+                fail( ex.getMessage() );
             }
         }
     }
@@ -1357,12 +1474,18 @@ public class OTS extends CWTestCategory
     public static class BasicSubTransactionTest extends OTSTestCase
     {        
         public BasicSubTransactionTest()
-            throws CWClassConstructorException
         {
-            super( "TC22", "Basic subtransaction test" );
+            super( "[TC22] Basic subtransaction test" );
         }
-                
-        public boolean run( CWVerboseStream stream )
+         
+        /**
+         * Main test method - TC22
+         *  - begin a transaction
+         *  - begin a sub transaction
+         *  - commit the sub transaction
+         *  - commit the top level transaction 
+         */          
+        public void runTest()
         {                       
             try
             {
@@ -1383,13 +1506,13 @@ public class OTS extends CWTestCategory
                 stream.writeVerbose("Commit the top level transaction");
                 current.commit( true );
                                 
-                return true;
+                return;
             }
             catch ( Exception ex )
             {
                 ex.printStackTrace();
                 
-                return false;
+                fail( ex.getMessage() );
             }
         }
     }
@@ -1400,12 +1523,19 @@ public class OTS extends CWTestCategory
     public static class SubtransactionTest extends OTSTestCase
     {        
         public SubtransactionTest()
-            throws CWClassConstructorException
         {
-            super( "TC23", "Subtransaction test" );
+            super( "[TC23) Subtransaction test" );
         }
-                
-        public boolean run( CWVerboseStream stream )
+        
+        /**
+         * Main test method - TC23
+         *  - create a transaction
+         *  - create a sub transaction
+         *  - compare the transactions
+         *  - commit the sub transaction
+         *  - commit the top level transaction  
+         */          
+        public void runTest()
         {                       
             try
             {
@@ -1431,29 +1561,25 @@ public class OTS extends CWTestCategory
                 
                 org.omg.CosTransactions.Coordinator coord2 = sub.get_coordinator();
                 
-                if ( coord1.is_same_transaction( coord2 ) )
-                    return false;
+                assert ( !coord1.is_same_transaction( coord2 ) );
+                         
+                assert ( !coord1.is_related_transaction( coord2 ) );
                 
-                if ( coord1.is_related_transaction( coord2 ) )
-                    return false;
+                assert ( coord2.is_descendant_transaction( coord1 ) );
                 
-                if ( !coord2.is_descendant_transaction( coord1 ) )
-                    return false;
-                
-                if ( !coord1.is_ancestor_transaction( coord2 ) )
-                    return false;
+                assert ( coord1.is_ancestor_transaction( coord2 ) );
 
                 sub.get_terminator().commit( true );
                 
                 ctrl.get_terminator().commit( true );
                 
-                return true;
+                return;
             }
             catch ( Exception ex )
             {
                 ex.printStackTrace();
                 
-                return false;
+                fail( ex.getMessage() );
             }
         }
     }
@@ -1464,12 +1590,19 @@ public class OTS extends CWTestCategory
     public static class SubtransactionResourceTest extends OTSTestCase
     {        
         public SubtransactionResourceTest()
-            throws CWClassConstructorException
         {
-            super( "TC24", "Subtransaction resource test" );
+            super( "[TC24] Subtransaction resource test" );
         }
-                
-        public boolean run( CWVerboseStream stream )
+        
+        /**
+         * Main test method - TC24
+         *  - create a transaction
+         *  - create a sub transaction
+         *  - register a resource as a subtransaction aware
+         *  - commit the sub transaction
+         *  - commit the top level transaction  
+         */           
+        public void runTest()
         {                       
             try
             {
@@ -1497,7 +1630,7 @@ public class OTS extends CWTestCategory
                 catch ( java.lang.Exception e )
                 {
                     e.printStackTrace();
-                    return false;
+                    fail( e.getMessage() );
                 }                  
                                 
                 stream.writeVerbose("Commit the sub transaction");
@@ -1506,20 +1639,22 @@ public class OTS extends CWTestCategory
                 stream.writeVerbose("Commit the top level transaction");
                 current.commit( true );
                 
-                if ( !r.commit_sub )
-                      return false;
-                
-                return true;
+                assert ( r.commit_sub );
+                   
+                return;
             }
             catch ( Exception ex )
             {
                 ex.printStackTrace();
                 
-                return false;
+                fail( ex.getMessage() );
             }
         }
     }
     
+    /**
+     * Resource implementation class used for testing
+     */ 
     public static class resourceImpl extends org.omg.CosTransactions.ResourcePOA
     {
         public boolean one_phase;
@@ -1581,6 +1716,9 @@ public class OTS extends CWTestCategory
         }
     }
     
+    /**
+     * Sub-resource implementation class used for testing
+     */ 
     public static class subResourceImpl extends org.omg.CosTransactions.SubtransactionAwareResourcePOA
     {
         public boolean one_phase;
@@ -1656,6 +1794,9 @@ public class OTS extends CWTestCategory
         }
     }
     
+    /**
+     * Synchonization implementation class used for testing
+     */ 
     public static class synchroImpl extends org.omg.CosTransactions.SynchronizationPOA
     {
         private int count;
@@ -1684,6 +1825,9 @@ public class OTS extends CWTestCategory
         }
     }
     
+    /**
+     * Implementation class used for testing
+     */ 
     public static class bankImpl extends otstests.bankPOA
     {
         private float _balance;

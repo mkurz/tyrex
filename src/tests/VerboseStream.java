@@ -40,40 +40,26 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: OTSTestHarness.java,v 1.2 2001/02/23 17:17:42 omodica Exp $
  */
 
-package ots;
+package tests;
 
-import  tests.*;
-
-import junit.framework.*;
-
-import java.util.Vector;
-import java.util.Enumeration;
+/////////////////////////////////////////////////////////////////////
+// VerboseStream
+/////////////////////////////////////////////////////////////////////
 
 /**
- * OTS Test harness.
+ * This class is a simple class to replace the CWVerboseStream from JTF. The argument "-verbose"
+ * specifies verbose messages should be printed.
+ *
+ * @author <a href="omodica@intalio.com">Olivier Modica</a>
  */
-public class OTSTestHarness
+public final class VerboseStream
 {
-    static public void main( String args[] )
-    {
-        try {
-            // define all the test suites
-            TestSuite main = new OTS("Tyrex OTS Test Harness");
-                        
-            // Set up the verbose mode
-            for(int i=0;i<args.length;i++) if(args[i].equals("-verbose")) VerboseStream.verbose=true;
-          
-            junit.textui.TestRunner.run(main);
-                                                   
-
-        } catch (Exception exception) {
-            exception.printStackTrace();
-      } 
+    public static boolean verbose = false;
+    
+    public void writeVerbose(String msg) {
+           
+      if(verbose) System.out.println(msg);
     }
-
 }
-
-
