@@ -1,39 +1,125 @@
 <xsd:schema xmlns:xsd="http://www.w3.org/1999/XMLSchema">
 
-<xsd:element name="jdbc" type="jdbc"/>
+    <xsd:element name="jdbc" type="jdbc"/>
+    
+    <xsd:complexType name="jdbc">
+        
+        <xsd:element name="performance" minOccurs="1" maxOccurs="1" >
+            <xsd:complexType>
+                <xsd:element    name="onephasecommit" 
+                                type="performanceValue" 
+                                minOccurs="1" 
+                                maxOccurs="1" />
+                                
+                <xsd:element    name="twophasecommit" 
+                                type="performanceValue" 
+                                minOccurs="1" 
+                                maxOccurs="1" />
+                                
+                <xsd:element    name="rollback" 
+                                type="performanceValue" 
+                                minOccurs="1" 
+                                maxOccurs="1" />
+            </xsd:complexType>
+        </xsd:element>
+        
+        <xsd:element    name="config" 
+                        minOccurs="1"
+                        maxOccurs="unbounded">
+            <xsd:complexType>
+                <xsd:element    name="parameter" 
+                                minOccurs="0"
+                                maxOccurs="unbounded">
+                    <xsd:complexType content="empty">
+                        <xsd:attribute  name="key" 
+                                        type="xsd:string"
+                                        use="required"
+                                        minOccurs="1" 
+                                        maxOccurs="1" />
+                            
+                        <xsd:attribute  name="value" 
+                                        type="xsd:string"
+                                        use="required"
+                                        minOccurs="1" 
+                                        maxOccurs="1" />
+                    </xsd:complexType>
+                </xsd:element>
+                
+                <xsd:attribute  name="class" 
+                                type="xsd:string"
+                                use="required"
+                                minOccurs="1" 
+                                maxOccurs="1" />
+                                
+                <xsd:attribute  name="userName" 
+                                type="xsd:string"
+                                use="default"
+                                value="" 
+                                minOccurs="1" 
+                                maxOccurs="1" />
+                                
+                <xsd:attribute  name="password" 
+                                type="xsd:string"
+                                use="default"
+                                value=""
+                                minOccurs="1" 
+                                maxOccurs="1" />
+                
+                <xsd:attribute  name="numberOfTables" 
+                                type="xsd:positiveInteger"
+                                use="default"
+                                value="1"
+                                minOccurs="1" 
+                                maxOccurs="1" />
+                
+                <xsd:attribute  name="description" 
+                                type="xsd:string"
+                                use="optional"
+                                minOccurs="0" 
+                                maxOccurs="1" />
+                
+                <xsd:attribute  name="canReuseDelistedXAResources" 
+                                type="xsd:boolean"
+                                use="default"
+                                value="false"
+                                minOccurs="1" 
+                                maxOccurs="1" />
+                                
+                <xsd:attribute  name="canTestPerformance" 
+                                type="xsd:boolean"
+                                use="default"
+                                value="true"
+                                minOccurs="1" 
+                                maxOccurs="1" />
+            </xsd:complexType>
+        </xsd:element>
+        
+        <xsd:attribute  name="class" 
+                        type="xsd:string" 
+                        use="optional"
+                        minOccurs="0" 
+                        maxOccurs="1" />
+                        
+        <xsd:attribute  name="description" 
+                        type="xsd:string"
+                        use="optional"
+                        minOccurs="0" 
+                        maxOccurs="1" />
+                        
+    </xsd:complexType>
+    
+    <xsd:complexType name="performanceValue" content="empty">
+        <xsd:attribute  name="value" 
+                        type="xsd:positiveInteger"
+                        use="required"
+                        minOccurs="1" 
+                        maxOccurs="1" />
+                            
+        <xsd:attribute  name="relative" 
+                        type="xsd:boolean"
+                        use="required"
+                        minOccurs="1" 
+                        maxOccurs="1" />
+    </xsd:complexType>
 
-<xsd:complexType name="jdbc">
-    <xsd:attribute name="class" type="xsd:string" />
-    <xsd:attribute name="description" type="xsd:string" />
-    <xsd:element name="performance" type="performance" minOccurs=1 maxOccurs=1 />
-    <xsd:element name="config" type="config" maxOccurs=unbounded />
-</xsd:complexType>
-
-<xsd:complexType name="performance">
-    <xsd:element name="onephasecommit" type="performanceValue" minOccurs=1 maxOccurs=1 />
-    <xsd:element name="twophasecommit" type="performanceValue" minOccurs=1 maxOccurs=1 />
-    <xsd:element name="rollback" type="performanceValue" minOccurs=1 maxOccurs=1/>
-</xsd:complexType>
-
-<xsd:complexType name="performanceValue">
-    <xsd:attribute name="value" type="xsd:positiveInteger" />
-    <xsd:attribute name="relative" type="xsd:boolean" />
-</xsd:complexType>
-
-<xsd:complexType name="config">
-    <xsd:attribute name="class" type="xsd:string" />
-    <xsd:attribute name="userName" type="xsd:string" />
-    <xsd:attribute name="password" type="xsd:string" />
-    <xsd:attribute name="numberOfTables" type="xsd:positiveInteger" />
-    <xsd:attribute name="description" type="xsd:string" />
-    <xsd:attribute name="canReuseDelistedXAResources" type="xsd:boolean" />
-    <xsd:attribute name="canTestPerformance" type="xsd:boolean" />
-    <xsd:element name="parameter" type="parameter" maxOccurs=unbounded />
-</xsd:complexType>
-                                                    
-<xsd:complexType name="parameter">
-    <xsd:attribute name="key" type="xsd:string" />
-    <xsd:attribute name="value" type="xsd:string" />
-</xsd:complexType>
-
-
+</xsd:schema>

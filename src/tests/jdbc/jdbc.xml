@@ -1,34 +1,31 @@
-<jdbc name="DB Test">
+<?xml version="1.0" encoding="UTF-8"?>
+
+<jdbc   description="DB Test" 
+        xmlns:xsi="http://www.w3.org/1999/XMLSchema-instance"
+	    xsi:noNamespaceSchemaLocation="jdbc.xsd">
     <performance>
-        (onephasecommit value=1600 relative=true/>
-        <twophasecommit value=800 relative=true/>
-        <rollback value=1600 relative=true/>
+        <onephasecommit value="1600" relative="true"/>
+        <twophasecommit value="800" relative="true"/>
+        <rollback value="1600" relative="true"/>
     </performance>
+    
     <config class="jdbc.CloudscapeDataSourceFactory"
-            description="Cloudscape 1" 
-            canReuseDelistedXAResources=false
-            userName="system"
-            password="manager"
-            numberOfTables=1>
+            description="Cloudscape 1">
         <parameter key="name" value="cloudscapename1"/>
     </config>
                 
     <config class="jdbc.CloudscapeDataSourceFactory"
             description="Cloudscape 2" 
-            canReuseDelistedXAResources=false
             userName="system"
-            password="manager"
-            numberOfTables=1>
+            password="manager">
         <parameter key="name" value="cloudscapename2"/>
     </config>
     
     <config class="jdbc.PostgresDataSourceFactory"
             description="Postgres" 
-            canReuseDelistedXAResources=false
-            canTestPerformance=false
+            canTestPerformance="false"
             userName="username"
-            password="password"
-            numberOfTables=1>
+            password="password">
         <parameter key="name" value="name"/>
         <parameter key="server" value="server"/>
         <parameter key="port" value="port"/>
@@ -36,11 +33,8 @@
     
     <config class="jdbc.OracleDataSourceFactory"
             description="Oracle" 
-            canReuseDelistedXAResources=false
-            canTestPerformance=true
             userName="username"
-            password="password"
-            numberOfTables=1>
+            password="password">
         <parameter key="name" value="name"/>
         <parameter key="server" value="server"/>
         <parameter key="port" value="port"/>
