@@ -119,4 +119,15 @@ public class XAResourceHelper
     public boolean treatDifferentBranchesForSharedResourcesAsShared() {
         return false;
     }
+
+    /**
+     * Return the specialised error message from the XAException.
+     * The default implementation returns the empty string.
+     *
+     * @param xaException the XAException
+     * @return an 
+     */
+    public String getXAErrorString( XAException xaException ) {
+        return "";
+    }
 }

@@ -47,6 +47,7 @@ package tyrex.tm.impl;
 
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
@@ -79,6 +80,17 @@ public final class OracleXAResourceHelper
      * True if the Oracle Xid constructor could not be loaded.
      */
     private boolean _failedXidConstructor;
+
+    /**
+     * The method for getErrorCode() from the OracleXAException
+     */
+    private Method _errorCodeMethod;
+
+    /**
+     * True if the getErrorCode() from the OracleXAException
+     * could not be loaded
+     */
+    private boolean _failedErrorCodeMethod;
 
 
     /**
@@ -168,6 +180,62 @@ public final class OracleXAResourceHelper
     }
 
     /**
+     * Return the oracle error code as a string if the exception is 
+     * {@link XAResourceHelperManager#_oracleXAExceptionClassName} 
+     * otherwise return null.
+     *
+     * @param xaException the XAException
+     * @return an 
+     */
+    public String getXAErrorString( XAException xaException ) {
+        Class xaExceptionClass;
+
+        xaExceptionClass = xaException.getClass();
+        if ( xaExceptionClass.getName().equals( XAResourceHelperManager._oracleXAExceptionClassName ) ) {
+            try {
+                if (loadOracleXAExceptionErrorMethod(xaExceptionClass)) {
+                    return " oracle error code: " + _errorCodeMethod.invoke( xaException, null );
+                }
+            }
+            catch( Throwable thrw ) {
+                
+            }
+        }
+
+        return "";
+    }
+
+
+    /**
+     * Return true if the oracle error method for the Oracle 
+     * XAException is loaded. If this method returns true then
+     * the variable {@link #_errorCodeMethod} will not be null and
+     * the variable {@link #_failedErrorCodeMethod} will be false. 
+     * If this method returns false then  
+     * the variable {@link #_errorCodeMethod} will be null and
+     * the variable {@link #_failedErrorCodeMethod} will be true. 
+     *
+     * @return true if the oracle error method for the Oracle
+     *      XAException is loaded.
+     */
+    private synchronized boolean loadOracleXAExceptionErrorMethod(Class xaExceptionClass) {
+        Method method = null;
+        
+        if ( ( null == _errorCodeMethod ) &&
+             !_failedErrorCodeMethod ) {
+            try {
+                _errorCodeMethod = xaExceptionClass.getDeclaredMethod( "getOracleError", null );
+                return true;
+            } catch ( Throwable thrw ) {
+                _failedErrorCodeMethod = true;
+                return false;
+            }
+        }
+
+        return null != _errorCodeMethod;
+    }
+
+    /**
      * Return true if the class {@link XID_CLASS_NAME} is
      * loaded. The variable {@link _xidConstructor} will be
      * set if the class {@link XID_CLASS_NAME} can be loaded.
@@ -176,7 +244,7 @@ public final class OracleXAResourceHelper
      * @return true if the class {@link XID_CLASS_NAME} can be
      *      loaded.
      */
-    private boolean loadOracleXidClass( XAResource xaResource )
+    private synchronized boolean loadOracleXidClass( XAResource xaResource )
     {
         Constructor xidConstructor = null;
         Class       xidClass;

@@ -45,7 +45,7 @@
 
 package tyrex.tm.impl;
 
-
+import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
 
 
@@ -83,6 +83,12 @@ final class XAResourceHelperManager
      * The oracle resource class name
      */
     private static final String           _oracleXAResourceClassName = "oracle.jdbc.xa.client.OracleXAResource";
+
+    /**
+     * The name of the Oracle XAException class name.
+     * The value is "oracle.jdbc.xa.OracleXAException".
+     */
+    static final String _oracleXAExceptionClassName = "oracle.jdbc.xa.OracleXAException";
 
 
     /**
@@ -137,6 +143,28 @@ final class XAResourceHelperManager
                 return _informixHelper;
             }
         }
+        
+        return _defaultHelper;
+    }
+
+    /**
+     * Get the XAResourceHelperManager for the specified XA exception.
+     * It is assumed the only the method 
+     * {@link XAResourceHelper.getXAErrorString()} will be called on the
+     * returned object.
+     *
+     * @param xaException the XA exception.
+     * @return the XAResourceHelper
+     */
+    static XAResourceHelper getHelper( XAException xaException )
+    {
+        if ( xaException.getClass().getName().equals( _oracleXAExceptionClassName ) ) {
+            synchronized ( _oracleXAResourceClassName ) {
+                if ( null == _oracleHelper )
+                    _oracleHelper = new OracleXAResourceHelper();
+                return _oracleHelper;
+            }
+        } 
         
         return _defaultHelper;
     }
