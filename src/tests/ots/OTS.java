@@ -96,7 +96,7 @@ public class OTS extends TestSuite
                                 
                 org.omg.CosTransactions.Status status = current.get_status();
          
-                assert( status.value() == org.omg.CosTransactions.Status._StatusNoTransaction );
+                assert( "Transaction should have been active.", status.value() == org.omg.CosTransactions.Status._StatusNoTransaction );
                  
                 stream.writeVerbose("Begin the transaction");
                 current.begin();
