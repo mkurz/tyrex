@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionImpl.java,v 1.43 2001/10/05 23:44:31 mohammed Exp $
+ * $Id: TransactionImpl.java,v 1.44 2001/10/19 00:15:34 mohammed Exp $
  */
 
 
@@ -90,7 +90,7 @@ import tyrex.util.Messages;
  * they are added.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.43 $ $Date: 2001/10/05 23:44:31 $
+ * @version $Revision: 1.44 $ $Date: 2001/10/19 00:15:34 $
  * @see InternalXAResourceHolder
  * @see TransactionManagerImpl
  * @see TransactionDomain
@@ -2657,6 +2657,10 @@ final class TransactionImpl
                     
                     if ( differentBranches ) { 
                         newResHolder._xaResource.start( newResHolder._xid, XAResource.TMNOFLAGS );
+
+                        if ( null != callback ) {
+                            callback.enlist( newResHolder._xid );    
+                        }
                     } else {
                         if ( XAResource.TMSUSPEND == resHolder._endFlag ) {
                             resHolder._xaResource.start( resHolder._xid, XAResource.TMRESUME );
@@ -2666,10 +2670,6 @@ final class TransactionImpl
                     }
                     newResHolder._nextHolder = _enlisted;
                     _enlisted = newResHolder;
-
-                    if ( null != callback ) {
-                        callback.enlist( newResHolder._xid );    
-                    }
 
                     return true;
                 }
