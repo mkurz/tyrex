@@ -80,7 +80,7 @@ import tyrex.util.Logger;
 /**
  * 
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.8 $
+ * @version $Revision: 1.9 $
  */
 public class Connector
     extends ResourceConfig
@@ -201,7 +201,8 @@ public class Connector
         // a list of URLs for the class loader.
         file = null;
         try {
-            file = new File( jarName );
+            file = createFile( jarName );
+
             if ( file.exists() && file.canRead() ) {
                 url = file.toURL();
             }
@@ -215,7 +216,7 @@ public class Connector
                 urls[ 0 ] = url;
                 for ( int i = 1 ; i < urls.length ; ++i ) {
                     jarName = tokenizer.nextToken();
-                    file = new File( jarName );
+                    file = createFile( jarName );
                     if ( file.exists() && file.canRead() )
                         urls[ i ] = file.toURL();
                     else

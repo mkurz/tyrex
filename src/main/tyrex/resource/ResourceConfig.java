@@ -45,7 +45,7 @@
 
 package tyrex.resource;
 
-
+import java.io.File;
 import tyrex.tm.TransactionDomain;
 
 
@@ -55,7 +55,7 @@ import tyrex.tm.TransactionDomain;
  * for configuring and creating a resource.
  * 
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  */
 public abstract class ResourceConfig
 {
@@ -267,4 +267,24 @@ public abstract class ResourceConfig
         throws ResourceException;
 
 
+    /**
+     * Return the file constructed from the path.
+     * <P>
+     * This method has a workaround for Sun bug #4117557
+     *
+     * @param path the path (required)
+     * @return the file constructed from the path.
+     */
+    protected final File createFile(String path) {
+        File file;
+
+        file = new File( path );
+        
+        // work around for Sun bug #4117557
+        if ( ! file.isAbsolute() ) {
+            file = new File( System.getProperty( "user.dir" ), path );    
+        }
+
+        return file;
+    }
 }

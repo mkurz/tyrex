@@ -70,7 +70,7 @@ import tyrex.util.Logger;
 /**
  * 
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.10 $
+ * @version $Revision: 1.11 $
  */
 public class DataSourceConfig
     extends ResourceConfig
@@ -159,7 +159,7 @@ public class DataSourceConfig
         // a list of URLs for the class loader.
         file = null;
         try {
-            file = new File( jarName );
+            file = createFile( jarName );
             if ( file.exists() && file.canRead() )
                 url = file.toURL();
             else
@@ -171,7 +171,7 @@ public class DataSourceConfig
                 urls[ 0 ] = url;
                 for ( int i = 1 ; i < urls.length ; ++i ) {
                     jarName = tokenizer.nextToken();
-                    file = new File( jarName );
+                    file = createFile( jarName );
                     if ( file.exists() && file.canRead() )
                         urls[ i ] = file.toURL();
                     else
