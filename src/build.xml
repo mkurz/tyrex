@@ -240,7 +240,7 @@
 
 
   <!-- Build a full release including JAR, zip/tarball, source and documentation -->
-  <target name="release" depends="clean,jar,source,docs,tarball">
+  <target name="release" depends="clean,doc,jar,source,docs,tarball">
   </target>
 
   <!-- Build the tarball including JAR and all dependent packages -->
