@@ -18,7 +18,7 @@
     	Extend your classpath by adding the OpenORB jar file and the 'ots.jar' file provided with the Tyrex distribution. Start the Tyrex build
     	file by supplying the following argument : <b>iiop</b>. After the build, a jar file named 'tyrex-X.X.X-iiop.jar' is available. Add this
     	jar file in your classpath.
-    	<p/>
+    	</p>
     </section>
     
     <section title="How to configure OpenORB to run Tyrex ?">
@@ -42,7 +42,7 @@
     	you can specify from the command line : <b>-ORBProfile=ots</b>
     	<br/>
     	To be able to resolve the 'TransactionService' initial reference, you have to extend the <b>InitRef</b> module, by adding :
-    	<br>
+    	<br/>
     	<code>
     	&gt;property name="TransactionService" value="corbaname:rir:#tyrex/TransactionFactory" /&lt;
     	</code>
