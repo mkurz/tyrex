@@ -40,7 +40,7 @@
  *
  * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionDomain.java,v 1.8 2001/03/02 19:01:33 arkin Exp $
+ * $Id: TransactionDomain.java,v 1.9 2001/03/02 20:43:25 arkin Exp $
  */
 
 
@@ -48,9 +48,13 @@ package tyrex.tm;
 
 
 import java.io.PrintWriter;
+import java.io.InputStream;
 import java.util.HashMap;
 import org.omg.CORBA.ORB;
 import org.omg.CosTransactions.TransactionFactory;
+import org.xml.sax.InputSource;
+import org.exolab.castor.xml.Unmarshaller;
+import org.exolab.castor.mapping.Mapping;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 import javax.transaction.UserTransaction;
@@ -58,6 +62,7 @@ import javax.transaction.SystemException;
 import javax.transaction.InvalidTransactionException;
 import javax.transaction.xa.Xid;
 import tyrex.tm.impl.TransactionDomainImpl;
+import tyrex.tm.conf.DomainConfig;
 
 
 /**
@@ -69,7 +74,7 @@ import tyrex.tm.impl.TransactionDomainImpl;
  * domain.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.8 $ $Date: 2001/03/02 19:01:33 $
+ * @version $Revision: 1.9 $ $Date: 2001/03/02 20:43:25 $
  */
 public abstract class TransactionDomain
 {
@@ -115,26 +120,75 @@ public abstract class TransactionDomain
      * If a transaction domain with the same name exists, it is
      * returned, otherwise a new transaction domain is created.
      *
-     * @param name The name of the transaction domain
-     * @param config The domain configuration object
+     * @param url The URL for the transaction domain configuration file
      * @return A new transaction domain
      * @throw SystemException An error occured while attempting
      * to create the domain
      */
-    public synchronized static TransactionDomain createDomain( String name, DomainConfig config )
+    public static TransactionDomain createDomain( String url )
+        throws SystemException
+    {
+        if ( url == null )
+            throw new IllegalArgumentException( "Argument url is null" );
+        return createDomain( new InputSource( url ) );
+    }
+
+
+    /**
+     * Creates a new transaction domain with the specified name.
+     * If a transaction domain with the same name exists, it is
+     * returned, otherwise a new transaction domain is created.
+     *
+     * @param stream The input stream for the transaction domain
+     * configuration file
+     * @return A new transaction domain
+     * @throw SystemException An error occured while attempting
+     * to create the domain
+     */
+    public static TransactionDomain createDomain( InputStream stream )
+        throws SystemException
+    {
+        if ( stream == null )
+            throw new IllegalArgumentException( "Argument stream is null" );
+        return createDomain( new InputSource( stream ) );
+    }
+
+
+    /**
+     * Creates a new transaction domain with the specified name.
+     * If a transaction domain with the same name exists, it is
+     * returned, otherwise a new transaction domain is created.
+     *
+     * @param source The input source for the transaction domain
+     * configuration file
+     * @return A new transaction domain
+     * @throw SystemException An error occured while attempting
+     * to create the domain
+     */
+    public synchronized static TransactionDomain createDomain( InputSource source )
         throws SystemException
     {
         TransactionDomain domain;
+        DomainConfig      config;
+        Mapping           mapping;
+        Unmarshaller      unmarshaller;
 
-        if ( name == null || name.trim().length() == 0 )
-            throw new IllegalArgumentException( "Argument name is null or an empty string" );
-        domain = (TransactionDomain) _domains.get( name );
-        if ( domain == null ) {
-            domain = new TransactionDomainImpl( name, config );
-            _domains.put( name, domain );
-            return domain;
-        } else
-            throw new SystemException( "Transaction domain " + name + " already exists" );
+        if ( source == null )
+            throw new IllegalArgumentException( "Argument source is null" );
+        try {
+            mapping = new Mapping();
+            mapping.loadMapping( new InputSource( DomainConfig.class.getResourceAsStream( "mapping.xml" ) ) );
+            unmarshaller = new Unmarshaller( (Class) null );
+            unmarshaller.setMapping( mapping );
+            config = (DomainConfig) unmarshaller.unmarshal( source );
+            domain = config.getDomain();
+        } catch ( Exception except ) {
+            throw new SystemException( except.toString() );
+        }
+        if ( _domains.containsKey( domain.getDomainName() ) )
+            throw new SystemException( "Transaction domain " + domain.getDomainName() + " already exists" );
+        _domains.put( domain.getDomainName(), domain );
+        return domain;
     }
 
 
@@ -276,6 +330,14 @@ public abstract class TransactionDomain
      * @return The transaction domain metrics
      */
     public abstract DomainMetrics getDomainMetrics();
+
+
+    /**
+     * Returns the transaction domain name.
+     *
+     * @return The transaction domain name
+     */
+    public abstract String getDomainName();
 
 
 }

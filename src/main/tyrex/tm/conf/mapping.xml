@@ -1,0 +1,71 @@
+<?xml version="1.0"?>
+<!DOCTYPE mapping PUBLIC "-//EXOLAB/Castor Object Mapping DTD Version 1.0//EN"
+                         "http://castor.exolab.org/mapping.dtd">
+<mapping>
+
+  <class name="tyrex.tm.conf.DomainConfig">
+    <map-to xml="domain" />
+    <field name="name" type="string" required="true">
+      <bind-xml name="name" node="element" />
+    </field>
+    <field name="maximum" type="integer">
+      <bind-xml name="maximum" node="element" />
+    </field>
+    <field name="timeout" type="integer">
+      <bind-xml name="timeout" node="element" />
+    </field>
+    <field name="journaling" type="boolean">
+      <bind-xml name="journaling" node="element" />
+    </field>
+  </class>
+
+  <class name="tyrex.resource.jdbc.DataSourceConfig">
+    <map-to xml="dataSource" />
+    <field name="name" type="string" required="true">
+      <bind-xml name="name" node="element" />
+    </field>
+    <field name="JAR" type="string" required="true">
+      <bind-xml name="jar" node="element" />
+    </field>
+    <field name="paths" type="string">
+      <bind-xml name="paths" node="element" />
+    </field>
+    <field name="class" type="string" required="true"
+           get-method="getClassName" set-method="setClassName">
+      <bind-xml name="class" node="element" />
+    </field>
+    <field name="twoPhase" type="boolean">
+      <bind-xml name="twoPhase" node="element" />
+    </field>
+    <field name="config" create-method="createFactory"
+           set-method="setFactory" type="java.io.Serializable">
+      <bind-xml name="config" node="element" />
+    </field>
+    <field name="limits" type="tyrex.resource.ResourceLimits">
+      <bind-xml name="limits" node="element" />
+    </field>
+  </class>
+
+  <class name="tyrex.resource.ResourceLimits">
+    <map-to xml="limits" />
+    <field name="maximum" type="integer">
+      <bind-xml name="maximum" node="element" />
+    </field>
+    <field name="minimum" type="integer">
+      <bind-xml name="minimum" node="element" />
+    </field>
+    <field name="initial" type="integer">
+      <bind-xml name="initial" node="element" />
+    </field>
+    <field name="maxRetain" type="integer">
+      <bind-xml name="maxRetain" node="element" />
+    </field>
+    <field name="timeout" type="integer">
+      <bind-xml name="timeout" node="element" />
+    </field>
+    <field name="trace" type="boolean">
+      <bind-xml name="trace" node="element" />
+    </field>
+  </class>
+
+</mapping>

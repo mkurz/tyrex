@@ -40,7 +40,7 @@
  *
  * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Configuration.java,v 1.1 2001/02/27 00:37:09 arkin Exp $
+ * $Id: Configuration.java,v 1.2 2001/03/02 20:43:27 arkin Exp $
  */
 
 
@@ -69,7 +69,7 @@ import java.security.SecureRandom;
  * <tt>tyrex.config</tt>.
  *
  * @author <a href="mailto:arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2001/02/27 00:37:09 $
+ * @version $Revision: 1.2 $ $Date: 2001/03/02 20:43:27 $
  */
 public final class Configuration
 {
@@ -119,6 +119,15 @@ public final class Configuration
      * this property is <tt>tyrex.uuid.stateFile</tt>.
      */
     public static final String PROPERTY_UUID_STATE_FILE = "tyrex.uuid.stateFile";
+
+
+    /**
+     * Property that specifies the name of the transaction journal factory.
+     * The transaction journal factory is used to open transaction journals,
+     * if journaling is requested for a transaction domain. The name of
+     * this property is <tt>tyrex.journal.factory</tt>.
+     */
+    public static final String PROPERTY_JOURNAL_FACTORY = "tyrex.journal.factory";
 
 
     /**

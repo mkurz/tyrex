@@ -43,7 +43,7 @@
  */
 
 
-package tyrex.resource.jdbc;
+package tyrex.resource.jdbc.xa;
 
 
 import java.io.InputStream;

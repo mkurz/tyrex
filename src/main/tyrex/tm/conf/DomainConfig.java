@@ -38,39 +38,113 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
+ * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: RemoteTransactionServer.java,v 1.4 2000/09/08 23:06:04 mohammed Exp $
  */
 
 
-package tyrex.server;
+package tyrex.tm.conf;
 
 
-import java.rmi.Remote;
-import java.rmi.RemoteException;
 import javax.transaction.SystemException;
+import tyrex.tm.TransactionDomain;
+import tyrex.tm.impl.TransactionDomainImpl;
 
 
 /**
  *
- *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.4 $ $Date: 2000/09/08 23:06:04 $
+ * @version $Revision: 1.1 $ $Date: 2001/03/02 20:44:22 $
  */
-public interface RemoteTransactionServer
-    extends Remote
+public final class DomainConfig
 {
 
 
-    public byte[] createRemoteTransaction()
-	throws SystemException, RemoteException;
+    public static final int  NO_LIMIT = 0;
 
 
-    /*
-    public void enlistRemoteTransaction( byte[] gxid, Resource tx )
-	throws RemoteException;
-    */
+    /**
+     * The default timeout for all transactions, specified in seconds.
+     * This value is used unless the transaction domain, or transaction manager
+     * are requested to use a different value. The default value is 120 seconds.
+     */
+    public static final int    DEFAULT_TIMEOUT = 120;
+
+
+    private String              _name;
+
+
+    private int                 _maximum = NO_LIMIT;
+
+
+    private int                 _timeout = DEFAULT_TIMEOUT;
+
+
+    private boolean             _journaling = false;
+
+
+    private TransactionDomain   _txDomain;
+
+
+    public String getName()
+    {
+        return _name;
+    }
+
+
+    public void setName( String name )
+    {
+        _name = name;
+    }
+
+
+    public int getMaximum()
+    {
+        return _maximum;
+    }
+
+
+    public void setMaximum( int maximum )
+    {
+        if ( maximum < 0 )
+            maximum = 0;
+        _maximum = maximum;
+    }
+
+
+    public int getTimeout()
+    {
+        return _timeout;
+    }
+
+
+    public void setTimeout( int timeout )
+    {
+        if ( timeout <= 0 )
+            timeout = DEFAULT_TIMEOUT;
+        _timeout = timeout;
+    }
+
+
+    public boolean getJournaling()
+    {
+        return _journaling;
+    }
+
+
+    public void setJournaling( boolean journaling )
+    {
+        _journaling = journaling;
+    }
+
+
+    public synchronized TransactionDomain getDomain()
+        throws SystemException
+    {
+        if ( _txDomain == null )
+            _txDomain = new TransactionDomainImpl( this );
+        return _txDomain;
+    }
 
 
 }

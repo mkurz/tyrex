@@ -40,89 +40,28 @@
  *
  * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
  *
+ * $Id: JournalFactory.java,v 1.1 2001/03/02 20:44:23 arkin Exp $
  */
 
 
-package tyrex.tm;
+package tyrex.tm.journal;
 
 
-import org.omg.CORBA.ORB;
-import javax.transaction.xa.XAResource;
-import tyrex.resource.ResourceLimits;
+import javax.transaction.SystemException;
 
 
 /**
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $ $Date: 2001/03/02 03:24:27 $
+ * @version $Revision: 1.1 $
  */
-public final  class DomainConfig
+public interface JournalFactory
 {
 
 
-    private ORB                 _orb;
-
-
-    private TransactionJournal  _journal;
-
-
-    private XAResource[]        _resources;
-
-
-    /**
-     * The maximum number of transactions allowed.
-     */
-    private int                  _maximum;
-
-
-    public void setORB( ORB orb )
-    {
-        _orb = orb;
-    }
-
-
-    public ORB getORB()
-    {
-        return _orb;
-    }
-
-
-    public XAResource[] getRecoveryResources()
-    {
-        return _resources;
-    }
-
-
-    public void setRecoveryResources( XAResource[] resources )
-    {
-        _resources = resources;
-    }
-
-
-    public TransactionJournal getJournal()
-    {
-        return _journal;
-    }
-
-
-    public void setJournal( TransactionJournal journal )
-    {
-        _journal = journal;
-    }
-
-
-    public int getMaximum()
-    {
-        return _maximum;
-    }
-
-
-    public void setMaximum( int maximum )
-    {
-        if ( maximum < 0 )
-            maximum = 0;
-        _maximum = maximum;
-    }
+    public Journal openJournal( String name )
+        throws SystemException;
 
 
 }
+

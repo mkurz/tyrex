@@ -63,48 +63,54 @@ package tyrex.resource;
  * </ul>
  * 
  * @author <a href="jdaniel@intalio.com">Jerome Daniel</a>
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.7 $
  */
 public final class ResourceLimits
 {
 
 
+    public static final int  NO_LIMIT = 0;
+
+
+    public static final int  NO_TIMEOUT = 0;
+
+
     /**
      * The maximum number of connections supported, or zero.
      */
-    private int           _maximum;
+    private int           _maximum = NO_LIMIT;
 
 
     /**
      * The minimum number of connections required.
      */
-    private int           _minimum;
+    private int           _minimum = 0;
 
 
     /**
      * The initial pool size.
      */
-    private int           _initial;
+    private int           _initial = 0;
 
 
     /**
      * The maximum time to retain an unused connection (in seconds),
      * or zero.
      */
-    private int           _maxRetain;
+    private int           _maxRetain = NO_LIMIT;
 
 
     /**
      * The timeout when attempting to open a new connection (in seconds),
      * or zero.
      */
-    private int           _timeout;
+    private int           _timeout = NO_TIMEOUT;
 
 
     /**
      * True to enable tracing of connections.
      */
-    private boolean       _trace;
+    private boolean       _trace = false;
 
 
     /**

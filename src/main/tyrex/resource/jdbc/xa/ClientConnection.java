@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: ClientConnection.java,v 1.1 2001/03/02 19:02:08 arkin Exp $
+ * $Id: ClientConnection.java,v 1.2 2001/03/02 20:43:24 arkin Exp $
  */
 
 
@@ -49,7 +49,6 @@ package tyrex.resource.jdbc.xa;
 
 import java.util.*;
 import java.sql.*;
-import tyrex.jdbc.AbstractTyrexConnectionImpl;
 
 
 /**
@@ -69,7 +68,7 @@ import tyrex.jdbc.AbstractTyrexConnectionImpl;
  * @see Connection
  */
 final class ClientConnection
-    extends AbstractTyrexConnectionImpl
+    extends TyrexConnection
     implements Connection
 {
 

@@ -53,7 +53,7 @@ import tyrex.tm.TransactionDomain;
 /**
  * 
  * @author <a href="jdaniel@intalio.com">Jerome Daniel</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 public abstract class BaseConfiguration
     implements Serializable
@@ -104,11 +104,6 @@ public abstract class BaseConfiguration
 
     public BaseConfiguration()
     {
-        try {
-            _txDomain = TransactionDomain.createDomain( "default", null );
-        } catch ( Exception except ) {
-            System.out.println( except );
-        }
     }
 
 

@@ -40,11 +40,11 @@
  *
  * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionJournal.java,v 1.1 2001/02/27 00:37:09 arkin Exp $
+ * $Id: Journal.java,v 1.1 2001/03/02 20:44:23 arkin Exp $
  */
 
 
-package tyrex.tm;
+package tyrex.tm.journal;
 
 
 import javax.transaction.SystemException;
@@ -85,7 +85,7 @@ import javax.transaction.xa.Xid;
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
  * @version $Revision: 1.1 $
  */
-public abstract class TransactionJournal
+public abstract class Journal
 {
 
 
@@ -178,8 +178,19 @@ public abstract class TransactionJournal
      * manager has not reached any heuristic decision.
      *
      * @return An array of zero of more recoverable transactions
+     * @throw SystemException An error occured while performing this operation
      */
     public abstract RecoveredTransaction[] recover()
+        throws SystemException;
+
+
+    /**
+     * Called to close the journal and release any resources held by the
+     * journal.
+     *
+     * @throw SystemException An error occured while performing this operation
+     */
+    public abstract void close()
         throws SystemException;
 
 

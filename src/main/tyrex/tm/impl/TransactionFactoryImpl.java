@@ -40,19 +40,30 @@
  *
  * Copyright 2000,2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionFactoryImpl.java,v 1.1 2001/02/27 00:37:52 arkin Exp $
+ * $Id: TransactionFactoryImpl.java,v 1.2 2001/03/02 20:43:27 arkin Exp $
  */
 
 
 package tyrex.tm.impl;
 
 
-import java.util.Properties;
+import javax.transaction.SystemException;
+import javax.transaction.InvalidTransactionException;
 import org.omg.CORBA.INVALID_TRANSACTION;
+import org.omg.CORBA.TRANSACTION_ROLLEDBACK;
+import org.omg.CORBA.INVALID_TRANSACTION;
+import org.omg.CORBA.TRANSACTION_REQUIRED;
+import org.omg.CORBA.Environment;
+import org.omg.CORBA.WrongTransaction;
+import org.omg.CosTransactions.Inactive;
+import org.omg.CosTransactions.InvalidControl;
 import org.omg.CosTransactions.TransactionFactory;
 import org.omg.CosTransactions.Control;
 import org.omg.CosTransactions.PropagationContext;
+import org.omg.CosTransactions.PropagationContextHolder;
 import org.omg.CosTransactions._TransactionFactoryImplBase;
+import org.omg.CosTSPortability.Sender;
+import org.omg.CosTSPortability.Receiver;
 
 
 /**
@@ -61,7 +72,7 @@ import org.omg.CosTransactions._TransactionFactoryImplBase;
  * of remote transactions.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2001/02/27 00:37:52 $
+ * @version $Revision: 1.2 $ $Date: 2001/03/02 20:43:27 $
  * @see TransactionImpl
  *
  * Changes 
@@ -69,7 +80,8 @@ import org.omg.CosTransactions._TransactionFactoryImplBase;
  * J. Daniel : Changed code to be compliant with CORBA developing rules.
  */
 final class TransactionFactoryImpl
-    extends _TransactionFactoryImplBase    
+    extends _TransactionFactoryImplBase
+    implements Sender, Receiver
 {
 
 
@@ -115,4 +127,102 @@ final class TransactionFactoryImpl
     }
 
      
+    public void sending_request( int refId, PropagationContextHolder pgxh )
+    {
+        TransactionImpl txImpl;
+
+        // Sender:
+        // Request about to be sent. The server has to deliver the current
+        // transaction context to the reciever.
+        txImpl = (TransactionImpl) _txDomain._txManager.getTransaction();
+        if ( txImpl == null )
+            throw new TRANSACTION_REQUIRED();
+        pgxh.value = txImpl.getControl().get_txcontext();
+    }
+
+
+    public void received_request( int refId, PropagationContext pgContext )
+    {
+        ControlImpl control;
+
+        // Receiver:
+        // Request has been recieved. The propagation context is handed
+        // for association with the thread. Need to create a local copy
+        // of the transaction and resume the thread under its control.
+        try {
+            control = (ControlImpl) recreate( pgContext );
+            try {
+                _txDomain._txManager.resume( control.getTransaction() );
+            } catch ( IllegalStateException except ) {
+                throw new InvalidControl();
+            } catch ( InvalidTransactionException except ) {
+                throw new InvalidControl();
+            } catch ( SystemException except ) {
+                throw new INVALID_TRANSACTION( except.toString() );
+            }
+        } catch ( InvalidControl except ) {
+            throw new INVALID_TRANSACTION();
+        }
+    }
+
+
+    public void sending_reply( int refId, PropagationContextHolder pgxh )
+    {
+        TransactionImpl txImpl;
+
+        // Receiver:
+        // Reply about to be sent. Figure out if we're in the same
+        // transaction level as the incoming request, if not,
+        txImpl = (TransactionImpl) _txDomain._txManager.getTransaction();
+        if ( txImpl == null ) {
+            // The only possibility for not having an imported
+            // transaction in the thread is that it has been
+            // rolled back or timed out.
+            throw new TRANSACTION_ROLLEDBACK();
+        } else {
+            if ( txImpl.getPropagationContext() == null ) {
+                // If the top level transaction is not an imported
+                // one, we rollback the top level and throw an
+                // exception.
+                while ( txImpl.getParent() != null )
+                    txImpl = txImpl.getParent();
+                if ( txImpl.getPropagationContext() != null ) {
+                    try {
+                        txImpl.getPropagationContext().current.coord.rollback_only();
+                    } catch ( Inactive except ) { }
+                }
+                throw new TRANSACTION_ROLLEDBACK();
+            }
+            pgxh.value = txImpl.getPropagationContext();
+        }
+    }
+
+
+    public void received_reply( int refId, PropagationContext pgContext, Environment env )
+        throws WrongTransaction
+    {
+        TransactionImpl txImpl;
+
+        // Sender:
+        // Reply has been recieved. If environment indicates an error,
+        // or we did not get the same transaction back, mark the
+        // transaction for rollback and throw an exception.
+        if ( env.exception() != null ) {
+            try {
+                _txDomain._txManager.setRollbackOnly();
+            } catch ( IllegalStateException except ) {
+            } catch ( SystemException except ) {
+                throw new INVALID_TRANSACTION( except.toString() );
+            }
+            throw new TRANSACTION_ROLLEDBACK();
+        }
+        // Make sure we got back the same transaction that we expected.
+        // Note that an exception can be an error on both side, but
+        // we do not deal with asynchronous transactions here.
+        txImpl = (TransactionImpl) _txDomain._txManager.getTransaction();
+        if ( txImpl == null || txImpl.getControl() != pgContext.current.coord )
+            throw new WrongTransaction();
+    }
+
+
 }

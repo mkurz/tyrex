@@ -40,7 +40,7 @@
  *
  * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionDomainImpl.java,v 1.3 2001/03/02 19:01:34 arkin Exp $
+ * $Id: TransactionDomainImpl.java,v 1.4 2001/03/02 20:43:26 arkin Exp $
  */
 
 
@@ -49,12 +49,14 @@ package tyrex.tm.impl;
 
 import java.io.PrintWriter;
 import java.util.Enumeration;
+import java.util.Properties;
 import java.security.AccessController;
 import org.apache.log4j.Category;
 import org.omg.CosTransactions.PropagationContext;
 import org.omg.CosTransactions.Inactive;
 import org.omg.CosTransactions.TransactionFactory;
 import org.omg.CORBA.ORB;
+import org.omg.CORBA.TSIdentification;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 import javax.transaction.UserTransaction;
@@ -65,17 +67,18 @@ import javax.transaction.InvalidTransactionException;
 import javax.transaction.xa.Xid;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.XAException;
-import tyrex.tm.DomainConfig;
+import javax.jts.TransactionService;
 import tyrex.tm.DomainMetrics;
 import tyrex.tm.Heuristic;
 import tyrex.tm.TransactionDomain;
 import tyrex.tm.TransactionInterceptor;
 import tyrex.tm.TransactionStatus;
-import tyrex.tm.TransactionJournal;
 import tyrex.tm.TransactionTimeoutException;
+import tyrex.tm.journal.Journal;
+import tyrex.tm.journal.JournalFactory;
+import tyrex.tm.conf.DomainConfig;
 import tyrex.tm.xid.BaseXid;
 import tyrex.tm.xid.XidUtils;
-import tyrex.server.RemoteTransactionServer;
 import tyrex.services.Clock;
 import tyrex.util.Messages;
 import tyrex.util.Configuration;
@@ -90,11 +93,11 @@ import tyrex.util.Configuration;
  * domain.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.3 $ $Date: 2001/03/02 19:01:34 $
+ * @version $Revision: 1.4 $ $Date: 2001/03/02 20:43:26 $
  */
 public class TransactionDomainImpl
     extends TransactionDomain
-    implements Runnable
+    implements TransactionService, Runnable
 {
 
 
@@ -155,14 +158,14 @@ public class TransactionDomainImpl
     /**
      * The transaction factory.
      */
-    private final TransactionFactory       _txFactory;
+    private final TransactionFactoryImpl   _txFactory;
     
     
     /**
      * The CORBA ORB used by this transaction domain, or null
      * if no CORBA ORB is used.
      */
-    protected final ORB                    _orb;
+    protected ORB                          _orb;
 
 
     /**
@@ -206,7 +209,7 @@ public class TransactionDomainImpl
     /**
      * The transaction journal used by this domain.
      */
-    protected final TransactionJournal     _journal;
+    protected final Journal                _journal;
 
 
     /**
@@ -230,29 +233,50 @@ public class TransactionDomainImpl
     /**
      * Constructs a new transaction domain.
      *
-     * @param domainName The transaction domain name
-     * @param config The domain configuration object, may be null
+     * @param config The domain configuration object
+     * @throws SystemException Failed to create the transaction domain
      */
-    public TransactionDomainImpl( String domainName, DomainConfig config )
+    public TransactionDomainImpl( DomainConfig config )
+        throws SystemException
     {
-        XAResource[] resources;
+        String         domainName;
+        JournalFactory factory;
+        String         factoryName;
 
+        if ( config == null )
+            throw new IllegalArgumentException( "Argument config is null" );
+        domainName = config.getName();
         if ( domainName == null || domainName.trim().length() == 0 )
-            throw new IllegalArgumentException( "Argument domainName is null or an empty string" );
-	_domainName = domainName;
+            throw new SystemException( "The domain name is missing" );
+	_domainName = domainName.trim();
+        _maximum = config.getMaximum();
+        _txTimeout = config.getTimeout();
+        if ( config.getJournaling() ) {
+            // Throws SystemException if failed to open journal
+            factoryName = Configuration.getProperty( Configuration.PROPERTY_JOURNAL_FACTORY );
+            if ( factoryName == null || factoryName.trim().length() == 0 )
+                throw new SystemException( "No transaction journal factory specified in property " +
+                                           Configuration.PROPERTY_JOURNAL_FACTORY );
+            try {
+                factory = (JournalFactory) getClass().getClassLoader().loadClass( factoryName ).newInstance();
+            } catch ( Exception except ) {
+                throw new SystemException( "Error obtaining transaction journal factory " + factoryName +
+                                           ": " + except.toString() );
+            }
+            _journal = factory.openJournal( _domainName );
+        } else
+            _journal = null;
+
 	_interceptors = new TransactionInterceptor[ 0 ];
 	_txManager = new TransactionManagerImpl( this );
 	_userTx = new UserTransactionImpl( _txManager );
         _txFactory = new TransactionFactoryImpl( this );
-        _orb = ( config == null ? null : config.getORB() );
-        _maximum = ( config == null ? 0 : config.getMaximum() );
         _category = Category.getInstance( "tyrex." + _domainName );
         _hashTable = new TransactionImpl[ TABLE_SIZE ];
         _metrics = new DomainMetrics();
 
         // Obtain a transaction journal with the domain name.
-        _journal = ( config == null ? null : config.getJournal() );
-        recover( _journal, ( config == null ? null : config.getRecoveryResources() ) );
+        // recover( _journal, ( config == null ? null : config.getRecoveryResources() ) );
 
         // starts the background thread
         _background = new Thread( this, "Transaction Domain " + _domainName );
@@ -561,6 +585,12 @@ public class TransactionDomainImpl
     public DomainMetrics getDomainMetrics()
     {
         return _metrics;
+    }
+
+
+    public String getDomainName()
+    {
+        return _domainName;
     }
 
 
@@ -1243,7 +1273,7 @@ public class TransactionDomainImpl
      * @param journal The transaction journal
      * @param resources An array of XA resources
      */
-    private void recover( TransactionJournal journal, XAResource[] resources )
+    private void recover( Journal journal, XAResource[] resources )
     {
         TransactionImpl entry;
         TransactionImpl next;
@@ -1328,10 +1358,10 @@ public class TransactionDomainImpl
      * @param journal The transaction journal
      * @throws SystemException An error occured trying to read the journal
      */
-    private void recoverJournal( TransactionJournal journal )
+    private void recoverJournal( Journal journal )
         throws SystemException
     {
-        TransactionJournal.RecoveredTransaction[] recovered;
+        Journal.RecoveredTransaction[] recovered;
 
         recovered = journal.recover();
         if ( recovered != null && recovered.length > 0 ) {
@@ -1360,7 +1390,7 @@ public class TransactionDomainImpl
      * @param recovered The recovered transaction record
      * @throw SystemException The recovered transaction record is invalid
      */
-    private void recoverRecord( TransactionJournal.RecoveredTransaction recovered )
+    private void recoverRecord( Journal.RecoveredTransaction recovered )
         throws SystemException
     {
         TransactionImpl newTx;
@@ -1442,6 +1472,26 @@ public class TransactionDomainImpl
                             tx.addRecovery( resources[ i ], xid );
                     }
                 }
+        }
+    }
+
+
+    //----------------------------------------------------
+    // JTS support
+    //----------------------------------------------------
+
+
+    public void identifyORB( ORB orb, TSIdentification tsi, Properties prop )
+    {
+        try {
+            _orb = orb;
+            tsi.identify_sender( _txFactory );
+            tsi.identify_receiver( _txFactory );
+        } catch ( Exception except ) {
+            // The ORB might tell us it's already using some sender/reciever,
+            // or any other error we are not interested in reporting back
+            // to the caller (i.e. the ORB).
+            _category.error( "Error occured while identifying ORB", except );
         }
     }
 
