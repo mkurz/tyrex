@@ -5,11 +5,13 @@
     <header>
     <ul>
       <li><a href="http://java.sun.com/products/jta">Java Transaction API</a></li>
-      <li><a href="http://java.sun.com/products/jts">JTS/OTS for IIOP interoperability</a></li>
+      <li><a href="http://java.sun.com/products/jts">JTS for IIOP interoperability</a></li>
+      <li><a href="http://www.omg.org/technology/documents/formal/transaction_service.htm">OMG Transaction
+            Service (OTS 1.1)</a></li>
       <li><a href="http://java.sun.com/products/jdbc">JDBC 2.0 and standard extensions</a></li>
+      <li><a href="http://java.sun.com/j2ee/connector">J2EE Connector Architecture (JCA) 1.0</a></li>
       <li><a href="http://java.sun.com/products/jndi">JNDI for naming and LDAP access</a></li>
       <li><a href="http://java.sun.com/products/jaas">JAAS for authorization and authentication</a></li>
-      <li><a href="http://java.sun.com/products/ejb">Enterprise JavaBeans</a></li>
       <li><a href="http://www.mozilla.org/directory">The Mozilla Directory SDK</a></li>
     </ul>
     </header>

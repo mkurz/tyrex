@@ -7,125 +7,122 @@
   <body>
 
     <section title="Introduction">
-        <p>
-        This document lists various issues involving XA support and
-        databases.
-        </p>
+      <p>This document lists various issues involving XA support and databases.</p>
     </section>
-        
+    
     <section title="Oracle">
-        <p><b>Tested Versions</b>
-            <ul>
-            <li>Oracle 8i version 8.1.6.0.0</li>
-            </ul>
-        </p>
-        
-        <p><b>Notes</b>
-            <p>Tyrex provides a workaround (<b><api>tyrex.tm.OracleXAResourceHelper</api></b> 
-            for two known Oracle XA issues:
-            <ul>
-            <li>Oracle XA resource transaction enlistment requires Oracle's implementation
-            of <b>javax.transaction.xa.Xid</b>.</li>
-            <li>Suspended Oracle XA resources must be resumed first before they can be ended.</li>
-            </ul>
-            For the workaround to execute classes12.zip <b>must</b> be in the classpath. 
-            Classes12.zip is not necessary for the code to compile.
-            </p>
-        </p>                  
-                  
-        <p><b>Issues</b>
+      <p><b>Tested Versions</b>
         <ul>
-        <li>XA resources delisted from a transaction with 
-        <b>javax.transaction.xa.XAResource#TMSUCCESS</b> cannot
-        be used in another transaction until the first transaction
-        ends.</li>
-        <li>If an XA resource is delisted using 
-        <b>javax.transaction.xa.XAResource#TMFAIL</b> the database
-        cannot be accessed for some amount of time (100 seconds in my tests)
-        using a new XA resource from a new XA connection from either the existing
-        XA data source or a new XA data source. Increasing the transaction timeout
-        on the XA resource works occasionally. Best results were achieved using
-        <code>Thread.currentThread().sleep(100000);</code></li>
+          <li>Oracle 8i version 8.1.6.0.0</li>
+        </ul>
+      </p>
+        
+      <p><b>Notes</b>
+        <p>Tyrex provides a workaround (<b><api>tyrex.tm.OracleXAResourceHelper</api></b> 
+          for two known Oracle XA issues:
+          <ul>
+            <li>Oracle XA resource transaction enlistment requires Oracle's implementation
+              of <b>javax.transaction.xa.Xid</b>.</li>
+            <li>Suspended Oracle XA resources must be resumed first before they can be ended.</li>
+          </ul>
+          For the workaround to execute classes12.zip <b>must</b> be in the classpath. 
+          Classes12.zip is not necessary for the code to compile.
+        </p>
+      </p>                  
+                  
+      <p><b>Issues</b>
+        <ul>
+          <li>XA resources delisted from a transaction with 
+            <b>javax.transaction.xa.XAResource#TMSUCCESS</b> cannot
+            be used in another transaction until the first transaction
+            ends.</li>
+          <li>If an XA resource is delisted using 
+            <b>javax.transaction.xa.XAResource#TMFAIL</b> the database
+            cannot be accessed for some amount of time (100 seconds in my tests)
+            using a new XA resource from a new XA connection from either the existing
+            XA data source or a new XA data source. Increasing the transaction timeout
+            on the XA resource works occasionally. Best results were achieved using
+            <code>Thread.currentThread().sleep(100000);</code></li>
         </ul> 
-        </p>
-
+      </p>
+      
     </section>
-
+    
     <section title="Sybase">
-        <p><b>Notes</b>
-            <p>Hopefully coming soon.
-            <br></br>
-            Sybase Adaptive Server 12.0
-            requires "Distributed Transaction Management" component,
-            which is not available for download, for XA support.
-            </p>
+      <p><b>Notes</b>
+        <p>Hopefully coming soon.
+          <br></br>
+          Sybase Adaptive Server 12.0
+          requires "Distributed Transaction Management" component,
+          which is not available for download, for XA support.
         </p>
+      </p>
     </section>
     
     <section title="Informix (Dynamic Server)">
-        <p><b>Notes</b>
-            <p>Please send email about the serial number
-            and key required for the Dynamic Server JDBC driver (version 2.11) installation
-            to <a href="mailto:tyrex-dev@exolab.org">Tyrex Developer's Mailing List</a>
-            </p>
+      <p><b>Notes</b>
+        <p>Please send email about the serial number
+          and key required for the Dynamic Server JDBC driver (version 2.11) installation
+          to <a href="mailto:tyrex-dev@exolab.org">Tyrex Developer's Mailing List</a>
         </p>
+      </p>
     </section>
     
     <section title="Interbase">
-        <p><b>Notes</b>
-            <p>The current JDBC driver (Version 2.0) does not support XA transactions yet.
-            </p>
+      <p><b>Notes</b>
+        <p>The current JDBC driver (Version 2.0) does not support XA transactions yet.
         </p>
+      </p>
     </section>
     
     <section title="Cloudscape">
-        <p><b>Tested Versions</b>
-            <ul>
-            <li>Cloudscape 3.5</li>
-            </ul>
-        </p>
-        
-        <p><b>Notes</b>
-            <p>Cloudscape's XA implementation has passed the most Tyrex tests.
-            </p>
-        </p>                  
-                  
-        <p><b>Issues</b>
+      <p><b>Tested Versions</b>
         <ul>
-        <li>XA resources delisted from a transaction with 
-        <b>javax.transaction.xa.XAResource#TMSUCCESS</b> cannot
-        be used in another transaction until the first transaction
-        ends.</li>
-        <li>There is a bug in the Cloudscape driver that causes infinite
-        recursion during driver registration occasionally.</li>
-        </ul> 
+          <li>Cloudscape 3.5</li>
+        </ul>
+      </p>
+      
+      <p><b>Notes</b>
+        <p>Cloudscape's XA implementation has passed the most Tyrex tests.
         </p>
-
+      </p>                  
+      
+      <p><b>Issues</b>
+        <ul>
+          <li>XA resources delisted from a transaction with 
+            <b>javax.transaction.xa.XAResource#TMSUCCESS</b> cannot
+            be used in another transaction until the first transaction
+            ends.</li>
+          <li>There is a bug in the Cloudscape driver that causes infinite
+            recursion during driver registration occasionally.</li>
+        </ul> 
+      </p>
+      
     </section>
     
     <section title="Other Databases">
-        <p>If there are other databases with a XA implementation and
+      <p>If there are other databases with a XA implementation and
         a <b>free</b> download (very important) that people would like
         tested please send email to 
         <a href="mailto:tyrex-dev@exolab.org">Tyrex Developer's Mailing List</a>.
-        </p>
+      </p>
     </section>
     
     <section title="Problems">
-        <p>If there are other problems with the databases listed previously
+      <p>If there are other problems with the databases listed previously
         send a detailed email to 
         <a href="mailto:tyrex-dev@exolab.org">Tyrex Developer's Mailing List</a>.
-        </p>
-        <p>
+      </p>
+      <p>
         The email should contain:
         <ul>
-        <li>A stacktrace if one is available</li>
-        <li>The database used, including version number</li>
-        <li>The JDBC driver version number</li>
-        <li>Instructions on how to reproduce the problem</li>
+          <li>A stacktrace if one is available</li>
+          <li>The database used, including version number</li>
+          <li>The JDBC driver version number</li>
+          <li>Instructions on how to reproduce the problem</li>
         </ul>
-        </p>
+      </p>
     </section>
-
+    
   </body>
 </document>

@@ -5,19 +5,19 @@
 
     <header>
       <p>Tyrex is the missing piece in the J2EE puzzle, a J2EE service provider for both
-         Servlet and EJB container, JMS providers and generic connectors. It provides
-         services for security and authentication, local and distributed transactions,
-         resource configuration and pooling, and TP monitoring. Tyrex is presently
-         integrated with Tomcat and OpenEJB.</p>
-
+        Servlet and EJB container, JMS providers and generic connectors. It provides
+        services for security and authentication, local and distributed transactions,
+        resource configuration and pooling, and TP monitoring. Tyrex is presently
+        integrated with Tomcat and OpenEJB.</p>
+      
       <p><b>Note:</b> Presently we are only hosting one mailing list. Traffic is not high, so if
-         you are interested in keeping up to date with new releases, please <a href="lists.xml">subscribe
-         to this list</a>.</p>
+        you are interested in keeping up to date with new releases, please <a href="lists.xml">subscribe
+          to this list</a>.</p>
 
     </header>
 
     <section title="Features">
-
+      
       <p>Short feature list (we haven't got all day):
         <ul>
           <li>Full support for JTA and OTS transactions APIs</li>
@@ -25,42 +25,42 @@
           <li>JAAS-based authentication, LDAP login module</li>
           <li>Configurable transaction processing monitor</li>
           <li>JDBC pooling and automatic JDBC resource enlistment</li>
-          <li>Connector architecture</li>
-          <li>XML/JNDI based configuration</li>
+          <li>JCA connection manager</li>
+          <li>XML based configuration</li>
           <li>JNDI environment naming context</li>
-          <li>Transaction context propagation over IIOP and RMI</li>
-          <li>Tomcat 3.1 connector</li>
-          <li>Recovery mechanism</li>
+          <li>Transaction context propagation over IIOP</li>
           <li>Can be used as a stand alone OTS server</li>
-        </ul></p>
+        </ul>
+      </p>
 
     </section>
 
     <section title="News">
       <p>Version $VERSION$ is now <a href="download.xml">available for download</a>.
-      <ul>
-        <li>January 11, 2001: Version 0.9.7</li>
-        <li>August 25, 2000: Version 0.9.6</li>
-        <li>April 10, 2000: Version 0.9.5</li>
-        <li>Feb 10, 2000: Version 0.9.4</li>
-        <li>Dec 21, 1999: Version 0.9</li>
-      </ul>
-       See the <a href="changelog.xml">change log page</a> for more information.</p>
-
+        <ul>
+          <li>March 23, 2001: Version 0.9.8</li>
+          <li>January 11, 2001: Version 0.9.7</li>
+          <li>August 25, 2000: Version 0.9.6</li>
+          <li>April 10, 2000: Version 0.9.5</li>
+          <li>Feb 10, 2000: Version 0.9.4</li>
+          <li>Dec 21, 1999: Version 0.9</li>
+        </ul>
+        See the <a href="changelog.xml">change log page</a> for more information.</p>
+      
     </section>
-
+    
     <section title="About Tyrex">
-
+      
       <p>Tyrex is the missing piece in the J2EE puzzle, the hidden back end behind the
-         Servlet, EJB and JMS servers. Tyrex was originally developed as a separate back-end
-         that can be used with Tomcat, OpenEJB, OpenJMS and a variety of other servers.
-         Due to its nature as a back-end system, Tyrex is probably one of the most boring
-         open source projects on earth.</p>
-
+        Servlet, EJB and JMS servers. Tyrex was originally developed as a separate back-end
+        that can be used with Tomcat, OpenEJB, OpenJMS and a variety of other servers.
+        Due to its nature as a back-end system, Tyrex is probably one of the most boring
+        open source projects on earth.</p>
+      
       <p>Most of the code released in Tyrex has been developed by Assaf Arkin, CTO
-         &lt;<email>arkin@intalio.com</email>&gt;. Contributors are welcome
-         to join this project. Please join us on the <a href="list.xml">mailing list</a>.</p>
+        &lt;<email>arkin@intalio.com</email>&gt;. Contributors are welcome
+        to join this project. Please join us on the <a href="list.xml">mailing list</a>.</p>
     </section>
-
+    
   </body>
 </document>
