@@ -50,13 +50,15 @@ Conetxt   ctx;
 
 <comment>// Make ctx points to a path within the shared memory space</comment>
 env = new Hashtable();
-env.put( Context.INITIAL_CONTEXT_FACTORY, "tyrex.naming.MemoryContextFactory" );
+env.put( Context.INITIAL_CONTEXT_FACTORY, 
+         "tyrex.naming.MemoryContextFactory" );
 env.put( Context.PROVIDER_URL, path );
 ctx = new InitialContext( env );
 
 <comment>// Make ctx the root of a private namespace</comment>
 env = new Hashtable();
-env.put( Context.INITIAL_CONTEXT_FACTORY, "tyrex.naming.MemoryContextFactory" );
+env.put( Context.INITIAL_CONTEXT_FACTORY, 
+         "tyrex.naming.MemoryContextFactory" );
 ctx = new InitialContext( env );
       </code>
 

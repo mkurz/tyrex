@@ -4,7 +4,7 @@
 <xsl:template match="$project/navSections">
   <xsl:for-each select="section">
   <xsl:variable name="sectionName" select="@name"/>
-  <table width="95" border="0" cellpadding="0" cellspacing="0">
+  <!-- <table width="95" border="0" cellpadding="0" cellspacing="0"> -->
   <xsl:for-each select="navLink">
     <xsl:variable name="url">
       <xsl:call-template name="link-convertor">
@@ -25,8 +25,8 @@
       </xsl:otherwise>
     </xsl:choose>
   </xsl:for-each>
-  </table>
-  <br/>
+  <!-- </table>
+  <br/> -->
   </xsl:for-each>
 </xsl:template>
 
