@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Configuration.java,v 1.7 2001/09/21 18:15:24 mohammed Exp $
+ * $Id: Configuration.java,v 1.8 2001/09/24 18:28:53 mohammed Exp $
  */
 
 
@@ -62,7 +62,7 @@ import java.security.SecureRandom;
  * rely on this configuration file.
  *
  * @author <a href="mailto:arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.7 $ $Date: 2001/09/21 18:15:24 $
+ * @version $Revision: 1.8 $ $Date: 2001/09/24 18:28:53 $
  */
 public final class Configuration
 {
@@ -329,10 +329,6 @@ public final class Configuration
             System.err.println( Messages.format( "tyrex.util.loadedConfigurationFile", fileName ) );
             System.err.println();
         }
-
-        //temp
-        org.apache.log4j.BasicConfigurator.configure();
-        org.apache.log4j.BasicConfigurator.enableAll();
     }
 
 
