@@ -38,30 +38,29 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
+ * Original code is Copyright (c) 1999-2001, Intalio, Inc. All Rights Reserved.
  *
- * $Id: XADataSourceTestSuite.java,v 1.6 2001/11/12 02:50:41 mills Exp $
+ * Contributions by MetaBoss team are Copyright (c) 2003-2004, Softaris Pty. Ltd. All Rights Reserved.
+ *
+ * $Id: XADataSourceTestSuite.java,v 1.7 2004/12/15 06:17:52 metaboss Exp $
  */
-
 
 package jdbc;
 
-import VerboseStream;
+import util.VerboseStream;
 
 import java.io.IOException;
 import java.sql.Connection;
-import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
+
 import javax.sql.XAConnection;
-import javax.sql.XADataSource;
 import javax.transaction.TransactionManager;
-import jdbc.db.TestConnectionImpl;
+
 import jdbc.db.TestDriverImpl;
-
-import junit.framework.*;
-
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
 import tyrex.resource.jdbc.xa.EnabledDataSource;
 
 
@@ -315,7 +314,7 @@ public class XADataSourceTestSuite
                                             " drivers. Expected 1.");
                     }
 
-                    Thread.currentThread().sleep(3000);
+                    Thread.sleep(3000);
 
                     connection = xaConnection.getConnection();
                     connection = xaConnection.getConnection();
@@ -402,7 +401,7 @@ public class XADataSourceTestSuite
                         
                                         stmt.close();
                                         
-                                        Thread.currentThread().sleep(7000);
+                                        Thread.sleep(7000);
                                         
                                         transactionManager.commit();
                         
