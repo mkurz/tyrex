@@ -244,7 +244,7 @@ public abstract class JDBCHelper
                 throw (RuntimeException)e;    
             }
 
-            e.printStackTrace();
+            //e.printStackTrace();
 
             throw new RuntimeException ( e.toString() );
         } finally {

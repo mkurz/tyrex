@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: EnlistedConnection.java,v 1.5 2000/09/08 23:07:26 mohammed Exp $
+ * $Id: EnlistedConnection.java,v 1.6 2000/09/27 23:06:52 mohammed Exp $
  */
 
 
@@ -110,6 +110,8 @@ public class EnlistedConnection
     /**
      * Constructs a new connection with the underlying JDBC
      * connection and the associated XA resource.
+     * <p>
+     * Assumes that the underlying connection does not auto-commit
      *
      * @param underlying the underlying connection
      * @param xaRes the XA resource associated with the
@@ -122,14 +124,7 @@ public class EnlistedConnection
     {
 	_underlying = underlying;
 	_xaRes = xaRes;
-    if ( _underlying.getAutoCommit() ) {
-        // make sure the underlying connection is not auto commit
-        try {
-            _underlying.setAutoCommit( false );
-        } catch ( SQLException e ) {
-            // ignore
-        }
-    }
+    
     enlist();
     }
 

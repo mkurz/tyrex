@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: XAConnectionImpl.java,v 1.9 2000/09/27 22:02:53 mohammed Exp $
+ * $Id: XAConnectionImpl.java,v 1.10 2000/09/27 23:06:53 mohammed Exp $
  */
 
 
@@ -484,12 +484,18 @@ public final class XAConnectionImpl
 		try {
 		    _txConn.conn.setAutoCommit( false );
 		    try {
-            if ( _resManager.getIsolationLevel() != _txConn.conn.getTransactionIsolation() )
+            // NOTE: Some JDBC drivers do not cache isolation levels so the method #getTransactionIsolation
+            // is expensive and can use up resources. The Cloudspace 3.5 driver suffers from this.
+
+            //if ( _resManager.getIsolationLevel() != _txConn.conn.getTransactionIsolation() )
 			    _txConn.conn.setTransactionIsolation( _resManager.getIsolationLevel() );
 		    } catch ( SQLException e ) {
                 // The underlying driver might not support this
 			    // isolation level that we use by default.
 
+                // See NOTE above why the code below is commented out
+                // We'll hope for the best in this case :-).
+                /*
                 // not wrapping the call to conn getTransactionIsolation in a
                 // try-catch block because if we can't determine the isolation level
                 // then it can be TRANSACTION_NONE and what's the point of continuing.
@@ -502,15 +508,16 @@ public final class XAConnectionImpl
                                                             ">: does not support transactions." );
                     throw new XAException( XAException.XAER_RMERR );    
                 }
-                else if ( _resManager.getLogWriter() != null ) {
+                else*/ if ( _resManager.getLogWriter() != null ) {
 			            _resManager.getLogWriter().println( "XAConnection <" + 
                                                             toString() +
-                                                            ">: cannot set isolation level. Using connection isolation level of " + isolationLevel + ".");
+                                                            ">: cannot set isolation level.");
                 }
 			}
 		    if ( _txConn.conn instanceof TwoPhaseConnection )
 			( (TwoPhaseConnection) _txConn.conn ).enableSQLTransactions( false );
 		} catch ( SQLException except ) {
+            except.printStackTrace(); // riad
 		    // If error occured at this point, we can only
 		    // report it as resource manager error.
 		    if ( _resManager.getLogWriter() != null )

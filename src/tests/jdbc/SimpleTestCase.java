@@ -636,7 +636,6 @@ class SimpleTestCase
                     stream.writeVerbose( "Could not test two-phase commit performance" );
                 }
                 
-    
                 try {
                     if ( !performance( transactionManager, entries, stream, ONE_PHASE_COMMIT_PERFORMANCE_TEST ) ) {
                         stream.writeVerbose( "Error: Performance one-phase commit failed" );
