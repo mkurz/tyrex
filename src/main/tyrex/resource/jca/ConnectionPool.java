@@ -81,7 +81,7 @@ import tyrex.util.LoggerPrintWriter;
 /**
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.8 $
+ * @version $Revision: 1.9 $
  */
 final class ConnectionPool
     extends PoolMetrics
@@ -258,7 +258,9 @@ final class ConnectionPool
             _logWriter.println( buffer.toString() );
         }
 
-        DaemonMaster.addDaemon( this, "Connection Pool " + name );
+        if ( 0 != _limits.getMaxRetain() ) {
+            DaemonMaster.addDaemon( this, "Connection Pool " + name );
+        }
     }
 
 
