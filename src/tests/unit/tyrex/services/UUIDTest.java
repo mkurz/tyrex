@@ -45,6 +45,8 @@
 
 package tyrex.services;
 
+import java.util.Arrays;
+
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.FileInputStream;
@@ -56,7 +58,7 @@ import junit.extensions.*;
 /**
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  */
 
 
@@ -151,6 +153,33 @@ public class UUIDTest extends TestCase
 //        System.out.println(bytes);
         bytes = UUID.createBinary();
 //        System.out.println(bytes);
+    }
+
+
+    /**
+     * <p>Generate a large number of IDs and ensure that all are
+     * unique.</p>
+     *
+     * @result Create a large String array.  Fill the array by
+     * generating a large number of individual ids.  Sort the array
+     * and then traverse it ensuring that no entry is the same as its
+     * neighbors.
+     */
+
+    public void testUniquness()
+        throws Exception
+    {
+        final int numIds = 300000;
+        String[] ids = new String[numIds];
+        for (int i = 0; i < numIds; i++)
+        {
+            ids[i] = UUID.create();
+        }
+        Arrays.sort(ids);
+        for (int i = 1; i < numIds; i++)
+        {
+            assert("Unique", ids[i].compareTo(ids[i - 1]) != 0);
+        }
     }
 
 
