@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <xsl:stylesheet version="1.0">
 
-<xsl:template match="searchForm">
-  <table width="95" border="0" cellpadding="0" cellspacing="0">
+<xsl:template name="searchForm">
+  <table width="95" height="25" border="0" cellpadding="0" cellspacing="0">
     <form method="POST" action="index.html">
       <xsl:element name="input">
         <xsl:attribute name="type">hidden</xsl:attribute>

@@ -88,6 +88,9 @@
       
     </section>
   </navSections>
+  
+  <searchForm>
+  </searchForm>
 
   <notice>
     Java, Enterprise JavaBeans, Java Messaging Server, JDBC, JNDI, JTA, JTS, Sun, Sun Microsystems and other Java

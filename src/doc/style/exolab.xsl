@@ -143,15 +143,16 @@
         </td>
         <td width="7" height="5" bgcolor="#a9a5de" valign="top" align="left">&#160;</td>
         <td width="70" height="5" valign="top" align="left">&#160;</td>
-        <td width="120" height="5" valign="top" align="left">&#160;</td>
+        <td width="10" height="5" valign="top" align="left">&#160;</td>
       </tr>
     
       <!-- content row -->
     
       <tr>
         <td width="20" height="5" bgcolor="#7270c2" valign="top" align="left">&#160;</td>
-        <td width="95" bgcolor="#7270c2" valign="top" 
-          align="left"><xsl:apply-templates select="searchForm"/></td>
+        <td width="95" height="25" bgcolor="#7270c2" valign="top" 
+          align="left"><xsl:call-template name="searchForm"/></td>
+        
         <td width="7" bgcolor="#a9a5de" valign="top" align="left"> 
           <img src="images/dotTrans.gif" width="1" height="25" border="0"/>
         </td>

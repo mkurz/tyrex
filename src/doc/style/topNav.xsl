@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <xsl:stylesheet version="1.0">
 
-<xsl:variable name="leftTopNavPos" select="5"/>
+<xsl:variable name="leftTopNavPos" select="6"/>
 <xsl:template match="$project/topNav">
   <xsl:for-each select="navLink">
     <xsl:variable name="url" select="url"/>
