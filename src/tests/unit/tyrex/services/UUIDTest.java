@@ -46,6 +46,7 @@
 package tyrex.services;
 
 import java.util.Arrays;
+import java.util.Comparator;
 
 import java.io.OutputStream;
 import java.io.PrintWriter;
@@ -58,7 +59,7 @@ import junit.extensions.*;
 /**
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  */
 
 
@@ -144,9 +145,13 @@ public class UUIDTest extends TestCase
                      UUID.trim(UUID.create(longerThanMaximumPrefix)).length());
         assertEquals("Trimmed ID", id.substring(0, UUID.MAXIMUM_LENGTH),
                      UUID.trim(id));
-        String anID = "4f0874ff-b23e-1004-847f-76480adaf1a8";
+        String anID = "a8f1da0a48767f8404103eb2ff74084f";
         byte[] bytes = UUID.toBytes(anID);
         assertEquals("Coverted ID", anID, UUID.fromBytes(bytes));
+        anID = "prefixa8f1da0a48767f8404103eb2ff74084f";
+        bytes = UUID.toBytes("prefix", anID);
+        assertEquals("Coverted ID", anID, UUID.fromBytes("prefix", bytes));
+
         char[] chars = UUID.createTimeUUIDChars();
 //        System.out.println(chars);
         bytes = UUID.createTimeUUIDBytes();
@@ -169,24 +174,37 @@ public class UUIDTest extends TestCase
     public void testUniquness()
         throws Exception
     {
-        final int numIds = 200000;
-        String[] ids1 = new String[2 * numIds];
-        String[] ids2 = new String[numIds];
+        byte[] bytes;
+        final int numIds = 700000;
+        byte[][] ids1 = new byte[2 * numIds][8];
+        byte[][] ids2 = new byte[numIds][8];
         IdThread idThread = new IdThread(ids2);
         idThread.start();
         for (int i = 0; i < numIds; i++)
         {
-            ids1[i] = UUID.create();
+            bytes = UUID.createTimeUUIDBytes();
+            for (int j = 0; j < 8; j++)
+            {
+                if (j < 6)
+                {
+                    ids1[i][j] = bytes[j];
+                }
+                else
+                {
+                    ids1[i][j] = bytes[j + 2];
+                }
+            }
         }
         idThread.join();
         for (int i = 0; i < numIds; i++)
         {
             ids1[numIds + i] = ids2[i];
         }
-        Arrays.sort(ids1);
+        BytesCompare comp = new BytesCompare();
+        Arrays.sort(ids1, comp);
         for (int i = 1; i < numIds; i++)
         {
-            assert("Unique", ids1[i].compareTo(ids1[i - 1]) != 0);
+            assert("Unique", comp.compare(ids1[i], ids1[i - 1]) != 0);
         }
     }
 
@@ -207,11 +225,39 @@ public class UUIDTest extends TestCase
         tyrex.Unit.runTests(args, new TestSuite(UUIDTest.class));
     }
 
+
+
+    private class BytesCompare implements Comparator
+    {
+        public int compare(Object oId1, Object oId2)
+        {
+            byte[] id1 = (byte[])oId1;
+            byte[] id2 = (byte[])oId2;
+            for (int i = 0; i < id1.length; i++)
+            {
+                if (id1[i] < id2[i])
+                {
+                    return -1;
+                }
+                else if (id1[i] > id2[i])
+                {
+                    return 1;
+                }
+            }
+            return 0;
+        }
+
+        public boolean equals()
+        {
+            return false;
+        }
+    }
+
     private class IdThread extends Thread
     {
-        private String[] _ids = null;
+        private byte[][] _ids = null;
 
-        public IdThread(String[] ids)
+        public IdThread(byte[][] ids)
         {
             _ids = ids;
         }
@@ -220,7 +266,18 @@ public class UUIDTest extends TestCase
         {
             for (int i = 0; i < _ids.length; i++)
             {
-                _ids[i] = UUID.create();
+                byte[] bytes = UUID.createTimeUUIDBytes();
+                for (int j = 0; j < 8; j++)
+                {
+                    if (j < 6)
+                    {
+                        _ids[i][j] = bytes[j];
+                    }
+                    else
+                    {
+                        _ids[i][j] = bytes[j + 2];
+                    }
+                }
             }
         }
     }
