@@ -80,7 +80,7 @@
     <section title="Informix">
       <p><b>Tested Versions</b>
         <ul>
-          <li>Unknown database version with JDBC 2.21 driver</li>
+          <li>Informix 7.30 with JDBC 2.21 driver</li>
         </ul>
       </p>
       <p><b>Notes</b>
