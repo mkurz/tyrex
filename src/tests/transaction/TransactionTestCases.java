@@ -149,6 +149,9 @@ import tyrex.tm.TyrexTransaction;
  * <LI> Test performance for one phase commits.
  * <LI> Test performance for rollbacks.            
  * </UL>
+ * <P>
+ * The two-phase commit tests can only apply to multiple data sources so if a single
+ * data source is defined then the two-phase commit tests are not run.
  *
  * @author <a href="mohammed@intalio.com">Riad Mohammed</a>
  */

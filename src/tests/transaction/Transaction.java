@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Transaction.java,v 1.3 2001/02/17 00:06:07 mohammed Exp $
+ * $Id: Transaction.java,v 1.4 2001/02/17 00:28:43 mohammed Exp $
  */
 
 
@@ -175,6 +175,9 @@ import tyrex.tm.TyrexTransaction;
  * <LI> Test performance for one-phase commit.
  * <LI> Test performance for rollbacks.            
  * </UL>
+ * <P>
+ * The two-phase commit tests can only apply to multiple data sources so if a single
+ * data source is defined then the two-phase commit tests are not run.
  *
  * @author <a href="mohammed@intalio.com">Riad Mohammed</a>
  */

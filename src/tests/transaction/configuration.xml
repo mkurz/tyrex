@@ -47,7 +47,7 @@
                                 the original transaction commits         
   name - the pretty name of the data source                                           
   
-  If attributes are given then the class defines a JDBC 2.0 XADataSource.
+  If attributes are given then the class defines a JDBC 2.0 XADataSource. URI cannot be used in this case
 -->  
   <datasource>
     <class>oracle.jdbc.xa.client.OracleXADataSource</class>
@@ -80,7 +80,7 @@
   name - the pretty name of the data source                                           
   
   The specified uri, user name and password are passed to tyrex.jdbc.xa.EnabledDataSource so that the 
-  JDBC 1.1 driver can be treated as an XADataSource
+  JDBC 1.1 driver can be treated as an XADataSource. Attributes cannot be used for a JDBC 1.1 driver.
 -->  
   <datasource>  
     <class>com.sybase.jdbc2.jdbc.SybDriver</class>
