@@ -10,7 +10,7 @@
 
 
   <!-- Template for document -->
-  
+
   <xsl:template match="/">
   <xsl:variable name="project" select="document('../project.xml')/project"/>
   <html>
@@ -25,28 +25,28 @@
     <link rel="stylesheet" href="default.css"/>
   </head>
 
-  <body bgcolor="#ffffff" link="#6763a9" vlink="#6763a9" 
+  <body bgcolor="#ffffff" link="#6763a9" vlink="#6763a9"
         topmargin="0" bottommargin="0" leftmargin="0" marginheight="0" marginwidth="0">
 
   <a name="top"/>
-    
+
     <table border="0" cellpadding="0" cellspacing="0" width="712" height="400">
 
-      <tr><td width="20" valign="top" align="left" bgcolor="#7270c2" height="7"><img
+      <tr><td width="20" valign="top" align="left" bgcolor="#7270c2"><img
         src="images/dotTrans.gif" width="1" height="1" border="0"/></td>
-        <td width="95" valign="top" align="left" bgcolor="#7270c2" height="7"><img
+        <td width="95" valign="top" align="left" bgcolor="#7270c2"><img
           src="images/dotTrans.gif" width="1" height="1" border="0"/></td>
-        <td width="7" valign="top" align="left" height="7"><img src="images/dotTrans.gif" border="0" 
+        <td width="7" valign="top" align="left"><img src="images/dotTrans.gif" border="0"
           width="1" height="1"/></td>
-        <td width="70" valign="top" align="left" height="7"><img 
+        <td width="70" valign="top" align="left"><img
           src="images/dotTrans.gif" width="70" height="6" border="0"/></td>
-        <td width="400" valign="top" align="left" height="7"><img 
+        <td width="400" valign="top" align="left"><img
           src="images/top_2.gif"  width="400" height="6" border="0"/></td>
-        <td width="120" valign="top" align="left" height="7"><xsl:element
-          name="img"><xsl:attribute name="src">images/line_blue.gif</xsl:attribute>
-        <xsl:attribute name="width">120</xsl:attribute>  
-        <xsl:attribute name="height">6</xsl:attribute>  
-        <xsl:attribute name="border">0</xsl:attribute>  
+        <td width="120" valign="top" align="left"><xsl:element
+          name="img"><xsl:attribute name="src">images/top_3.gif</xsl:attribute>
+        <xsl:attribute name="width">120</xsl:attribute>
+        <xsl:attribute name="height">6</xsl:attribute>
+        <xsl:attribute name="border">0</xsl:attribute>
       </xsl:element></td></tr>
       <tr>
         <td width="20" bgcolor="#7270c2" valign="top" align="left"><img
@@ -54,7 +54,7 @@
         <td width="95" bgcolor="#7270c2" valign="top" align="left"><img
           src="images/dotTrans.gif" border="0" width="1" height="1"/></td>
         <td width="7" bgcolor="#ffffff" valign="top" align="left"></td>
-        <td width="70" valign="top" align="left"><img 
+        <td width="70" valign="top" align="left"><img
           src="images/dotTrans.gif" width="1" height="1" border="0"/></td>
         <td width="400" valign="middle" align="left">
         <xsl:apply-templates select="$project/topNav"/><br/>
@@ -62,65 +62,45 @@
         <td width="120" height="20" valign="top" align="left">&#160;</td>
       </tr>
       <tr>
-        <td width="20" bgcolor="#7270c2" valign="top" align="left" height="8"><img 
+        <td width="20" bgcolor="#7270c2" valign="top" align="left"><img
           src="images/dotTrans.gif" width="20" height="3" border="0"/></td>
-        <td width="95" bgcolor="#7270c2" valign="top" align="left" height="8"><img 
+        <td width="95" bgcolor="#7270c2" valign="top" align="left"><img
           src="images/line_sm.gif" width="105" height="3" border="0"/></td>
-        <td width="7" bgcolor="#a9a5de" valign="top" align="left" height="8"><img 
+        <td width="7" bgcolor="#a9a5de" valign="top" align="left"><img
           src="images/line_sm.gif" width="7" height="3" border="0"/></td>
-        <td width="70" valign="top" align="left" height="8"><img 
+        <td width="70" valign="top" align="left"><img
           src="images/line_light.gif" width="70" height="3" border="0"/></td>
-        <td width="400" valign="top" align="left" height="8"><img 
+        <td width="400" valign="top" align="left"><img
           src="images/line_light.gif" width="400" height="3" border="0"/></td>
-        <td width="120" valign="top" align="left" height="8"><img 
+        <td width="120" valign="top" align="left"><img
           src="images/dotTrans.gif" border="0" width="1" height="1"/></td>
       </tr>
 
       <tr>
-        <td bgcolor="#7270c2" valign="top" align="left"><img 
+        <td bgcolor="#7270c2" valign="top" align="left"><img
           src="images/dotTrans.gif" width="20" height="10" border="0"/></td>
 
         <td width="95" bgcolor="#7270c2" valign="top" align="left"><img src="images/dotTrans.gif" width="1" height="2" border="0"/><br/>
-            <table width="95" border="0" cellpadding="0" cellspacing="0">
-<xsl:apply-templates select="$project/navSections"/>
-
-                <!-- line row -->
-              <tr height="5">
-                <td width="95" height="5" bgcolor="#7270c2" valign="top">
-                <img src="images/dotTrans.gif" width="1" height="15" border="0"/><br/>
-                <img src="images/line_sm.gif" width="105" height="3" border="0"/>
-                </td>
-              </tr>
-      
-              <tr height="15"/>
-              
-              <!-- content row -->
-              <tr>
-                <td width="95" height="25" bgcolor="#7270c2" valign="top" 
-                  align="left"><xsl:call-template name="searchForm"/></td>
-              </tr>
-      
-            </table>
-            <br/>
-        </td>
+<xsl:apply-templates select="$project/navSections"/></td>
 
         <td width="7" bgcolor="#a9a5de" valign="top" align="left">&#160;</td>
         <td width="70" valign="top" align="left">&#160;</td>
         <td rowspan="4" width="400" valign="top">
           <table cols="1" rows="2" border="0" cellpadding="0" cellspacing="0" width="400">
             <tr>
-              <td valign="top" align="left"><br/><img border="0" height="44" hspace="0"
-                  src="{$project/logo}" vspace="0" width="102"/><br/><img border="0" height="10" hspace="0"
+              <td valign="top" align="left"><br/><img border="0" height="50" hspace="0"
+                  src="{$project/logo}" vspace="0" width="200"/><br/><img border="0" height="10" hspace="0"
                   src="images/dotTrans.gif"/>
               </td>
             </tr>
           </table><p/><p/><br/>
 
           <xsl:if test="/document/properties/title">
-            <span class="header"><xsl:value-of select="/document/properties/title"/></span>
+            <span class="header"><xsl:value-of select="/document/properties/title"/></span><br/><br/>
           </xsl:if>
 
           <xsl:apply-templates select="document/body/header"/>
+          <xsl:apply-templates select="document/body/mailing-list"/>
 
           <!-- build the page navigation first, section by section -->
           <xsl:for-each select=".//section">
@@ -132,10 +112,10 @@
                   <a href="#{@title}"><xsl:value-of select="@title"/></a><br/>
                 </xsl:when>
                 <xsl:when test='$level=3'>
-                  <a href="#{@title}"><xsl:value-of select="@title"/></a><br/> 
+                  <a href="#{@title}"><xsl:value-of select="@title"/></a><br/>
                 </xsl:when>
                 <xsl:otherwise>
-                  &#xA0;&#xA0;&#xA0;<a href="#{@title}"><xsl:value-of select="@title"/></a><br/> 
+                  &#xA0;&#xA0;&#xA0;<a href="#{@title}"><xsl:value-of select="@title"/></a><br/>
                 </xsl:otherwise>
               </xsl:choose>
             </xsl:if>
@@ -147,39 +127,76 @@
         <!-- now show the sections themselves -->
         <xsl:apply-templates select="document/body/section"/>
       </td>
-      <td width="120" height="5" valign="top" 
-        align="left"><a href="http://www.exolab.org"><img 
-        src="images/exolab_logo_blue.gif" hspace="0" vspace="10" width="134" height="58" border="0"/></a></td>
+      <td width="120" height="5" valign="top"
+        align="left"><a href="http://www.exolab.org"><img
+        src="images/logo_exolab.gif" hspace="0" vspace="10" width="77" height="20" border="0"/></a></td>
       </tr>
-    </table>
-    
-    <table border="0" cellpadding="0" cellspacing="0"  >
-              <tr height="5">
-                <td width="20" rowspan="2" height="100%" bgcolor="#7270c2" valign="top" align="left">
-                  <br/>
-                    <br/>
-                    <img src="images/stripes1.gif" width="20" height="125" border="0"/></td> 
-                  <td width="95" rowspan="2" height="100%" bgcolor="#7270c2" valign="top" align="left">
-                  <br/>
-                    <br/>
-                    <img src="images/stripe105.gif" width="105" height="125" border="0"/></td>
-                  <td width="7" rowspan="2" height="100%" bgcolor="#a9a5de" valign="top" align="left">&#160;</td>
-                  
-                  <td width="70" height="25" valign="top" align="left">&#160;</td>
-                  <td width="400" height="25" valign="bottom" align="left">
-                  <br/><br/>
-                  <img src="images/line_light.gif"  border="0" width="400" height="3"  /><br/>
-                  <p/>
-                  <span class="bodyGrey">
-                    <xsl:for-each select="$project/notice">
-                      <small><xsl:copy-of select="."/><br/>&#xA0;<br/></small>
-                    </xsl:for-each>
-                  </span>
-                  <p/>
-                  &#160;
-                </td>
-                <td width="120" height="25" valign="top" align="left">&#160;</td>
-              </tr>
+
+      <!-- line row -->
+
+      <tr height="5">
+        <td width="20" height="5" bgcolor="#7270c2" valign="top" align="left">&#160;</td>
+        <td width="95" height="5" bgcolor="#7270c2" valign="top">
+        <img src="images/dotTrans.gif" width="1" height="15" border="0"/><br/>
+        <img src="images/line_sm.gif" width="105" height="3" border="0"/>
+
+
+        </td>
+        <td width="7" height="5" bgcolor="#a9a5de" valign="top" align="left">&#160;</td>
+        <td width="70" height="5" valign="top" align="left">&#160;</td>
+        <td width="120" height="5" valign="top" align="left">&#160;</td>
+      </tr>
+
+      <!-- content row -->
+
+      <tr>
+        <td width="20" height="5" bgcolor="#7270c2" valign="top" align="left">&#160;</td>
+        <td width="95" bgcolor="#7270c2" valign="top"
+          align="left"><xsl:call-template name="searchForm"/></td>
+        <td width="7" bgcolor="#a9a5de" valign="top" align="left">
+          <img src="images/dotTrans.gif" width="1" height="25" border="0"/>
+        </td>
+        <td width="70" valign="top" align="left">
+          <img src="images/dotTrans.gif" width="1" height="25" border="0"/>
+        </td>
+        <td width="120" valign="top" align="left">&#160;</td>
+      </tr>
+
+      <!-- final row -->
+
+      <tr height="5">
+        <td width="20" rowspan="2" height="100%" bgcolor="#7270c2" valign="bottom"
+          align="left"><img src="images/stripes1.gif" width="20" height="125" border="0"/></td>
+        <td width="95" rowspan="2" height="100%" bgcolor="#7270c2" valign="bottom"
+          align="left"><img src="images/stripe105.gif" width="105" height="125" border="0"/></td>
+        <td width="7" rowspan="2" height="100%" bgcolor="#a9a5de" valign="top"
+          align="left">&#160;</td>
+        <td width="70" height="100%" valign="top" align="left">&#160;</td>
+        <td width="120" height="100%" valign="top" align="left">&#160;</td>
+      </tr>
+
+      <!-- extra  row -->
+
+      <tr height="5">
+        <!--td width="20" height="25" valign="top" align="left">&#160;</td>
+        <td width="95" height="25" valign="top" align="left">&#160;</td>
+        <td width="7" height="25" valign="top" align="left">&#160;</td-->
+        <td width="70" height="25" valign="top" align="left">&#160;</td>
+        <td width="400" height="25" valign="bottom" align="left">
+          <br/><br/>
+          <img src="images/line_light.gif"  border="0" width="400" height="3"  /><br/>
+          <p/>
+          <span class="bodyGrey">
+            <xsl:for-each select="$project/notice">
+              <small><xsl:copy-of select="."/><br/>&#xA0;<br/></small>
+            </xsl:for-each>
+          </span>
+          <p/>
+          &#160;
+        </td>
+        <td width="120" height="25" valign="top" align="left">&#160;</td>
+      </tr>
+
     </table>
 
   </body>
@@ -194,23 +211,27 @@
     <xsl:variable name="level" select="count(ancestor::*)"/>
     <xsl:choose>
       <xsl:when test='$level=2'>
+        <xsl:if test="@ref-id"><a name="{@ref-id}"/></xsl:if>
         <a name="{@title}"><h2><xsl:value-of select="@title"/></h2></a>
       </xsl:when>
       <xsl:when test='$level=3'>
+        <xsl:if test="@ref-id"><a name="{@ref-id}"/></xsl:if>
         <a name="{@title}"><h3><xsl:value-of select="@title"/></h3></a>
       </xsl:when>
       <xsl:when test='$level=4'>
+        <xsl:if test="@ref-id"><a name="{@ref-id}"/></xsl:if>
         <a name="{@title}"><h4><xsl:value-of select="@title"/></h4></a>
       </xsl:when>
-      <xsl:when test='$level>=5'>
-        <h5><xsl:copy-of select="@title"/></h5>
-      </xsl:when>
+      <xsl:otherwise>
+        <xsl:if test="@ref-id"><a name="{@ref-id}"/></xsl:if>
+        <a name="{@title}"><h5><xsl:value-of select="@title"/></h5></a>
+      </xsl:otherwise>
     </xsl:choose>
     <xsl:apply-templates/>
   </xsl:template>
 
   <xsl:template match="header">
-    <xsl:apply-templates select="*"/>  
+    <xsl:apply-templates select="*"/>
   </xsl:template>
 
 
@@ -224,21 +245,22 @@
 
   <xsl:template match="small">
     <span class="bodyGrey">
-      <xsl:copy-of select="*|text()"/>  
+      <xsl:copy-of select="*|text()"/>
     </span>
   </xsl:template>
 
   <xsl:template match="p">
     <p>
-      <span class="bodyGrey">
+      <span class="bodyBlack">
         <xsl:apply-templates select="*|@*|text()"/>
       </span>
     </p>
   </xsl:template>
-      
+
   <xsl:template match="td">
     <td>
-      <span class="bodyGrey">
+      <xsl:copy-of select="@*"/>
+      <span class="bodyBlack">
       <xsl:apply-templates select="*|@*|text()"/>
       </span>
     </td>
@@ -247,16 +269,16 @@
   <xsl:template match="ul">
     <table border="0" cellpadding="2" cellspacing="2">
       <tr><td colspan="2" height="5"></td></tr>
-      <span class="bodyGrey"><xsl:apply-templates/></span>
+      <span class="bodyBlack"><xsl:apply-templates/></span>
     </table>
   </xsl:template>
 
   <xsl:template match="ul/li">
     <tr>
-      <td align="left" valign="top" width="15">
-        &#149;
-     </td>
-      <td align="left" valign="top"><span class="bodyGrey"><xsl:apply-templates/></span></td>
+      <td align="left" valign="top" width="10">
+	<img src="images/bullet.gif"  border="0" width="16" height="16" />
+      </td>
+      <td align="left" valign="top"><span class="bodyBlack"><xsl:apply-templates/></span></td>
     </tr>
   </xsl:template>
 
@@ -268,7 +290,7 @@
 
 
   <!-- Templates for links -->
-      
+
   <xsl:template match="a">
     <a>
       <xsl:if test="@href">
@@ -281,8 +303,8 @@
           <xsl:value-of select="$href"/>
         </xsl:attribute>
       </xsl:if>
-      <xsl:for-each select="@*[name(.)!='href']">
-        <xsl:copy select="."/>
+      <xsl:for-each select="@*[not(name(.)='href')]">
+        <xsl:copy-of select="."/>
       </xsl:for-each>
       <xsl:apply-templates/>
     </a>
@@ -360,7 +382,7 @@
   </xsl:template>
 
   <xsl:template match="mailing-list">
-    <div>
+    <div class="bodyGrey">
       [
       <a href="mailto:{@manager}@{@server}?subject=subscribe {@name}">Subscribe</a> |
       <a href="mailto:{@manager}@{@server}?subject=unsubscribe {@name}">Unsubscribe</a> |
@@ -382,29 +404,29 @@
     <xsl:for-each select="type">
       <xsl:variable name="type" select="@name"/>
       <xsl:variable name="color-epsilon" select="'#ffffff'"/>
-      <p><span class="bodyGrey"><b><xsl:value-of select="@name"/></b></span></p>
-      <p><span class="bodyGrey"><xsl:value-of select="."/></span></p>
+      <p><span class="bodyBlack"><b><xsl:value-of select="@name"/></b></span></p>
+      <p><span class="bodyBlack"><xsl:value-of select="."/></span></p>
       <table cellpadding="4" cellspacing="2" width="90%">
         <tr>
-          <td bgcolor="{$color-epsilon}"><span class="bodyGrey">
+          <td bgcolor="{$color-epsilon}" valign="top"><span class="bodyBlack">
             <b>Name</b></span>
           </td>
-          <td bgcolor="{$color-epsilon}"><span class="bodyGrey">
+          <td bgcolor="{$color-epsilon}" valign="top"><span class="bodyBlack">
             <b>Contribution</b></span>
           </td>
-          <td bgcolor="{$color-epsilon}"><span class="bodyGrey">
+          <td bgcolor="{$color-epsilon}" valign="top"><span class="bodyBlack">
             <b>Company</b></span>
           </td>
         </tr>
         <xsl:for-each select="../contributor[@type=$type]">
           <tr>
-            <td><span class="bodyGrey">
+            <td valign="top"><span class="bodyBlack">
               <a href="mailto:{email}"><xsl:value-of select="name@given"/>&#xA0;<xsl:value-of select="name@surname"/></a></span>
             </td>
-            <td><span class="bodyGrey">
+            <td valign="top"><span class="bodyBlack">
                <xsl:value-of select="description"/></span>
             </td>
-            <td><span class="bodyGrey">
+            <td valign="top"><span class="bodyBlack">
                <xsl:variable name="company-id" select="company/@id"/>
                <xsl:variable name="company" select="../company[@id=$company-id]"/>
                <a href="http://{$company/url}"><xsl:value-of select="$company/name"/></a>
