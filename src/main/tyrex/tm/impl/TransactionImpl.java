@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionImpl.java,v 1.34 2001/09/24 22:25:37 mohammed Exp $
+ * $Id: TransactionImpl.java,v 1.35 2001/09/24 22:27:32 mohammed Exp $
  */
 
 
@@ -89,7 +89,7 @@ import tyrex.util.Messages;
  * they are added.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.34 $ $Date: 2001/09/24 22:25:37 $
+ * @version $Revision: 1.35 $ $Date: 2001/09/24 22:27:32 $
  * @see XAResourceHolder
  * @see TransactionManagerImpl
  * @see TransactionDomain
@@ -2690,7 +2690,7 @@ final class TransactionImpl
                     
                     if ( differentBranches ) { 
                         if (true) {
-                            System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.start(XAResource.TMNOFLAGS) " + resHolder._xaResource + " with xid " + resHolder._xid);    
+                            System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.start(XAResource.TMNOFLAGS) " + resHolder._xaResource + " with xid " + resHolder._xid + " with different branches");    
                         }
 
                         newResHolder._xaResource.start( newResHolder._xid, XAResource.TMNOFLAGS );
