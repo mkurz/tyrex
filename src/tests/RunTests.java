@@ -43,16 +43,16 @@
  */
 
 
-import java.security.AccessControlContext;
-import java.security.AccessController;                                
-import java.security.DomainCombiner;
-import java.security.Permission;
-import java.security.PermissionCollection;
-import java.security.PrivilegedAction;
-import java.security.ProtectionDomain;
-import java.util.Enumeration;
-import tyrex.naming.NamingPermission;
-import tyrex.tm.TyrexPermission;
+//import java.security.AccessControlContext;
+//import java.security.AccessController;                                
+//import java.security.DomainCombiner;
+//import java.security.Permission;
+//import java.security.PermissionCollection;
+//import java.security.PrivilegedAction;
+//import java.security.ProtectionDomain;
+//import java.util.Enumeration;
+//import tyrex.naming.NamingPermission;
+//import tyrex.tm.TyrexPermission;
 
 /////////////////////////////////////////////////////////////////////
 // RunTests
