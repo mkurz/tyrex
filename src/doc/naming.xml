@@ -7,43 +7,43 @@
   <body>
 
     <section title="Introduction">
-
+      
       <p>The <api package="tyrex.naming">naming</api> package includes two JNDI service providers.
-         One is an in-memory namespace provider. The typical use for an in-memory namespace is listing
-         non-persistenct objects such as connection factories, active services, etc. The other is
-         a JNDI environment naming context (ENC) implementation for the purpose of exposing the
-         environment naming space to a J2EE application. It provides an in-memory, read-only,
-         serializable context implementation. The in-memory namespace is used to populate the ENC
-         for the currently running component.</p>
-
+        One is an in-memory namespace provider. The typical use for an in-memory namespace is listing
+        non-persistenct objects such as connection factories, active services, etc. The other is
+        a JNDI environment naming context (ENC) implementation for the purpose of exposing the
+        environment naming space to a J2EE application. It provides an in-memory, read-only,
+        serializable context implementation. The in-memory namespace is used to populate the ENC
+        for the currently running component.</p>
+      
     </section>
-
-
+    
+    
     <section title="MemoryContext">
-
+      
       <p><api>tyrex.naming.MemoryContext</api> is an in-memory JNDI service provider. Binds objects
-         into a namespace held entirely in memory, supporting serializable, remoteable and local
-         objects. The in-memory service provider is particularly useful for holding resource factories
-         (the JNDI ENC) and exposing run-time services and configuration objects.</p>
-
+        into a namespace held entirely in memory, supporting serializable, remoteable and local
+        objects. The in-memory service provider is particularly useful for holding resource factories
+        (the JNDI ENC) and exposing run-time services and configuration objects.</p>
+      
       <p>An instance of <api>tyrex.naming.MemoryContext</api> constructed with no environment
-         attribute will use it's namespace and serve as the root of that namespace. Such a namespace
-         is no accessible except through the creating context, and is garbage collected when all
-         such contexts are no longer referenced. If necessary the root context can be duplicated using
-         <tt>lookup( "" )</tt>.</p>
+        attribute will use it's namespace and serve as the root of that namespace. Such a namespace
+        is no accessible except through the creating context, and is garbage collected when all
+        such contexts are no longer referenced. If necessary the root context can be duplicated using
+        <tt>lookup( "" )</tt>.</p>
 
       <p>If the environment attribute {@link Context.PROVIDER_URL} is set, the context will reference
-         a node in a namespace shared by all such contexts. That tree is statically held in memory for
-         the life time of the virtual machine.</p>
-
+        a node in a namespace shared by all such contexts. That tree is statically held in memory for
+        the life time of the virtual machine.</p>
+      
       <p><api>tyrex.naming.MemoryContextFactory</api> implements a context factory for <api>tyrex.naming.MemoryContext</api>.
-         When set properly the <tt>InitialContext</tt> will return a <api>tyrex.naming.MemoryContext</api>
-         referencing the named path in the shared memory space. If the PROVIDER_URL property is not
-         set, a new context with with it's own namespace will be created.</p>
-
+        When set properly the <tt>InitialContext</tt> will return a <api>tyrex.naming.MemoryContext</api>
+        referencing the named path in the shared memory space. If the PROVIDER_URL property is not
+        set, a new context with with it's own namespace will be created.</p>
+      
       <p>To use the memory context from an <tt>InitialContext</tt> set the <tt>INITIAL_CONTEXT_FACTORY</tt>
-         and <tt>PROVIDER_URL</tt> environment attributes as follows:</p>
-
+        and <tt>PROVIDER_URL</tt> environment attributes as follows:</p>
+      
       <code>
 Hashtable env;
 Conetxt   ctx;
@@ -63,18 +63,18 @@ ctx = new InitialContext( env );
       </code>
 
       <p>By default a memory context is read-write. You may set a context to read only, causing
-         all context returns from that context to be read-only as well. However, other contexts
-         obtained for the same path will be read-write. This functionality enables the application
-         to pass a read-only view of it's namespace and continue updating it. The environment
-         attribute <tt>readOnly</tt> can be set to make a context read-only.</p>
-
+        all context returns from that context to be read-only as well. However, other contexts
+        obtained for the same path will be read-write. This functionality enables the application
+        to pass a read-only view of it's namespace and continue updating it. The environment
+        attribute <tt>readOnly</tt> can be set to make a context read-only.</p>
+      
       <p>In order to access a shared namespace the application must have the adequate permission
-         <api>tyrex.naming.NamingPermission</api> &quot;shared&quot;. No permission is necessary
-         to create or access a private namespace.</p>
+        <api>tyrex.naming.NamingPermission</api> &quot;shared&quot;. No permission is necessary
+        to create or access a private namespace.</p>
 
     </section>
 
-    <section title="EnvContext">
+    <section title="Environment Naming Context">
 
       <p><api>tyrex.naming.EnvContext</api> is an environment naming context implementation (ENC).
          This is a read only, serializable, bound-to-thread JNDI service provider that implements
@@ -92,21 +92,15 @@ ctx = new InitialContext( env );
          heirarchial and supporting links, can bind non-persistent objects (like factories, services),
          and can be serialized as part of a bean's activation/passivation.</p>
 
-      <p>In order to set the contents of the ENC, the container will construct a <api>tyrex.naming.MemoryContext</api>
-         that is not shared, populate it with all the relevant information (including empty contexts), and call
-         <api class="tyrex.naming.EnvContext">setEnvContext(javax.naming.Context)</api> on the current thread.
-         The same memory context may be assigned to any number of threads.</p>
-
-      <p><api class="tyrex.naming.EnvContext">setEnvContext(javax.naming.Context)</api> may be called for each
-         new context on the same thread, and must be balanced with a call to <api class="tyrex.naming.EnvContext">unsetEnvContext()</api>.
-         The ENC state is undefined outside the boundaries of these methods calles, and any attempt to use it
-         will likley result in an error.</p>
+      <p>The runtime context is used to populate the ENC and associate it with the current running
+        thread, see <javadoc>tyrex.tm.RuntimeContext</javadoc> for more details.</p>
 
       <p>The following example places an instance of <tt>UserTransaction</tt> and a JDBC connector adaptor
          in the ENC of the current thread:</p>
       <code>
-MemoryContext root;
-MemoryContext ctx;
+Context        root;
+Context        ctx;
+RuntimeContext runCtx;
 
 <comment>// Construct a non-shared memory context</comment>
 root = new MemoryContext();
@@ -116,9 +110,14 @@ ctx.bind( "UserTransaction", ut );
 ctx = ctx.createSubcontext( "env" );
 ctx = ctx.createSubcontext( "jdbc" );
 ctx = ctx.bind( "mydb", jdbcAdapter );
+
 . . .
-<comment>// Make the context visible to the current thread</comment>
-EnvContext.setEnvContext( root );
+<comment>// Associate the memory context with a new
+// runtime context and associate the runtime context
+// with the current thread</comment>
+runCtx = RuntimeContext.newRuntimeContext( root, null );
+RuntimeContext.setRuntimeContext( runCtx );
+
 . . .
 <comment>// Application code</comment>
 InitialContext ctx;
@@ -126,8 +125,9 @@ InitialContext ctx;
 ctx = new InitialContext();
 ds = (DataSource) ctx.lookup( "comp/env/mydb" );
 . . .
-<comment>// Make the context invisible</comment>
-EnvContext.unsetEnvContext();
+
+<comment>// Dissociate the runtime context from the thread</comment>
+RuntimeContext.unsetRuntimeContext();
       </code>
 
       <p>In order to set the naming context for the current thread the application must have the adequate

@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: EnvContext.java,v 1.8 2001/03/12 19:20:16 arkin Exp $
+ * $Id: EnvContext.java,v 1.9 2001/03/13 20:59:02 arkin Exp $
  */
 
 
@@ -83,48 +83,9 @@ import tyrex.tm.impl.ThreadContext;
  * read-only namespace, heirarchial and supporting links, can bind
  * non-persistent objects (like factories, services), and can be
  * serialized as part of a bean's activation/passivation.
- * <p>
- * In order to set the contents of the ENC, the container will construct
- * a {@link MemoryContext} that is not shared, populate it with all the
- * relevant information (including empty contexts), and call {@link
- * #setEnvContext} on the current thread. The same memory context may be
- * assigned to any number of threads.
- * <p>
- * {@link #setEnvContext} may be called for each new context on the same
- * thread, and must be balanced with a call to {@link #unsetEnvContext}.
- * The ENC state is undefined outside the boundaries of these methods
- * calles, and any attempt to use it will likley result in an error.
- * <p>
- * The following example places an instance of <tt>UserTransaction</tt>
- * and a JDBC connector adaptor in the ENC of the current thread:
- * <pre>
- * MemoryContext root;
- * MemoryContext ctx;
- *
- * <font color="red">// Construct a non-shared memory context</font>
- * root = new MemoryContext();
- * <font color="red">// Create comp/UserTransaction and comp/env/mydb</font>
- * ctx = root.createSubcontext( "comp" );
- * ctx.bind( "UserTransaction", ut );
- * ctx = ctx.createSubcontext( "env" );
- * ctx = ctx.createSubcontext( "jdbc" );
- * ctx = ctx.bind( "mydb", jdbcAdapter );
- * . . .
- * <font color="red">// Make the context visible to the current thread</font>
- * EnvContext.setEnvContext( root );
- * . . .
- * <font color="red">// Application code</font>
- * InitialContext ctx;
- *
- * ctx = new InitialContext();
- * ds = (DataSource) ctx.lookup( "comp/env/mydb" );
- * . . .
- * <font color="red">// Make the context invisible</font>
- * EnvContext.unsetEnvContext();
- * </pre>
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.8 $ $Date: 2001/03/12 19:20:16 $
+ * @version $Revision: 1.9 $ $Date: 2001/03/13 20:59:02 $
  */
 public final class EnvContext
     implements Context, Serializable
