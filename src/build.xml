@@ -25,6 +25,20 @@
 <property name="build.compiler" value="jikes" />      
 -->
  
+  <!-- ================================================================== -->
+  <!--            The pattern for the support files that need             -->
+  <!--                to be copied when compiling classes                 -->
+  <!-- ================================================================== -->
+  <patternset id="support.files">
+    <include name="**/*.xsd" />
+    <include name="**/*.xml" />
+    <include name="**/*.xsl" />
+    <include name="**/*.properties" />
+    <include name="**/*.dtd" />
+  </patternset>
+
+
+
   <!-- Display all the targets -->
   <target name="targets">
     <echo message=""/>
@@ -85,8 +99,11 @@
     <javac srcdir="${main}" destdir="${classes}" 
            excludes="**/package.html,**/*.disabled,**/*.disable,**/*.old,tyrex/tools/Tomcat.java,tyrex/jdbc/util/*,tyrex/corba/*"
            classpath="${classpath}" debug="on" deprecation="off" />
-    <copy todir="${classes}/tyrex/conf">
-       <fileset dir="${main}/tyrex/conf" includes="*.xsd,*.dtd,*.xml" />
+    <!-- copy the support files -->
+    <copy todir="${classes}">
+      <fileset dir="${main}">
+        <patternset refid="support.files" />
+      </fileset>
     </copy>
   </target>
 
@@ -98,14 +115,23 @@
     <javac srcdir="${main}" destdir="${classes}" 
            excludes="**/package.html,**/*.disabled,**/*.disable,**/*.old,tyrex/tools/Tomcat.java,tyrex/jdbc/util/*,tyrex/corba/*"
            classpath="${classpath}" debug="off" deprecation="off" optimize="on" />
-    <copy todir="${classes}/tyrex/conf">
-       <fileset dir="${main}/tyrex/conf" includes="*.xsd,*.dtd,*.xml" />
+    <!-- copy the support files -->
+    <copy todir="${classes}">
+      <fileset dir="${main}">
+        <patternset refid="support.files" />
+      </fileset>
     </copy>
   </target>
 
   <target name="main-iiop" depends="init">
     <javac srcdir="${main}" destdir="${classes}" 
            includes="tyrex/corba/*"/>
+    <!-- copy the support files -->
+    <copy todir="${classes}/tyrex/corba">
+      <fileset dir="${main}/tyrex/corba">
+        <patternset refid="support.files" />
+      </fileset>
+    </copy>
   </target>
 
   <!-- Build the test packages -->
@@ -114,6 +140,12 @@
     <javac srcdir="${source}/tests" destdir="${build}/tests"
            classpath="${classpath}" debug="on" deprecation="${deprecation}" 
            excludes="hidden/**/*,jdbc/spi/*,ots/**,tyrex/tests/junit/ots/**" />
+    <!-- copy the support files -->
+    <copy todir="${build}/tests">
+      <fileset dir="${source}/tests">
+        <patternset refid="support.files" />
+      </fileset>
+    </copy>
   </target>
   
   <target name="tests-transaction" depends="prepare">
