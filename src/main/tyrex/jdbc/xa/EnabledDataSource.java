@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: EnabledDataSource.java,v 1.6 2000/09/08 23:11:12 mohammed Exp $
+ * $Id: EnabledDataSource.java,v 1.7 2000/09/18 22:12:56 mohammed Exp $
  */
 
 
@@ -77,7 +77,9 @@ import javax.naming.spi.ObjectFactory;
  * The driver class name {@link #setDriverClassName} specifies the
  * class of the JDBC driver to be loaded.
  * <p>
- * The JDBC URL is specified by {@link #setDriverName}.
+ * The JDBC URL is specified by {@link #setDriverName}. The JDBC URL
+ * is of the form jdbc:subprotocol:subname. The initial "jdbc:" is optional
+ * so that subprocol:subname is also valid.
  * <p>
  * The supported data source properties are:
  * <pre>
@@ -99,8 +101,7 @@ import javax.naming.spi.ObjectFactory;
  *
  * ds = new EnabledDataSource();
  * ds.setDriverClassName( "..." );
- * ds.setDriverName( "..." );
- * ds.setDriverSubname( "..." );
+ * ds.setDriverName( "jdbc:subprotocol:subname" );
  * ds.setUser( "me" );
  * ds.setPassword( "secret" );
  * ctx = new InitialContext();
@@ -158,8 +159,9 @@ public class EnabledDataSource
 
     /**
      * The name of the {@link java.sql.Driver} which this
-     * data source should use. This should be the beginning of
-     * the connection URL, e.g. <tt>jdbc:postgresql</tt>.
+     * data source should use. The driver name
+     * is of the form jdbc:subprotocol:subname. The initial "jdbc:" is optional
+     * so that subprocol:subname is also valid.
      */
     private String         _driverName;
 
@@ -305,8 +307,10 @@ public class EnabledDataSource
 
 
     /**
-     * Sets the URL name of the JDBC driver to use, e.g. <tt>jdbc:subprotocol:subname</tt>.
-     * The jdbc header is optional.
+     * Sets the JDBC URL for the JDBC driver to use. The JDBC URL
+     * is of the form jdbc:subprotocol:subname. The initial "jdbc:" is optional
+     * so that subprocol:subname is also valid.
+     *
      * The standard name for this property is <tt>driverName</tt>.
      *
      * @param driverName The URL name of the JDBC driver to use
@@ -322,7 +326,9 @@ public class EnabledDataSource
 
 
     /**
-     * Returns the URL name of the JDBC driver to use.
+     * Returns the URL name of the JDBC driver to use. The JDBC URL
+     * is of the form jdbc:subprotocol:subname. The initial "jdbc:" 
+     * is optional so that subprocol:subname is also valid.
      * The standard name for this property is <tt>driverName</tt>.
      *
      * @return The URL name of the JDBC driver to use
