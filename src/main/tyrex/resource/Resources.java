@@ -71,7 +71,7 @@ import tyrex.util.Logger;
  * client connection factory available to the application.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.7 $
+ * @version $Revision: 1.8 $
  */
 public final class Resources
 {
@@ -129,14 +129,9 @@ public final class Resources
     {
         if ( config == null )
             throw new IllegalArgumentException( "Argument config is null" );
-        if ( config.getFactory() != NullFactory.INSTANCE ) {
-            if ( _config.containsKey( config.getName() ) )
-                throw new ResourceException( "A resource with the name " + config.getName() + " already installed" );
-            _config.put( config.getName(), config );
-        }
-        else {
-            Logger.resource.debug("Ignoring resource configuration '" + config.getName() + "'");
-        }
+        if ( _config.containsKey( config.getName() ) )
+            throw new ResourceException( "A resource with the name " + config.getName() + " already installed" );
+        _config.put( config.getName(), config );
     }
 
 
