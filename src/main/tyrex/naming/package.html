@@ -1,0 +1,95 @@
+<html>
+  <body>
+    <p><b>JNDI Environment & Service Naming Contexts</b></p>
+
+    <dl>
+      <dt><b>Version: </b></dt><dd>$Revision: 1.1 $ $Date: 2000/04/11 20:25:13 $</dd>
+      <dt><b>Author: </b></dt><dd><a href="mailto:arkin@exoffice.com">Assaf Arkin</a></dd>
+    </dl>
+
+    <p>An in-memory namespace is available through the {@link tyrex.naming.MemoryContext}
+       JNDI service provider. The in-memory namespace holds objects directly in memory
+       including factories and services that cannot be held in a persistent namespace.
+       It supports two modes of operation, a tree shared between all instances through
+       a shared namespace, and trees created dynamically with access controlled by their
+       creator. See <a href="#memory">In-Memory Context</a> for more details.</p>
+
+    <p>The in-memory JNDI service provider has the following properties:</p>
+    <ul>
+      <li>It is held entirely in memory for fast access and manipulations</li>
+      <li>It is persisted indirectly through copying to XML files or persistent
+        JNDI namespaces (e.g. LDAP, CosNaming, etc)</li>
+      <li>It supports binding of persistent (serializable and referenceable),
+          remote (RMI/IIOP) and active objects (resource factories, services, etc).</li>
+      <li>It is a full JNDI service provider supporting sub-context creation and
+          destruction, lookup and name parsing, heirarchial structure, links, etc.</li>
+      <li>It provides the basis for the JNDI Environment Naming Context</li>
+    </ul>
+
+    <p>The caller must had adequate security permission to access the shared in-memory
+       namespace (creating a private namespace requires no permission) and to set/unset
+       the ENC for the current thread, see <a href="#permissions">Access Permissions</a>
+       for more details.</p>
+
+    <h3><a name="memory">In-Memory Context</a></h3>
+
+    <p>{@link tyrex.naming.MemoryContext} is an in-memory JNDI service provider. It binds
+       objects into a namespace held entirely in memory, supporting serializable, remoteable
+       and local objects. The in-memory service provider is particularly useful for holding
+       resource factories (the JNDI ENC) and exposing run-time services and configuration objects.</p>
+
+    <p>An instance of {@link MemoryContext} constructed with no environment attribute will use
+       it's own tree of bindings. Such a tree is no accessible except through context created from
+       the original context, and is garbage collected when all such contexts are no longer referenced.
+       If necessary the root context can be duplicated using <tt>lookup( "" )</tt>.</p>
+
+    <p>If the environment attribute {@link Context.PROVIDER_URL} is used, the context will reference
+       a node in a tree shared by all such contexts. That tree is statically held in memory for the
+       life time of the virtual machine.</p>
+
+    <p>{@link tyrex.naming.MemoryContextFactory} implements a context factory for {@link MemoryContext}.
+       When set properly {@link javax.naming.InitialContext} will return a {@link MemoryContext}
+       referencing the named path in the memory model. Typically applications will use it to
+       construct an in-memory namespace under the shared root, e.g.:</p>
+
+    <pre>
+MemoryContextFactory factory;
+Hashtable            env;
+
+<font color="red">// Set up the path</font>
+env = new Hashtable();
+env.put( Context.PROVIDER_URL, "services" );
+<font color="red">// Obtain the context for services</font>
+factory = new MemoryContextFactory();
+ctx = factory.getInitialContext( env );
+
+<font color="red">// Alternatively, construct MemoryContext directly</font>
+
+env = new Hashtable();
+env.put( Context.PROVIDER_URL, "services" );
+ctx = new MemoryContext( env );
+    </pre>
+
+    <h3><a name="enc">Environment Naming Context</a></h3>
+
+    <p>{@link tyrex.naming.java.javaURLContextFactory} implements a URL context factory for
+       the <tt>java:</tt> URL. It exposes <tt>java:/comp</tt> as a read-only context as per
+       the J2EE container requirements. To use this context factory the JNDI properties file
+       must include the following property: <tt>java.naming.factory.url.pkgs=tyrex.naming</tt>.</p>
+
+    <h3><a name="permissions">Access Permissions</a></h3>
+
+    <p>{@link tyrex.naming.NamingPermission} defines the permissions required to read/write
+       the shared in-memory namespace and set/unset the environment naming context for a thread.
+       The following permissions are defined:</p>
+    <dl>
+      <dd>tyrex.naming.NamingPermission "shared"</dd>
+      <dt>Access (read/write) to the shared in-memory namespace</dt>
+      <dd>tyrex.naming.NamingPermission "enc"</dd>
+      <dt>Access (read/write) to the environment naming context
+        and ability to set/unset it for the current thread</dt>
+    </dl>
+
+
+  </body>
+</html>
