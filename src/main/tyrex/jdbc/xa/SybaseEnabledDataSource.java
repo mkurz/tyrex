@@ -70,21 +70,10 @@ public final class SybaseEnabledDataSource
     public static long  DEFAULT_WAIT_TIME = 5000;
 
     /**
-     * The user name used to get the connection, 
-     * to execute the truncation sql
+     * The default number of times to retry truncating the sybase log
+     * if an error occurs.
      */
-    private /*final*/ String _userName; // compiler error
-
-    /**
-     * The password used to get the connection,
-     * to execute the truncation sql
-     */
-    private /*final*/ String _password; // compiler error
-
-    /**
-     * The sql to execute
-     */
-    private /*final*/ String _sql; // compiler error
+    public static int DEFAULT_RETRIES = 2;
 
     /**
      * The time to wait before attempting to truncate the sybase log,
@@ -92,36 +81,38 @@ public final class SybaseEnabledDataSource
      */
     private long _waitTime = DEFAULT_WAIT_TIME;
 
+    /**
+     * The number of times to retry truncating the sybase log
+     * if an error occurs.
+     */
+     private int _retries = DEFAULT_RETRIES;
 
     /**
      * Create the SybaseEnabledDataSource with the specified database.
+     * <p>
+     * If the database name is null, empty or consists of whitespace
+     * then the truncation thread is not run.
      * <p>
      * The user name and password specified are only used to truncate
      * the Sybase transaction log.
      *
      * @param databaseName the database name. Can be null.
-     * @param userName the user name. Can be null.
-     * @param password the passowrd. Can be null.
+     * @param userName the user name used to get the connection
+     *      execute the truncation sql. Can be null.
+     * @param password the password used to get the connection,
+     *      execute the truncation sql. Can be null.
      */
     public SybaseEnabledDataSource(String databaseName, String userName, String password)
     {
         String trimmedDatabaseName = null == databaseName ? "" : databaseName.trim();
 
-        _userName = userName;
-        _password = password;
-
-        if (0 == trimmedDatabaseName.length()) {
-            _sql = null;    
-        }
-        else {
+        if (0 != trimmedDatabaseName.length()) {
             Thread truncThread;
-
-            _sql = "dump tran " + trimmedDatabaseName + " with truncate_only";
-
+            
             // Create a background thread that will track transactions
         	// that timeout, abort them and release the underlying
         	// connections to the pool.
-        	truncThread = new Thread( new TruncRunnable(), "Sybase Transaction Log Truncation Daemon"  );
+        	truncThread = new Thread( new TruncRunnable(trimmedDatabaseName, userName, password), "Sybase Transaction Log Truncation Daemon"  );
         	truncThread.setPriority( Thread.MIN_PRIORITY );
         	truncThread.setDaemon( true );
         	truncThread.start();
@@ -145,7 +136,7 @@ public final class SybaseEnabledDataSource
      * Set the truncation wait time.
      *
      * @param waitTime the new wait time in
-     *      milliseconds.
+     *      milliseconds. Must be greater than 0.
      */
     public void setWaitTime(long waitTime)
     {
@@ -156,46 +147,105 @@ public final class SybaseEnabledDataSource
         _waitTime = waitTime;
     }
 
+
+    /**
+     * Get the number of times to retry truncating
+     * the sybase transaction log if an error occurs.
+     *
+     * @return the number of times to retry truncating
+     *      the sybase transaction log if an error occurs.
+     */
+    public int getRetries()
+    {
+        return _retries;
+    }
+
+
+    /**
+     * Set the number of times to retry truncating
+     * the sybase transaction log if an error occurs.
+     * <p>
+     * If the retries is negative then log truncation
+     * is retired indefinitely.
+     *
+     * @param retries the number of times to retry truncating
+     *      the sybase transaction log if an error occurs.
+     */
+    public void setRetries(int retries)
+    {
+        _retries = retries;
+    }
+
     /**
      * The runnable for truncating the Sybase transaction log
      */
     private class TruncRunnable 
         implements Runnable
     {
+        /**
+         * The user name used to get the connection, 
+         * to execute the truncation sql
+         */
+        private final String _userName;
+    
+        /**
+         * The password used to get the connection,
+         * to execute the truncation sql
+         */
+        private final String _password;
+    
+        /**
+         * The sql to execute
+         */
+        private final String _sql;
+
+        /**
+         * Create the TruncRunnable with the specified arguments
+         *
+         * @param databaseName the name of the database
+         * @param userName the user name used to get the connection
+         *      execute the truncation sql
+         * @param password the password used to get the connection,
+         *      execute the truncation sql
+         */
+        private TruncRunnable(String databaseName, 
+                              String userName,
+                              String password)
+        {
+            _sql = "dump tran " + databaseName + " with truncate_only";
+            _userName = userName;
+            _password = password;
+        }
+
         public void run() 
         {
             Connection connection = null;
             PreparedStatement stmt = null;
+            int retries = 0;
 
             while (true) {
                 try {
-                    Thread.currentThread().sleep(_waitTime);
+                    Thread.currentThread().sleep(SybaseEnabledDataSource.this._waitTime);
                 }
                 catch (InterruptedException e) {
                 }
 
                 synchronized (SybaseEnabledDataSource.this) {
                     try {
-                        //System.out.println("dumping tran log");
                         connection = SybaseEnabledDataSource.this.getXAConnection(_userName, _password).getConnection();
                         stmt = connection.prepareStatement(_sql);
                         stmt.execute();
                         connection.commit();
-                        //System.out.println("dumped tran log");
+                        retries = 0;
                     }
                     catch(Exception e) {
-                        System.out.println("failed to dump tran log");
-                        e.printStackTrace();
-                    }
-                    if (null != connection) {
-                        try {    
-                            connection.close();
+                        if (retries == SybaseEnabledDataSource.this._retries) {
+                            System.out.println("SybaseEnabledDataSource: Failed to dump tran log. Ending daemon thread");
+                            e.printStackTrace();    
+                            return;
                         }
-                        catch (SQLException e){
-                        }
-                        connection = null;
+                        ++retries;
                     }
-
                     if (null != stmt) {
                         try {    
                             stmt.close();
@@ -203,6 +253,15 @@ public final class SybaseEnabledDataSource
                         catch (SQLException e){
                         }
                         stmt = null;
+                    }
+
+                    if (null != connection) {
+                        try {    
+                            connection.close();
+                        }
+                        catch (SQLException e){
+                        }
+                        connection = null;
                     }
                 }
             }
