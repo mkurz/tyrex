@@ -12,12 +12,12 @@
             <url>ftp://ftp.exolab.org/pub/tyrex/tyrex-$VERSION$/tyrex-$VERSION$.zip</url>
             <br/>&#xA0;</li>
         <li>Full documentation including all JavaDocs and specs (big)<br/>
-            <url>ftp://ftp.exolab.org/ftp/pub/tyrex/tyrex-$VERSION$/tyrex-$VERSION$-doc.tgz</url><br/>
-            <url>ftp://ftp.exolab.org/ftp/pub/tyrex/tyrex-$VERSION$/tyrex-$VERSION$-doc.zip</url>
+            <url>ftp://ftp.exolab.org/pub/tyrex/tyrex-$VERSION$/tyrex-$VERSION$-doc.tgz</url><br/>
+            <url>ftp://ftp.exolab.org/pub/tyrex/tyrex-$VERSION$/tyrex-$VERSION$-doc.zip</url>
             <br/>&#xA0;</li>
         <li>Full CVS snapshot: all sources, docs, libraries (big)<br/>
-            <url>ftp://ftp.exolab.org/ftp/pub/tyrex/tyrex-$VERSION$/tyrex-$VERSION$-src.tgz</url><br/>
-            <url>ftp://ftp.exolab.org/ftp/pub/tyrex/tyrex-$VERSION$/tyrex-$VERSION$-src.zip</url>
+            <url>ftp://ftp.exolab.org/pub/tyrex/tyrex-$VERSION$/tyrex-$VERSION$-src.tgz</url><br/>
+            <url>ftp://ftp.exolab.org/pub/tyrex/tyrex-$VERSION$/tyrex-$VERSION$-src.zip</url>
             <br/>&#xA0;</li>
       </ul>
 
@@ -40,7 +40,7 @@
          open source license and available from our FTP server.
          Open source licenses in use include Apache (ASF), Exolab, Mozilla (MPL),
          and public domain. All licenses are fully compatible with each other.</small></p>
-
+         
     </header>
   </body>
 </document>
