@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionImpl.java,v 1.33 2001/09/24 18:29:43 mohammed Exp $
+ * $Id: TransactionImpl.java,v 1.34 2001/09/24 22:25:37 mohammed Exp $
  */
 
 
@@ -89,7 +89,7 @@ import tyrex.util.Messages;
  * they are added.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.33 $ $Date: 2001/09/24 18:29:43 $
+ * @version $Revision: 1.34 $ $Date: 2001/09/24 22:25:37 $
  * @see XAResourceHolder
  * @see TransactionManagerImpl
  * @see TransactionDomain
@@ -563,6 +563,7 @@ final class TransactionImpl
         throws IllegalStateException, SystemException, RollbackException
     {
         XAResourceHolder resHolder;
+        XAResourceHolder previousResHolder;
         
         if ( xaResource == null )
             throw new IllegalArgumentException( "Argument xaResource is null" );
@@ -599,6 +600,7 @@ final class TransactionImpl
             // If the resource was started, we do not enlist it a
             // second time.
             resHolder = _enlisted;
+            previousResHolder = null;
             while ( resHolder != null ) {
                 if ( resHolder._xaResource == xaResource ) {
                     if ( resHolder._endFlag == XAResource.TMSUSPEND ) {
@@ -609,14 +611,65 @@ final class TransactionImpl
 
                             xaResource.start( resHolder._xid, XAResource.TMRESUME );
                             resHolder._endFlag = XAResource.TMNOFLAGS;
+
                             return true;
                         } catch ( XAException except ) {
-                            return false;
+                            except.printStackTrace();
+                            throw new NestedSystemException( except );
                         } catch ( Exception except ) {
+                            except.printStackTrace();
                             throw new NestedSystemException( except );
                         }
-                    } else
+                    } else {
+                        if (true) {
+                            System.out.println(Thread.currentThread() + "Transaction " + toString() + " Transaction.enlist() " + xaResource + " with xid " + resHolder._xid + " failed because xaresource is alread enlisted.");    
+                        }
                         return false;
+                    }
+                }
+                previousResHolder = resHolder;
+                resHolder = resHolder._nextHolder;
+            }
+
+            // check the delisted
+            resHolder = _delisted;
+
+            while ( resHolder != null ) {
+                if ( resHolder._xaResource == xaResource ) {
+                    if ( resHolder._endFlag == XAResource.TMSUCCESS ) {
+                        try {
+                            if (true) {
+                                System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.start(XAResource.TMJOIN) " + xaResource + " with xid " + resHolder._xid + " because XAResource.end(TMSUCCESS) has already been called.");    
+                            }
+
+                            xaResource.start( resHolder._xid, XAResource.TMJOIN );
+                            resHolder._endFlag = XAResource.TMNOFLAGS;
+
+                            if ( null == previousResHolder ) {
+                                _delisted = resHolder._nextHolder;    
+                            } else {
+                                previousResHolder._nextHolder = resHolder._nextHolder;
+                            }
+
+                            if ( null == _enlisted ) {
+                                resHolder._nextHolder = null;
+                            }
+                            else {
+                                resHolder._nextHolder = _enlisted._nextHolder;
+                            }
+                            
+                            _enlisted = resHolder;    
+                            return true;
+                        } catch ( Exception except ) {
+                            except.printStackTrace();
+                            throw new NestedSystemException( except );
+                        }
+                    } else {
+                        if (true) {
+                            System.out.println(Thread.currentThread() + "Transaction " + toString() + " Transaction.enlist() " + xaResource + " with xid " + resHolder._xid + " failed because xaresource is failed.");    
+                        }
+                        return false;
+                    }
                 }
                 resHolder = resHolder._nextHolder;
             }
