@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TestHarness.java,v 1.18 2003/11/11 06:09:07 metaboss Exp $
+ * $Id: TestHarness.java,v 1.19 2005/02/10 03:07:09 metaboss Exp $
  */
 
 
@@ -49,6 +49,7 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 import naming.Naming;
 import transaction.Transaction;
+import util.VerboseStream;
 
 
 /**
