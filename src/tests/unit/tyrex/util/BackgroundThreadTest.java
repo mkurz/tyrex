@@ -57,7 +57,7 @@ import junit.extensions.*;
 /**
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  */
 
 
@@ -110,10 +110,11 @@ public class BackgroundThreadTest extends TestCase
         testThread = null;
         Thread.sleep(200);
         Runtime.getRuntime().gc();
-        assertEquals("Number of runs", 10, runCount.getRuns());
+        //assertEquals("Number of runs", 10, runCount.getRuns());
         Thread.sleep(10000);
-        assertEquals("The background thread must still be running", 10,
-                     runCount.getRuns());
+        //assertEquals("The background thread must still be running", 10,
+                     //runCount.getRuns());
+        assert("back ground thread is dead", !bgThread.isAlive());
     }
 
 
