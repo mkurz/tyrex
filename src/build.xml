@@ -70,7 +70,7 @@
   <target name="main" depends="prepare">
     <javac srcdir="${main}" destdir="${classes}" excludes="**/package.html"
            classpath="${classpath}" debug="on" deprecation="${deprecation}"
-           includes="tyrex/concurrency/**,tyrex/connector/**,tyrex/interceptor/**,tyrex/naming/**" />
+           includes="tyrex/concurrency/**,tyrex/connector/**,tyrex/interceptor/**,tyrex/naming/**,tyrex/util/**" />
   </target>
 
   <!-- Same as main, but also cleans and additional targets -->
