@@ -2,6 +2,12 @@
 
     <xsd:element name="jdbc" type="jdbc"/>
     
+    <xsd:simpleType name="parameterType" base="xsd:string" >
+        <xsd:enumeration value="string" />
+        <xsd:enumeration value="int" />
+        <xsd:enumeration value="boolean" />
+    </xsd:simpleType>
+    
     <xsd:complexType name="jdbc">
         
         <xsd:element name="performance" minOccurs="1" maxOccurs="1" >
@@ -42,6 +48,13 @@
                                         use="required"
                                         minOccurs="1" 
                                         maxOccurs="1" />
+                                        
+                        <xsd:attribute  name="type" 
+                                        type="parameterType"
+                                        use="required"
+                                        minOccurs="1" 
+                                        maxOccurs="1" />
+                                        
                     </xsd:complexType>
                 </xsd:element>
                 
@@ -82,6 +95,13 @@
                                 type="xsd:boolean"
                                 use="default"
                                 value="false"
+                                minOccurs="1" 
+                                maxOccurs="1" />
+                                
+                <xsd:attribute  name="delistedXAResourcesSleepTime" 
+                                type="xsd:nonNegativeInteger"
+                                use="default"
+                                value="0"
                                 minOccurs="1" 
                                 maxOccurs="1" />
                                 

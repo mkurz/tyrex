@@ -9,19 +9,19 @@
         <rollback value="1600" relative="true"/>
     </performance>
     
-    <config class="jdbc.CloudscapeDataSourceFactory"
+    <config class="jdbc.CloudscapeDataSourceConfig"
             description="Cloudscape 1">
         <parameter key="name" value="cloudscapename1"/>
     </config>
                 
-    <config class="jdbc.CloudscapeDataSourceFactory"
+    <config class="jdbc.CloudscapeDataSourceConfig"
             description="Cloudscape 2" 
-            userName="system"
-            password="manager">
+            userName="name"
+            password="password">
         <parameter key="name" value="cloudscapename2"/>
     </config>
     
-    <config class="jdbc.PostgresDataSourceFactory"
+    <config class="jdbc.PostgresDataSourceConfig"
             description="Postgres" 
             canTestPerformance="false"
             userName="username"
@@ -31,7 +31,7 @@
         <parameter key="port" value="port"/>
     </config>
     
-    <config class="jdbc.OracleDataSourceFactory"
+    <config class="jdbc.OracleDataSourceConfig"
             description="Oracle" 
             userName="username"
             password="password">

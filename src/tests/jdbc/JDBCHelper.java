@@ -166,6 +166,20 @@ public abstract class JDBCHelper
 
 
     /**
+     * Return the number of milliseconds to sleep after
+     * ending an xa resource with the TMFAIL flag.
+     * <P>
+     * A value of zero or less means don't wait.
+     * <P>
+     * The default is 0.
+     */
+    public int getFailSleepTime()
+    {
+        return 0;
+    }
+
+
+    /**
      * Drop and create the tables for the data sources.
      *
      * @param create True if the tables are to be created

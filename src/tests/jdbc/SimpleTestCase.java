@@ -331,7 +331,7 @@ class SimpleTestCase
                 }
                 return false;
             }
-
+            
             try {
                 if ( !testCommit( transactionManager, entries, stream, USE_1PC_COMMIT_OPTIMIZATION, false ) ) {
                     stream.writeVerbose( "Error: Failed two-phase commit, with one-phase commit optimization" );
@@ -456,6 +456,7 @@ class SimpleTestCase
                 }
             }
             
+            
             try {
                 if ( !testRollbackWithFailedDelist( transactionManager, entries, stream ) ) {
                     stream.writeVerbose( "Error: Failed to rollback with resource delist" );
@@ -468,6 +469,13 @@ class SimpleTestCase
                 return false;
             }
 
+            if ( helper.getFailSleepTime() > 0) {
+                stream.writeVerbose( "Sleeping for " + 
+                                     helper.getFailSleepTime() + 
+                                     " milliseconds after delisting resource with failure ");
+                try {Thread.sleep(helper.getFailSleepTime());}catch (Exception e){}    
+            }
+            
             try {
                 if ( !testAsynchronousTransaction( transactionManager, entries, stream, true ) ) {
                     stream.writeVerbose( "Error: Failed to commit asynchronously" );
@@ -478,7 +486,6 @@ class SimpleTestCase
                 stream.writeVerbose( e.toString() );
                 return false;
             }
-
 
             try {
                 if ( !testAsynchronousTransaction( transactionManager, entries, stream, false ) ) {
@@ -736,8 +743,18 @@ class SimpleTestCase
         for ( int i = 0; i < entries.length; ++i ) {
             entry = entries[ i ];
             transactionManager.getTransaction().delistResource( entry.xaResource, XAResource.TMFAIL );
-            entry.xaConnection = helper.getXAConnection( i );
+            //System.out.println("old xa connection " + entry.xaConnection);
+            //System.out.println("old xa resource " + entry.xaResource);
+            entry.xaConnection.close();
+            entry.xaConnection = /*helper.createXADataSource( i ).getXAConnection(); */helper.getXAConnection( i );
             entry.xaResource = entry.xaConnection.getXAResource();
+            /*System.out.println("timeout " + entry.xaResource.getTransactionTimeout());
+            if ( entry.xaResource.setTransactionTimeout(200) ) {
+                System.out.println(" set timeout");
+            }*/
+            //System.out.println("new xa connection " + entry.xaConnection);
+            //System.out.println("new xa resource " + entry.xaResource);
+
         }
 
         // the status should be rollback
