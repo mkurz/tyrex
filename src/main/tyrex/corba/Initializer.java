@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Initializer.java,v 1.3 2001/02/23 18:58:37 jdaniel Exp $
+ * $Id: Initializer.java,v 1.4 2001/02/23 19:41:12 jdaniel Exp $
  *
  * Date         Author  Changes
  */
@@ -127,8 +127,7 @@ public class Initializer extends org.omg.CORBA.LocalObject implements org.omg.Po
          */
         public void exception( String from, String msg, java.lang.Exception ex )
         {
-            tyrex.util.Logger.ots.warn("EXCEPTION => " + from + ": " + msg );
-            ex.printStackTrace( tyrex.util.Logger.getSystemLogger() );            
+            tyrex.util.Logger.ots.warn("EXCEPTION => " + from + ": " + msg );            
         }
 }
 
