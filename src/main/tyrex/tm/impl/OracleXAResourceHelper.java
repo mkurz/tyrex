@@ -54,38 +54,31 @@ import javax.transaction.xa.Xid;
 /**
  * This class describes various methods to help the transaction
  * manipulate XA resources from Oracle. This class has been
- * tested with Oracle 8.1.6, 8.1.7, 9.0.1. For Oracle 8.1.6 the
- * oracle classes (classes12.zip) must be in the Tyrex classpath because
- * Oracle 8.1.6 requires the xid to be oracle.jdbc.xa.OracleXid.
- * For Oracle 8.1.7 and above the oracle classes (classes12.zip) may optionally
- * be in the Tyrex classpath.
+ * tested with Oracle 8.1.6, 8.1.7, 9.0.1. 
  *
  * @author <a href="mohammed@intalio.com">Riad Mohammed</a>
  */
-final class OracleXAResourceHelper
+public final class OracleXAResourceHelper
     extends XAResourceHelper
 {
 
 
     /**
-     * The name of the XID implementation class required by Oracle.
+     * The name of the XID implementation class required by Oracle 8.1.6.
+     * The value is "oracle.jdbc.xa.OracleXid".
      */
     public static final String XID_CLASS_NAME = "oracle.jdbc.xa.OracleXid";
 
 
     /**
-     * The oracle Xid constructor
+     * The Oracle Xid constructor
      */
-    private final Constructor _xidConstructor;
-
+    private Constructor _xidConstructor;
 
     /**
-     * The array used in the new instance method
-     * call for the Xid constructor
-     *
-     * @see #xidConstructor
+     * True if the Oracle Xid constructor could not be loaded.
      */
-    private final Object[]    _contructorArgs;
+    private boolean _failedXidConstructor;
 
 
     /**
@@ -93,30 +86,25 @@ final class OracleXAResourceHelper
      */
     public OracleXAResourceHelper()
     {
-        Constructor xidConstructor = null;
-        Class       xidClass;
-        Class       byteArrayClass;
-
-        try {
-            xidClass = Class.forName( XID_CLASS_NAME );
-            byteArrayClass = Class.forName( "[B" );
-            xidConstructor = xidClass.getDeclaredConstructor( new Class[]{ Integer.TYPE, byteArrayClass, byteArrayClass } );
-        } catch ( Exception except ) {
-            // Oracle classes not found, this helper will assume the
-            // default behavior for creating the xid.
-        }
-        _xidConstructor = xidConstructor;
-        if ( null == xidConstructor )
-            _contructorArgs = null;        
-        else
-            _contructorArgs = new Object[ 3 ];
+        
     }
 
 
-    public Xid getXid( Xid xid )
+    /**
+     * Create the xid for use with the XA resource from the specified xid.
+     * <P>
+     * The default implementation is to return the xid.
+     *
+     * @param xaResource The XAResource
+     * @param xid The xid
+     * @throws XAException An error occured obtaining the xid
+     */
+    public Xid getXid( XAResource xaResource, Xid xid )
         throws XAException
     {
-        if ( null == _xidConstructor ) {
+        Object[] contructorArgs;
+
+        if ( !loadOracleXidClass( xaResource ) ) {
             if ( ( null == xid.getBranchQualifier() ) || 
                  ( 0 == xid.getBranchQualifier().length ) ) {
                 return new OracleXidWrapper( xid );
@@ -127,67 +115,21 @@ final class OracleXAResourceHelper
 
         try {
             // populate the constructor args
-            _contructorArgs[ 0 ] = new Integer( xid.getFormatId() );
-            _contructorArgs[ 1 ] = xid.getGlobalTransactionId();
+            contructorArgs = new Object[3];
+            contructorArgs[ 0 ] = new Integer( xid.getFormatId() );
+            contructorArgs[ 1 ] = xid.getGlobalTransactionId();
             if ( ( null == xid.getBranchQualifier() ) || ( 0 == xid.getBranchQualifier().length ) ) {
-                _contructorArgs[ 2 ] = xid.getGlobalTransactionId();    
+                contructorArgs[ 2 ] = xid.getGlobalTransactionId();    
             }
             else {
-                _contructorArgs[ 2 ] = xid.getBranchQualifier();
+                contructorArgs[ 2 ] = xid.getBranchQualifier();
             }
-            return (Xid) _xidConstructor.newInstance( _contructorArgs );
+            return (Xid) _xidConstructor.newInstance( contructorArgs );
         } catch ( Throwable thrw ) {
             if ( thrw instanceof XAException )
                 throw (XAException) thrw;
             // Unable to access constructor, assume default behavior.
             return xid;
-        }
-    }
-
-
-    public void endSuspended( XAResource xaResource, Xid xid )
-        throws XAException
-    {
-        xaResource.start( xid, XAResource.TMRESUME );
-        xaResource.end( xid, XAResource.TMSUCCESS );
-    }
-
-    /**
-     * Helper Xid class if oracle.jdbc.xa.OracleXid is not in the
-     * classpath. This wont work for Oracle 8.1.6
-     */
-    private static class OracleXidWrapper 
-        implements Xid 
-    {
-        
-        /**
-         * The uderlying xid
-         */
-        private final Xid _xid;
-
-        /**
-         * Create the OracleXidWrapper
-         *
-         * @param xid the uderlying xid (required)
-         */
-        private OracleXidWrapper( Xid xid ) 
-        {
-            _xid = xid;
-        }
-
-        public byte[] getBranchQualifier() 
-        {
-            return getGlobalTransactionId();
-        }
-        
-        public int getFormatId() 
-        {
-            return _xid.getFormatId();
-        }
-        
-        public byte[] getGlobalTransactionId() 
-        {
-            return _xid.getGlobalTransactionId();
         }
     }
 
@@ -223,5 +165,78 @@ final class OracleXAResourceHelper
      */
     public boolean treatDifferentBranchesForSharedResourcesAsShared() {
         return false; // true does not work in all cases
+    }
+
+    /**
+     * Return true if the class {@link XID_CLASS_NAME} is
+     * loaded. The variable {@link _xidConstructor} will be
+     * set if the class {@link XID_CLASS_NAME} can be loaded.
+     *
+     * @param xaResource The XAResource
+     * @return true if the class {@link XID_CLASS_NAME} can be
+     *      loaded.
+     */
+    private boolean loadOracleXidClass( XAResource xaResource )
+    {
+        Constructor xidConstructor = null;
+        Class       xidClass;
+        Class       byteArrayClass;
+
+        if ( ( null == _xidConstructor ) &&
+             !_failedXidConstructor ) {
+            try {
+                xidClass = xaResource.getClass().getClassLoader().loadClass( XID_CLASS_NAME );
+                byteArrayClass = Class.forName( "[B" );
+                _xidConstructor = xidClass.getDeclaredConstructor( new Class[]{ Integer.TYPE, byteArrayClass, byteArrayClass } );
+                return true;
+            } catch ( Throwable thrw ) {
+                // Oracle classes not found, this helper will assume the
+                // default behavior for creating the xid.
+                _failedXidConstructor = true;
+                return false;
+            }
+        }
+
+        return null != _xidConstructor;
+    }
+
+    /**
+     * Helper Xid class to handle bug where Oracle 8.1.7 and 
+     * Oracle 9.0.1 expects a valid branch qualifier. This class 
+     * wont work for Oracle 8.1.6 which expects {@link #XID_CLASS_NAME}.
+     */
+    private static class OracleXidWrapper 
+        implements Xid 
+    {
+        
+        /**
+         * The uderlying xid
+         */
+        private final Xid _xid;
+
+        /**
+         * Create the OracleXidWrapper
+         *
+         * @param xid the uderlying xid (required)
+         */
+        private OracleXidWrapper( Xid xid ) 
+        {
+            _xid = xid;
+        }
+
+        public byte[] getBranchQualifier() 
+        {
+            return getGlobalTransactionId();
+        }
+        
+        public int getFormatId() 
+        {
+            return _xid.getFormatId();
+        }
+        
+        public byte[] getGlobalTransactionId() 
+        {
+            return _xid.getGlobalTransactionId();
+        }
     }
 }

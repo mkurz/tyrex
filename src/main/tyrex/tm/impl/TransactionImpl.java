@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionImpl.java,v 1.44 2001/10/19 00:15:34 mohammed Exp $
+ * $Id: TransactionImpl.java,v 1.45 2002/04/17 00:53:57 mohammed Exp $
  */
 
 
@@ -90,7 +90,7 @@ import tyrex.util.Messages;
  * they are added.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.44 $ $Date: 2001/10/19 00:15:34 $
+ * @version $Revision: 1.45 $ $Date: 2002/04/17 00:53:57 $
  * @see InternalXAResourceHolder
  * @see TransactionManagerImpl
  * @see TransactionDomain
@@ -2649,7 +2649,7 @@ final class TransactionImpl
                     helper = XAResourceHelperManager.getHelper( xaResource );
                     differentBranches = helper.useDifferentBranchesForSharedResources();
                     if ( differentBranches ) {
-                        newResHolder = new InternalXAResourceHolder( xaResource, callback, XAResourceHelperManager.getHelper( xaResource ).getXid( XidUtils.newBranch( resHolder._xid ) ), 
+                        newResHolder = new InternalXAResourceHolder( xaResource, callback, XAResourceHelperManager.getHelper( xaResource ).getXid( xaResource, XidUtils.newBranch( resHolder._xid ) ), 
                                                              helper.treatDifferentBranchesForSharedResourcesAsShared() );
                     } else {
                         newResHolder = new InternalXAResourceHolder( xaResource, callback, resHolder._xid, true );
@@ -2719,7 +2719,7 @@ final class TransactionImpl
         // and to enlist it.
         xid = _xid.newBranch();
         try {
-            xid = XAResourceHelperManager.getHelper( xaResource ).getXid( xid );
+            xid = XAResourceHelperManager.getHelper( xaResource ).getXid( xaResource, xid );
         } catch ( XAException except ) {
             throw new NestedSystemException( except );
         }

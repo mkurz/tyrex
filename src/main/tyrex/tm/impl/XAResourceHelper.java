@@ -75,31 +75,14 @@ public class XAResourceHelper
      * <P>
      * The default implementation is to return the xid.
      *
+     * @param xaResource The XAResource
      * @param xid The xid
      * @throws XAException An error occured obtaining the xid
      */
-    public Xid getXid( Xid xid )
+    public Xid getXid( XAResource xaResource, Xid xid )
         throws XAException
     {
         return xid;
-    }
-
-
-    /**
-     * End work performed by the specified xa resource that has previously
-     * been suspended.
-     * <P>
-     * The default implementation is to call {@link javax.transaction.xa.XAResource#end
-     * end} with the flag {@link javax.transaction.xa.XAResource#TMSUCCESS}
-     *
-     * @param xaResource The XA resource
-     * @throws XAException An error occured while ending the work performed
-     * by the XA resource
-     */
-    public void endSuspended( XAResource xaResource, Xid xid )
-        throws XAException
-    {
-        xaResource.end( xid, XAResource.TMSUCCESS );
     }
 
 

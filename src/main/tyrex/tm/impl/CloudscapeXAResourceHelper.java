@@ -105,6 +105,6 @@ final class CloudscapeXAResourceHelper
      * @see #useDifferentBranchesForSharedResources
      */
     public boolean treatDifferentBranchesForSharedResourcesAsShared() {
-        return true; // true does not work in all cases
+        return false; // true does not work in all cases
     }
 }
