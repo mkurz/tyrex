@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionDomainImpl.java,v 1.15 2001/03/16 01:21:03 arkin Exp $
+ * $Id: TransactionDomainImpl.java,v 1.16 2001/03/16 03:38:28 arkin Exp $
  */
 
 
@@ -52,6 +52,7 @@ import java.util.Enumeration;
 import java.util.Properties;
 import java.util.Iterator;
 import java.util.ArrayList;
+import java.lang.reflect.Field;
 import java.security.AccessController;
 import org.apache.log4j.Category;
 import org.omg.CosTransactions.otid_t;
@@ -70,7 +71,6 @@ import javax.transaction.InvalidTransactionException;
 import javax.transaction.xa.Xid;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.XAException;
-import javax.jts.TransactionService;
 import tyrex.tm.DomainMetrics;
 import tyrex.tm.Heuristic;
 import tyrex.tm.TransactionDomain;
@@ -96,11 +96,11 @@ import tyrex.util.Configuration;
  * Implementation of a transaction domain.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.15 $ $Date: 2001/03/16 01:21:03 $
+ * @version $Revision: 1.16 $ $Date: 2001/03/16 03:38:28 $
  */
 public class TransactionDomainImpl
     extends TransactionDomain
-    implements TransactionService, Runnable
+    implements Runnable
 {
 
 
@@ -655,12 +655,15 @@ public class TransactionDomainImpl
         TransactionImpl newTx;
         TransactionImpl entry;
         TransactionImpl next;
-        otid_t          otid;
         byte[]          global;
         BaseXid         xid;
         int             hashCode;
         int             index;
         long            timeout;
+        otid_t          otid;
+        Class           otidClass;
+        Field           bqualField;
+        int             bqualLength;
 
         if ( pgContext == null )
             throw new IllegalArgumentException( "Argument pgContext is null" );
@@ -671,8 +674,33 @@ public class TransactionDomainImpl
             throw new SystemException( "Transaction domain not active" );
 
         otid = pgContext.current.otid;
-        global = new byte[ otid.bequal_length ];
-        for ( int i = otid.bequal_length ; i-- > 0 ; )
+        otidClass = otid.getClass();
+        try {
+            // Get the otid_t field for OTS
+            bqualField = otidClass.getField( "bqual_length" );
+        } catch ( NoSuchFieldException except ) {
+            try {
+                // Get the otid_t field for JTS
+                bqualField = otidClass.getField( "bequal_length" );
+            } catch ( NoSuchFieldException except2 ) {
+                throw new NestedSystemException( except2 );
+            } catch ( SecurityException except2 ) { 
+                throw new NestedSystemException( except2 );
+            } 
+        } catch ( SecurityException except ) { 
+            throw new NestedSystemException( except );
+        }
+
+        // Get the bqual field length using introspection.
+        try {
+            bqualLength = bqualField.getInt( otid );
+        } catch ( IllegalAccessException except ) {
+            throw new NestedSystemException( except );
+        } catch ( IllegalArgumentException except ) {
+            throw new NestedSystemException( except );
+        }
+        global = new byte[ bqualLength ];
+        for ( int i = bqualLength ; i-- > 0 ; )
             global[ i ] = otid.tid[ i ];
         xid = (BaseXid) XidUtils.importXid( otid.formatID, global, null );
         timeout = pgContext.timeout;
@@ -1484,9 +1512,12 @@ public class TransactionDomainImpl
     //----------------------------------------------------
 
 
-    public void identifyORB( ORB orb, TSIdentification tsi, Properties prop )
+    public synchronized void identifyORB( ORB orb, TSIdentification tsi, Properties prop )
     {
         try {
+            if ( _orb != null )
+                throw new org.omg.CORBA.TSIdentificationPackage.AlreadyIdentified();
+            //IllegalStateException( "Transaction domain already identified to an ORB" );
             _orb = orb;
             if ( tsi != null )
             {
@@ -1498,6 +1529,7 @@ public class TransactionDomainImpl
             // or any other error we are not interested in reporting back
             // to the caller (i.e. the ORB).
             _category.error( "Error occured while identifying ORB", except );
+            _orb = null;
         }
     }
 

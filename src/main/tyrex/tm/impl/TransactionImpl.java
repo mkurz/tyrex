@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionImpl.java,v 1.7 2001/03/12 19:20:20 arkin Exp $
+ * $Id: TransactionImpl.java,v 1.8 2001/03/16 03:38:28 arkin Exp $
  */
 
 
@@ -88,7 +88,7 @@ import tyrex.util.Messages;
  * they are added.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.7 $ $Date: 2001/03/12 19:20:20 $
+ * @version $Revision: 1.8 $ $Date: 2001/03/16 03:38:28 $
  * @see XAResourceHolder
  * @see TransactionManagerImpl
  * @see TransactionDomain
@@ -605,7 +605,7 @@ final class TransactionImpl
                         } catch ( XAException except ) {
                             return false;
                         } catch ( Exception except ) {
-                            throw new SystemException( except.toString() );
+                            throw new NestedSystemException( except );
                         }
                     } else
                         return false;
@@ -672,7 +672,7 @@ final class TransactionImpl
             } catch ( XAException except ) {
                 return false;
             } catch ( Exception except ) {
-                throw new SystemException( except.toString() );
+                throw new NestedSystemException( except );
             }
 
         case XAResource.TMSUCCESS:
@@ -704,7 +704,7 @@ final class TransactionImpl
             } catch ( XAException except ) {
                 return false;
             } catch ( Exception except ) {
-                throw new SystemException( except.toString() );
+                throw new NestedSystemException( except );
             } finally {
                 // if this is resource failure set rollback
                 if ( flag == XAResource.TMFAIL )
@@ -1490,9 +1490,9 @@ final class TransactionImpl
                     resHolder._endFlag = XAResource.TMSUSPEND;
                 } catch ( XAException except ) {
                     xaError( resHolder, except );
-                    throw new SystemException( except.toString() );
+                    throw new NestedSystemException( except );
                 } catch ( Exception except ) {
-                    throw new SystemException( except.toString() );
+                    throw new NestedSystemException( except );
                 }
             }
             resHolder = resHolder._nextHolder;
@@ -1561,7 +1561,7 @@ final class TransactionImpl
                     } catch ( XAException except ) {
                         xaError( resHolder, except );
                     } catch ( Exception except ) {
-                        throw new SystemException( except.toString() );
+                        throw new NestedSystemException( except );
                     }
                 }
                 resHolder = resHolder._nextHolder;
@@ -2567,7 +2567,7 @@ final class TransactionImpl
                         } catch ( XAException except ) {
                             throw except;
                         } catch ( Exception except ) {
-                            throw new SystemException( except.toString() );
+                            throw new NestedSystemException( except );
                         }
                     }
                     resHolder = resHolder._nextHolder;
@@ -2577,7 +2577,7 @@ final class TransactionImpl
                 // method call then return it as a system exception
                 if ( ( except.errorCode == XAException.XAER_RMERR ) || 
                      ( except.errorCode == XAException.XAER_RMFAIL ) )
-                    throw new SystemException( except.toString() );    
+                    throw new NestedSystemException( except );    
                 throw except;
             }
         }
@@ -2619,7 +2619,7 @@ final class TransactionImpl
         try {
             xid = XAResourceHelperManager.getHelper( xaResource ).getXid( xid );
         } catch ( XAException except ) {
-            throw new SystemException( except.toString() );
+            throw new NestedSystemException( except );
         }
         resHolder = new XAResourceHolder( xaResource, xid, false );
         
@@ -2632,7 +2632,7 @@ final class TransactionImpl
             xaError( resHolder, except );
             return false;
         } catch ( Exception except ) {
-            throw new SystemException( except.toString() );
+            throw new NestedSystemException( except );
         }
     }
 
@@ -2754,7 +2754,7 @@ final class TransactionImpl
             else
                 // For any other error, we produce a SystemException
                 // to wrap it up.
-                _sysError = new SystemException( except.toString() );
+                _sysError = new NestedSystemException( except );
         }
     }
     

@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionManagerImpl.java,v 1.5 2001/03/12 19:20:20 arkin Exp $
+ * $Id: TransactionManagerImpl.java,v 1.6 2001/03/16 03:38:28 arkin Exp $
  */
 
 
@@ -77,7 +77,7 @@ import tyrex.util.Messages;
  * transaction server.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.5 $ $Date: 2001/03/12 19:20:20 $
+ * @version $Revision: 1.6 $ $Date: 2001/03/16 03:38:28 $
  * @see Tyrex#recycleThread
  * @see TransactionDomain
  * @see TransactionImpl
@@ -139,7 +139,7 @@ final class TransactionManagerImpl
             context._tx.registerSynchronization( new TransactionManagerSynchronization() );
         } catch ( RollbackException except ) {
             // this should not happen
-            throw new SystemException( except.toString() );
+            throw new NestedSystemException( except );
         }
     }
 
@@ -497,7 +497,7 @@ final class TransactionManagerImpl
                 if ( except instanceof SystemException )
                     throw ( SystemException) except;
                 else
-                    throw new SystemException( except.toString() );
+                    throw new NestedSystemException( except );
             }
         }
     }
