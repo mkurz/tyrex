@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: EnabledDataSource.java,v 1.10 2000/09/29 01:24:17 mohammed Exp $
+ * $Id: EnabledDataSource.java,v 1.11 2000/09/29 01:32:42 mohammed Exp $
  */
 
 
@@ -245,7 +245,9 @@ public class EnabledDataSource
 	//    throw new SQLException( "User name specified but password is missing" );
     if (null != user) {
         info.put( "user", user );
-	    info.put( "password", password );    
+    }
+    if (null != password) {
+        info.put( "password", password );    
     }
     
     // Attempt to establish a connection. Report a successful
