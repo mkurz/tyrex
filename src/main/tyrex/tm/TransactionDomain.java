@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionDomain.java,v 1.19 2001/03/19 17:39:02 arkin Exp $
+ * $Id: TransactionDomain.java,v 1.20 2001/03/19 18:44:46 arkin Exp $
  */
 
 
@@ -86,7 +86,7 @@ import tyrex.util.Logger;
  * {@link #terminate terminate}.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.19 $ $Date: 2001/03/19 17:39:02 $
+ * @version $Revision: 1.20 $ $Date: 2001/03/19 18:44:46 $
  */
 public abstract class TransactionDomain
 {
@@ -144,8 +144,7 @@ public abstract class TransactionDomain
             throw new IllegalArgumentException( "Argument name is null or an empty string" );
         domain = _firstDomain;
         while ( domain != null ) {
-            if ( domain.getDomainName().equals( name ) &&
-                 domain.getState() != TERMINATED )
+            if ( domain.getDomainName().equals( name ) )
                 return domain;
             domain = domain.getNextDomain();
         }
@@ -164,14 +163,15 @@ public abstract class TransactionDomain
      * @param url URL for the transaction domain configuration file
      * @return A new transaction domain
      * @throw DomainConfigurationException An error occured while
-     * attempting to create the domain
+     * attempting to create the domain, or a transaction domain with
+     * the same name already exists
      */
     public static TransactionDomain createDomain( String url )
         throws DomainConfigurationException
     {
         if ( url == null )
             throw new IllegalArgumentException( "Argument url is null" );
-        return createDomain( new InputSource( url ) );
+        return createDomain( new InputSource( url ), false );
     }
 
 
@@ -186,14 +186,15 @@ public abstract class TransactionDomain
      * @param steam Input stream for the transaction domain configuration file
      * @return A new transaction domain
      * @throw DomainConfigurationException An error occured while
-     * attempting to create the domain
+     * attempting to create the domain, or a transaction domain with
+     * the same name already exists
      */
     public static TransactionDomain createDomain( InputStream stream )
         throws DomainConfigurationException
     {
         if ( stream == null )
             throw new IllegalArgumentException( "Argument stream is null" );
-        return createDomain( new InputSource( stream ) );
+        return createDomain( new InputSource( stream ), false );
     }
 
 
@@ -209,70 +210,13 @@ public abstract class TransactionDomain
      * configuration file
      * @return A new transaction domain
      * @throw DomainConfigurationException An error occured while
-     * attempting to create the domain
+     * attempting to create the domain, or a transaction domain with
+     * the same name already exists
      */
     public synchronized static TransactionDomain createDomain( InputSource source )
         throws DomainConfigurationException
     {
-        TransactionDomainImpl nextDomain;
-        TransactionDomainImpl lastDomain;
-        DomainConfig          config;
-        Mapping               mapping;
-        Unmarshaller          unmarshaller;
-        String                domainName;
-
-        if ( source == null )
-            throw new IllegalArgumentException( "Argument source is null" );
-        try {
-            mapping = new Mapping();
-            mapping.loadMapping( new InputSource( DomainConfig.class.getResourceAsStream( "mapping.xml" ) ) );
-            unmarshaller = new Unmarshaller( (Class) null );
-            unmarshaller.setMapping( mapping );
-            config = (DomainConfig) unmarshaller.unmarshal( source );
-        } catch ( Exception except ) {
-            throw new DomainConfigurationException( except );
-        }
-        // Check that domain name is valid.
-        domainName = config.getName();
-        if ( domainName == null || domainName.trim().length() == 0 )
-            throw new DomainConfigurationException( "Transaction domain configuration file missing domain name" );
-        domainName = domainName.trim();
-
-        // Make sure we do not already have a domain with this name.
-        // If we do and the domain is terminated, replace it with the
-        // new domain. Otherwise, thrown a configuration exception.
-        nextDomain = _firstDomain;
-        lastDomain = null;
-        while ( nextDomain != null ) {
-            if ( nextDomain.getDomainName().equals( domainName ) ) {
-                if ( nextDomain.getState() != TERMINATED )
-                    throw new DomainConfigurationException( "Transaction domain " + domainName + " already exists" );
-                nextDomain = nextDomain.getNextDomain();
-                if ( lastDomain == null )
-                    _firstDomain = nextDomain;
-                else
-                    lastDomain.setNextDomain( nextDomain );
-            } else {
-                lastDomain = nextDomain;
-                nextDomain = nextDomain.getNextDomain();
-            }                
-        }
-        // Add and return the new domain.
-        lastDomain = _firstDomain;
-        if ( lastDomain == null ) {
-            nextDomain = (TransactionDomainImpl) config.getDomain();
-            _firstDomain = nextDomain;
-            return nextDomain;
-        } else {
-            nextDomain = lastDomain.getNextDomain();
-            while ( nextDomain != null ) {
-                lastDomain = nextDomain;
-                nextDomain = nextDomain.getNextDomain();
-            }
-            nextDomain = (TransactionDomainImpl) config.getDomain();
-            lastDomain.setNextDomain( nextDomain );
-            return nextDomain;
-        }
+        return createDomain( source, false );
     }
 
 
@@ -459,15 +403,94 @@ public abstract class TransactionDomain
     public abstract Resources getResources();
 
 
+    /**
+     * Creates and returns a new transaction domain.
+     *
+     * @param source The domain configuration file source
+     * @param autoRecover True if the domain should be recovered
+     * @return A new transaction domain
+     * @throw DomainConfigurationException An error occured while
+     * attempting to create the domain, or a transaction domain with
+     * the same name already exists
+     */
+    private synchronized static TransactionDomain createDomain( InputSource source, boolean autoRecover )
+        throws DomainConfigurationException
+    {
+        TransactionDomainImpl nextDomain;
+        TransactionDomainImpl lastDomain;
+        DomainConfig          config;
+        Mapping               mapping;
+        Unmarshaller          unmarshaller;
+        String                domainName;
+
+        if ( source == null )
+            throw new IllegalArgumentException( "Argument source is null" );
+        try {
+            mapping = new Mapping();
+            mapping.loadMapping( new InputSource( DomainConfig.class.getResourceAsStream( "mapping.xml" ) ) );
+            unmarshaller = new Unmarshaller( (Class) null );
+            unmarshaller.setMapping( mapping );
+            config = (DomainConfig) unmarshaller.unmarshal( source );
+        } catch ( Exception except ) {
+            throw new DomainConfigurationException( except );
+        }
+        // Check that domain name is valid.
+        domainName = config.getName();
+        if ( domainName == null || domainName.trim().length() == 0 )
+            throw new DomainConfigurationException( "Transaction domain configuration file missing domain name" );
+        domainName = domainName.trim();
+        if ( autoRecover )
+            config.setAutoRecover( true );
+
+        // Make sure we do not already have a domain with this name.
+        // If we do and the domain is terminated, replace it with the
+        // new domain (undocumented feature used in some test cases).
+        // Otherwise, throw a configuration exception.
+        nextDomain = _firstDomain;
+        lastDomain = null;
+        while ( nextDomain != null ) {
+            if ( nextDomain.getDomainName().equals( domainName ) ) {
+                if ( nextDomain.getState() != TERMINATED )
+                    throw new DomainConfigurationException( "Transaction domain " + domainName + " already exists" );
+                nextDomain = nextDomain.getNextDomain();
+                if ( lastDomain == null )
+                    _firstDomain = nextDomain;
+                else
+                    lastDomain.setNextDomain( nextDomain );
+            } else {
+                lastDomain = nextDomain;
+                nextDomain = nextDomain.getNextDomain();
+            }                
+        }
+        // Add and return the new domain.
+        lastDomain = _firstDomain;
+        if ( lastDomain == null ) {
+            nextDomain = (TransactionDomainImpl) config.getDomain();
+            _firstDomain = nextDomain;
+            return nextDomain;
+        } else {
+            nextDomain = lastDomain.getNextDomain();
+            while ( nextDomain != null ) {
+                lastDomain = nextDomain;
+                nextDomain = nextDomain.getNextDomain();
+            }
+            nextDomain = (TransactionDomainImpl) config.getDomain();
+            lastDomain.setNextDomain( nextDomain );
+            return nextDomain;
+        }
+    }
+
+
     static {
-        StringTokenizer domainFiles;
-        String          domainFile;
+        StringTokenizer   domainFiles;
+        String            domainFile;
+        TransactionDomain domain;
         
         domainFiles = new StringTokenizer( Configuration.getProperty( Configuration.PROPERTY_DOMAIN_FILES, "" ), ", " );
         while ( domainFiles.hasMoreTokens() ) {
             domainFile = domainFiles.nextToken();
             try {
-                createDomain( domainFile );
+                domain = createDomain( new InputSource( domainFile ), true );
             } catch ( DomainConfigurationException except ) {
                 Logger.tyrex.error( "Error loading domain configuration file " + domainFile, except );
             }

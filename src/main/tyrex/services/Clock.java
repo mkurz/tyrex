@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Clock.java,v 1.2 2001/03/12 19:20:19 arkin Exp $
+ * $Id: Clock.java,v 1.3 2001/03/19 18:44:46 arkin Exp $
  */
 
 
@@ -61,7 +61,7 @@ import tyrex.util.Logger;
  * for testing purposes.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  */
 public final class Clock
     extends Thread
@@ -272,7 +272,7 @@ public final class Clock
         int value;
 
         _clock = new Clock();
-        value = Configuration.getInteger( Configuration.PROPERTY_SLEEP_TICKS );
+        value = Configuration.getInteger( Configuration.PROPERTY_UNSYNCH_TICKS );
         _clock._sleepTicks = value > 0 ? value : SLEEP_TICKS;
         value = Configuration.getInteger( Configuration.PROPERTY_SYNCH_EVERY );
         _clock._synchEvery = value > 0 ? value : SYNCH_EVERY;

@@ -1,3 +1,6 @@
+Before 0.9.8 release
+--------------------
+
 - Make UserTransactionImpl serializable by looking up
   the transaction domain upon de-serialization.
 
@@ -6,13 +9,17 @@
 
 - Implement destroy() for connection pool
 
+
+Under consideration for version 0.9.9
+-------------------------------------
+
+- tryLock() method for LockSet
+
+- Auto-recover option to domain configuration file
+
 - Add ThreadPool implementation with ThreadPoolMetrics for statistics (including average
   execution time, average block time, block/unblock ratio)
 
 - ThreadPool to use Runnable but add stop() method
 
 - Have all asynch transactions complete in background thread of TransactionDomain
-
-- (0.9.9) Add tryLock() to LockSet interface
-
-- (0.9.9) Possibly add auto-recover option to domain configuration file

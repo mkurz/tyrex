@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionDomainImpl.java,v 1.22 2001/03/19 17:39:02 arkin Exp $
+ * $Id: TransactionDomainImpl.java,v 1.23 2001/03/19 18:44:47 arkin Exp $
  */
 
 
@@ -96,7 +96,7 @@ import tyrex.util.Configuration;
  * Implementation of a transaction domain.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.22 $ $Date: 2001/03/19 17:39:02 $
+ * @version $Revision: 1.23 $ $Date: 2001/03/19 18:44:47 $
  */
 public class TransactionDomainImpl
     extends TransactionDomain
@@ -120,13 +120,6 @@ public class TransactionDomainImpl
      * The size of the hash table. This must be a prime value.
      */
     public static final int  TABLE_SIZE = 1103;
-
-
-    /**
-     * The maximum timeout for a transaction. This is ten minutes,
-     * specified as seconds.
-     */
-    public static final int  MAXIMUM_TIMEOUT = 10 * 60;
 
 
     /**
@@ -184,6 +177,14 @@ public class TransactionDomainImpl
      * The default timeout for all transactions, in seconds.
      */
     private int                            _txTimeout;
+
+
+    /**
+     * The time to wait for a new transaction when limit exceeded.
+     * This value is specified in milliseconds, while it is specified
+     * in seconds for {@link DomainConfig}.
+     */
+    private int                            _waitNew;
 
 
     /**
@@ -274,10 +275,12 @@ public class TransactionDomainImpl
             throw new DomainConfigurationException( "The domain name is missing" );
         _domainName = domainName.trim();
         _maximum = config.getMaximum();
-        _txTimeout = config.getTimeout();
+        setTransactionTimeout( config.getTimeout() );
+        _waitNew = config.getWaitNew() * 1000;
 
         factoryName = config.getJournalFactory();
         if ( factoryName != null && factoryName.trim().length() != 0 ) {
+            factoryName = factoryName.trim();
             try {
                 factory = (JournalFactory) getClass().getClassLoader().loadClass( factoryName ).newInstance();
             } catch ( Exception except ) {
@@ -574,8 +577,8 @@ public class TransactionDomainImpl
         xid = (BaseXid) XidUtils.newGlobal();
         if ( timeout <= 0 )
             timeout = _txTimeout;
-        else if ( timeout > MAXIMUM_TIMEOUT )
-            timeout = MAXIMUM_TIMEOUT;
+        else if ( timeout > DomainConfig.MAXIMUM_TIMEOUT )
+            timeout = DomainConfig.MAXIMUM_TIMEOUT;
         hashCode = xid.hashCode();
         newTx = new TransactionImpl( xid, parent, this, timeout * 1000 );
         timeout = newTx._timeout;
@@ -713,8 +716,8 @@ public class TransactionDomainImpl
             timeout = pgContext.timeout;
             if ( timeout <= 0 )
                 timeout = _txTimeout;
-            else if ( timeout > MAXIMUM_TIMEOUT )
-                timeout = MAXIMUM_TIMEOUT;
+            else if ( timeout > DomainConfig.MAXIMUM_TIMEOUT )
+                timeout = DomainConfig.MAXIMUM_TIMEOUT;
             // !!! Is pgContext timeout in seconds or milliseconds
             try {
                 newTx = new TransactionImpl( xid, pgContext, this, timeout * 1000 );
@@ -850,8 +853,8 @@ public class TransactionDomainImpl
     {
         if ( timeout <= 0 )
             timeout = DomainConfig.DEFAULT_TIMEOUT;
-        else if ( timeout > MAXIMUM_TIMEOUT )
-            timeout = MAXIMUM_TIMEOUT;
+        else if ( timeout > DomainConfig.MAXIMUM_TIMEOUT )
+            timeout = DomainConfig.MAXIMUM_TIMEOUT;
         _txTimeout = timeout;
     }
 
@@ -875,8 +878,8 @@ public class TransactionDomainImpl
         // For zero we use the default timeout for all new transactions.
         if ( timeout <= 0 )
             timeout = _txTimeout;
-        else if ( timeout > MAXIMUM_TIMEOUT )
-            timeout = MAXIMUM_TIMEOUT;
+        else if ( timeout > DomainConfig.MAXIMUM_TIMEOUT )
+            timeout = DomainConfig.MAXIMUM_TIMEOUT;
 
         // Synchronization is required to block background thread from
         // attempting to time out the transaction while we process it,
@@ -1092,7 +1095,7 @@ public class TransactionDomainImpl
         if ( _maximum == 0 || _txCount < _maximum )
             return;
         clock = Clock.clock();
-        timeout = clock + 6000;
+        timeout = clock + _waitNew;
         try {
             while ( clock < timeout ) {
                 wait( timeout - clock );
