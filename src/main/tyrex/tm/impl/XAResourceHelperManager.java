@@ -75,15 +75,25 @@ final class XAResourceHelperManager
     private static XAResourceHelper       _cloudscapeHelper;
 
     /**
+     * The Informix XA resource helper
+     */
+    private static XAResourceHelper       _informixHelper;
+
+    /**
      * The oracle resource class name
      */
     private static final String           _oracleXAResourceClassName = "oracle.jdbc.xa.client.OracleXAResource";
 
 
     /**
-     * The oracle resource class name
+     * The cloudscape resource class name
      */
     private static final String           _cloudscapeXAResourceClassName = "c8e.bm.a";
+
+    /**
+     * The informix resource class name
+     */
+    private static final String           _informixXAResourceClassName = "com.informix.jdbcx.IfxXAResource";
 
     /**
      * Private constructor
@@ -97,9 +107,9 @@ final class XAResourceHelperManager
      * Get the XAResourceHelperManager for the specified xa resource.
      *
      * @param xaResource the xa resource.
-     * @return the XAResourceHelperManager
+     * @return the XAResourceHelper
      */
-    static XAResourceHelper getHelper(XAResource xaResource)
+    static XAResourceHelper getHelper( XAResource xaResource )
     {
         String className;
 
@@ -111,14 +121,24 @@ final class XAResourceHelperManager
                     _oracleHelper = new OracleXAResourceHelper();
                 return _oracleHelper;
             }
-        } if ( className.equals( _cloudscapeXAResourceClassName ) ) {
+        } 
+        if ( className.equals( _cloudscapeXAResourceClassName ) ) {
             synchronized ( _cloudscapeXAResourceClassName ) {
                 if ( null == _cloudscapeHelper )
                     _cloudscapeHelper = new CloudscapeXAResourceHelper();
                 return _cloudscapeHelper;
             }
-        } else
-            return _defaultHelper;
+        }
+
+        if ( className.equals( _informixXAResourceClassName ) ) {
+            synchronized ( _informixXAResourceClassName ) {
+                if ( null == _informixXAResourceClassName )
+                    _informixHelper = new InformixXAResourceHelper();
+                return _informixHelper;
+            }
+        }
+        
+        return _defaultHelper;
     }
 
 
