@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: TestHarness.java,v 1.1 2000/04/10 20:53:52 arkin Exp $
+ * $Id: TestHarness.java,v 1.2 2000/04/12 00:46:16 arkin Exp $
  */
 
 
@@ -66,6 +66,7 @@ public class TestHarness
     static
     {
         _categories.addElement( concurrency.Concurrency.class.getName() );
+        _categories.addElement( naming.Naming.class.getName() );
     }
 
 

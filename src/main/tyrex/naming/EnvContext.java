@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: EnvContext.java,v 1.1 2000/04/11 20:25:13 arkin Exp $
+ * $Id: EnvContext.java,v 1.2 2000/04/12 00:47:04 arkin Exp $
  */
 
 
@@ -125,7 +125,7 @@ import tyrex.util.FastThreadLocal;
  * </pre>
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2000/04/11 20:25:13 $
+ * @version $Revision: 1.2 $ $Date: 2000/04/12 00:47:04 $
  */
 public final class EnvContext
     implements Context, Serializable
@@ -227,18 +227,17 @@ public final class EnvContext
 	obj = bindings.get( name );
 	if ( obj != null ) {
 	    if ( obj instanceof LinkRef ) {
-		    // Found a link reference that we must follow. If the link
-		    // starts with a '.' we use it's name to do a look underneath
-		    // this context. Otherwise, we continue looking from some
-		    // initial context.
-		    String link;
-		    
-		    link = ( (LinkRef) obj ).getLinkName();
-		    if ( link.startsWith( "." ) ) {
-			return lookup( link.substring( 1 ) );
-		    } else {
-			return lookupInitialContext( link );
-		    }
+                // Found a link reference that we must follow. If the link
+                // starts with a '.' we use it's name to do a look underneath
+                // this context. Otherwise, we continue looking from some
+                // initial context.
+                String link;
+                
+                link = ( (LinkRef) obj ).getLinkName();
+                if ( link.startsWith( "." ) )
+                    return lookup( link.substring( 1 ) );
+                else
+                    return lookupInitialContext( link );
 	    } else if ( obj instanceof MemoryBinding ) {
 		// If we found a subcontext, we must return a new context
 		// to represent it and keep the environment set for this
@@ -317,9 +316,8 @@ public final class EnvContext
 		    if ( link.startsWith( "." ) ) {
 			name = new CompositeName( link.substring( 1 ) );
 			continue; // Reiterate
-		    } else {
+		    } else
 			return lookupInitialContext( link );
-		    }
 		} else if ( obj instanceof MemoryBinding ) {
 		    // If we found a subcontext, we must return a new context
 		    // to represent it and keep the environment set for this
@@ -782,15 +780,18 @@ public final class EnvContext
      * @throws SecurityException Caller does not have adequate
      *  permission to set/unset context
      */
-    public static void setEnvContext( MemoryContext context )
-        throws SecurityException
+    public static void setEnvContext( Context context )
+        throws SecurityException, IllegalArgumentException
     {
         ThreadMemoryBinding thread;
         MemoryBinding       bindings;
 
         AccessController.checkPermission( NamingPermission.ENC );
 
-        bindings = context.getBindings();
+        if ( ! ( context instanceof MemoryContext ) )
+            throw new IllegalArgumentException( "The argument 'context' was not created from " +
+                                                MemoryContextFactory.class.getName() );
+        bindings = ( (MemoryContext) context ).getBindings();
         if ( ! bindings.isRoot() )
             throw new IllegalArgumentException( "The argument 'context' is not a root context" );
         thread = (ThreadMemoryBinding) _local.get();

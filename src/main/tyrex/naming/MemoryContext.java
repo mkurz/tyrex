@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: MemoryContext.java,v 1.1 2000/04/11 20:25:13 arkin Exp $
+ * $Id: MemoryContext.java,v 1.2 2000/04/12 00:47:04 arkin Exp $
  */
 
 
@@ -52,7 +52,20 @@ import java.util.Vector;
 import java.util.Hashtable;
 import java.util.Enumeration;
 import java.util.Dictionary;
-import javax.naming.*;
+import javax.naming.Context;
+import javax.naming.LinkRef;
+import javax.naming.CompositeName;
+import javax.naming.InitialContext;
+import javax.naming.NamingEnumeration;
+import javax.naming.NameParser;
+import javax.naming.Name;
+import javax.naming.NamingException;
+import javax.naming.NotContextException;
+import javax.naming.NameNotFoundException;
+import javax.naming.OperationNotSupportedException;
+import javax.naming.InvalidNameException;
+import javax.naming.NameAlreadyBoundException;
+import javax.naming.ContextNotEmptyException;
 
 
 /**
@@ -76,7 +89,7 @@ import javax.naming.*;
  *
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2000/04/11 20:25:13 $
+ * @version $Revision: 1.2 $ $Date: 2000/04/12 00:47:04 $
  * @see MemoryContextFactory
  */
 public final class MemoryContext
@@ -161,7 +174,7 @@ public final class MemoryContext
 	// This takes care of setting certain flags appropriately.
 	if ( env != null ) {
             if ( env.get( PROVIDER_URL ) != null )
-                _bindings =  MemoryContextFactory.getBindings( env.get( PROVIDER_URL ).toString() );
+                _bindings = MemoryContextFactory.getBindings( env.get( PROVIDER_URL ).toString() );
             else
                 _bindings = new MemoryBinding();
 	    enum = env.keys();
