@@ -1,0 +1,5 @@
+grant { 
+	permission tyrex.tm.TyrexPermission "*";
+	permission tyrex.naming.NamingPermission "*";
+};
+
