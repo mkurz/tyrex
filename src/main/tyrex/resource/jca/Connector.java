@@ -55,6 +55,8 @@ import java.util.jar.JarFile;
 import java.util.jar.JarEntry;
 import org.xml.sax.InputSource;
 import org.apache.log4j.Category;
+import org.exolab.castor.mapping.Mapping;
+import org.exolab.castor.mapping.MappingException;
 import org.exolab.castor.xml.Unmarshaller;
 import org.exolab.castor.xml.ValidationException;
 import org.exolab.castor.xml.MarshalException;
@@ -72,7 +74,7 @@ import tyrex.util.Logger;
 /**
  * 
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 public class Connector
     extends ResourceConfig
@@ -119,7 +121,8 @@ public class Connector
         DDConnector             ddConnector;
         DDResourceAdapter       ddAdapter;
         String                  txSupport;
-
+        Mapping                 mapping;
+        
         name = _name;
         if ( name == null || name.trim().length() == 0 )
             throw new ResourceException( "The configuration element is missing the resource manager name" );
@@ -137,7 +140,7 @@ public class Connector
                 url = new URL( jarName );
             paths = _paths;
             if ( paths != null && paths.length() > 0 ) {
-                tokenizer = new StringTokenizer( paths, ":; " );
+                tokenizer = new StringTokenizer( paths, ",:; " );
                 urls = new URL[ tokenizer.countTokens() + 1 ];
                 urls[ 0 ] = url;
                 for ( int i = 1 ; i < urls.length ; ++i ) {
@@ -154,22 +157,24 @@ public class Connector
             throw new ResourceException( except );
         }
 
-
         // Read the connector JAR file and it's deployment descriptor.
         try {
-            jarFile = new JarFile( urls[ 0 ].toString(), true );
-            info = new StringBuffer( "Loading connector " + name + " from " + jarFile.getName() );
+            jarFile = new JarFile( _jar, true );
+            info = new StringBuffer( "Loading connector " + name + " from " + _jar );
             jarEntry = jarFile.getJarEntry( "META-INF/ra.xml" );
             if ( jarEntry == null )
                 throw new ResourceException( "Connector " + name + 
                                              " missing deployment descriptor" );
-            ddConnector = (DDConnector) Unmarshaller.unmarshal( DDConnector.class,
-                                                                new InputSource( jarFile.getInputStream( jarEntry ) ) );
+            mapping = new Mapping();
+            mapping.loadMapping( new InputSource( Connector.class.getResourceAsStream( "mapping.xml" ) ) );
+            ddConnector = (DDConnector) new Unmarshaller(mapping).unmarshal( new InputSource( jarFile.getInputStream( jarEntry ) ) );
         } catch ( IOException except ) {
             throw new ResourceException( except );
         } catch ( ValidationException except ) {
             throw new ResourceException( except );
         } catch ( MarshalException except ) {
+            throw new ResourceException( except );
+        } catch ( MappingException except ) {
             throw new ResourceException( except );
         }
         if ( ddConnector.getDisplayName() != null )
@@ -183,7 +188,7 @@ public class Connector
             throw new ResourceException( "Connector " + name + 
                                          " missing resource adapter deployment descriptor" );
         txSupport = ddAdapter.getTransactionSupport();
-            
+
         // Create a new URL class loader for the data source.
         // Create a new connector loader using the class loader and
         // deployment descriptor.

@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: DDResourceAdapter.java,v 1.2 2001/03/12 19:20:17 arkin Exp $
+ * $Id: DDResourceAdapter.java,v 1.3 2001/04/11 23:53:02 mohammed Exp $
  */
 
 
@@ -52,7 +52,7 @@ import java.util.Vector;
 
 /**
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  */
 public class DDResourceAdapter
 {
@@ -229,17 +229,17 @@ public class DDResourceAdapter
      *
      * @return An authentication mechanism
      */
-    public Vector getAuthMechanism()
+    public Vector getAuthenticationMechanism()
     {
         return _authMechanism;
     }
 
 
-    public void setAuthMechanism( Vector authMechanism )
+    public void setAuthenticationMechanism( Vector authMechanism )
     {
         _authMechanism = authMechanism;
     }
-
+    
 
     /**
      * Specifies whether the resource adapter implementation supports

@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: DDAuthMechanism.java,v 1.2 2001/03/12 19:20:17 arkin Exp $
+ * $Id: DDAuthMechanism.java,v 1.3 2001/04/11 23:53:02 mohammed Exp $
  */
 
 
@@ -49,7 +49,7 @@ package tyrex.resource.jca.dd;
 
 /**
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  */
 public class DDAuthMechanism
 {
@@ -81,13 +81,13 @@ public class DDAuthMechanism
      *
      * @return The type of the authentication mechanism
      */
-    public String getAuthMechType()
+    public String getAuthenticationMechanismType()
     {
         return _mechType;
     }
 
 
-    public void setAuthMechType( String mechType )
+    public void setAuthenticationMechanismType( String mechType )
     {
         _mechType = mechType;
     }
