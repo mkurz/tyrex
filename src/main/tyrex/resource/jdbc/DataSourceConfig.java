@@ -70,7 +70,7 @@ import tyrex.util.Logger;
 /**
  * 
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.11 $
+ * @version $Revision: 1.12 $
  */
 public class DataSourceConfig
     extends ResourceConfig
@@ -136,7 +136,6 @@ public class DataSourceConfig
     {
         String                  name;
         String                  jarName;
-        File                    file;
         String                  className;
         URL[]                   urls;
         URL                     url;
@@ -157,13 +156,8 @@ public class DataSourceConfig
 
         // Obtain the JAR file and use the paths to create
         // a list of URLs for the class loader.
-        file = null;
         try {
-            file = createFile( jarName );
-            if ( file.exists() && file.canRead() )
-                url = file.toURL();
-            else
-                url = new URL( jarName );
+            url = getURL( jarName );
             paths = _paths;
             if ( paths != null && paths.length() > 0 ) {
                 tokenizer = new StringTokenizer( paths, ",; " );
@@ -171,19 +165,13 @@ public class DataSourceConfig
                 urls[ 0 ] = url;
                 for ( int i = 1 ; i < urls.length ; ++i ) {
                     jarName = tokenizer.nextToken();
-                    file = createFile( jarName );
-                    if ( file.exists() && file.canRead() )
-                        urls[ i ] = file.toURL();
-                    else
-                        urls[ i ] = new URL( jarName );
+                    urls[ i ] = getURL( jarName );
                 }
             } else
                 urls = new URL[] { url };
-        } catch ( MalformedURLException except ) {
-            if ( null != file ) {
-                Logger.resource.error("Could not create url for datasource file: '" + file + "'. File may not exist.");
-            }
-
+        } catch ( IOException except ) {
+            Logger.resource.error("Could not create url for datasource file: '" + jarName + "'. File may not exist.");
+            
             throw new ResourceException( except );
         }
             

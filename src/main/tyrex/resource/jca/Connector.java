@@ -82,7 +82,7 @@ import tyrex.util.Logger;
 /**
  * 
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.12 $
+ * @version $Revision: 1.13 $
  */
 public class Connector
     extends ResourceConfig
@@ -218,7 +218,6 @@ public class Connector
     {
         String                  name;
         String                  jarName;
-        File                    file;
         URL[]                   urls;
         URL                     url;
         StringTokenizer         tokenizer;
@@ -237,16 +236,8 @@ public class Connector
 
         // Obtain the JAR file and use the paths to create
         // a list of URLs for the class loader.
-        file = null;
         try {
-            file = createFile( jarName );
-
-            if ( file.exists() && file.canRead() ) {
-                url = file.toURL();
-            }
-            else {
-                url = new URL( jarName );
-            }
+            url = getURL( jarName );
             paths = _paths;
             if ( paths != null && paths.length() > 0 ) {
                 tokenizer = new StringTokenizer( paths, ",; " );
@@ -254,20 +245,15 @@ public class Connector
                 urls[ 0 ] = url;
                 for ( int i = 1 ; i < urls.length ; ++i ) {
                     jarName = tokenizer.nextToken();
-                    file = createFile( jarName );
-                    if ( file.exists() && file.canRead() )
-                        urls[ i ] = file.toURL();
-                    else
-                        urls[ i ] = new URL( jarName );
+                    urls[ i ] = getURL( jarName );
                 }
             } else
                 urls = new URL[] { url };
-        } catch ( MalformedURLException except ) {
-            if ( null != file ) {
-                Logger.resource.error("Could not create url for connector file: '" + file + "'. File may not exist.");
-            }
+        } catch ( IOException except ) {
+            Logger.resource.error("Could not create url for connector file: '" + jarName + "'. File may not exist.", except);
+            
             throw new ResourceException( except );
-        }
+        } 
 
         // Read the connector JAR file and it's deployment descriptor.
         try {
