@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionDomainImpl.java,v 1.26 2001/03/23 23:50:02 arkin Exp $
+ * $Id: TransactionDomainImpl.java,v 1.27 2001/04/24 20:13:50 psq Exp $
  */
 
 
@@ -90,13 +90,14 @@ import tyrex.services.DaemonMaster;
 import tyrex.util.Messages;
 import tyrex.util.Configuration;
 import tyrex.util.LoggerPrintWriter;
+import tyrex.util.Logger;
 
 
 /**
  * Implementation of a transaction domain.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.26 $ $Date: 2001/03/23 23:50:02 $
+ * @version $Revision: 1.27 $ $Date: 2001/04/24 20:13:50 $
  */
 public class TransactionDomainImpl
     extends TransactionDomain
@@ -317,6 +318,7 @@ public class TransactionDomainImpl
         _userTx = new UserTransactionImpl( _txManager );
         _txFactory = new TransactionFactoryImpl( this );
         _category = Category.getInstance( "tyrex." + _domainName );
+        _category.addAppender(Logger.appender);
         _hashTable = new TransactionImpl[ TABLE_SIZE ];
 
         // Obtain all the resources. We need to have the transaction manager
