@@ -63,7 +63,7 @@
     <javac srcdir="${source.main}"
            destdir="${build.classes}"
            debug="off"
-           excludes="tyrex/corba/**,tyrex/connector/**"
+           excludes="tyrex/corba/*,tyrex/connector/*,tyrex/security/ldap/**"
            deprecation="${deprecation}">
     </javac>
     
@@ -157,7 +157,9 @@
     <property name="archive" value="${project}-${version}" />
     <jar jarfile="${dist.dir}/${archive}-tests.jar"
          basedir="${build.tests}"
-         excludes="ots/*" />
+         excludes="ots/*,unit/**" />
+    <jar jarfile="${dist.dir}/${archive}-tests-unit.jar"
+	 basedir="${build.tests}/unit" />
   </target>
   
   <target name="jar-tests-iiop" depends="tests-iiop">    

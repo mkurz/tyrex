@@ -48,7 +48,7 @@ package tyrex.corba;
  * This is the current interface implementation. This code is extracted from the OpenORB OTS source code.
  * 
  * @author <a href="mailto:jdaniel@intalio.com">Jerome Daniel &lt;daniel@intalio.com&gt;</a>
- * @version $Revision: 1.7 $ $Date: 2001/09/17 15:58:43 $ 
+ * @version $Revision: 1.8 $ $Date: 2001/09/22 00:04:56 $ 
  */
 public class Current extends org.omg.CORBA.LocalObject implements org.omg.CosTransactions.Current				     
 {
@@ -442,6 +442,17 @@ public class Current extends org.omg.CORBA.LocalObject implements org.omg.CosTra
 	// -----------------------------------------------------------------------------------------
 
 	/**
+	 * This operation is used to return the Coordinator ior
+	 */
+	public String get_coordinator_ior()
+		throws org.omg.CORBA.MARSHAL
+	{
+		org.omg.CosTransactions.Coordinator coord = getPropagationContext().current.coord;
+
+		return ( ( org.openorb.PI.OpenORBInitInfo ) _info ).orb().object_to_string( coord );
+	}
+
+	/**
 	 * This operation is used to return the propagation context
 	 */
 	public org.omg.CosTransactions.PropagationContext getPropagationContext()
@@ -569,7 +580,7 @@ public class Current extends org.omg.CORBA.LocalObject implements org.omg.CosTra
                {
                   org.omg.CORBA.Object obj = _info.resolve_initial_references("TransactionService");
    						
-   			      _tfactory = org.omg.CosTransactions.TransactionFactoryHelper.narrow( obj );				
+   		  _tfactory = org.omg.CosTransactions.TransactionFactoryHelper.narrow( obj );				
                }
                
                return _tfactory;  
