@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: LocalXid_BaseXidImpl.java,v 1.3 2001/09/12 11:17:52 mills Exp $
+ * $Id: LocalXid_BaseXidImpl.java,v 1.4 2001/09/12 13:36:25 mills Exp $
  */
 
 package tyrex.tm.xid;
@@ -54,7 +54,7 @@ import java.io.PrintWriter;
 /**
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  */
 
 public class LocalXid_BaseXidImpl extends BaseXidTest
@@ -86,5 +86,16 @@ public class LocalXid_BaseXidImpl extends BaseXidTest
         char[] pref = BaseXid.createPrefix(LocalXid.LOCAL_FORMAT_ID);
         return new String(pref) + "-"
             + tyrex.Unit.byteArrayToString(xid.getBranchQualifier());
+    }
+
+
+    /**
+     * <p>Whether the class (the test's newBaseXid() method) is
+     * expected to produce unique ids.</p> */
+
+    public boolean uniqueIds()
+        throws Exception
+    {
+        return true;
     }
 }

@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: GlobalXid_BaseXidImpl.java,v 1.2 2001/09/12 11:17:52 mills Exp $
+ * $Id: GlobalXid_BaseXidImpl.java,v 1.3 2001/09/12 13:36:25 mills Exp $
  */
 
 package tyrex.tm.xid;
@@ -54,7 +54,7 @@ import java.io.PrintWriter;
 /**
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  */
 
 public class GlobalXid_BaseXidImpl extends BaseXidTest
@@ -86,5 +86,16 @@ public class GlobalXid_BaseXidImpl extends BaseXidTest
         char[] pref = xid.createPrefix(BaseXid.FORMAT_ID);
         return new String(pref)
             + tyrex.Unit.byteArrayToString(xid.getGlobalTransactionId());
+    }
+
+
+    /**
+     * <p>Whether the class (the test's newBaseXid() method) is
+     * expected to produce unique ids.</p> */
+
+    public boolean uniqueIds()
+        throws Exception
+    {
+        return true;
     }
 }

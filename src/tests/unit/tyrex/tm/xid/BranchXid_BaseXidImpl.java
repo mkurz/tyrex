@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: BranchXid_BaseXidImpl.java,v 1.4 2001/09/12 11:17:52 mills Exp $
+ * $Id: BranchXid_BaseXidImpl.java,v 1.5 2001/09/12 13:36:25 mills Exp $
  */
 
 package tyrex.tm.xid;
@@ -54,7 +54,7 @@ import java.io.PrintWriter;
 /**
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  */
 
 public class BranchXid_BaseXidImpl extends BaseXidTest
@@ -91,5 +91,16 @@ public class BranchXid_BaseXidImpl extends BaseXidTest
         char[] pref = xid.createPrefix(BaseXid.FORMAT_ID);
         return new String(pref) + tyrex.Unit.byteArrayToString(_global) + "-"
             + tyrex.Unit.byteArrayToString(_branch);
+    }
+
+
+    /**
+     * <p>Whether the class (the test's newBaseXid() method) is
+     * expected to produce unique ids.</p> */
+
+    public boolean uniqueIds()
+        throws Exception
+    {
+        return false;
     }
 }

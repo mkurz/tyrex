@@ -40,10 +40,13 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: BaseXidTest.java,v 1.4 2001/09/12 11:17:52 mills Exp $
+ * $Id: BaseXidTest.java,v 1.5 2001/09/12 13:36:25 mills Exp $
  */
 
 package tyrex.tm.xid;
+
+import java.util.Arrays;
+import java.util.Comparator;
 
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -53,7 +56,7 @@ import java.io.PrintWriter;
 
 /**
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  */
 
 public abstract class BaseXidTest extends TestCase
@@ -80,6 +83,14 @@ public abstract class BaseXidTest extends TestCase
      */
 
     public abstract String getStringXid(BaseXid xid)
+        throws Exception;
+
+
+    /**
+     * <p>Whether the class (the test's newBaseXid() method) is
+     * expected to produce unique ids.</p> */
+
+    public abstract boolean uniqueIds()
         throws Exception;
 
     /**
@@ -109,6 +120,83 @@ public abstract class BaseXidTest extends TestCase
         // it's value String's version would have to be used again.
         // Therefore there is no gain.
         assertEquals("HashCode", xid.hashCode(), xid.hashCode());
+    }
+
+
+    /**
+     * <p>Create a large number of ids.</p>
+     *
+     * @result Sort the list of ids and ensure that all are unique.
+     */
+
+    public void testUniqueness()
+        throws Exception
+    {
+        if (!uniqueIds())
+        {
+            return;
+        }
+        final int numIds = 100000;
+        BaseXid[] ids1 = new BaseXid[2 * numIds];
+        BaseXid[] ids2 = new BaseXid[numIds];
+        IdThread idThread = new IdThread(ids2);
+        idThread.start();
+        for (int i = 0; i < numIds; i++)
+        {
+            ids1[i] = newBaseXid();
+        }
+        idThread.join();
+        for (int i = 0; i < numIds; i++)
+        {
+            ids1[numIds + i] = ids2[i];
+        }
+        IdsCompare comp = new IdsCompare();
+        Arrays.sort(ids1, comp);
+        for (int i = 1; i < numIds; i++)
+        {
+            String str = "unique " + Integer.toString(i) + " "
+                + ids1[i].toString() + " " + ids1[i - 1].toString();
+            assert(str, comp.compare(ids1[i], ids1[i - 1]) != 0);
+        }
+    }
+
+
+    private class IdsCompare implements Comparator
+    {
+        public int compare(Object id1, Object id2)
+        {
+            return ((BaseXid)id1).toString().compareTo(((BaseXid)id2).toString());
+        }
+
+        public boolean equals()
+        {
+            return false;
+        }
+    }
+
+    private class IdThread extends Thread
+    {
+        private BaseXid[] _ids = null;
+
+        public IdThread(BaseXid[] ids)
+        {
+            _ids = ids;
+        }
+
+        public void run()
+        {
+            try
+            {
+                for (int i = 0; i < _ids.length; i++)
+                {
+                    _ids[i] = newBaseXid();
+                }
+            }
+            catch (Exception e)
+            {
+                fail("Generation of ids failed.");
+            }
+        }
     }
 
 

@@ -59,7 +59,7 @@ import junit.extensions.*;
 /**
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.7 $
  */
 
 
@@ -224,7 +224,6 @@ public class UUIDTest extends TestCase
     {
         tyrex.Unit.runTests(args, new TestSuite(UUIDTest.class));
     }
-
 
 
     private class BytesCompare implements Comparator
