@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: ServerDataSource.java,v 1.3 2000/08/28 19:01:48 mohammed Exp $
+ * $Id: ServerDataSource.java,v 1.4 2000/08/31 18:13:03 mohammed Exp $
  */
 
 
@@ -75,6 +75,7 @@ import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.Name;
 import tyrex.tm.ResourceManager;
+import tyrex.resource.ResourceLimits;
 import tyrex.resource.ResourcePool;
 import tyrex.resource.ResourcePoolManager;
 import tyrex.resource.ResourcePoolManagerImpl;
@@ -90,7 +91,7 @@ import tyrex.util.Messages;
  * {@link tyrex.resource.ResourcePool}.
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.3 $ $Date: 2000/08/28 19:01:48 $
+ * @version $Revision: 1.4 $ $Date: 2000/08/31 18:13:03 $
  *
  * Date         Author          Changes
  * ?            Assaf Arkin     Created  
@@ -637,6 +638,32 @@ public class ServerDataSource
 	    _poolManager.unmanage();
 	_poolManager = poolManager;
 	_poolManager.manage( this, true );
+    }
+
+
+    /**
+     * Set the resource limits for the resource pool manager.
+     * If the specified argument is null then the default resource
+     * limits is used.
+     * @param resourceLimits the resource
+     * @see ResourceLimits
+     */
+    public void setResourceLimits( ResourceLimits resourceLimits )
+    {
+        getPoolManager().setResourceLimits( resourceLimits );
+    }
+
+
+    /**
+     * Return the resource limits associated with the resource pool manager.
+     * The same copy used by the resource pool manager is returned so changes
+     * to the resource limit object will affect the resource pool manager.
+     * @return the resource limits used by the resource pool manager.
+     * @see ResourceLimits
+     */
+    public ResourceLimits getResourceLimits()
+    {
+        return getPoolManager().getResourceLimits();
     }
 
 
