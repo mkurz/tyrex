@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!-- $Id: configuration.xml,v 1.4 2001/03/19 17:39:00 arkin Exp $ -->
+<!-- $Id: configuration.xml,v 1.5 2001/03/19 22:16:24 arkin Exp $ -->
 <document>
   <properties>
     <title>Tyrex Configuration</title>
@@ -76,55 +76,55 @@ tyrex.domain.files=domain.xml ]]></code></p>
 
     <section title="UUID State">
 
-      <p>The the Tyrex UUID generator for producing Universally Unique IDentifiers. UUIDs are
-        used to identify processes, transactions, messages and other objects. UUIDs are 128 bit
-        values guaranteed to be unique across all servers and applications.</p>
-      
-      <p>In order to guaranteed uniqueness, the UUID generator utilizes three parameters: the
-        node identifier, clock sequence and system clock. The system clock uses a resolution of
-        100 nanoseconds, allowing nearly a million UUIDs to be generated in a second.
-        Tyrex provides an internal clock with that resolution that is guaranteed to be monotonic
-        during the lifetime of the server.</p>
-      
-      <p>The clock sequence is required to protect against backward changes to the clock.
-        The clock may be set backwards accidentally, or as a result of server down time.
-        Day light savings has no affect on the clock which is based on Coordinated Universal
-        Time (UTC). The clock sequence is automatically incremented each time Tyrex is started.
-        The clock sequence rolls over at 1024.</p>
-      
-      <p>The node identifier is required to guarantee uniqueness across servers. The node
-        identifier is a 47 bit value set from a unique identifier obtained from the IEEE 802
-        address of the network card. Each network card has a unique 47 bit identifier.
-        Where multiple network cards are installed, any one can be used.</p>
-      
-      <p>When installing Tyrex, the network card address is obtained and placed in the UUID
-        state file. The clock sequence can be set to any arbitrary value between 0 and 1024,
-        but must have no correlation to the network card address. The UUID state is generally
-        stored in a file called <tt>uuid.state</tt>.</p>
-      
-      <p>To obtain the network card address under Linux/UNIX run <tt>ifconfig</tt> from the root
-        account. To obtain the network card address under Windows 2000 open a DOS window and type
-        <tt>ipconfig /all</tt>. The following example illustrates a UUID state file generated from
-        the network card address 08:00:46:08:64:C3 using the clock sequence 100. Both values
-        are specified as hexadecimal values:</p>
-      
-      <code>
-uuid.nodeIdentifier=0800460864C3    
-uuid.clockSequence=0100</code>
+      <p>The Tyrex UUID generator is used for producing Universally Unique IDentifiers.
+        UUIDs are 128 bit values guaranteed to be unique across all servers and applications.
+        They are used for transaction identifiers, and by applications that rely on this
+        service to produce unique identifiers.</p>
 
-      <p>The UUID state file is typically located in the installation directory of Tyrex.
-        The location of the file can be changed by setting the property <tt>tyrex.uuid.stateFile</tt>
-        in the Tyrex configuration file.</p>
+      <p>In order to guarantee uniqueness, the UUID generator utilizes three parameters:
+        the system clock, clock sequence and node identifier. The system clock simulates
+        a resolution of 100 nanoseconds, allowing nearly ten thousand UUIDs to be generated
+        in a second.</p>
+
+      <p>The <i>clock sequence</i> protects against a retarding clock. The clock may be set
+        backwards accidentaly. or as a result of server down time. Day light savings time has
+        no effect on the clock, but clustered servers will seldom have a synchronized clock.
+        The clock sequence is automatically incremented each time Tyrex is started, rolling
+        over after 8192 restarts.</p>
       
-      <p>If the UUID state file could not be located, Tyrex will use random values for both
-        the node identifier and clock sequence. In a deployment environment, it is important
-        that both values are truly unique. To enable the use of cryptographic quality
-        random numbers set the property <tt>tyrex.secureRandom</tt> to true in
-        the Tyrex configuration file.</p>
+      <p>The <i>node identifier</i> guarantees uniqueness across servers. The node idenifier
+        if a 47 bit value set from the IEEE 802 address of the network card. Each network card
+        has a universally unique 47 bit identifier. Where multiple network cards are installed,
+        any one card can be used.</p>
+
+      <p>When installing Tyrex for the first time, the network card address is obtained and
+        placed in the UUID state file. To obtain the network address under Linux/UNIX, run
+        <tt>ifconfig</tt> from the root account. To obtain the network card address under
+        Windows 2000, open a DOS window and type <tt>ipconfig /all</tt>.</p>
+
+      <p>The clock sequence can be set to any arbitrary value between 0 and 8192, but must
+        have no correlation with the network card address to be unique. If no value is placed,
+        the initial value will be randomly generated.</p>
+
+      <p>The following example illustrates the contents of a UUID state file generated from
+        the network card address <tt>08:00:46:08:64:C3</tt> with a clock sequence of 100. 
+      <code>
+uuid.nodeIdentifier=08:00:46:08:64:C3
+uuid.clockSequence=100</code></p>
+
+      <p>The UUID state file is typically located in the installation directory of Tyrex,
+        under the name <tt>uuid.state</tt>. The location and name of the file can be
+        controlled using the configuration property <tt>tyrex.uuid.stateFile</tt>.</p>
+
+      <p>If the UUID state file could not be located, Tyrex will use random values for
+        both the node identifier and clock sequence. Different random values will be
+        generated each time Tyrex is used to assure uniquness. In a deployment environment
+        it is important to gurantee that both values are truely unique. If the network
+        card address is unavailable, use cryptographic quality random number generator by
+        setting the configuration property <tt>tyrex.random.secure</tt> to true.</p>
       
-      <p>Using the cryptographic quality random number generator will cause Tyrex to boot up
-        slower. This option can be turned off in a development environment where truly unique
-        UUIDs are not required.</p>
+      <p>Using the cryptographic quality random number generator will slow the initialization
+        process. It is recommended to leave this property unset in a development environment.</p>
       
     </section>
 

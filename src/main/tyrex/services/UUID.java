@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: UUID.java,v 1.2 2001/03/12 19:20:19 arkin Exp $
+ * $Id: UUID.java,v 1.3 2001/03/19 22:16:25 arkin Exp $
  */
 
 
@@ -54,6 +54,7 @@ import java.util.HashSet;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.StringTokenizer;
 import tyrex.util.Configuration;
 import tyrex.util.Logger;
 import tyrex.util.Messages;
@@ -129,7 +130,7 @@ import tyrex.util.Messages;
  * hexadecimal value.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $ $Date: 2001/03/12 19:20:19 $
+ * @version $Revision: 1.3 $ $Date: 2001/03/19 22:16:25 $
  */
 public final class UUID
 {
@@ -626,7 +627,7 @@ public final class UUID
                 clock = Clock.synchronize();
                 if ( clock <= _lastClock ) {
                     if ( Configuration.verbose )
-                        Logger.tyrex.debug( Messages.message( "tyrex.util.uuidFastHolding" ) );
+                        Logger.tyrex.debug( Messages.message( "tyrex.uuid.fastHolding" ) );
                     while ( clock <= _lastClock ) {
                         // UUIDs generated too fast, suspend for a while.
                         try {
@@ -739,7 +740,7 @@ public final class UUID
                 clock = Clock.synchronize();
                 if ( clock <= _lastClock ) {
                     if ( Configuration.verbose )
-                        Logger.tyrex.debug( Messages.message( "tyrex.util.uuidFastHolding" ) );
+                        Logger.tyrex.debug( Messages.message( "tyrex.uuid.fastHolding" ) );
                     while ( clock <= _lastClock ) {
                         // UUIDs generated too fast, suspend for a while.
                         try {
@@ -803,11 +804,18 @@ public final class UUID
         long             nodeIdLong;
         String           seqString;
         int              seqInt;
+        StringTokenizer  tokenizer;
+        String           token;
 
+        // Find the name of the UUID state file from the configuration,
+        // or use a default name.
         stateFile = Configuration.getProperty( Configuration.PROPERTY_UUID_STATE_FILE );
         if ( stateFile == null )
             stateFile = UUID_STATE_FILE;
         state = null;
+        // Try to read the UUID state file into a properties object.
+        // If successful, the values will be accessible from the
+        // object state, otherwise, state is set to null.
         try {
             input = new FileInputStream( stateFile );
             state = new Properties();
@@ -815,7 +823,7 @@ public final class UUID
             input.close();
         } catch ( IOException except ) {
             if ( Configuration.verbose )
-                Logger.tyrex.info( Messages.format( "tyrex.util.uuidStateFileMissing", stateFile ) );
+                Logger.tyrex.info( Messages.format( "tyrex.uuid.stateFileMissing", stateFile ) );
             state = null;
         }
 
@@ -829,20 +837,30 @@ public final class UUID
             nodeIdString = state.getProperty( PROPERTY_NODE_IDENTIFIER );
             if ( nodeIdString != null ) {
                 try {
-                    nodeIdLong = Long.parseLong( nodeIdString, 16 );
+                    nodeIdString = nodeIdString.trim();
+                    nodeIdLong = 0;
+                    tokenizer = new StringTokenizer( nodeIdString, ":" );
+                    while ( tokenizer.hasMoreTokens() ) {
+                        token = tokenizer.nextToken();
+                        nodeIdLong = ( nodeIdLong << 8 ) + Long.parseLong( token, 16 );
+                    }
                     // This is the only case where we can read the clock sequence. If the
                     // clock sequence cannot be determined (missing, or invalid), the node
                     // identifier is considered invalid.
                     seqString = state.getProperty( PROPERTY_CLOCK_SEQUENCE );
                     if ( seqString != null ) {
                         try {
-                            seqInt = Integer.parseInt( seqString, 16 );
+                            seqString = seqString.trim();
+                            seqInt = Integer.parseInt( seqString, 10 );
                             ++seqInt;
                         } catch ( NumberFormatException except ) {
+                            Logger.tyrex.info( Messages.message( "tyrex.uuid.clockSequenceInvalid" ) );
                             nodeIdLong = -1;
                         }
                     }
-                } catch ( NumberFormatException except ) { }
+                } catch ( NumberFormatException except ) {
+                    Logger.tyrex.info( Messages.message( "tyrex.uuid.nodeIdentifierInvalid" ) );
+                }
             }
         }
 
@@ -864,13 +882,13 @@ public final class UUID
         // and are expected to store the clock sequence in that file. If we fail to
         // store the new clock sequence, must assume a random node identifier.
         if ( nodeIdLong != -1 && state != null ) {
-            state.put( PROPERTY_CLOCK_SEQUENCE, String.valueOf( _clockSeqOctet ) );
+            state.put( PROPERTY_CLOCK_SEQUENCE, String.valueOf( seqInt ) );
             try {
                 output = new FileOutputStream( stateFile  );
-                state.save( output, Messages.message( "tyrex.util.uuidStateFileHeader" ) );
+                state.save( output, Messages.message( "tyrex.uuid.stateFileHeader" ) );
                 output.close();
             } catch ( IOException except ) {
-                Logger.tyrex.error( Messages.format( "tyrex.util.uuidStateFileFailure", stateFile ), except );
+                Logger.tyrex.error( Messages.format( "tyrex.uuid.stateFileFailure", stateFile ), except );
                 nodeIdLong = -1;
             }
         }
@@ -901,15 +919,22 @@ public final class UUID
         _nodeIdentifierByte = new byte[ 6 ];
         for ( int i = 0 ; i < 6 ; ++i )
             _nodeIdentifierByte[ i ] = (byte) ( ( nodeIdLong >> ( ( 5 - i ) * 8 ) ) & 0xFF );
+        nodeIdString = new String();
+        for ( int i = 0 ; i < 12 ; i += 2 ) {
+            if ( i > 0 )
+                nodeIdString = nodeIdString + ":";
+            nodeIdString = nodeIdString + HEX_DIGITS[ (int) ( ( nodeIdLong >> ( ( 11 - i ) * 4 ) ) & 0x0F ) ] +
+                HEX_DIGITS[ (int) ( ( nodeIdLong >> ( ( 10 - i ) * 4 ) ) & 0x0F ) ];
+        }
 
         // The number of UUIDs allowed per tick depends on the number of ticks between
         // each advance of the clock, adjusted for 100 nanosecond precision.
         _uuidsPerTick = Clock.getSleepTicks() * 100;
 
         if ( Configuration.verbose )
-            Logger.tyrex.info( Messages.format( "tyrex.util.uuidInitializing",
-                                                String.valueOf( _nodeIdentifierOctet ),
-                                                String.valueOf( _clockSeqOctet ),
+            Logger.tyrex.info( Messages.format( "tyrex.uuid.initializing",
+                                                String.valueOf( nodeIdString ),
+                                                String.valueOf( seqInt ),
                                                 String.valueOf( _uuidsPerTick ) ) );
 
         // Need to mask UUID variant on clock sequence, but only after clock sequence
