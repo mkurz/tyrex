@@ -1,7 +1,6 @@
 <?xml version="1.0" ?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2000/10/XMLSchema"
-            xmlns:bpml="http://www.bpmi.org/BPML"               
-            targetNamespace="http://www.bpmi.org/BPML">
+            targetNamespace="http://tyrex.exolab.org/TYREX">
 
 
   <xsd:element name="domain">
