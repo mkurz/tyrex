@@ -81,7 +81,7 @@ import tyrex.util.LoggerPrintWriter;
 /**
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  */
 final class ConnectionPool
     extends PoolMetrics
@@ -1316,36 +1316,14 @@ final class ConnectionPool
         
         public Object next()
         {
-            PoolEntry   entry;
-            int         index;
-            PoolEntry[] pool;
-
             synchronized ( ConnectionPool.this ) {
-                entry = _entry;
-                while ( entry != null ) {
-                    if ( entry._available ) {
-                        _entry = entry._nextEntry;
-                        return entry;
-                    }
-                    entry = entry._nextEntry;
+                if (!hasNext()) {
+                    throw new NoSuchElementException( "No more elements in collection" );        
                 }
-                pool = _pool;
-                index = _index;
-                while ( entry == null && index > 0 ) {
-                    entry = pool[ --index ];
-                    while ( entry != null ) {
-                        if ( entry._available ) {
-                            _entry = entry._nextEntry;
-                            _index = index;
-                            return entry;
-                        }
-                        entry = entry._nextEntry;
-                    }
-                }
-                _entry = null;
-                _index = -1;
+
+                return _entry._managed;
             }
-            throw new NoSuchElementException( "No more elements in collection" );
+            
         }
         
         
