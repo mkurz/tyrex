@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: XidHashtable.java,v 1.2 2000/01/17 22:13:59 arkin Exp $
+ * $Id: XidHashtable.java,v 1.3 2000/02/23 21:11:03 arkin Exp $
  */
 
 
@@ -82,7 +82,7 @@ import tyrex.util.Messages;
  *
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $ $Date: 2000/01/17 22:13:59 $
+ * @version $Revision: 1.3 $ $Date: 2000/02/23 21:11:03 $
  * @see XidImpl
  */
 public final class XidHashtable
@@ -317,7 +317,7 @@ public final class XidHashtable
      * (we don't remove on null) and a reference to the next entry in
      * the same table position.
      */
-    class Entry
+    static class Entry
     {
 
 	Object  value;
@@ -340,7 +340,7 @@ public final class XidHashtable
      * might (but most probably will) not be reflected in the
      * enumeration.
      */
-    class XidHashtableEnumeration
+    static class XidHashtableEnumeration
 	implements Enumeration
     {
 	
@@ -377,7 +377,6 @@ public final class XidHashtable
 	{
 	    _table = table;
 	    _index = 0;
-	    _entry = null;
 	    _element = element;
 	    _entry = _table[ 0 ];
 	}

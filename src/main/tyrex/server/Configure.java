@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: Configure.java,v 1.2 2000/01/17 22:13:59 arkin Exp $
+ * $Id: Configure.java,v 1.3 2000/02/23 21:11:26 arkin Exp $
  */
 
 
@@ -87,7 +87,7 @@ import tyrex.conf.Server;
  *
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $ $Date: 2000/01/17 22:13:59 $
+ * @version $Revision: 1.3 $ $Date: 2000/02/23 21:11:26 $
  */
 public final class Configure
     implements Serializable
@@ -505,6 +505,7 @@ public final class Configure
      * @throws IOException The default configuration file could not
      *   be located, or an error encountered reading the file
      */
+    /*
     public void refresh()
 	throws IOException
     {
@@ -525,6 +526,7 @@ public final class Configure
 		setLogWriter( config.getLogWriter() );
 	}
     }
+    */
 
 
     /**
@@ -536,6 +538,7 @@ public final class Configure
      *
      * @return A new configuration object
      */
+    /*
     public static Configure createDefault()
     {
 	Server    server;
@@ -554,6 +557,7 @@ public final class Configure
 	}
 	return new Configure();
     }
+    */
 
 
 }

@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: TransactionServer.java,v 1.2 2000/01/17 22:13:59 arkin Exp $
+ * $Id: TransactionServer.java,v 1.3 2000/02/23 21:11:26 arkin Exp $
  */
 
 
@@ -85,7 +85,7 @@ import tyrex.resource.ResourceLimits;
  *
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $ $Date: 2000/01/17 22:13:59 $
+ * @version $Revision: 1.3 $ $Date: 2000/02/23 21:11:26 $
  * @see Configure
  * @see Tyrex
  * @see TransactionManagerImpl
@@ -161,8 +161,11 @@ public final class TransactionServer
 		if ( data != null )
 		    config = (Configure) data.get();
 	    } catch ( Exception except ) { }
+	    // XXX
+	    /*
 	    if ( config == null )
 		config = Configure.createDefault();
+	    */
 	    start( config );
 	}
     }
@@ -210,7 +213,10 @@ public final class TransactionServer
 	    // so we start it now. The restart process will recurse
 	    // into this method call again, but with _instance set.
 	    try {
+		// XXX
+		/**
 		start( Configure.createDefault() );
+		*/
 	    } catch ( Exception except ) {
 		Logger.getSystemLogger().println(
 		    Messages.format( "tyrex.server.failedInitialize", except ) );
@@ -314,9 +320,12 @@ public final class TransactionServer
 		    Messages.message( "tyrex.server.serverRestart" ) );
 
 		// Load new configuration information from disk
+		// XXX
+		/*
 		try {
 		    config.refresh();
 		} catch ( IOException except ) { }
+		*/
 
 		// We cannot at any point set _recoveryLog to null,
 		// so we need to use an intermediate.

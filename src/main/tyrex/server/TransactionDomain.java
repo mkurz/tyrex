@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: TransactionDomain.java,v 1.1 2000/01/17 22:19:34 arkin Exp $
+ * $Id: TransactionDomain.java,v 1.2 2000/02/23 21:11:26 arkin Exp $
  */
 
 
@@ -72,7 +72,7 @@ import tyrex.util.Messages;
 /**
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2000/01/17 22:19:34 $
+ * @version $Revision: 1.2 $ $Date: 2000/02/23 21:11:26 $
  */
 public class TransactionDomain
     implements ResourcePool, RemoteTransactionServer
@@ -97,6 +97,13 @@ public class TransactionDomain
      * is 30 seconds.
      */
     public static final int DefaultTimeout = 30;
+
+
+    /**
+     * The default transaction domain. The default transaction domain is
+     * always known to exist.
+     */
+    public static final String DefaultDomain = "default";
 
 
     /**

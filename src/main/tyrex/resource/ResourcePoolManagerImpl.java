@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: ResourcePoolManagerImpl.java,v 1.1 2000/01/17 22:19:14 arkin Exp $
+ * $Id: ResourcePoolManagerImpl.java,v 1.2 2000/02/23 21:11:26 arkin Exp $
  */
 
 
@@ -58,7 +58,7 @@ import tyrex.util.Messages;
  *
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2000/01/17 22:19:14 $
+ * @version $Revision: 1.2 $ $Date: 2000/02/23 21:11:26 $
  * @see PooledResources
  * @see ResourcePoolManager
  * @see ResourceLimits
@@ -151,7 +151,7 @@ public class ResourcePoolManagerImpl
 	long current;
 	int  poolSize;
 	
-	if ( _upperLimit < 0 )
+	if ( _upperLimit <= 0 )
 	    return;
 
 	// Synchronization is required so we can be notified

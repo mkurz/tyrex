@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: ResourceLimitsMarshalInfo.java,v 1.1 2000/01/17 22:19:14 arkin Exp $
+ * $Id: ResourceLimitsMarshalInfo.java,v 1.2 2000/02/23 21:12:13 arkin Exp $
  */
 
 
@@ -52,13 +52,14 @@ import org.exolab.castor.xml.MarshalInfo;
 import org.exolab.castor.xml.MarshalDescriptor;
 import org.exolab.castor.xml.MarshalHelper;
 import org.exolab.castor.xml.SimpleMarshalInfo;
+import org.exolab.castor.xml.MarshalException;
 
 
 /**
  * Marshalling information for {@link ResourceLimits}.
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2000/01/17 22:19:14 $
+ * @version $Revision: 1.2 $ $Date: 2000/02/23 21:12:13 $
  * @see ResourceLimits
  */
 public class ResourceLimitsMarshalInfo
@@ -68,7 +69,7 @@ public class ResourceLimitsMarshalInfo
 
 
     public ResourceLimitsMarshalInfo()
-	throws IOException
+	throws MarshalException
     {
 	super( ResourceLimits.class );
 
