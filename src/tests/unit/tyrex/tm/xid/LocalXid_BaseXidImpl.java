@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: BaseXidTest.java,v 1.2 2001/09/06 10:27:02 mills Exp $
+ * $Id: LocalXid_BaseXidImpl.java,v 1.1 2001/09/06 10:27:02 mills Exp $
  */
 
 package tyrex.tm.xid;
@@ -52,62 +52,38 @@ import java.io.PrintWriter;
 
 
 /**
+ *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.1 $
  */
 
-public abstract class BaseXidTest extends TestCase
+public class LocalXid_BaseXidImpl extends BaseXidTest
 {
-    private PrintWriter _logger = null;
-
-    public BaseXidTest(String name)
+    public LocalXid_BaseXidImpl(String name)
     {
         super(name);
     }
 
-
     /**
-     * <p>The abstract method for creating an instance of BaseXid.</p>
+     * The method for creating an instance of BaseXid.
      */
 
-    public abstract BaseXid newBaseXid()
-        throws Exception;
-
-
-    /**
-     * <p>The abstract method for returning a String representation of
-     * BaseXid.</p>
-     */
-
-    public abstract String getStringXid(BaseXid xid)
-        throws Exception;
-
-    /**
-     * <p>Create an instance.</p>
-     *
-     * @result Ensure that hasMoreElements() returns true.  Call
-     * next() three times ensuring that the correct values are
-     * returned each time.  hasMoreElements() should now return false.
-     */
-
-    public void testBasicFunctionality()
+    public BaseXid newBaseXid()
         throws Exception
     {
-        BaseXid xid = newBaseXid();
-        char[] pref = xid.createPrefix(762817453);
-        String strPref = new String(pref);
-        assertEquals("Prefeix", "xid:2d77abad-", strPref);
-        assertEquals("toString()", getStringXid(xid), xid.toString());
-        assertEquals("hashCode()", 460614900, xid.hashCode());
+        return (BaseXid) new LocalXid();
     }
 
 
-    /** Adds a message in the log (except if the log is null)*/
-    private void logMessage(String message)
+    /**
+     * <p>The method for returning a String representation of
+     * BaseXid.</p>
+     */
+
+    public String getStringXid(BaseXid xid)
+        throws Exception
     {
-        if (_logger != null)
-        {
-            _logger.println(message);
-        }
+        char[] pref = BaseXid.createPrefix(LocalXid.LOCAL_FORMAT_ID);
+        return new String(pref) + "-" + new String(xid.getBranchQualifier());
     }
 }

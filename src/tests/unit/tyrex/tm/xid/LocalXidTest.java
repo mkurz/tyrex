@@ -40,65 +40,48 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: BaseXidTest.java,v 1.2 2001/09/06 10:27:02 mills Exp $
+ * $Id: LocalXidTest.java,v 1.1 2001/09/06 10:27:02 mills Exp $
  */
 
 package tyrex.tm.xid;
 
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
-
+import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.io.FileInputStream;
+import java.io.File;
+
+import junit.framework.*;
+import junit.extensions.*;
 
 
 /**
+ *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.1 $
  */
 
-public abstract class BaseXidTest extends TestCase
+public class LocalXidTest extends TestCase
 {
     private PrintWriter _logger = null;
 
-    public BaseXidTest(String name)
+    public LocalXidTest(String name)
     {
         super(name);
     }
 
+    public void setUp()
+    {
+        _logger= new PrintWriter(System.out);
+    }
 
-    /**
-     * <p>The abstract method for creating an instance of BaseXid.</p>
-     */
+    public void tearDown()
+    {
+        _logger.flush();
+    }
 
-    public abstract BaseXid newBaseXid()
-        throws Exception;
-
-
-    /**
-     * <p>The abstract method for returning a String representation of
-     * BaseXid.</p>
-     */
-
-    public abstract String getStringXid(BaseXid xid)
-        throws Exception;
-
-    /**
-     * <p>Create an instance.</p>
-     *
-     * @result Ensure that hasMoreElements() returns true.  Call
-     * next() three times ensuring that the correct values are
-     * returned each time.  hasMoreElements() should now return false.
-     */
-
-    public void testBasicFunctionality()
+    public void testNone()
         throws Exception
     {
-        BaseXid xid = newBaseXid();
-        char[] pref = xid.createPrefix(762817453);
-        String strPref = new String(pref);
-        assertEquals("Prefeix", "xid:2d77abad-", strPref);
-        assertEquals("toString()", getStringXid(xid), xid.toString());
-        assertEquals("hashCode()", 460614900, xid.hashCode());
     }
 
 
@@ -109,5 +92,21 @@ public abstract class BaseXidTest extends TestCase
         {
             _logger.println(message);
         }
+    }
+
+
+    // Compile the test suite.
+    public static TestSuite suite()
+    {
+        TestSuite suite = new TestSuite(LocalXidTest.class);
+        suite.addTest(new TestSuite(LocalXid_BaseXidImpl.class));
+        return suite;
+    }
+
+
+    // Allow this test to be run on its own.
+    public static void main(String args[])
+    {
+        tyrex.Unit.runTests(args, suite());
     }
 }

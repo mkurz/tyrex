@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: BranchXid_BaseXidImpl.java,v 1.1 2001/09/06 02:09:20 mills Exp $
+ * $Id: BranchXid_BaseXidImpl.java,v 1.2 2001/09/06 10:27:02 mills Exp $
  */
 
 package tyrex.tm.xid;
@@ -54,7 +54,7 @@ import java.io.PrintWriter;
 /**
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 
 public class BranchXid_BaseXidImpl extends BaseXidTest
@@ -71,8 +71,21 @@ public class BranchXid_BaseXidImpl extends BaseXidTest
     public BaseXid newBaseXid()
         throws Exception
     {
-        byte[] global = new byte[5];
-        byte[] branch = new byte[5];
+        byte[] global = new byte[] { (byte)0xA8, (byte)0xB7, (byte)0xC6, (byte)0xD5, (byte)0xE4, (byte)0xF3};
+        byte[] branch = new byte[] { (byte)0x9F, (byte)0x8E, (byte)0x7D, (byte)0x6C, (byte)0x5B, (byte)0x4A};
         return (BaseXid) new BranchXid(global, branch);
+    }
+
+
+    /**
+     * <p>The method for returning a String representation of
+     * BaseXid.</p>
+     */
+
+    public String getStringXid(BaseXid xid)
+        throws Exception
+    {
+        char[] pref = xid.createPrefix(BaseXid.FORMAT_ID);
+        return new String(pref) + "f3e4d5c6b7a8-4a5b6c7d8e9f";
     }
 }
