@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TestHarness.java,v 1.12 2001/03/19 17:39:03 arkin Exp $
+ * $Id: TestHarness.java,v 1.13 2001/04/19 17:32:43 jdaniel Exp $
  */
 
 package tests;
@@ -50,7 +50,7 @@ import java.util.Enumeration;
 
 import junit.framework.*;
 
-import lock.Lock;
+//import lock.Lock;
 import naming.Naming;
 /*
 import jdbc.XADataSourceTestSuite;
@@ -67,17 +67,21 @@ public class TestHarness
     {
         try {
             // define all the test suites
-            TestSuite main = new TestSuite("Tyrex Test Harness");
-            TestSuite lock = new Lock( "Lock service tests" );
+            TestSuite main = new TestSuite("Tyrex Test Harness");            
             TestSuite naming = new Naming( "JNDI service provider" );
             /*
-            TestSuite jdbc = new XADataSourceTestSuite( "XADataSource test" );
-            TestSuite transaction = new Transaction( "Transaction tests" );
+            if ( args.length == 0 )
+            {
+               System.out.println("Specify the tyrex configuration file name and path as argument to start the tests...");
+               System.exit(0);
+            }
+            TestSuite jdbc = new XADataSourceTestSuite( "XADataSource test", args[0] );
+            TestSuite transaction = new Transaction( "Transaction tests", args[0] );
             */
            
             // set up the lock test suite
-            for( java.util.Enumeration e = lock.tests(); e.hasMoreElements(); )
-             main.addTest( (Test)e.nextElement());
+            //for( java.util.Enumeration e = lock.tests(); e.hasMoreElements(); )
+            // main.addTest( (Test)e.nextElement());
             
             // set up the naming test suite
             for( java.util.Enumeration e = naming.tests(); e.hasMoreElements(); )

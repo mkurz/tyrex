@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: XADataSourceTestSuite.java,v 1.1 2001/02/23 17:17:41 omodica Exp $
+ * $Id: XADataSourceTestSuite.java,v 1.2 2001/04/19 17:32:39 jdaniel Exp $
  */
 
 
@@ -62,9 +62,7 @@ import jdbc.db.TestDriverImpl;
 
 import junit.framework.*;
 
-import tyrex.jdbc.ServerDataSource;
-import tyrex.jdbc.xa.EnabledDataSource;
-import tyrex.tm.Tyrex;
+import tyrex.resource.jdbc.xa.EnabledDataSource;
 
 
 /**
@@ -79,29 +77,41 @@ public class XADataSourceTestSuite
     private TestDriverImpl _driver = null;
 
 
-    public XADataSourceTestSuite( String name)
+    public XADataSourceTestSuite( String name, String config_file )
     {
         super( name );
         
+        tyrex.tm.TransactionDomain txDomain = createTransactionDomain( config_file );
+        
         TestCase tc;
         
-        tc = new EnabledDataSourceTest();
+        tc = new EnabledDataSourceTest( txDomain );
+        addTest( tc );
+                
+        tc = new PruneTest( txDomain );
         addTest( tc );
         
-        tc = new ServerDataSourceTest();
-        addTest( tc );
-
-        tc = new XAConnectionTest();
-        addTest( tc );
-
-        tc = new PruneTest();
-        addTest( tc );
-        
-        tc = new TransactionTimeoutTest();
+        tc = new TransactionTimeoutTest( txDomain );
         addTest( tc );
         
     }
-
+    
+    /**
+     * Creates a transaction domain
+     */
+    private tyrex.tm.TransactionDomain createTransactionDomain( String config_file )    
+    {
+      try
+        {        	        
+        	  return tyrex.tm.TransactionDomain.createDomain( config_file );         
+        }
+        catch ( tyrex.tm.DomainConfigurationException ex )
+        {
+        	   ex.printStackTrace();
+        	   System.exit(0);
+        }
+       return null;
+    }
 
     /**
      * Return the Tyrex driver registered with the
@@ -157,9 +167,13 @@ public class XADataSourceTestSuite
     private class EnabledDataSourceTest
         extends TestCase
     {
-        EnabledDataSourceTest()
+        private tyrex.tm.TransactionDomain _txDomain = null;
+        
+        EnabledDataSourceTest( tyrex.tm.TransactionDomain txDomain )
         {
             super( "[TC01] Enabled Data Source" );
+            
+            _txDomain = txDomain;
         }
     
         public void runTest()
@@ -177,7 +191,7 @@ public class XADataSourceTestSuite
             try {
                 testDriver = getTestDriver(stream);
 
-                transactionManager = Tyrex.getTransactionManager();
+                transactionManager = _txDomain.getTransactionManager();
                 testDriver.clearNumberOfCreatedConnections();
                 ds = getEnabledDataSource();
                 i = 0;
@@ -233,9 +247,13 @@ public class XADataSourceTestSuite
     private class PruneTest
         extends TestCase
     {
-        PruneTest()
+        private tyrex.tm.TransactionDomain _txDomain = null;
+        
+        PruneTest( tyrex.tm.TransactionDomain txDomain )
         {
             super( "[TC04] Prune" );
+            
+            _txDomain = txDomain;
         }
     
         public void runTest()
@@ -252,7 +270,7 @@ public class XADataSourceTestSuite
             try {
                 testDriver = getTestDriver(stream);
 
-                transactionManager = Tyrex.getTransactionManager();
+                transactionManager = _txDomain.getTransactionManager();
                 testDriver.clearNumberOfCreatedConnections();
                 ds = getEnabledDataSource();
                 ds.setTransactionTimeout(1);
@@ -303,85 +321,18 @@ public class XADataSourceTestSuite
             }
         }
     }
-
-
-    private class ServerDataSourceTest
-        extends TestCase
-    {
-        private ServerDataSourceTest()
-        {
-            super( "[TC02] Server Data Source" );
-        }
     
-        public void runTest()
-        {
-            TransactionManager transactionManager;
-            TestDriverImpl testDriver;
-            Connection connection;
-            Statement stmt;
-            EnabledDataSource ds;
-            ServerDataSource pool;
-            int i;
-            
-            VerboseStream stream = new VerboseStream();
-            
-            try {
-                testDriver = getTestDriver(stream);
-
-                transactionManager = Tyrex.getTransactionManager();
-
-                testDriver.clearNumberOfCreatedConnections();
-                
-                ds = getEnabledDataSource();
-                pool = new ServerDataSource();
-    
-                pool.setDataSource((XADataSource)ds);
-                i = 0;
-    
-                try {
-                    for (; i < 10000; i++) {
-                        transactionManager.begin();
-        
-                        connection = pool.getConnection();
-    
-                        stmt = connection.createStatement();
-        
-                        stmt.executeUpdate("update enabled_test set text = '55' where id = 1");
-        
-                        stmt.close();
-        
-                        transactionManager.commit();
-        
-                        connection.close();
-                    }
-                }
-                catch (Exception e)
-                {
-                    stream.writeVerbose("failed at iteration " + i);
-                    stream.writeVerbose(e.toString());
-                    e.printStackTrace();
-                    fail("Error: failed at iteration " + i );
-                }
-    
-                if (testDriver.getNumberOfCreatedConnections() != 1) {
-                    fail("Driver created " + 
-                                        testDriver.getNumberOfCreatedConnections() +
-                                        " drivers. Expected 1.");
-                }
-            }
-            catch (Exception e) {
-                e.printStackTrace();
-                fail( e.getMessage() );
-            }
-        }
-    }
 
     private class TransactionTimeoutTest
         extends TestCase
     {
-        private TransactionTimeoutTest()
+        private tyrex.tm.TransactionDomain _txDomain = null;
+        
+        private TransactionTimeoutTest( tyrex.tm.TransactionDomain txDomain )
         {
             super( "[TC05] Transaction Timeout" );
+            
+            _txDomain = txDomain;
         }
     
         public void runTest()
@@ -393,7 +344,7 @@ public class XADataSourceTestSuite
                 final TestDriverImpl testDriver = getTestDriver(stream);
                 Thread thread;
                 final boolean[] result = new boolean[]{false};
-                final TransactionManager transactionManager = Tyrex.getTransactionManager();
+                final TransactionManager transactionManager = _txDomain.getTransactionManager();
                 EnabledDataSource ds = getEnabledDataSource();
                 ds.setTransactionTimeout(3);
                 
@@ -466,129 +417,7 @@ public class XADataSourceTestSuite
 
         }
     }
-
-
-
-    private class XAConnectionTest
-        extends TestCase
-    {
-        private XAConnectionTest()
-        {
-            super( "[TC03] XA Connections with different user/passwords" );
-        }
     
-        public void runTest()
-        {
-            TransactionManager transactionManager;
-            TestDriverImpl testDriver;
-            Connection connection;
-            Statement stmt;
-            EnabledDataSource ds;
-            ServerDataSource pool;
-            int i;
-            
-            VerboseStream stream = new VerboseStream();
-            
-            try {
-                testDriver = getTestDriver(stream);
-
-                transactionManager = Tyrex.getTransactionManager();
-
-                testDriver.clearNumberOfCreatedConnections();
-                
-                ds = getEnabledDataSource();
-                pool = new ServerDataSource();
-    
-                pool.setDataSource((XADataSource)ds);
-                i = 0;
-    
-                try {
-                    for (; i < 10000; i++) {
-                        transactionManager.begin();
-        
-                        connection = pool.getConnection("user1", "pass1");
-                        stmt = connection.createStatement();
-                        stmt.executeUpdate("update enabled_test set text = '55' where id = 1");
-                        stmt.close();
-                        connection.close();
-
-                        connection = pool.getConnection("user2", "pass2");
-                        stmt = connection.createStatement();
-                        stmt.executeUpdate("update enabled_test set text = '55' where id = 1");
-                        stmt.close();
-                        connection.close();
-
-
-                        connection = pool.getConnection("user3", "pass3");
-                        stmt = connection.createStatement();
-                        stmt.executeUpdate("update enabled_test set text = '55' where id = 1");
-                        stmt.close();
-                        connection.close();
-        
-                        transactionManager.commit();
-        
-                        
-                    }
-                }
-                catch (Exception e)
-                {
-                    stream.writeVerbose("failed at iteration " + i);
-                    stream.writeVerbose(e.toString());
-                    //e.printStackTrace();
-                    fail( e.getMessage() );
-                }
-    
-                if (testDriver.getNumberOfCreatedConnections() != 3) {
-                    fail("Driver created " + 
-                                        testDriver.getNumberOfCreatedConnections() +
-                                        " drivers. Expected 3.");
-                }
-    
-             }
-            catch (Exception e) {
-                e.printStackTrace();
-                fail( e.getMessage() );
-            }
-        }
-    }
-
-   /*
-    public static void main (String args[]) {
-
-        class Test extends org.exolab.jtf.CWBaseApplication
-        {
-            private final java.util.Vector categories;
-
-            public Test(String s)
-                throws CWClassConstructorException
-            {
-                super(s);
-
-                categories = new java.util.Vector();
-                categories.addElement("jdbc.XADataSourceTestCategory");
-            }
-        
-            protected String getApplicationName()
-            {
-                return "Test";
-            }
-        
-            protected java.util.Enumeration getCategoryClassNames()
-            {
-                return categories.elements();
-            }
-        }
-
-        try
-        {
-            Test test = new Test("enabled test");
-            test.run(args);
-        }
-        catch(Exception exception)
-        {
-            exception.printStackTrace();
-        }
-    }*/
     
 }
 

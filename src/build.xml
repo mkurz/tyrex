@@ -110,10 +110,16 @@
     -->
 
     <!-- build the java files -->
+    <!--javac srcdir="${source.tests};${build.tests}"
+           destdir="${build.tests}"           
+           debug="on"
+           excludes="naming/**,ots/**,transaction/**,jdbc/**"           
+           deprecation="${deprecation}">
+    </javac-->
     <javac srcdir="${source.tests};${build.tests}"
            destdir="${build.tests}"           
            debug="on"
-           excludes="naming/**,ots/**,transaction/**,jdbc/**"
+           excludes="ots/**"           
            deprecation="${deprecation}">
     </javac>
   </target>
