@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionImpl.java,v 1.41 2001/10/05 22:15:34 mohammed Exp $
+ * $Id: TransactionImpl.java,v 1.42 2001/10/05 22:40:37 mohammed Exp $
  */
 
 
@@ -90,7 +90,7 @@ import tyrex.util.Messages;
  * they are added.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.41 $ $Date: 2001/10/05 22:15:34 $
+ * @version $Revision: 1.42 $ $Date: 2001/10/05 22:40:37 $
  * @see InternalXAResourceHolder
  * @see TransactionManagerImpl
  * @see TransactionDomain
@@ -2477,7 +2477,32 @@ final class TransactionImpl
             throw new SystemException( "XA resource is not in the proper state to be ended" );
     }
 
-     
+
+
+    /**
+     * Return the oracle error code as a string if the exception is 
+     * {@link XAResourceHelperManager#_oracleXAExceptionClassName} 
+     * otherwise return null.
+     *
+     * @param xaException the XAException
+     * @return an 
+     */
+    private String getXAErrorString( XAException xaException ) {
+        Class xaExceptionClass;
+
+        xaExceptionClass = xaException.getClass();
+        if ( xaExceptionClass.getName().equals( "oracle.jdbc.xa.OracleXAException" ) ) {
+            try {
+                return " oracle error code: " + xaExceptionClass.getDeclaredMethod( "getOracleError", null ).invoke( xaException, null );
+            }
+            catch( Throwable thrw ) {
+                thrw.printStackTrace();
+            }
+        }
+
+        return "";
+    }
+    
     /**
      * Modify the current heuristic decision of the transaction according
      * to data from the specified exception that occurred.
@@ -2492,22 +2517,26 @@ final class TransactionImpl
         if ( except.errorCode == XAException.XA_HEURMIX ) {
             _heuristic = _heuristic | Heuristic.MIXED; 
             _txDomain._category.error( "XAResource " + resHolder._xaResource +
-                                       " reported mixed heuristic on transaction branch " + resHolder._xid, except );
+                                       " reported mixed heuristic on transaction branch " + resHolder._xid +
+                                       getXAErrorString( except ) , except );
         } else if ( except.errorCode == XAException.XA_HEURHAZ ) {
             _heuristic = _heuristic | Heuristic.HAZARD; 
             _txDomain._category.error( "XAResource " + resHolder._xaResource +
-                                       " reported hazard heuristic on transaction branch " + resHolder._xid, except );
+                                       " reported hazard heuristic on transaction branch " + resHolder._xid +
+                                       getXAErrorString( except ), except );
         } else if ( except.errorCode == XAException.XA_RDONLY) {
             ; // ignore    
         } else if ( except.errorCode >= XAException.XA_RBBASE &&
                     except.errorCode <= XAException.XA_RBEND ) {
             _txDomain._category.error( "XAResource " + resHolder._xaResource +
-                                       " reported rollback heuristic on transaction branch " + resHolder._xid, except );
+                                       " reported rollback heuristic on transaction branch " + resHolder._xid +
+                                       getXAErrorString( except ), except );
             _heuristic = _heuristic | Heuristic.ROLLBACK;
         } else if ( except.errorCode == XAException.XA_HEURCOM ) {
             _heuristic = _heuristic | Heuristic.COMMIT;
             _txDomain._category.error( "XAResource " + resHolder._xaResource +
-                                       " reported commit heuristic on transaction branch " + resHolder._xid, except );
+                                       " reported commit heuristic on transaction branch " + resHolder._xid +
+                                       getXAErrorString( except ), except );
         } else {
             // Any error will cause us to rollback the entire
             // transaction or at least the remaining part of it.
@@ -2817,7 +2846,8 @@ final class TransactionImpl
         if ( except instanceof RuntimeException )
             _txDomain._category.error( "Error " + except.toString() + " reported in transaction " + _xid, except );
         else
-            _txDomain._category.error( "Error " + except.toString() + " reported in transaction " + _xid, except );
+            _txDomain._category.error( "Error " + except.toString() + " reported in transaction " 
+                                       + _xid + ( except instanceof XAException ? getXAErrorString( ( XAException ) except ) : "" ), except );
        
         // Record the first general exception as a system exception,
         // so it may be returned from commit/rollback.
