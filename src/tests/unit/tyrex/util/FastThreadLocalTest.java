@@ -55,18 +55,8 @@ import junit.framework.*;
 import junit.extensions.*;
 
 /**
- * <p>Bounds testing the interface can be done as part of the basic
- * functionality since when inputs are invalid, default values are
- * returned.  Bounds testing the configuration file itself is useful
- * to ensure sensible behavior when the file is corrupted or
- * incorrectly written.</p>
- *
- * <p>This class is expected to change and so tests will not be
- * implemented until after the changes have been made and these
- * documented tests updated accordingly.</p>
- *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  */
 
 
@@ -114,12 +104,44 @@ public class FastThreadLocalTest extends TestCase
         assertNotNull(ftl.get(testThread));
         assertEquals("Val", 1, i.intValue());
         Thread.sleep(400);
-//        Thread thr = new Thread(ftl);
-//        thr.interrupt();
+        ThreadGroup thrGroup = testThread.getThreadGroup();
+        Thread[] threads = new Thread[10];
+        thrGroup.enumerate(threads);
+        Thread ftlThread = null;
+        String thrName = Messages.message("tyrex.util.threadLocalDaemonName");
+        for (int j = 0; j < threads.length; j++)
+        {
+            if (threads[j] != null)
+            {
+                if (threads[j].getName().compareTo(thrName) == 0)
+                {
+                    ftlThread = threads[j];
+                    break;
+                }
+            }
+        }
+        testThread = null;
+        ftlThread.interrupt();
+        threads = null;
+        ftlThread = null;
         Runtime.getRuntime().gc();
         Thread.sleep(10000);
         Runtime.getRuntime().gc();
-        assertNull(ftl.get(testThread));
+        threads = new Thread[10];
+        thrGroup.enumerate(threads);
+        for (int j = 0; j < threads.length; j++)
+        {
+            if (threads[j] != null)
+            {
+                if (threads[j].getName().compareTo("Test Thread") == 0)
+                {
+                    testThread = (TestThread)threads[j];
+                    break;
+                }
+            }
+        }
+        if (testThread != null)
+            assertNull(ftl.get(testThread));
     }
 
 
@@ -145,6 +167,7 @@ public class FastThreadLocalTest extends TestCase
 
         public TestThread(FastThreadLocal ftl)
         {
+            super("Test Thread");
             _ftl = ftl;
         }
 
