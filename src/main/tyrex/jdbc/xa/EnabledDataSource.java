@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: EnabledDataSource.java,v 1.3 2000/08/28 19:01:49 mohammed Exp $
+ * $Id: EnabledDataSource.java,v 1.4 2000/08/31 22:46:01 mohammed Exp $
  */
 
 
@@ -292,16 +292,16 @@ public class EnabledDataSource
 	url = url + _databaseName;
 	
 	// If username an password supplied, place them in the URL.
-	if ( user != null && user.length() > 0 ) {
+	/*if ( user != null && user.length() > 0 ) {
 	    url = url + "?user=" + user;
 	    if ( password != null )
 		url = url + "&password=" + password;
-	}
+	}*/
 
 	// Attempt to establish a connection. Report a successful
 	// attempt or a failure.
 	try {
-	    conn = _driver.connect( url, info );
+        conn = _driver.connect( url, info );
 	} catch ( SQLException except ) {
 	    if ( _logWriter != null )
 		_logWriter.println( "DataSource: getConnection failed " + except );
