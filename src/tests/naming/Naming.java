@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Naming.java,v 1.5 2001/02/23 17:17:41 omodica Exp $
+ * $Id: Naming.java,v 1.6 2001/03/19 17:39:03 arkin Exp $
  */
 
 
@@ -57,8 +57,7 @@ import junit.framework.*;
 
 import javax.naming.*;
 import javax.naming.spi.ObjectFactory;
-import tyrex.naming.EnvContext;
-import tyrex.naming.NamingPermission;
+import tyrex.tm.RuntimeContext;
 
 
 /**
@@ -91,17 +90,6 @@ public class Naming extends TestSuite
         env.put( Context.URL_PKG_PREFIXES, "tyrex.naming" );
         if ( url != null )
             env.put( Context.PROVIDER_URL, url );
-        return new InitialContext( env );
-    }
-
-
-    public static InitialContext getEnvInitialContext()
-        throws NamingException
-    {
-        Hashtable env;
-
-        env = new Hashtable();
-        env.put( Context.URL_PKG_PREFIXES, "tyrex.naming" );
         return new InitialContext( env );
     }
 
@@ -144,13 +132,13 @@ public class Naming extends TestSuite
                 ctx2 = (Context) initCtx.lookup( name );
                 ctx1.bind( name, value );
                 if ( ctx2.lookup( name ) != value ) {
-                    fail( "Error: Same testValue not bound in both contexts" );
+                    fail( "Error: Same testValue not bound in both contexts (1)" );
                   }
                 ctx2 = ctx2.createSubcontext( sub );
                 ctx1 = (Context) ctx1.lookup( sub );
                 ctx1.bind( sub + name, value );
                 if ( ctx2.lookup( sub + name ) != value ) {
-                    fail( "Error: Same testValue not bound in both contexts" );
+                    fail( "Error: Same testValue not bound in both contexts (2)" );
                 }
 
                 // Test that shared and non-shared spaces not the same.
@@ -159,7 +147,7 @@ public class Naming extends TestSuite
                 try {
                     ctx2 = (Context) ctx2.lookup( name );
                     if ( ctx2.lookup( name ) == value ) {
-                        fail( "Error: Same testValue bound to not-shared contexts" );
+                        fail( "Error: Same testValue bound to not-shared contexts (1)" );
                     }
                     fail( "Error: NameNotFoundException not reported" );
                 } catch ( NameNotFoundException except ) {
@@ -171,7 +159,7 @@ public class Naming extends TestSuite
                 try {
                     ctx2 = (Context) ctx2.lookup( name );
                     if ( ctx2.lookup( name ) == value ) {
-                        fail( "Error: Same testValue bound to not-shared contexts" );
+                        fail( "Error: Same testValue bound to not-shared contexts (2)" );
                     }
                     fail( "Error: NameNotFoundException not reported" );
                 } catch ( NameNotFoundException except ) {
@@ -210,76 +198,66 @@ public class Naming extends TestSuite
             String               value = "testValue";
             String               path = "comp/env";
             String               name = "test";
-            InitialContext       initCtx;
+            RuntimeContext       runCtx;
+            Context              rootCtx;
             Context              ctx;
             Context              enc = null;
+            InitialContext       initCtx;
             
             VerboseStream stream = new VerboseStream();
 
             try {
+                runCtx = RuntimeContext.newRuntimeContext();
                 stream.writeVerbose( "Constructing a context with comp/env/test as a test value" );
-                initCtx = Naming.getInitialContext( null );
-                initCtx.createSubcontext( "comp" );
-                initCtx.createSubcontext( "comp/env" );
-                initCtx.bind( path + "/" + name, value );
-                ctx = (Context) initCtx.lookup( "" );
-                EnvContext.setEnvContext( ctx );
+                rootCtx = runCtx.getEnvContext();
+                rootCtx.createSubcontext( "comp" );
+                rootCtx.createSubcontext( "comp/env" );
+                rootCtx.bind( path + "/" + name, value );
+                ctx = (Context) rootCtx.lookup( "" );
 
                 stream.writeVerbose( "Test ability to read from the ENC in variety of ways" );
                 try {
-                    if ( initCtx.lookup( "java:" + path + "/" + name ) != value ) {
-                        fail( "Error: Failed to lookup name" );
+                    if ( rootCtx.lookup( path + "/" + name ) != value ) {
+                        fail( "Error: Failed to lookup name (1)" );
                     }
                 } catch ( NameNotFoundException except ) {
-                    fail( "Error: Failed to lookup name" );
+                    fail( "Error: Failed to lookup name (2)" );
                 }
                 try {
-                    enc = (Context) initCtx.lookup( "java:" );
-                    enc = (Context) enc.lookup( "comp" );
+                    enc = (Context) rootCtx.lookup( "comp" );
                     enc = (Context) enc.lookup( "env" );
                     if ( enc.lookup( name ) != value ) {
-                        fail( "Error: Failed to lookup name" );
+                        fail( "Error: Failed to lookup name (3)" );
                     }
                 } catch ( NameNotFoundException except ) {
-                    fail( "Error: Failed to lookup name" );
+                    fail( "Error: Failed to lookup name (4)" );
                 }
-
 
                 stream.writeVerbose( "Test updates on memory context reflecting in ENC" );
                 ctx.unbind( path + "/" + name );
                 try {
                     enc.lookup( name );
                     fail( "Error: NameNotFoundException not reported" );
-                  } catch ( NameNotFoundException except ) { }
-
-                stream.writeVerbose( "Test that the JNDI ENC is read only" );
-                try {
-                    enc.bind( name, value );
-                    fail( "Error: JNDI ENC not read-only" );
-                  } catch ( OperationNotSupportedException except ) { }
-
-                ctx.bind( path + "/" + name, value );
-                try {
-                    enc.unbind( name );
-                    fail( "Error: JNDI ENC not read-only" );
-                 } catch ( OperationNotSupportedException except ) { }
-
+                } catch ( NameNotFoundException except ) { }
 
                 stream.writeVerbose( "Test the stack nature of the JNDI ENC" );
-                EnvContext.setEnvContext( (Context) Naming.getInitialContext( null ).lookup( "" ) );
+                initCtx = new InitialContext();
+                ctx.bind( path + "/" + name, value );
+                RuntimeContext.setRuntimeContext( runCtx );
+                RuntimeContext.setRuntimeContext( RuntimeContext.newRuntimeContext() );
                 try {
                     initCtx.lookup( "java:" + path + "/" + name );
-                    fail( "Error: NameNotFoundException not reported" );
+                    fail( "Error: NotContextException not reported" );
                 } catch ( NotContextException except ) { }
-                EnvContext.unsetEnvContext();
+                RuntimeContext.unsetRuntimeContext();
                 try {
                     if ( initCtx.lookup( "java:" + path + "/" + name ) != value ) {
-                        fail( "Error: Failed to lookup name" );
+                        fail( "Error: Failed to lookup name (5)" );
                     }
-                } catch ( NameNotFoundException except ) {
-                    fail( "Error: NameNotFoundException reported" );
+                } catch ( NamingException except ) {
+                    fail( "Error: NamingException reported" );
                 }
-                EnvContext.unsetEnvContext();
+                RuntimeContext.unsetRuntimeContext();
                 try {
                     initCtx.lookup( "java:" + path + "/" + name );
                     fail( "Error: NamingException not reported" );
@@ -287,8 +265,21 @@ public class Naming extends TestSuite
 
 
                 stream.writeVerbose( "Test the serialization nature of JNDI ENC" );
-                ctx = (Context) initCtx.lookup( "" );
-                EnvContext.setEnvContext( ctx );
+                RuntimeContext.setRuntimeContext( runCtx );
+
+                stream.writeVerbose( "Test that the JNDI ENC is read only" );
+                ctx.unbind( path + "/" + name );
+                try {
+                    initCtx.bind( "java:" + name, value );
+                    fail( "Error: JNDI ENC not read-only (1)" );
+                  } catch ( OperationNotSupportedException except ) { }
+
+                ctx.bind( path + "/" + name, value );
+                try {
+                    initCtx.unbind( "java:" + name );
+                    fail( "Error: JNDI ENC not read-only (2)" );
+                } catch ( OperationNotSupportedException except ) { }
+
                 try {
                     ObjectOutputStream    oos;
                     ObjectInputStream     ois;
@@ -304,16 +295,15 @@ public class Naming extends TestSuite
                     fail( "Error: Failed to (de)serialize: " + except );
                     System.out.println( except );
                 }
-                EnvContext.unsetEnvContext();
+                RuntimeContext.unsetRuntimeContext();
                 try {
                     enc.lookup( name );
                     stream.writeVerbose( "Error: Managed to lookup name but java:comp not bound to thread" );
                 } catch ( NamingException except ) { }{}
-                ctx = (Context) initCtx.lookup( "" );
-                EnvContext.setEnvContext( ctx );
+                RuntimeContext.setRuntimeContext( runCtx );
                 try {
                     if ( enc.lookup( name ) != value ) {
-                        fail( "Error: Failed to lookup name" );
+                        fail( "Error: Failed to lookup name (6)" );
                     }
                 } catch ( NameNotFoundException except ) {
                     fail( "Error: NameNotFoundException reported" );
@@ -347,19 +337,20 @@ public class Naming extends TestSuite
          */
         public void runTest()
         {
-            Context   ctx;
-            String    name = "test";
-            String    value = "Just A Test";
-            Object    object;
-            
-            VerboseStream stream = new VerboseStream();
+            Context        ctx;
+            String         name = "test";
+            String         value = "Just A Test";
+            Object         object;
+            RuntimeContext runCtx;
+            VerboseStream  stream = new VerboseStream();
 
             try {
                 object = new TestObject( value );
                 // Construct the same context from two perspsective
                 // and compare bound values
                 stream.writeVerbose( "Test binding of Referenceable object in MemoryContext" );
-                ctx = (Context) Naming.getInitialContext( null ).lookup( "" );
+                runCtx = RuntimeContext.newRuntimeContext();
+                ctx = runCtx.getEnvContext();
                 ctx.bind( name, object );
                 if ( ctx.lookup( name ) == object ) {
                     fail( "Error: Same object instance returned in both cases" );
@@ -370,15 +361,15 @@ public class Naming extends TestSuite
                 stream.writeVerbose( "Bound one object, reconstructed another, both pass equality test" );
 
                 stream.writeVerbose( "Test looking up Referenceable object from EnvContext" );
-                EnvContext.setEnvContext( ctx );
-                ctx = getEnvInitialContext();
+                RuntimeContext.setRuntimeContext( runCtx );
+                ctx = new InitialContext();
                 if ( ctx.lookup( "java:" + name ) == object ) {
                     fail( "Error: Same object instance returned in both cases" );
                 }
                 if ( ! ctx.lookup( "java:" + name ).equals( object ) ) {
                     fail( "Error: The two objects are not identical" );
                 }
-                EnvContext.unsetEnvContext();
+                RuntimeContext.unsetRuntimeContext();
                 stream.writeVerbose( "Bound one object, reconstructed another, both pass equality test" );
 
             } catch ( NamingException except ) {

@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: MemoryContextFactory.java,v 1.5 2001/03/12 19:20:16 arkin Exp $
+ * $Id: MemoryContextFactory.java,v 1.6 2001/03/19 17:39:01 arkin Exp $
  */
 
 
@@ -67,14 +67,12 @@ import javax.naming.spi.InitialContextFactory;
  * java.naming.factory.initial=tyrex.naming.MemoryContextFactory
  * java.naming.provider.url=
  * </pre>
- * Any URL will return a context to that path in the object tree,
+ * Any non-empty URL will return a context to that path in the object tree,
  * relative to the same shared root. The returned context is read/write.
- * The caller must have the {@link NamingPermission} permission on the
- * path in order to acquire the context.
  * 
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.5 $ $Date: 2001/03/12 19:20:16 $
+ * @version $Revision: 1.6 $ $Date: 2001/03/19 17:39:01 $
  * @see MemoryContext
  * @see JavaContext
  */
@@ -129,20 +127,20 @@ public final class MemoryContextFactory
     /**
      * Returns an initial context based on the {@link Context.PROVIDER_URL}
      * environment attribute. If this attribute is missing or an empty
-     * string, the root will be returned. If not, the specified context
-     * will be returned relative to the root.
+     * string, a new memory context be returned. Otherwise, the specified
+     * context will be returned.
      */
     public Context getInitialContext( Hashtable env )
        throws NamingException
     {
-        String url;
+        String url = null;
         
-        if ( env.get( Context.PROVIDER_URL ) == null )
-            return new MemoryContext( env );
-        else {
+        if ( env.get( Context.PROVIDER_URL ) != null )
             url = env.get( Context.PROVIDER_URL ).toString();
+        if ( url == null || url.length() == 0 )
+            return new MemoryContext( new MemoryBinding(), env );
+        else
             return new MemoryContext( getBindings( url ), env );
-        }
     }
 
 

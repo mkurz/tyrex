@@ -75,14 +75,13 @@ import tyrex.resource.ResourceLimits;
 import tyrex.services.Clock;
 import tyrex.services.DaemonMaster;
 import tyrex.util.Primes;
-import tyrex.util.Configuration;
 import tyrex.util.LoggerPrintWriter;
 
 
 /**
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 final class ConnectionPool
     implements Resource, ConnectionManager, Set, ConnectionEventListener, Runnable
@@ -186,17 +185,20 @@ final class ConnectionPool
         _loader = loader;
         _metrics = new PoolMetrics();
         _category = category;
-        _logWriter = new LoggerPrintWriter( _category, null );
         _txManager= txManager;
 
         // Clone object to prevent changes by caller from affecting the
         // behavior of the pool.
-        if ( limits == null )
+        if ( limits == null ) {
             _limits = new ResourceLimits();
-        else {
+            _logWriter = null;
+        } else {
             _limits = (ResourceLimits) limits.clone();
-            if ( _limits.getTrace() )
+            if ( _limits.getTrace() ) {
+                _logWriter = new LoggerPrintWriter( _category, null );
                 _loader.setLogWriter( _logWriter );
+            } else 
+                _logWriter = null;
         }
 
         // Set the pool table to the optimum size based on the maximum
@@ -247,10 +249,12 @@ final class ConnectionPool
                 buffer.append( "  " ).append( metaData.getEISProductVersion() );
         } else
             buffer.append( _loader.toString() );
-        _category.info( "Created connection pool for manager " + name +
-                        " with initial size " + _limits.getInitial() +
-                        " and maximum size " + _limits.getMaximum() );
-        _category.info( buffer.toString() );
+        if ( _logWriter != null ) {
+            _logWriter.println( "Created connection pool for manager " + name +
+                                " with initial size " + _limits.getInitial() +
+                                " and maximum size " + _limits.getMaximum() );
+            _logWriter.println( buffer.toString() );
+        }
 
         DaemonMaster.addDaemon( this, "Connection Pool " + name );
     }
@@ -401,8 +405,11 @@ final class ConnectionPool
 
             // No matched connections, need to create a new one.
             // If we have more room for a new connection, we create
-            // a new connection.
-            if ( _limits.getMaximum() == 0 && _metrics.getTotal() < _limits.getMaximum() ) {
+            // a new connection. Otherwise, if we have a connection we
+            // do not use (and cannot be matched), release it and make
+            // room for a new connection to be created.
+            if ( _limits.getMaximum() == 0 || _metrics.getTotal() < _limits.getMaximum() ||
+                 ( _metrics.getAvailable() > 0 && discardNext() ) ) {
                 managed = _loader.createManagedConnection( ThreadContext.getThreadContext().getSubject(),
                                                            requestInfo );
                 // Need to allocate the connection. It is an error if the
@@ -410,20 +417,6 @@ final class ConnectionPool
                 entry = allocate( managed, true );
                 if ( entry == null )
                     throw new ResourceException( "Connector error: createManagedConnetion returned an existing connection" );
-                else
-                    return entry;
-            }
-
-            // If we have a connection we do not use (and cannot be matched),
-            // release it and make room for a new connection to be created.
-            if ( _metrics.getAvailable() > 0 && discardNext() ) {
-                managed = _loader.createManagedConnection( ThreadContext.getThreadContext().getSubject(),
-                                                           requestInfo );
-                // Need to allocate the connection. It is an error if the
-                // managed connection is already in the pool.
-                entry = allocate( managed, true );
-                if ( entry == null )
-                    throw new ResourceAllocationException( "Connector error: createManagedConnetion returned an existing connection" );
                 else
                     return entry;
             }
@@ -581,12 +574,16 @@ final class ConnectionPool
             entry = new PoolEntry( managed, hashCode, xaResource, localTx );
             _pool[ index ] = entry;
         } else {
-            if ( entry._hashCode == hashCode && entry._managed.equals( managed ) )
+            if ( entry._hashCode == hashCode && entry._managed.equals( managed ) ) {
+                _category.error( "Connector error: Allocated connection " + managed + " already in pool" );
                 return null;
+            }
             next = entry._nextEntry;
             while ( next != null ) {
-                if ( next._hashCode == hashCode && next._managed.equals( managed ) )
+                if ( next._hashCode == hashCode && next._managed.equals( managed ) ) {
+                    _category.error( "Connector error: Allocated connection " + managed + " already in pool" );
                     return null;
+                }
                 entry = next;
                 next = entry._nextEntry;
             }
@@ -617,6 +614,8 @@ final class ConnectionPool
                 notifyAll();
             }
         }
+        if ( _logWriter != null )
+            _logWriter.println( "Allocated new connection " + entry._managed );
         return entry;
     }
 
@@ -655,6 +654,8 @@ final class ConnectionPool
             clock = Clock.clock();
             _metrics.recordUnusedDuration( (int) ( clock - entry._timeStamp ) );
             entry._timeStamp = clock;
+            if ( _logWriter != null )
+                _logWriter.println( "Reusing connection " + entry._managed );
             return entry;
         }
         return null;
@@ -696,16 +697,23 @@ final class ConnectionPool
         entry = _pool[ index ];
         if ( entry != null ) {
             if ( hashCode == entry._hashCode && entry._managed.equals( managed ) ) {
-                if ( entry._available )
+                if ( entry._available ) {
+                    _category.error( "Connector error: Released connection " + managed + " not in pool" );
                     return false;
+                }
             } else {
                 entry = entry._nextEntry;
                 while ( entry != null && hashCode != entry._hashCode &&
                         ! entry._managed.equals( managed ) )
                     entry = entry._nextEntry;
-                if ( entry == null || entry._available ) 
+                if ( entry == null || entry._available ) {
+                    _category.error( "Connector error: Released connection " + managed + " not in pool" );
                     return false;
+                }
             }
+        } else {
+            _category.error( "Connector error: Released connection " + managed + " not in pool" );
+            return false;
         }
         // If we reached this point, we have the connection entry
         // and the connection is not reserved. If an XA resource
@@ -746,6 +754,8 @@ final class ConnectionPool
                              " by connection pool " + this, except );
             discard( entry._managed, false );
         }
+        if ( _logWriter != null )
+            _logWriter.println( "Released connection " + managed );
         return true;
     }
 
@@ -811,6 +821,8 @@ final class ConnectionPool
                              " by connection pool " + this, except );
         }
         notifyAll();
+        if ( _logWriter != null )
+            _logWriter.println( "Discarded connection " + entry._managed );
         return true;
     }
 

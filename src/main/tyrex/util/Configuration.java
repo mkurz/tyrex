@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Configuration.java,v 1.4 2001/03/12 19:20:21 arkin Exp $
+ * $Id: Configuration.java,v 1.5 2001/03/19 17:39:03 arkin Exp $
  */
 
 
@@ -69,7 +69,7 @@ import java.security.SecureRandom;
  * <tt>tyrex.config</tt>.
  *
  * @author <a href="mailto:arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.4 $ $Date: 2001/03/12 19:20:21 $
+ * @version $Revision: 1.5 $ $Date: 2001/03/19 17:39:03 $
  */
 public final class Configuration
 {
@@ -77,30 +77,30 @@ public final class Configuration
 
     /**
      * Property specifying whether to run in verbose mode.
-     * <tt>tyrex.verbose</tt>
+     * <tt>tyrex.log.verbose</tt>
      */
-    public static final String PROPERTY_VERBOSE = "tyrex.verbose";
+    public static final String PROPERTY_LOG_VERBOSE = "tyrex.log.verbose";
 
 
     /**
      * Property specifying whether to enable console logging.
-     * <tt>tyrex.silent</tt>
+     * <tt>tyrex.log.console</tt>
      */
-    public static final String PROPERTY_SILENT = "tyrex.silent";
+    public static final String PROPERTY_LOG_CONSOLE = "tyrex.log.console";
 
 
     /**
-     * Property that determines the number of clock ticks to skip before
-     * incrementing the internal clock. The value is an integer, the percision is
-     * milliseconds. The name of this property is <tt>tyrex.clock.sleepTicks</tt>.
+     * Property that determines the number of clock ticks for each
+     * unsynchronized cycle. The value is an integer, the percision is
+     * milliseconds. The name of this property is <tt>tyrex.clock.unsynchicks</tt>.
      */
-    public static final String PROPERTY_SLEEP_TICKS = "tyrex.clock.sleepTicks";
+    public static final String PROPERTY_UNSYNCH_TICKS = "tyrex.clock.unsynchTicks";
 
 
     /**
-     * Property that determines the number of sleep ticks to skip before
-     * synchronizing with the system clock. The value is an integer. The name
-     * of this property is <tt>tyrex.clock.synchEvery</tt>.
+     * Property that determines the number of unsynchronized cycles
+     * before the clock is synchronized. The value is an integer.
+     * The name of this property is <tt>tyrex.clock.synchEvery</tt>.
      */
     public static final String PROPERTY_SYNCH_EVERY = "tyrex.clock.synchEvery";
 
@@ -108,26 +108,26 @@ public final class Configuration
     /**
      * Property that determines whether to use secure or standard random
      * number generator. This value is true or false. The name of this
-     * property is <tt>tyrex.secureRandom</tt>.
+     * property is <tt>tyrex.random.secure</tt>.
      */
-    public static final String PROPERTY_SECURE_RANDOM = "tyrex.secureRandom";
+    public static final String PROPERTY_SECURE_RANDOM = "tyrex.random.secure";
 
 
     /**
-     * Property that specifies the name of the UUID state file. The UUID state
-     * file is used to store the node identifier and clock sequence. The name of
-     * this property is <tt>tyrex.uuid.stateFile</tt>.
+     * Property that specifies the name of the UUID state file.
+     * The UUID state file is used to store the node identifier
+     * and clock sequence. The name of this property is
+     * <tt>tyrex.uuid.stateFile</tt>.
      */
     public static final String PROPERTY_UUID_STATE_FILE = "tyrex.uuid.stateFile";
 
 
     /**
-     * Property that specified the name of the resource configuration file.
-     * The resource configuration file is used to set up resource managers
-     * and connectors, such as JDBC data sources, JMS providers, and JCA connectors.
-     * The name of this property is <tt>tyrex.resources</tt>.
+     * Property that specified the name of domain configuration file(s)
+     * to load at startup. This value is a comma separated list of zero
+     * or more file names. The name of this property is <tt>tyrex.domain.files</tt>.
      */
-    public static final String PROPERTY_RESOURCE_CONFIG = "tyrex.resources";
+    public static final String PROPERTY_DOMAIN_FILES = "tyrex.domain.files";
 
 
     /**
@@ -172,7 +172,7 @@ public final class Configuration
      * file. Otherwise, the configuration file {@link #FILE_NAME} will be
      * looked for in the classpath.
      */
-    public static final String SYSTEM_PROPERTY = "tyrex.config";
+    public static final String CONFIG_SYSTEM_PROPERTY = "tyrex.config";
 
 
     /**
@@ -200,7 +200,7 @@ public final class Configuration
      * information messages to the console. This variable is set from the
      * configuration file.
      */
-    public static final boolean     silent;
+    public static final boolean     console;
 
 
     /**
@@ -284,9 +284,9 @@ public final class Configuration
 
 
     static {
-        InputStream is;
-        Properties  properties;
-        String      fileName;
+        InputStream     is;
+        Properties      properties;
+        String          fileName;
 
         properties = new Properties( System.getProperties() );
         // Get detault configuration from the Tyrex JAR. Complain if not found.
@@ -309,7 +309,7 @@ public final class Configuration
 
         // Get overriding configuration. Use the system property if set,
         // the classpath otherwise.
-        fileName = System.getProperty( SYSTEM_PROPERTY );
+        fileName = System.getProperty( CONFIG_SYSTEM_PROPERTY );
         try {
             if ( fileName  != null )
                 is = new FileInputStream( fileName );
@@ -329,8 +329,8 @@ public final class Configuration
         _default = properties;
 
         // Make sure logging is set up properly before proceeding.
-        verbose = getBoolean( PROPERTY_VERBOSE );
-        silent = getBoolean( PROPERTY_SILENT );
+        verbose = getBoolean( PROPERTY_LOG_VERBOSE );
+        console = getBoolean( PROPERTY_LOG_CONSOLE );
 
         if ( fileName != null ) {
             System.err.println( Messages.format( "tyrex.util.loadedConfigurationFile", fileName ) );

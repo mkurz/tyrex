@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: MemoryContext.java,v 1.9 2001/03/12 19:20:16 arkin Exp $
+ * $Id: MemoryContext.java,v 1.10 2001/03/19 17:39:00 arkin Exp $
  */
 
 
@@ -90,7 +90,7 @@ import javax.naming.spi.NamingManager;
  *
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.9 $ $Date: 2001/03/12 19:20:16 $
+ * @version $Revision: 1.10 $ $Date: 2001/03/19 17:39:00 $
  * @see MemoryContextFactory
  */
 public class MemoryContext
@@ -175,10 +175,15 @@ public class MemoryContext
         // Use addToEnvironment to duplicate the environment variables.
         // This takes care of setting certain flags appropriately.
         if ( env != null ) {
-           if ( env.get( PROVIDER_URL ) != null )
-               _bindings = MemoryContextFactory.getBindings( env.get( PROVIDER_URL ).toString() );
-            else
-                _bindings = new MemoryBinding();
+           value = env.get( PROVIDER_URL );
+           if ( value != null ) {
+               name = value.toString();
+               if ( name.length() > 0 )
+                   _bindings = MemoryContextFactory.getBindings( name );
+               else
+                   _bindings = new MemoryBinding();
+           } else
+               _bindings = new MemoryBinding();
            enum = env.keys();
            while ( enum.hasMoreElements() ) {
                name = (String) enum.nextElement();

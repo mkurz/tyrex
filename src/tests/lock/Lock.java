@@ -40,11 +40,11 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Concurrency.java,v 1.4 2001/02/23 17:17:40 omodica Exp $
+ * $Id: Lock.java,v 1.1 2001/03/19 17:40:25 arkin Exp $
  */
 
 
-package concurrency;
+package lock;
 
 import tests.*;
 
@@ -54,19 +54,18 @@ import java.util.Enumeration;
 
 import junit.framework.*;
 
-import tyrex.concurrency.LockSet;
-import tyrex.concurrency.LockSetFactory;
-import tyrex.concurrency.LockMode;
-import tyrex.concurrency.LockNotHeldException;
-import tyrex.concurrency.engine.TyrexLockSetFactory;
+import tyrex.lock.LockSet;
+import tyrex.lock.LockSetFactory;
+import tyrex.lock.LockNotHeldException;
+import tyrex.lock.LockTimeoutException;
 
 
 
-public class Concurrency extends TestSuite
+public class Lock extends TestSuite
 {
 
 
-    public Concurrency( String name )
+    public Lock( String name )
     {
         super( name);
         
@@ -77,6 +76,7 @@ public class Concurrency extends TestSuite
         tc = new DeadlockTest();
         addTest( tc );
     }
+
 
     /**
      * LockSet test
@@ -105,40 +105,43 @@ public class Concurrency extends TestSuite
             VerboseStream stream = new VerboseStream();
 
             try {
-                factory = new TyrexLockSetFactory( null );
+                factory = new LockSetFactory();
                 lockSet = factory.create();
 
                 // Test acquiring read lock and two write locks
-                if ( ! lockSet.tryLock( LockMode.Read ) ) {
+                try {
+                    lockSet.lock( LockSet.READ );
+                    stream.writeVerbose( "Acquired read lock" );
+                } catch ( LockTimeoutException except ) {
                     fail( "Error: Failed to acquire read lock" );
-                   
                 }
-                stream.writeVerbose( "Acquired read lock" );
-                if ( ! lockSet.tryLock( LockMode.Write ) ) {
+                try {
+                    lockSet.lock( LockSet.WRITE );
+                    stream.writeVerbose( "Acquired 1st write lock, same thread" );
+                } catch ( LockTimeoutException except ) {
                     fail( "Error: Failed to acquire write lock" );
-                    
                 }
-                stream.writeVerbose( "Acquired 1st write lock, same thread" );
-                if ( ! lockSet.tryLock( LockMode.Write ) ) {
+                try {
+                    lockSet.lock( LockSet.WRITE );
+                    stream.writeVerbose( "Acquired 2nd write lock, same thread" );
+                } catch ( LockTimeoutException except ) {
                     fail( "Error: Failed to acquire write lock" );
-                   
                 }
-                stream.writeVerbose( "Acquired 1st write lock, same thread" );
 
                 // Test acquiring write lock, different thread
                 stream.writeVerbose( "Attempt to acquire write lock, different thread" );
-                acquire = new AcquireThread( lockSet, LockMode.Write );
+                acquire = new AcquireThread( lockSet, LockSet.WRITE );
                 acquire.start();
                 acquire.join( 100 );
                 if ( acquire.result() ) {
-                    fail( "Error: Other thread managed to acquire write lock" );
+                    fail( "Error: Other thread managed to acquire write lock (1)" );
             
                 } else
                     stream.writeVerbose( "OK: Other thread failed to acquire write lock" );
 
                 // Releasing both write locks, second thread can't obtain lock yet
                 try {
-                    lockSet.unlock( LockMode.Write );
+                    lockSet.unlock( LockSet.WRITE );
                 } catch ( LockNotHeldException except ) {
                     fail( "Error: Write lock not held" );
          
@@ -146,12 +149,12 @@ public class Concurrency extends TestSuite
                 stream.writeVerbose( "Released 2nd write lock" );
                 acquire.join( 100 );
                 if ( acquire.result() ) {
-                    fail( "Error: Other thread managed to acquire write lock" );
+                    fail( "Error: Other thread managed to acquire write lock (2)" );
             
                 } else
                     stream.writeVerbose( "OK: Other thread couldn't acquire lock" );
                 try {
-                    lockSet.unlock( LockMode.Write );
+                    lockSet.unlock( LockSet.WRITE );
                 } catch ( LockNotHeldException except ) {
                     fail( "Error: Write lock not held" );
                
@@ -159,14 +162,14 @@ public class Concurrency extends TestSuite
                 stream.writeVerbose( "Released 1st write lock" );
                 acquire.join( 100 );
                 if ( acquire.result() ) {
-                    fail( "Error: Second thread managed to acquire write lock" );
+                    fail( "Error: Second thread managed to acquire write lock (3)" );
           
                 } else
                     stream.writeVerbose( "OK: Other thread couldn't acquire lock" );
 
                 // Release read lock, other thread can acquire write lock
                 try {
-                    lockSet.unlock( LockMode.Read );
+                    lockSet.unlock( LockSet.READ );
                 } catch ( LockNotHeldException except ) {
                     fail( "Error: Read lock not held" );
           
@@ -180,12 +183,12 @@ public class Concurrency extends TestSuite
                 stream.writeVerbose( "Other thread acquired write lock" );
 
                 // Make sure this thread cannot acquire a read lock
-                if ( lockSet.tryLock( LockMode.Read ) ) {
-                    fail( "Error: This thread managed to acquire write lock" );
-       
-                } else
+                try {
+                    lockSet.lock( LockSet.READ );
+                    fail( "Error: This thread managed to acquire read lock" );
+                } catch ( LockTimeoutException except ) {
                     stream.writeVerbose( "OK: This thread failed to acquire write lock" );
-
+                }
         
             } catch ( InterruptedException except ) {
                 System.out.println( except );
@@ -203,11 +206,11 @@ public class Concurrency extends TestSuite
         
         LockSet  lockSet;
         
-        LockMode mode;
+        int       mode;
         
         boolean  result;
         
-        AcquireThread( LockSet lockSet, LockMode mode )
+        AcquireThread( LockSet lockSet, int mode )
         {
             this.lockSet = lockSet;
             this.mode = mode;
@@ -216,8 +219,10 @@ public class Concurrency extends TestSuite
 
         public void run()
         {
-            lockSet.lock( mode );
-            result = true;
+            try {
+                lockSet.lock( mode, Integer.MAX_VALUE );
+                result = true;
+            } catch ( LockTimeoutException except ) { }
         }
 
         boolean result()
@@ -256,36 +261,42 @@ public class Concurrency extends TestSuite
             VerboseStream stream = new VerboseStream();
 
             try {
-                factory = new TyrexLockSetFactory( null );
+                factory = new LockSetFactory();
                 parent = factory.create();
-                lockSet1 = factory.createRelated( parent );
-                lockSet2 = factory.createRelated( parent );
+                lockSet1 = factory.createRelated( null, parent );
+                lockSet2 = factory.createRelated( null, parent );
 
                 deadlock = new DeadlockThread( parent, lockSet1, lockSet2, stream );
                 deadlock.start();
                 
-                lockSet1.lock( LockMode.Read );
-                lockSet2.lock( LockMode.Read );
-                stream.writeVerbose( "Main: Acquired read locks" );
-
+                try {
+                    lockSet1.lock( LockSet.READ );
+                    lockSet2.lock( LockSet.READ );
+                    stream.writeVerbose( "Main: Acquired read locks" );
+                } catch ( LockTimeoutException except ) {
+                    fail( "Error: Main: Could not acquired read locks" );
+                }
+                    
                 Thread.currentThread().sleep( 500 );
 
-                if ( lockSet1.tryLock( LockMode.Upgrade ) )
+                try {
+                    lockSet1.lock( LockSet.UPGRADE );
                     stream.writeVerbose( "Main: Acquired upgrade lock (1)" );
-                else {
+                } catch ( LockTimeoutException except ) {
                     fail( "Error: Main: Could not acquired upgrade lock (1)" );
-                    parent.getCoordinator( null ).dropLocks();
+                    parent.getCoordinator().dropLocks();
                     deadlock.join();
                 }
                 Thread.currentThread().sleep( 500 );
 
-                if ( lockSet2.tryLock( LockMode.Upgrade ) ) {
+                try {
+                    lockSet2.lock( LockSet.UPGRADE );
                     fail( "Error: Maing: Acquired upgrade lock (2)" );
-                    parent.getCoordinator( null ).dropLocks();
+                    parent.getCoordinator().dropLocks();
                     deadlock.join();
-                } else {
+                } catch ( LockTimeoutException except ) {
                     stream.writeVerbose( "OK: Main: Could not acquired upgrade lock (2) -- deadlock detected" );
-                    parent.getCoordinator( null ).dropLocks();
+                    parent.getCoordinator().dropLocks();
                     deadlock.join();
                 }
 
@@ -326,47 +337,61 @@ public class Concurrency extends TestSuite
             try {
                 sleep( 100 );
 
-                lockSet1.lock( LockMode.Read );
-                lockSet2.lock( LockMode.Read );
-                stream.writeVerbose( "Second: Acquired read locks" );
+                try {
+                    lockSet1.lock( LockSet.READ );
+                    lockSet2.lock( LockSet.READ );
+                    stream.writeVerbose( "Second: Acquired read locks" );
+                } catch ( LockTimeoutException except ) {
+                    stream.writeVerbose( "Error: Main: Could not acquired read locks" );
+                }
 
                 sleep( 500 );
 
-                if ( lockSet2.tryLock( LockMode.Upgrade ) )
+                try {
+                    lockSet2.lock( LockSet.UPGRADE );
                     stream.writeVerbose( "Second: Acquired upgrade lock (2)" );
-                else {
+                } catch ( LockTimeoutException except ) {
                     stream.writeVerbose( "Error: Second: Could not acquired upgrade lock (2)" );
-                    parent.getCoordinator( null ).dropLocks();
+                    parent.getCoordinator().dropLocks();
                     return;
                 }
                 sleep( 500 );
 
-                if ( lockSet1.tryLock( LockMode.Upgrade ) )
+                try {
+                    lockSet1.lock( LockSet.UPGRADE );
                     stream.writeVerbose( "Second: Acquired upgrade lock (1)" );
-                else {
+                } catch ( LockTimeoutException except ) {
                     stream.writeVerbose( "Error: Second: Could not acquired upgrade lock (1)" );
-                    parent.getCoordinator( null ).dropLocks();
+                    parent.getCoordinator().dropLocks();
                     return;
                 }
 
                 sleep( 500 );
 
                 try {
-                    lockSet2.changeMode( LockMode.Read, LockMode.Write );
-                    lockSet2.unlock( LockMode.Upgrade );
+                    lockSet2.changeMode( LockSet.READ, LockSet.WRITE );
+                    lockSet2.unlock( LockSet.UPGRADE );
+                } catch ( LockTimeoutException except ) {
+                    stream.writeVerbose( "Error: Could not acquire write lock (2)" );
+                    parent.getCoordinator().dropLocks();
+                    return;
                 } catch ( LockNotHeldException except ) {
                     stream.writeVerbose( "Error: Second: Read lock not held (2)" );
-                    parent.getCoordinator( null ).dropLocks();
+                    parent.getCoordinator().dropLocks();
                     return;
                 }
                 stream.writeVerbose( "Second: Upgraded to write lock (2)" );
 
                 try {
-                    lockSet1.changeMode( LockMode.Read, LockMode.Write );
-                    lockSet1.unlock( LockMode.Upgrade );
+                    lockSet1.changeMode( LockSet.READ, LockSet.WRITE );
+                    lockSet1.unlock( LockSet.UPGRADE );
+                } catch ( LockTimeoutException except ) {
+                    stream.writeVerbose( "Error: Could not acquire write lock (1)" );
+                    parent.getCoordinator().dropLocks();
+                    return;
                 } catch ( LockNotHeldException except ) {
                     stream.writeVerbose( "Error: Second: Read lock not held (1)" );
-                    parent.getCoordinator( null ).dropLocks();
+                    parent.getCoordinator().dropLocks();
                     return;
                 }
                 stream.writeVerbose( "Second: Upgraded to write lock (1)" );

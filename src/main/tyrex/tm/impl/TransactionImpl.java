@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionImpl.java,v 1.12 2001/03/17 03:34:54 arkin Exp $
+ * $Id: TransactionImpl.java,v 1.13 2001/03/19 17:39:02 arkin Exp $
  */
 
 
@@ -88,7 +88,7 @@ import tyrex.util.Messages;
  * they are added.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.12 $ $Date: 2001/03/17 03:34:54 $
+ * @version $Revision: 1.13 $ $Date: 2001/03/19 17:39:02 $
  * @see XAResourceHolder
  * @see TransactionManagerImpl
  * @see TransactionDomain
@@ -1684,7 +1684,7 @@ final class TransactionImpl
             return Heuristic.MIXED;
         else if ( ( heuristic & Heuristic.OTHER ) != 0 )
             return Heuristic.OTHER;    
-        else if ( ( heuristic & ( Heuristic.COMMIT + Heuristic.ROLLBACK ) ) != 0 )
+        else if ( ( heuristic & ( Heuristic.COMMIT + Heuristic.ROLLBACK ) ) == Heuristic.COMMIT + Heuristic.ROLLBACK )
             return Heuristic.MIXED;
         else
             return heuristic;
@@ -1979,7 +1979,7 @@ final class TransactionImpl
                 }
                 resHolder = resHolder._nextHolder;
             }
-        
+
             if ( _resources != null ) {
                 // Tell all the OTS resources to forget about their
                 // transaction.
@@ -2226,7 +2226,6 @@ final class TransactionImpl
                 } catch ( IllegalStateException except ) { }    
             }
         }
-        
         
         // If an error has been encountered during 2pc,
         // we must report it accordingly. I believe this

@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Version.java,v 1.2 2001/03/12 19:20:21 arkin Exp $
+ * $Id: Version.java,v 1.3 2001/03/19 17:39:03 arkin Exp $
  */
 
 
@@ -51,12 +51,26 @@ import java.util.StringTokenizer;
 
 
 /**
+ * Prints version information to the console. To print version information
+ * from the command line:
+ * <p>
+ * <code>
+ * java com.intalio.n3.util.Version
+ * </code>
  *
  * @author <a href="mailto:arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $ $Date: 2001/03/12 19:20:21 $
+ * @version $Revision: 1.3 $ $Date: 2001/03/19 17:39:03 $
  */
 public class Version
 {
+
+
+    public static void main( String[] args )
+    {
+        boolean verbose;
+        
+        verbose = Configuration.verbose;
+    }
 
 
     /**

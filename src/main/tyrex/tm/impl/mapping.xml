@@ -17,6 +17,11 @@
     <field name="journalFactory" type="string">
       <bind-xml name="journalFactory" node="element" />
     </field>
+<!--
+    <field name="autoRecover" type="boolean">
+      <bind-xml name="autoRecover" node="element" />
+    </field>
+-->
     <field name="resources" type="tyrex.resource.Resources">
       <bind-xml name="resources" node="element" />
     </field>
@@ -27,6 +32,10 @@
     <field name="dataSource" type="tyrex.resource.jdbc.DataSourceConfig"
            set-method="addConfiguration">
       <bind-xml name="dataSource" node="element" />
+    </field>
+    <field name="connector" type="tyrex.resource.jca.Connector"
+           set-method="addConfiguration">
+      <bind-xml name="connector" node="element" />
     </field>
   </class>
 
@@ -57,7 +66,6 @@
     </field>
   </class>
 
-<!--
   <class name="tyrex.resource.jca.Connector">
     <map-to xml="connector" />
     <field name="name" type="string" required="true">
@@ -80,7 +88,6 @@
       <bind-xml name="limits" node="element" />
     </field>
   </class>
--->
 
   <class name="tyrex.resource.ResourceLimits">
     <map-to xml="limits" />

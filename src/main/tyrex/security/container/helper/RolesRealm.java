@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: RolesRealm.java,v 1.4 2001/03/12 19:20:19 arkin Exp $
+ * $Id: RolesRealm.java,v 1.5 2001/03/19 17:39:02 arkin Exp $
  */
 
 
@@ -57,7 +57,7 @@ import tyrex.security.container.RoleCredentials;
  * lookup roles and members in roles, and construct {@link RoleCredentials}.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.4 $ $Date: 2001/03/12 19:20:19 $
+ * @version $Revision: 1.5 $ $Date: 2001/03/19 17:39:02 $
  */
 public class RolesRealm
 {
@@ -234,7 +234,7 @@ public class RolesRealm
         /**
          * The default size of the member hashtable. Must be a prime number.
          */
-        private static final int MemberTableSize = 29;
+        private static final int TABLE_SIZE = 29;
         
         
         /**
@@ -246,7 +246,7 @@ public class RolesRealm
         Role( String roleName, String[] members )
         {
             _roleName = roleName;
-            _members = new MemberEntry[ MemberTableSize ];
+            _members = new MemberEntry[ TABLE_SIZE ];
             addMembers( members );
         }
         

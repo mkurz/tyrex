@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: LockSet.java,v 1.2 2001/03/13 03:14:57 arkin Exp $
+ * $Id: LockSet.java,v 1.3 2001/03/19 17:39:00 arkin Exp $
  */
 
 
@@ -108,7 +108,7 @@ import tyrex.services.UUID;
  * creating a new lock set, a unique identifier is assigned to the lock set.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $ $Date: 2001/03/13 03:14:57 $
+ * @version $Revision: 1.3 $ $Date: 2001/03/19 17:39:00 $
  */
 public final class LockSet
     implements Synchronization, Serializable
@@ -336,6 +336,49 @@ public final class LockSet
             throw new IllegalArgumentException( "Argument tx is null" );
         internalLock( mode, tx, ms );
     }
+
+
+    /**
+     * Attempt to acquires a lock on this lock set in the specified mode.
+     * <p>
+     * If a lock is held in an incompatible mode by a different owner,
+     * then this method returns false.
+     * <p>
+     * If no lock is held in an incompatible model, or a lock is held by
+     * the same or related owner, the lock will be acquired and this method
+     * will return true.
+     *
+     * @param mode The requested lock mode
+     * @return True if lock acquired, false if failed to acquire lock
+     */
+    /*
+    public final boolean tryLock( int mode )
+    {
+        internalTryLock( mode, getOwner() );
+    }
+    */
+
+
+    /**
+     * Attempt to acquires a lock on this lock set in the specified mode.
+     * <p>
+     * If a lock is held in an incompatible mode by a different owner,
+     * then this method returns false.
+     * <p>
+     * If no lock is held in an incompatible model, or a lock is held by
+     * the same or related owner, the lock will be acquired and this method
+     * will return true.
+     *
+     * @param tx The owner transaction
+     * @param mode The requested lock mode
+     * @return True if lock acquired, false if failed to acquire lock
+     */
+    /*
+    public final boolean tryLock( Transcation tx, int mode )
+    {
+        internalTryLock( mode, tx );
+    }
+    */
 
 
     /**

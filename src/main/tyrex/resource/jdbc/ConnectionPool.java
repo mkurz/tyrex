@@ -77,14 +77,13 @@ import tyrex.resource.ResourceException;
 import tyrex.services.Clock;
 import tyrex.services.DaemonMaster;
 import tyrex.util.Primes;
-import tyrex.util.Configuration;
 import tyrex.util.LoggerPrintWriter;
 
 
 /**
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.7 $
  */
 final class ConnectionPool
     implements Resource, DataSource, ConnectionEventListener, Runnable
@@ -197,22 +196,25 @@ final class ConnectionPool
         _poolDataSource = poolDataSource;
         _metrics = new PoolMetrics();
         _category = category;
-        _logWriter = new LoggerPrintWriter( _category, null );
         _txManager= txManager;
 
         try {
             // Clone object to prevent changes by caller from affecting the
             // behavior of the pool.
-            if ( limits == null )
+            if ( limits == null ) {
                 _limits = new ResourceLimits();
+                _logWriter = null;
+            }
             else {
                 _limits = (ResourceLimits) limits.clone();
                 if ( _limits.getTrace() ) {
+                    _logWriter = new LoggerPrintWriter( _category, null );
                     if ( _xaDataSource != null )
                         _xaDataSource.setLogWriter( _logWriter );
                     else
                         _poolDataSource.setLogWriter( _logWriter );
-                }
+                } else
+                    _logWriter = null;
             }
             
             // Set the pool table to the optimum size based on the maximum
@@ -246,9 +248,10 @@ final class ConnectionPool
         } catch ( SQLException except ) {
             throw new ResourceException( except.toString() );
         }
-        _category.info( "Created connection pool for data source " + name +
-                        " with initial size " + _limits.getInitial() +
-                        " and maximum size " + _limits.getMaximum() );
+        if ( _logWriter != null )
+            _logWriter.print( "Created connection pool for data source " + name +
+                              " with initial size " + _limits.getInitial() +
+                              " and maximum size " + _limits.getMaximum() );
 
         DaemonMaster.addDaemon( this, "Connection Pool " + name );
     }
@@ -397,21 +400,11 @@ final class ConnectionPool
             
             // No matched connections, need to create a new one.
             // If we have more room for a new connection, we create
-            // a new connection.
-            if ( _limits.getMaximum() == 0 && _metrics.getTotal() < _limits.getMaximum() ) {
-                pooled = createPooledConnection( user, password );
-                // Need to allocate the connection. It is an error if the
-                // pooled connection is already in the pool.
-                entry = allocate( pooled, user, password, true );
-                if ( entry == null )
-                    throw new SQLException( "Connector error: createPooledConnetion returned an existing connection" );
-                else
-                    return entry;
-            }
-            
-            // If we have a connection we do not use (and cannot be matched),
-            // release it and make room for a new connection to be created.
-            if ( _metrics.getAvailable() > 0 && discardNext() ) {
+            // a new connection. Otherwise, if we have a connection we
+            // do not use (and cannot be matched), release it and make
+            // room for a new connection to be created.
+            if ( _limits.getMaximum() == 0 || _metrics.getTotal() < _limits.getMaximum() ||
+                 ( _metrics.getAvailable() > 0 && discardNext() ) ) {
                 pooled = createPooledConnection( user, password );
                 // Need to allocate the connection. It is an error if the
                 // pooled connection is already in the pool.
@@ -462,7 +455,7 @@ final class ConnectionPool
             if ( user != null )
                 connection = _xaDataSource.getXAConnection( user, password );
             else
-                connection =_xaDataSource.getXAConnection();
+                connection = _xaDataSource.getXAConnection();
         } else {
             if ( user != null )
                 connection = _poolDataSource.getPooledConnection( user, password );
@@ -591,12 +584,16 @@ final class ConnectionPool
             entry = new PoolEntry( pooled, hashCode, xaResource, user, password );
             _pool[ index ] = entry;
         } else {
-            if ( entry._hashCode == hashCode && entry._pooled.equals( pooled ) )
+            if ( entry._hashCode == hashCode && entry._pooled.equals( pooled ) ) {
+                _category.error( "Connector error: Allocated connection " + pooled + " already in pool" );
                 return null;
+            }
             next = entry._nextEntry;
             while ( next != null ) {
-                if ( next._hashCode == hashCode && next._pooled.equals( pooled ) )
+                if ( next._hashCode == hashCode && next._pooled.equals( pooled ) ) {
+                    _category.error( "Connector error: Allocated connection " + pooled + " already in pool" );
                     return null;
+                }
                 entry = next;
                 next = entry._nextEntry;
             }
@@ -627,6 +624,8 @@ final class ConnectionPool
                 notifyAll();
             }
         }
+        if ( _logWriter != null )
+            _logWriter.println( "Allocated new connection " + entry._pooled );
         return entry;
     }
 
@@ -665,6 +664,8 @@ final class ConnectionPool
             clock = Clock.clock();
             _metrics.recordUnusedDuration( (int) ( clock - entry._timeStamp ) );
             entry._timeStamp = clock;
+            if ( _logWriter != null )
+                _logWriter.println( "Reusing connection " + entry._pooled );
             return entry;
         }
         return null;
@@ -706,17 +707,25 @@ final class ConnectionPool
         entry = _pool[ index ];
         if ( entry != null ) {
             if ( hashCode == entry._hashCode && entry._pooled.equals( pooled ) ) {
-                if ( entry._available )
+                if ( entry._available ) {
+                    _category.error( "Connector error: Released connection " + pooled + " not in pool" );
                     return false;
+                }
             } else {
                 entry = entry._nextEntry;
                 while ( entry != null && hashCode != entry._hashCode &&
                         ! entry._pooled.equals( pooled ) )
                     entry = entry._nextEntry;
-                if ( entry == null || entry._available ) 
+                if ( entry == null || entry._available ) {
+                    _category.error( "Connector error: Released connection " + pooled + " not in pool" );
                     return false;
+                }
             }
+        } else {
+            _category.error( "Connector error: Released connection " + pooled + " not in pool" );
+            return false;
         }
+        
         // If we reached this point, we have the connection entry
         // and the connection is not reserved. If an XA resource
         // is used, we need to delist it. If successful, we mark
@@ -755,6 +764,8 @@ final class ConnectionPool
                              " by connection pool " + this, except );
             discard( entry._pooled, false );
         }
+        if ( _logWriter != null )
+            _logWriter.println( "Released connection " + pooled );
         return true;
     }
 
@@ -820,6 +831,8 @@ final class ConnectionPool
                              " by connection pool " + this, except );
         }
         notifyAll();
+        if ( _logWriter != null )
+            _logWriter.println( "Discarded connection " + entry._pooled );
         return true;
     }
 
@@ -857,14 +870,18 @@ final class ConnectionPool
             return false;
         if ( hashCode == entry._hashCode && entry._pooled.equals( pooled ) ) {
             _pool[ index ] = entry._nextEntry;
-            if ( ! entry._available )
+            if ( ! entry._available ) {
+                _category.error( "Connector error: Discarded connection " + pooled + " not in pool" );
                 return false;
+            }
         } else {
             next = entry._nextEntry;
             while ( next != null ) {
                 if ( hashCode == next._hashCode && next._pooled.equals( pooled ) ) {
-                    if ( ! next._available )
+                    if ( ! next._available ) {
+                        _category.error( "Connector error: Discarded connection " + pooled + " not in pool" );
                         return false;
+                    }
                     entry._nextEntry = next._nextEntry;
                     entry = next;
                     break;
@@ -872,8 +889,10 @@ final class ConnectionPool
                 entry = next;
                 next = entry._nextEntry;
             }
-            if ( next == null )
+            if ( next == null ) {
+                _category.error( "Connector error: Discarded connection " + pooled + " not in pool" );
                 return false;
+            }
         }
         // If we reached this point, we have the connection entry
         // and the connection is not reserved. We notify the pool,
@@ -896,6 +915,8 @@ final class ConnectionPool
         // We notify any blocking thread that it can attempt to
         // get a new connection.
         notifyAll();
+        if ( _logWriter != null )
+            _logWriter.println( "Discarded connection " + pooled );
         return true;
     }
 
@@ -986,20 +1007,22 @@ final class ConnectionPool
      * @param password The password, or null
      * @return A matching connection, or null if no connection matched
      */
-    private synchronized PooledConnection matchPooledConnections( String user, String password )
+    private PooledConnection matchPooledConnections( String user, String password )
     {
         PoolEntry  entry;
 
         for ( int i = _pool.length ; i-- > 0 ; ) {
             entry = _pool[ i ];
             while ( entry != null ) {
-                if ( user == null && entry._user == null )
-                    return entry._pooled;
-                else if ( user != null && entry._user != null && user.equals( entry._user ) &&
-                          ( ( password == null && entry._password == null ) ||
-                            ( password != null && entry._password != null &&
-                              password.equals( entry._password ) ) ) )
-                    return entry._pooled;
+                if ( entry._available ) {
+                    if ( user == null && entry._user == null )
+                        return entry._pooled;
+                    else if ( user != null && entry._user != null && user.equals( entry._user ) &&
+                              ( ( password == null && entry._password == null ) ||
+                                ( password != null && entry._password != null &&
+                                  password.equals( entry._password ) ) ) )
+                        return entry._pooled;
+                }
                 entry = entry._nextEntry;
             }
         }

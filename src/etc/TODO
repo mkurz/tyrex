@@ -13,4 +13,6 @@
 
 - Have all asynch transactions complete in background thread of TransactionDomain
 
-- Update JAAS providers to use Logger
+- (0.9.9) Add tryLock() to LockSet interface
+
+- (0.9.9) Possibly add auto-recover option to domain configuration file

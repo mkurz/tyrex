@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: RealmPrincipal.java,v 1.4 2001/03/12 19:20:18 arkin Exp $
+ * $Id: RealmPrincipal.java,v 1.5 2001/03/19 17:39:02 arkin Exp $
  */
 
 
@@ -57,7 +57,7 @@ import java.security.Principal;
  * name to the application.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.4 $ $Date: 2001/03/12 19:20:18 $
+ * @version $Revision: 1.5 $ $Date: 2001/03/19 17:39:02 $
  */
 public final class RealmPrincipal
     implements Principal, Serializable
@@ -67,7 +67,7 @@ public final class RealmPrincipal
     /**
      * The principal 'anyone' indicates an unknown prinicipal.
      */
-    public static final RealmPrincipal Anyone = new RealmPrincipal( "anyone", null );
+    public static final RealmPrincipal ANYONE = new RealmPrincipal( "anyone", null );
     
     
     /**

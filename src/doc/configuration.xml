@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!-- $Id: configuration.xml,v 1.3 2001/03/16 01:21:03 arkin Exp $ -->
+<!-- $Id: configuration.xml,v 1.4 2001/03/19 17:39:00 arkin Exp $ -->
 <document>
   <properties>
     <title>Tyrex Configuration</title>
@@ -13,75 +13,63 @@
       <p>When Tyrex is instantiated, it reads configuration properties from the Tyrex
        configuration file. The Tyrex configuration file is called <tt>tyrex.config</tt>.</p>
 
-      <p>The configuration file is loaded in the following manner. First a default
-        configuration file is loaded, which provides default values. If a configuration
-        file named <tt>tyrex.config</tt> exists in the local directory from which Tyrex
-        is started, or in the class path, it is loaded next. Any properties specified in
-        this file override properties specified in the default configuration files.</p>
+      <p>The configuration file is loaded in the following manner. First, a default
+        configuration file is loaded from the Tyrex JAR. This file provides the minimum
+        set of default values required by Tyrex, including such data as the version number.</p>
+
+      <p>If a configuration file called <tt>tyrex.config</tt> exists in the class path,
+        it will be loaded next. This file can override any values specified in the default
+        configuration file.</p>
 
       <p>The name of the configuration file can be specified using the system property
-        <tt>tyrex.config</tt>. To set the system property use the <tt>-D</tt>
-        option as follows:</p>
-
-    <code><![CDATA[
-java -Dtyrex.config=tyrex.config $1 ]]></code>
+        <tt>tyrex.config</tt>. The following example illustrates how to set the system
+        property:
+        <code><![CDATA[
+java -Dtyrex.config=tyrex.config $1 ]]></code></p>        
 
       <p>The following properties are supported in the current version of Tyrex:
         <ul>
-          <li><b><tt>tyrex.verbose</tt></b> Property specifying whether to run in
-            verbose mode. When this property is set to true, Tyrex will emit additional
-            information to the logs that can assist in troubleshooting. It is recommended
-            to set this property to false in deployment environment.</li>
+          <li><b><tt>tyrex.log.verbose</tt></b> Specifies whether to run Tyrex in verbose
+            mode. When this property is set to <tt>true</tt>, Tyrex will emit additional
+            information to the log to assist in troubleshtooting and debugging. It is
+            recommended to leave this property to the default value (<tt>false</tt>)
+            in a deployment environment.</li>
+          <li><b><tt>tyrex.log.console</tt></b> Specifies whether to enable console logging.
+            When this property is set to <tt>true</tt> (the default), Tyrex will emit
+            various information (in both verbose and non-verbose mode) to the console.</li>
+          <li><b><tt>tyrex.clock.unsynchTicks</tt></b> Determines the number of clocks ticks
+            to skip before incrementing the internal clock. The value of this property is
+            an integer, the precision is milliseconds. The default value is <tt>100</tt>
+            milliseconds.</li>
+          <li><b><tt>tyrex.clock.synchEvery</tt></b> Determines the number of unsynchronized
+            cycles before synchronizing the clock. The value of this property is an integer
+            that, when multiplied by <tt>tyrex.clock.unsynchTicks</tt>, determines the clock
+            synchronization interval (in milliseconds). The default value is <tt>10</tt>
+            cycles.</li>
+          <li><b><tt>tyrex.random.secure</tt></b> Determines whether to use secure
+            (cryptographic quality) or standard (pseudo) random number generator. Setting this
+            property to <tt>true</tt> assures that random numbers are truely random, but
+            results in a longer statup sequence. The default value is <tt>false</tt>.</li>
+          <li><b><tt>tyrex.uuid.stateFile</tt></b> The name of the UUID state file, see
+            <a href="#UUID State File">UUID State File</a> for more information. The default
+            value is <tt>uuid.state</tt>.</li>
+          <li><b><tt>tyrex.domain.files</tt></b> Specifies the name of the default domain
+            configuration file(s). This property is a list of file names that must be
+            accessible from the current directory. All domain configuration files specified
+            in this property will be loaded automatically by Tyrex. If this property is missing,
+            Tyrex loads up with no transaction domain.</li>
+        </ul></p>
 
-          <li><b><tt>tyrex.silent</tt></b> Property specifying whether to enable
-            console logging. When this property is set to true, Tyrex will emit various
-            information to the console, allowing the console to be used for troubleshooting.
-            It is recommended to set this property to true in deployment environment.</li>
+      <p>The following example illustrates a Tyrex configuration file:
+        <code><![CDATA[
+tyrex.log.verbose=false
+tyrex.log.console=true
 
-          <li><b><tt>tyrex.sleepTicks</tt></b> Property that determines the number of
-            clock ticks to skip before incrementing the internal clock. The value
-            is an integer, the precision is milliseconds. The recommended value is 100.</li>
-
-          <li><b><tt>tyrex.synchEvery</tt></b> Property that determines the number of sleep
-            ticks to skip before synchronizing with the system clock. The recommended value
-            is 10.</li>
-
-          <li><b><tt>tyrex.secureRandom</tt></b> Property that determines whether to use
-            secure (cryptographic quality) or standard random number generator. Setting this
-            property to true assures that all generated random numbers are truly random,
-            but slows Tyrex server boot up.</li>
-
-          <li><b><tt>tyrex.uuid.stateFile</tt></b> Property that specifies the name of the
-            UUID state file. See <a href="#UUID State">UUID State</a> for more information.</li>
-
-          <li><b><tt>tyrex.domain.file</tt></b> Property that specified the name of the domain
-            configuration file. The domain configuration file is used to set up the default
-            transaction domain used by Tyrex. This property can include a list of files, one
-            per transaction domain. If this property is missing, Tyrex loads up with no
-            transaction domain. See <a href="#Domain Configuration">Domain Configuration</a>
-            for more information.</li>
-    </ul></p>
-
-      <p>The following example illustrates a server configuration file for a deployment
-        environment:</p>
-
-    <code>
-tyrex.verbose=false
-tyrex.silent=true
-
-# The number of clock ticks to skip before
-# incrementing the internal clock.
-tyrex.clock.synchEvery=100
-# The number of sleep ticks to skip before
-# synchronizing with the system clock.
-tyrex.clock.sleepTicks=10
-# Determines whether to use secure or
-# non-secure random number generator.
-tyrex.secureRandom=true
-# The name of the UUID state file
+tyrex.clock.unsynchTicks=100
+tyrex.clock.synchEvery=10
+tyrex.random.secure=true
 tyrex.uuid.stateFile=uuid.state
-# The name of the domain configuration file
-tyrex.domain.fila=domain.xml</code>
+tyrex.domain.files=domain.xml ]]></code></p>
 
     </section>
 

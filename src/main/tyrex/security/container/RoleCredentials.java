@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: RoleCredentials.java,v 1.4 2001/03/12 19:20:18 arkin Exp $
+ * $Id: RoleCredentials.java,v 1.5 2001/03/19 17:39:02 arkin Exp $
  */
 
 
@@ -60,7 +60,7 @@ import javax.security.auth.AuthPermission;
  * Role credentials are considered public.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.4 $ $Date: 2001/03/12 19:20:18 $
+ * @version $Revision: 1.5 $ $Date: 2001/03/19 17:39:02 $
  */
 public final class RoleCredentials
 {
@@ -76,7 +76,7 @@ public final class RoleCredentials
     /**
      * The default size of the role hashtable. Must be a prime number.
      */
-    private static final int RoleTableSize = 29;
+    private static final int TABLE_SIZE = 29;
     
     
     /**
@@ -86,7 +86,7 @@ public final class RoleCredentials
      */
     public RoleCredentials( String[] roleNames )
     {
-        _roles = new RoleEntry[ RoleTableSize ];
+        _roles = new RoleEntry[ TABLE_SIZE ];
         for ( int i = 0 ; i < roleNames.length ; ++i ) {
             addRole( roleNames[ i ] );
         }
@@ -101,7 +101,7 @@ public final class RoleCredentials
      */
     public RoleCredentials( RoleCredentials[] creds )
     {
-        _roles = new RoleEntry[ RoleTableSize ];
+        _roles = new RoleEntry[ TABLE_SIZE ];
         for ( int i = 0 ; i < creds.length ; ++i ) {
             for ( int j = 0 ; j < creds[ i ]._roles.length ; ++j ) {
                 RoleEntry entry;

@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionDomainImpl.java,v 1.21 2001/03/17 03:34:54 arkin Exp $
+ * $Id: TransactionDomainImpl.java,v 1.22 2001/03/19 17:39:02 arkin Exp $
  */
 
 
@@ -96,7 +96,7 @@ import tyrex.util.Configuration;
  * Implementation of a transaction domain.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.21 $ $Date: 2001/03/17 03:34:54 $
+ * @version $Revision: 1.22 $ $Date: 2001/03/19 17:39:02 $
  */
 public class TransactionDomainImpl
     extends TransactionDomain
@@ -237,13 +237,6 @@ public class TransactionDomainImpl
 
 
     /**
-     * Monitor object used to block for timeout of transaction and notify
-     * change in timeout of next transaction.
-     */
-    private final Object                   _timeoutLock = new Object();
-
-
-    /**
      * The state of the transaction domain.
      */
     private int                            _state;
@@ -253,6 +246,12 @@ public class TransactionDomainImpl
      * Records errors reported during recovery.
      */
     private RecoveryException              _recoveryErrors;
+
+
+    /**
+     * The next domain in a single linked list of transaction domains.
+     */
+    private TransactionDomainImpl          _nextDomain;
 
 
     /**
@@ -315,6 +314,20 @@ public class TransactionDomainImpl
         // starts the background thread
         DaemonMaster.addDaemon( this, "Transaction Domain " + _domainName );
         _state = READY;
+        if ( Configuration.verbose )
+            _category.info( "Created transaction domain " + _domainName );
+
+        // If auto recovery requested, perform it now.
+        if ( config.getAutoRecover() ) {
+            try {
+                recover();
+            } catch ( RecoveryException except ) {
+                while ( except != null ) {
+                    _category.error( "Error recovering domain " + _domainName, except );
+                    except = except.getNextException();
+                }
+            }
+        }
     }
 
 
@@ -395,9 +408,7 @@ public class TransactionDomainImpl
             _state = TERMINATED;
             // Notify the background thread that we are terminating.
             // This will cause all transactions to time out.
-            synchronized ( _timeoutLock ) {
-                _timeoutLock.notify();
-            }
+            notifyAll();
         }
     }
 
@@ -468,7 +479,7 @@ public class TransactionDomainImpl
     //-------------------------------------------------------------------------
 
 
-    public Transaction findTransaction( Xid xid )
+    public TransactionImpl findTransaction( Xid xid )
     {
         TransactionImpl entry;
         int             hashCode;
@@ -493,7 +504,7 @@ public class TransactionDomainImpl
     }
 
 
-    public Transaction findTransaction( String xid )
+    public TransactionImpl findTransaction( String xid )
     {
         TransactionImpl entry;
         int             hashCode;
@@ -515,6 +526,18 @@ public class TransactionDomainImpl
             }
         }
         return null;
+    }
+
+
+    public TransactionDomainImpl getNextDomain()
+    {
+        return _nextDomain;
+    }
+
+
+    public void setNextDomain( TransactionDomainImpl nextDomain )
+    {
+        _nextDomain = nextDomain;
     }
 
 
@@ -563,7 +586,7 @@ public class TransactionDomainImpl
             // applies for top-level transactions.
             if ( parent == null )
                 canCreateNew();
-
+        
             for ( int i = 0 ; i < _interceptors.length ; ++i ) {
                 try {
                     _interceptors[ i ].begin( xid );
@@ -577,7 +600,7 @@ public class TransactionDomainImpl
             // new creation/activation and are not subject to timeout.
             if ( parent != null )
                 return newTx;
-    
+            
             index = ( hashCode & 0x7FFFFFFF ) % _hashTable.length;
             entry = _hashTable[ index ];
             if ( entry == null )
@@ -594,15 +617,13 @@ public class TransactionDomainImpl
             }
             ++_txCount;
             _metrics.changeActive( 1 );
-        }
-        
-        // If this transaction times out before any other transaction,
-        // need to wakeup the background thread so it can update its
-        // transaction timeout.
-        synchronized ( _timeoutLock ) {
+            
+            // If this transaction times out before any other transaction,
+            // need to wakeup the background thread so it can update its
+            // transaction timeout.
             if ( _nextTimeout == 0 || _nextTimeout > timeout ) {
                 _nextTimeout = timeout;
-                _timeoutLock.notify();
+                notifyAll();
             }
         }
         return newTx;
@@ -681,21 +702,28 @@ public class TransactionDomainImpl
         for ( int i = bqualLength ; i-- > 0 ; )
             global[ i ] = otid.tid[ i ];
         xid = (BaseXid) XidUtils.importXid( otid.formatID, global, null );
-        timeout = pgContext.timeout;
-        if ( timeout <= 0 )
-            timeout = _txTimeout;
-        else if ( timeout > MAXIMUM_TIMEOUT )
-            timeout = MAXIMUM_TIMEOUT;
-        // !!! Is pgContext timeout in seconds or milliseconds
-        try {
-            newTx = new TransactionImpl( xid, pgContext, this, timeout * 1000 );
-        } catch ( Inactive except ) {
-            throw new SystemException( Messages.message( "tyrex.tx.inactive" ) );
-        }
-        hashCode = xid.hashCode();
-        timeout = newTx._timeout;
 
         synchronized ( this ) {
+            // Check if we already have this transaction, if so return the existing
+            // transaction, otherwise proceed to create a new one.
+            newTx = findTransaction( xid );
+            if ( newTx != null )
+                return newTx;
+        
+            timeout = pgContext.timeout;
+            if ( timeout <= 0 )
+                timeout = _txTimeout;
+            else if ( timeout > MAXIMUM_TIMEOUT )
+                timeout = MAXIMUM_TIMEOUT;
+            // !!! Is pgContext timeout in seconds or milliseconds
+            try {
+                newTx = new TransactionImpl( xid, pgContext, this, timeout * 1000 );
+            } catch ( Inactive except ) {
+                throw new SystemException( Messages.message( "tyrex.tx.inactive" ) );
+            }
+            hashCode = xid.hashCode();
+            timeout = newTx._timeout;
+            
             // Block if exceeded maximum number of transactions allowed.
             // At this point we might get a SystemException.
             canCreateNew();
@@ -707,7 +735,7 @@ public class TransactionDomainImpl
                     _category.error( "Interceptor " + _interceptors[ i ] + " reported error", thrw );
                 }
             }
-        
+            
             index = ( hashCode & 0x7FFFFFFF ) % _hashTable.length;
             entry = _hashTable[ index ];
             if ( entry == null )
@@ -724,15 +752,13 @@ public class TransactionDomainImpl
             }
             ++_txCount;
             _metrics.changeActive( 1 );
-        }
-
-        // If this transaction times out before any other transaction,
-        // need to wakeup the background thread so it can update its
-        // transaction timeout.
-        synchronized ( _timeoutLock ) {
+            
+            // If this transaction times out before any other transaction,
+            // need to wakeup the background thread so it can update its
+            // transaction timeout.
             if ( _nextTimeout == 0 || _nextTimeout > timeout ) {
                 _nextTimeout = timeout;
-                _timeoutLock.notify();
+                notifyAll();
             }
         }
         return newTx;
@@ -756,7 +782,7 @@ public class TransactionDomainImpl
      *
      * @param tx The transaction to forget about
      */
-    protected void forgetTransaction( TransactionImpl tx )
+    protected synchronized void forgetTransaction( TransactionImpl tx )
     {
         TransactionImpl entry;
         TransactionImpl next;
@@ -772,47 +798,45 @@ public class TransactionDomainImpl
         xid = tx._xid;
         hashCode = tx._hashCode;
         index = ( hashCode & 0x7FFFFFFF ) % _hashTable.length;
-        synchronized ( this ) {
-            entry = _hashTable[ index ];
-            if ( entry == null )
-                return;
-            if ( entry._hashCode == hashCode && entry._xid.equals( xid ) )
-                _hashTable[ index ] = entry._nextEntry;
-            else {
-                next = entry._nextEntry;
-                while ( next != null ) {
-                    if ( next._hashCode == hashCode && next._xid.equals( xid ) ) {
-                        entry._nextEntry = next._nextEntry;
-                        entry = next;
-                        break;
-                    }
+        entry = _hashTable[ index ];
+        if ( entry == null )
+            return;
+        if ( entry._hashCode == hashCode && entry._xid.equals( xid ) )
+            _hashTable[ index ] = entry._nextEntry;
+        else {
+            next = entry._nextEntry;
+            while ( next != null ) {
+                if ( next._hashCode == hashCode && next._xid.equals( xid ) ) {
+                    entry._nextEntry = next._nextEntry;
                     entry = next;
-                    next = next._nextEntry;
+                    break;
                 }
-                if ( next == null )
-                    return;
+                entry = next;
+                next = next._nextEntry;
             }
-            --_txCount;
-            try {
-                _metrics.changeActive( - 1 );
-            } catch ( IllegalStateException except ) {
-                _category.error( "Internal error", except );
-            }
-
-            // If the domain is terminated, we close the transaction
-            // journal at this point. Otherwise, we notify any blocking
-            // thread that it's able to create a new transaction.
-            if ( _state == TERMINATED ) {
-                if ( _journal != null ) {
-                    try {
-                        _journal.close();
-                    } catch ( SystemException except ) {
-                        _category.error( "Error closing journal for transaction domain " + _domainName, except );
-                    }
-                }
-            } else
-                notify();
+            if ( next == null )
+                return;
         }
+        --_txCount;
+        try {
+            _metrics.changeActive( - 1 );
+        } catch ( IllegalStateException except ) {
+            _category.error( "Internal error", except );
+        }
+        
+        // If the domain is terminated, we close the transaction
+        // journal at this point. Otherwise, we notify any blocking
+        // thread that it's able to create a new transaction.
+        if ( _state == TERMINATED ) {
+            if ( _journal != null ) {
+                try {
+                    _journal.close();
+                } catch ( SystemException except ) {
+                    _category.error( "Error closing journal for transaction domain " + _domainName, except );
+                }
+            }
+        } else 
+            notifyAll();
     }
 
 
@@ -841,7 +865,7 @@ public class TransactionDomainImpl
      * default timeout for all new transactions.
      * @see TransactionManager#setTransactionTimeout setTransactionTimeout
      */
-    protected void setTransactionTimeout( TransactionImpl tx, int timeout )
+    protected synchronized void setTransactionTimeout( TransactionImpl tx, int timeout )
     {
         long  newTimeout;
 
@@ -857,20 +881,18 @@ public class TransactionDomainImpl
         // Synchronization is required to block background thread from
         // attempting to time out the transaction while we process it,
         // and so we can notify it of the next timeout.
-        synchronized ( _timeoutLock ) {
-            // Timeout is never set back.
-            newTimeout = tx._started + timeout * 1000;
-            if ( newTimeout > tx._timeout ) {
-                tx._timeout = newTimeout;
-                tx.internalSetTransactionTimeout( timeout );
-                // If this transaction times out before any other transaction,
-                // need to wakeup the background thread so it can update its
-                // transaction timeout. Background thread is synchronizing on
-                // hash table.
-                if ( _nextTimeout == 0 || _nextTimeout > newTimeout ) {
-                    _nextTimeout = newTimeout;
-                    _timeoutLock.notify();
-                }
+        // Timeout is never set back.
+        newTimeout = tx._started + timeout * 1000;
+        if ( newTimeout > tx._timeout ) {
+            tx._timeout = newTimeout;
+            tx.internalSetTransactionTimeout( timeout );
+            // If this transaction times out before any other transaction,
+            // need to wakeup the background thread so it can update its
+            // transaction timeout. Background thread is synchronizing on
+            // hash table.
+            if ( _nextTimeout == 0 || _nextTimeout > newTimeout ) {
+                _nextTimeout = newTimeout;
+                notifyAll();
             }
         }
     }
@@ -993,28 +1015,26 @@ public class TransactionDomainImpl
             throw new IllegalArgumentException( "Argument context is null" );
         if ( context._tx != null )
             delistThread( context, thread );
-        synchronized ( tx ) {
-            xid = tx._xid;
-            for ( int i = _interceptors.length ; i-- > 0 ; ) {
-                try {
-                    _interceptors[ i ].resume( xid, thread );
-                } catch ( InvalidTransactionException except ) {
-                    for ( ++i ; i < _interceptors.length ; ++i ) {
-                        try {
-                            _interceptors[ i ].suspend( xid, thread );
-                        } catch ( Throwable thrw ) {
-                            _category.error( "Interceptor " + _interceptors[ i ] + " reported error", thrw );
-                        }
+        xid = tx._xid;
+        for ( int i = _interceptors.length ; i-- > 0 ; ) {
+            try {
+                _interceptors[ i ].resume( xid, thread );
+            } catch ( InvalidTransactionException except ) {
+                for ( ++i ; i < _interceptors.length ; ++i ) {
+                    try {
+                        _interceptors[ i ].suspend( xid, thread );
+                    } catch ( Throwable thrw ) {
+                        _category.error( "Interceptor " + _interceptors[ i ] + " reported error", thrw );
                     }
-                    // Transaction will not be associated with this thread.
-                    return false;
-                } catch ( Throwable thrw ) {
-                    _category.error( "Interceptor " + _interceptors[ i ] + " reported error", thrw );
                 }
+                // Transaction will not be associated with this thread.
+                return false;
+            } catch ( Throwable thrw ) {
+                _category.error( "Interceptor " + _interceptors[ i ] + " reported error", thrw );
             }
-            context._tx = tx;
-            return true;
         }
+        context._tx = tx;
+        return true;
     }
     
 
@@ -1036,17 +1056,15 @@ public class TransactionDomainImpl
         tx = context._tx;
         if ( tx == null )
             return;
-        synchronized ( tx ) {
-            xid = tx._xid;
-            for ( int i = _interceptors.length ; i-- > 0 ; ) {
-                try {
-                    _interceptors[ i ].suspend( xid, thread );
-                } catch ( Throwable thrw ) {
-                    _category.error( "Interceptor " + _interceptors[ i ] + " reported error", thrw );
-                }
+        xid = tx._xid;
+        for ( int i = _interceptors.length ; i-- > 0 ; ) {
+            try {
+                _interceptors[ i ].suspend( xid, thread );
+            } catch ( Throwable thrw ) {
+                _category.error( "Interceptor " + _interceptors[ i ] + " reported error", thrw );
             }
-            context._tx = null;
         }
+        context._tx = null;
     }
 
 
@@ -1097,7 +1115,7 @@ public class TransactionDomainImpl
      * synchronizes on itself (thread instance) to be notified of
      * a changed in the next timeout.
      */
-    public void run()
+    public synchronized void run()
     {
         TransactionImpl entry;
         long            nextTimeout;
@@ -1108,54 +1126,45 @@ public class TransactionDomainImpl
                 // We synchronize to be notified when the timeout of any
                 // transaction changes on the hashtable object, and we will
                 // need to remove records from the hashtable.
-                synchronized ( _timeoutLock ) {
-                    // No transaction to time out, wait forever. Otherwise,
-                    // wait until the next transaction times out.
-                    if ( _nextTimeout == 0 ) {
-                        _timeoutLock.wait();
-                        clock = Clock.clock();
-                    } else {
-                        clock = Clock.clock();
-                        if ( _nextTimeout > clock ) {
-                            _timeoutLock.wait( _nextTimeout - clock );
-                            clock = Clock.clock();
-                        }
-
-                        // If we have been notified that the domain is
-                        // terminating, we timeout all the transactions
-                        // in this domain.
-                        if ( _state == TERMINATED ) {
-                            for ( int i = _hashTable.length ; i-- > 0 ; ) {
-                                entry = _hashTable[ i ];
-                                while ( entry != null ) {
-                                    entry.timedOut();
-                                    entry = entry._nextEntry;
-                                }
-                            }
-                            DaemonMaster.removeDaemon( this );
-                            return;
-                        }
-
-                        // We synchronize to be able to traverse the transaction
-                        // hash table. At this point we synchronize on both
-                        // background thread and domain.
-                        synchronized ( this ) {
-                            if ( _nextTimeout != 0 && _nextTimeout <= clock ) {
-                                nextTimeout = 0;
-                                for ( int i = _hashTable.length ; i-- > 0 ; ) {
-                                    entry = _hashTable[ i ];
-                                    while ( entry != null ) {
-                                        if ( entry._timeout <= clock ) {
-                                            entry.timedOut();
-                                        } else if ( nextTimeout == 0 || nextTimeout > entry._timeout )
-                                            nextTimeout = entry._timeout;
-                                        entry = entry._nextEntry;
-                                    }
-                                }
-                                _nextTimeout = nextTimeout;
-                            }
+                // No transaction to time out, wait forever. Otherwise,
+                // wait until the next transaction times out.
+                clock = Clock.clock();
+                while ( _nextTimeout == 0 || _nextTimeout > clock ) {
+                    if ( _nextTimeout > clock )
+                        wait( _nextTimeout - clock );
+                    else
+                        wait();
+                    clock = Clock.clock();
+                }
+                    
+                // If we have been notified that the domain is
+                // terminating, we timeout all the transactions
+                // in this domain.
+                if ( _state == TERMINATED ) {
+                    for ( int i = _hashTable.length ; i-- > 0 ; ) {
+                        entry = _hashTable[ i ];
+                        while ( entry != null ) {
+                            entry.timedOut();
+                            entry = entry._nextEntry;
                         }
                     }
+                    DaemonMaster.removeDaemon( this );
+                    return;
+                }
+                
+                if ( _nextTimeout != 0 && _nextTimeout <= clock ) {
+                    nextTimeout = 0;
+                    for ( int i = _hashTable.length ; i-- > 0 ; ) {
+                        entry = _hashTable[ i ];
+                        while ( entry != null ) {
+                            if ( entry._timeout <= clock ) {
+                                entry.timedOut();
+                            } else if ( nextTimeout == 0 || nextTimeout > entry._timeout )
+                                nextTimeout = entry._timeout;
+                            entry = entry._nextEntry;
+                        }
+                    }
+                    _nextTimeout = nextTimeout;
                 }
             } catch ( InterruptedException except ) {
                 return;
@@ -1182,7 +1191,7 @@ public class TransactionDomainImpl
      * @param journal The transaction journal
      * @param resources An array of XA resources
      */
-    private void recover( Journal journal, XAResource[] resources )
+    private  void recover( Journal journal, XAResource[] resources )
     {
         TransactionImpl entry;
         TransactionImpl next;
@@ -1206,41 +1215,39 @@ public class TransactionDomainImpl
         for ( int i = _hashTable.length ; i-- > 0 ; ) {
             entry = _hashTable[ i ];
             while ( entry != null ) {
-                synchronized ( entry ) {
-                    next = entry._nextEntry;
-                    if ( entry._status == Status.STATUS_PREPARED ) {
-                        // The transaction was prepared. Need to markes it as active,
-                        // so we can attempt to prepare it again, and potentially
-                        // rollback or end with a heuristic decision.
-                        entry._status = Status.STATUS_ACTIVE;
-                        try {
-                            entry.commit();
-                            ++commit;
-                        } catch ( Exception except ) {
-                            recoveryError( new RecoveryException( except ) );
-                            ++rollback;
-                        }
-                    } else if ( entry._status == Status.STATUS_COMMITTED ) {
-                        // The transaction has been marked as committed.
-                        // We assume that all RM are capable of committing.
-                        entry._status = Status.STATUS_PREPARED;
-                        entry.internalCommit( entry.canUseOnePhaseCommit() );
-                        try {
-                            entry.forget( Heuristic.COMMIT );
-                        } catch ( IllegalStateException except ) { }
+                next = entry._nextEntry;
+                if ( entry._status == Status.STATUS_PREPARED ) {
+                    // The transaction was prepared. Need to markes it as active,
+                    // so we can attempt to prepare it again, and potentially
+                    // rollback or end with a heuristic decision.
+                    entry._status = Status.STATUS_ACTIVE;
+                    try {
+                        entry.commit();
                         ++commit;
-                    } else if ( entry._status == Status.STATUS_ROLLEDBACK ) {
-                        // The transaction has been marked as rolledback.
-                        // We assume that all RM are capable of committing.
-                        entry._status = Status.STATUS_MARKED_ROLLBACK;
-                        entry.internalRollback();
-                        try {
-                            entry.forget( Heuristic.ROLLBACK );
-                        } catch ( IllegalStateException except ) { }
+                    } catch ( Exception except ) {
+                        recoveryError( new RecoveryException( except ) );
                         ++rollback;
                     }
-                    entry = next;
+                } else if ( entry._status == Status.STATUS_COMMITTED ) {
+                    // The transaction has been marked as committed.
+                    // We assume that all RM are capable of committing.
+                    entry._status = Status.STATUS_PREPARED;
+                    entry.internalCommit( entry.canUseOnePhaseCommit() );
+                    try {
+                        entry.forget( Heuristic.COMMIT );
+                    } catch ( IllegalStateException except ) { }
+                    ++commit;
+                } else if ( entry._status == Status.STATUS_ROLLEDBACK ) {
+                    // The transaction has been marked as rolledback.
+                    // We assume that all RM are capable of committing.
+                    entry._status = Status.STATUS_MARKED_ROLLBACK;
+                    entry.internalRollback();
+                    try {
+                        entry.forget( Heuristic.ROLLBACK );
+                    } catch ( IllegalStateException except ) { }
+                    ++rollback;
                 }
+                entry = next;
             }
         }
         clock = Clock.clock() - clock;

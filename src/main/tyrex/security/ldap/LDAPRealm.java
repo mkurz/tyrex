@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: LDAPRealm.java,v 1.5 2001/03/12 19:20:19 arkin Exp $
+ * $Id: LDAPRealm.java,v 1.6 2001/03/19 17:39:02 arkin Exp $
  */
 
 
@@ -66,7 +66,7 @@ import tyrex.security.container.helper.RolesRealm;
 /**
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.5 $ $Date: 2001/03/12 19:20:19 $
+ * @version $Revision: 1.6 $ $Date: 2001/03/19 17:39:02 $
  */
 public class LDAPRealm
     extends RolesRealm
@@ -76,7 +76,7 @@ public class LDAPRealm
     // XXX members: should contain user DNs
    
  
-    public static final String DefaultRealmName = "<default>";
+    public static final String DEFAULT_REALM_NAME = "<default>";
     
     
     private LDAPUrl  _url;
@@ -172,7 +172,7 @@ public class LDAPRealm
     
     public boolean isDefaultRealm()
     {
-        return getRealmName().equals( DefaultRealmName );
+        return getRealmName().equals( DEFAULT_REALM_NAME );
     }
     
     

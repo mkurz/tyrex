@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: LockSetFactory.java,v 1.2 2001/03/13 03:14:57 arkin Exp $
+ * $Id: LockSetFactory.java,v 1.3 2001/03/19 17:39:00 arkin Exp $
  */
 
 
@@ -56,7 +56,7 @@ import tyrex.tm.TransactionDomain;
  * A factory for creating new lock sets.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $ $Date: 2001/03/13 03:14:57 $
+ * @version $Revision: 1.3 $ $Date: 2001/03/19 17:39:00 $
  */
 public final  class LockSetFactory
 {
@@ -88,6 +88,21 @@ public final  class LockSetFactory
     {
         return new LockSet( identifier, null );
     }
+
+
+    /**
+     * Creates a new lock set that is related to an existing lock set.
+     * Related lock sets drop their locks together.
+     *
+     * @param related The related lock set
+     * @return A new lock set
+     */
+    /*
+    public LockSet createRelated( LockSet related )
+    {
+        return new LockSet( null, related );
+    }
+    */
 
 
     /**

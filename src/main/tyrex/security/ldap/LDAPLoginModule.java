@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: LDAPLoginModule.java,v 1.4 2001/03/12 19:20:19 arkin Exp $
+ * $Id: LDAPLoginModule.java,v 1.5 2001/03/19 17:39:02 arkin Exp $
  */
 
 
@@ -67,6 +67,7 @@ import tyrex.security.container.RealmPrincipal;
 import tyrex.security.container.helper.EmailPrincipal;
 import tyrex.security.NamePasswordCredentials;
 import tyrex.security.NamePasswordCallback;
+import tyrex.util.Logger;
 
 
 public class LDAPLoginModule
@@ -74,53 +75,46 @@ public class LDAPLoginModule
 {
 
 
-    public static class Options
-    {
+    /**
+     * The LDAP URL (<tt>ldap-url</tt>). The URL of the LDAP server includes
+     * the server's host name and port number (if not the default), but no
+     * root DN. For example, <tt>ldap://intalio.com</tt>.
+     */
+    public static final String OPTION_LDAP_URL = "ldap-url";
         
         
-        /**
-         * The LDAP URL (<tt>ldap-url</tt>). The URL of the LDAP server includes
-         * the server's host name and port number (if not the default), but no
-         * root DN. For example, <tt>ldap://intalio.com</tt>.
-         */
-        public static final String LDAPUrl = "ldap-url";
+    /**
+     * The DN mask (<tt>dn-mask</tt>). The mask for constructing a DN given
+     * the account name, using an asterisk to represent the account name.
+     * For example, <tt>uid=*,ou=People,dc=intalio,dc=com</tt>.
+     */
+    public static final String OPTION_DN_MASK = "dn-mask";
         
         
-        /**
-         * The DN mask (<tt>dn-mask</tt>). The mask for constructing a DN given
-         * the account name, using an asterisk to represent the account name.
-         * For example, <tt>uid=*,ou=People,dc=intalio,dc=com</tt>.
-         */
-        public static final String DNMask = "dn-mask";
+    /**
+     * The roles RDN (<tt>roles-rdn</tt>). The relative DN underneath which
+     * all roles are listed. For example, <tt>ou=Roles,dc=intalio,dc=com</tt>.
+     */
+    public static final String OPTION_ROLES_RDN = "roles-rdn";
         
         
-        /**
-         * The roles RDN (<tt>roles-rdn</tt>). The relative DN underneath which
-         * all roles are listed. For example, <tt>ou=Roles,dc=intalio,dc=com</tt>.
-         */
-        public static final String RolesRDN = "roles-rdn";
-        
-        
-        /**
-         * The name of the realm (<tt>realm</tt>). This module configuration
-         * represents a realm and only users in that realm are authenticated.
-         * This option may be null if the realm is unknown. For example,
-         * <tt>intalio.com</tt>.
-         */
-        public static final String Realm = "realm";
-        
-        
-        /**
-         * Log errors (<tt>log-errors</tt>). If this option is specified,
-         * initialization errors are logged to the console.
-         */
-        public static final String LogErrors = "log-errors";
-        
-        
-    }
+    /**
+     * The name of the realm (<tt>realm</tt>). This module configuration
+     * represents a realm and only users in that realm are authenticated.
+     * This option may be null if the realm is unknown. For example,
+     * <tt>intalio.com</tt>.
+     */
+    public static final String OPTION_REALM = "realm";
     
     
-    private static final String ModuleName = "LDAPLoginModule";
+    /**
+     * Log errors (<tt>log-errors</tt>). If this option is specified,
+     * initialization errors are logged to the console.
+     */
+    public static final String OPTION_LOG_ERRORS = "log-errors";
+    
+    
+    private static final String MODULE_NAME = "LDAPLoginModule";
     
     
     /**
@@ -161,21 +155,20 @@ public class LDAPLoginModule
         
         String realmName;
         
-        realmName = (String) _options.get( Options.Realm );
+        realmName = (String) _options.get( OPTION_REALM );
         if ( realmName == null )
-            realmName = LDAPRealm.DefaultRealmName;
+            realmName = LDAPRealm.DEFAULT_REALM_NAME;
         synchronized ( sharedState ) {
             _realm = (LDAPRealm) sharedState.get( realmName );
             if ( _realm == null ) {
                 try {
-                    _realm = new LDAPRealm( realmName, (String) _options.get( Options.LDAPUrl ),
-                                            (String) _options.get( Options.DNMask ),
-                                            (String) _options.get( Options.RolesRDN ) );
+                    _realm = new LDAPRealm( realmName, (String) _options.get( OPTION_LDAP_URL ),
+                                            (String) _options.get( OPTION_DN_MASK ),
+                                            (String) _options.get( OPTION_ROLES_RDN ) );
                 } catch ( Exception except ) {
                     
-                    if ( options.get( Options.LogErrors ) != null ) {
-                        System.out.println( ModuleName + " error: cannot load LDAP realm " + realmName +
-                                            ": " + except );
+                    if ( options.get( OPTION_LOG_ERRORS ) != null ) {
+                        Logger.security.error( MODULE_NAME + " error: cannot load LDAP realm " + realmName, except );
                         except.printStackTrace();
                     }
                     return;
@@ -216,7 +209,6 @@ public class LDAPLoginModule
             NamePasswordCredentials nameCreds;
             
             nameCreds = (NamePasswordCredentials) iter.next();
-            System.out.println( "Realm " + nameCreds.getRealm() + " " + _realm.isDefaultRealm() );
             if ( ( nameCreds.getRealm() == null && _realm.isDefaultRealm() ) ||
                  ( nameCreds.getRealm() != null && nameCreds.getRealm().equals( _realm.getRealmName() ) ) ) {
                 ldapCreds = new LDAPCredentials( _realm.getLDAPHost(), _realm.getLDAPPort(), _realm.getDN( nameCreds.getName() ),

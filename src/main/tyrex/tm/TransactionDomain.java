@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionDomain.java,v 1.18 2001/03/16 20:56:56 arkin Exp $
+ * $Id: TransactionDomain.java,v 1.19 2001/03/19 17:39:02 arkin Exp $
  */
 
 
@@ -49,8 +49,7 @@ package tyrex.tm;
 
 import java.io.PrintWriter;
 import java.io.InputStream;
-import java.util.HashMap;
-import java.util.Iterator;
+import java.util.StringTokenizer;
 import org.omg.CosTransactions.TransactionFactory;
 import org.xml.sax.InputSource;
 import org.exolab.castor.xml.Unmarshaller;
@@ -62,6 +61,8 @@ import javax.transaction.xa.Xid;
 import tyrex.tm.impl.TransactionDomainImpl;
 import tyrex.tm.impl.DomainConfig;
 import tyrex.resource.Resources;
+import tyrex.util.Configuration;
+import tyrex.util.Logger;
 
 
 /**
@@ -85,29 +86,47 @@ import tyrex.resource.Resources;
  * {@link #terminate terminate}.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.18 $ $Date: 2001/03/16 20:56:56 $
+ * @version $Revision: 1.19 $ $Date: 2001/03/19 17:39:02 $
  */
 public abstract class TransactionDomain
 {
 
 
+    /**
+     * Domain ready status. This status is reported for a newly created
+     * transaction domain that has not been recovered yet. The domain
+     * cannot be used to create or import new transactions until is has
+     * been recovered.
+     */
     public static final int  READY      = 0;
 
 
+    /**
+     * Domain recovery status. This status is reported for a transaction
+     * domain during recovery.
+     */
     public static final int  RECOVERING = 1;
 
 
+    /**
+     * Domain active status. This status is reported for a transaction
+     * domain after it has been recovered and before it is terminated.
+     * The domain can be used to create and import new transactions.
+     */
     public static final int  ACTIVE     = 2;
 
 
+    /**
+     * Domain terminated status. This status is reported for a transaction
+     * domain after it has been terminated. The domain is no longer useable.
+     */
     public static final int  TERMINATED = 3;
 
 
-
     /**
-     * A hash map of all transaction domains.
+     * The first transaction domain in a single-linked list of domains.
      */
-    private static final HashMap            _domains = new HashMap();
+    private static TransactionDomainImpl    _firstDomain;
 
     
     /**
@@ -119,9 +138,18 @@ public abstract class TransactionDomain
      */
     public static synchronized TransactionDomain getDomain( String name )
     {
+        TransactionDomainImpl domain;
+
         if ( name == null || name.trim().length() == 0 )
             throw new IllegalArgumentException( "Argument name is null or an empty string" );
-        return (TransactionDomain) _domains.get( name );
+        domain = _firstDomain;
+        while ( domain != null ) {
+            if ( domain.getDomainName().equals( name ) &&
+                 domain.getState() != TERMINATED )
+                return domain;
+            domain = domain.getNextDomain();
+        }
+        return null;        
     }
 
 
@@ -186,11 +214,12 @@ public abstract class TransactionDomain
     public synchronized static TransactionDomain createDomain( InputSource source )
         throws DomainConfigurationException
     {
-        TransactionDomain domain;
-        TransactionDomain oldDomain;
-        DomainConfig      config;
-        Mapping           mapping;
-        Unmarshaller      unmarshaller;
+        TransactionDomainImpl nextDomain;
+        TransactionDomainImpl lastDomain;
+        DomainConfig          config;
+        Mapping               mapping;
+        Unmarshaller          unmarshaller;
+        String                domainName;
 
         if ( source == null )
             throw new IllegalArgumentException( "Argument source is null" );
@@ -203,12 +232,47 @@ public abstract class TransactionDomain
         } catch ( Exception except ) {
             throw new DomainConfigurationException( except );
         }
-        oldDomain = (TransactionDomain) _domains.get( config.getName() );
-        if ( oldDomain != null && oldDomain.getState() != TERMINATED )
-            throw new DomainConfigurationException( "Transaction domain " + config.getName() + " already exists" );
-        domain = config.getDomain();
-        _domains.put( domain.getDomainName(), domain );
-        return domain;
+        // Check that domain name is valid.
+        domainName = config.getName();
+        if ( domainName == null || domainName.trim().length() == 0 )
+            throw new DomainConfigurationException( "Transaction domain configuration file missing domain name" );
+        domainName = domainName.trim();
+
+        // Make sure we do not already have a domain with this name.
+        // If we do and the domain is terminated, replace it with the
+        // new domain. Otherwise, thrown a configuration exception.
+        nextDomain = _firstDomain;
+        lastDomain = null;
+        while ( nextDomain != null ) {
+            if ( nextDomain.getDomainName().equals( domainName ) ) {
+                if ( nextDomain.getState() != TERMINATED )
+                    throw new DomainConfigurationException( "Transaction domain " + domainName + " already exists" );
+                nextDomain = nextDomain.getNextDomain();
+                if ( lastDomain == null )
+                    _firstDomain = nextDomain;
+                else
+                    lastDomain.setNextDomain( nextDomain );
+            } else {
+                lastDomain = nextDomain;
+                nextDomain = nextDomain.getNextDomain();
+            }                
+        }
+        // Add and return the new domain.
+        lastDomain = _firstDomain;
+        if ( lastDomain == null ) {
+            nextDomain = (TransactionDomainImpl) config.getDomain();
+            _firstDomain = nextDomain;
+            return nextDomain;
+        } else {
+            nextDomain = lastDomain.getNextDomain();
+            while ( nextDomain != null ) {
+                lastDomain = nextDomain;
+                nextDomain = nextDomain.getNextDomain();
+            }
+            nextDomain = (TransactionDomainImpl) config.getDomain();
+            lastDomain.setNextDomain( nextDomain );
+            return nextDomain;
+        }
     }
 
 
@@ -230,6 +294,8 @@ public abstract class TransactionDomain
     /**
      * Called to initiate recovery. This method must be called before the
      * transaction domain is active and can be used to create new transactions.
+     * This method may be called multiple times, but will initiate recovery
+     * only the first time.
      *
      * @throws RecoveryException A chain of errors reported during recovery
      */
@@ -249,16 +315,17 @@ public abstract class TransactionDomain
      */
     public static Transaction getTransaction( Xid xid )
     {
-        Iterator              iterator;
         TransactionDomainImpl domain;
         Transaction           tx;
 
-        iterator = _domains.values().iterator();
-        while ( iterator.hasNext() ) {
-            domain = (TransactionDomainImpl) iterator.next();
-            tx = domain.findTransaction( xid );
-            if ( tx != null )
-                return tx;
+        domain = _firstDomain;
+        while ( domain != null ) {
+            if ( domain.getState() == ACTIVE ) {
+                tx = domain.findTransaction( xid );
+                if ( tx != null )
+                    return tx;
+            }
+            domain = domain.getNextDomain();
         }
         return null;
     }
@@ -279,16 +346,17 @@ public abstract class TransactionDomain
      */
     public static Transaction getTransaction( String xid )
     {
-        Iterator              iterator;
         TransactionDomainImpl domain;
         Transaction           tx;
 
-        iterator = _domains.values().iterator();
-        while ( iterator.hasNext() ) {
-            domain = (TransactionDomainImpl) iterator.next();
-            tx = domain.findTransaction( xid );
-            if ( tx != null )
-                return tx;
+        domain = _firstDomain;
+        while ( domain != null ) {
+            if ( domain.getState() == ACTIVE ) {
+                tx = domain.findTransaction( xid );
+                if ( tx != null )
+                    return tx;
+            }
+            domain = domain.getNextDomain();
         }
         return null;
     }
@@ -389,6 +457,22 @@ public abstract class TransactionDomain
      * @return Resources installed for this transaction domain
      */
     public abstract Resources getResources();
+
+
+    static {
+        StringTokenizer domainFiles;
+        String          domainFile;
+        
+        domainFiles = new StringTokenizer( Configuration.getProperty( Configuration.PROPERTY_DOMAIN_FILES, "" ), ", " );
+        while ( domainFiles.hasMoreTokens() ) {
+            domainFile = domainFiles.nextToken();
+            try {
+                createDomain( domainFile );
+            } catch ( DomainConfigurationException except ) {
+                Logger.tyrex.error( "Error loading domain configuration file " + domainFile, except );
+            }
+        }
+    }
 
 
 }

@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: XAConnectionImpl.java,v 1.3 2001/03/12 19:20:18 arkin Exp $
+ * $Id: XAConnectionImpl.java,v 1.4 2001/03/19 17:39:02 arkin Exp $
  */
 
 
@@ -229,7 +229,6 @@ public final class XAConnectionImpl
                 } catch ( XAException except ) { }
             }
         } finally {
-            _resManager = null;
             _underlying = null;
             _txConn = null;
             _listener = null;

@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: X509CertificateLoginModule.java,v 1.4 2001/03/12 19:20:18 arkin Exp $
+ * $Id: X509CertificateLoginModule.java,v 1.5 2001/03/19 17:39:02 arkin Exp $
  */
 
 
@@ -67,6 +67,7 @@ import javax.security.auth.login.LoginException;
 import javax.security.auth.callback.CallbackHandler;
 import javax.security.auth.Subject;
 import javax.security.auth.spi.LoginModule;
+import tyrex.util.Logger;
 
 
 /**
@@ -110,7 +111,7 @@ import javax.security.auth.spi.LoginModule;
  *
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.4 $ $Date: 2001/03/12 19:20:18 $
+ * @version $Revision: 1.5 $ $Date: 2001/03/19 17:39:02 $
  */
 public final class X509CertificateLoginModule
     implements LoginModule
@@ -118,49 +119,44 @@ public final class X509CertificateLoginModule
 
 
     /**
-     * Option names for the login module.
+     * The key store name (<tt>key-store</tt>). If this option is not
+     * specified, the default key store is used (typically JKS).
      */
-    public static class Options
-    {
-        
-        /**
-         * The key store name (<tt>key-store</tt>). If this option is not
-         * specified, the default key store is used (typically JKS).
-         */
-        public static final String KeyStore = "key-store";
-        
-        /**
-         * The trusted certificate list (<tt>trusted-certs</tt>). If this
-         * option is not specified, all the trusted certificates in the
-         * key store are used.
-         */
-        public static final String TrustedCerts = "trusted-certs";
-        
-        /**
-         * The CRL class (<tt>crl-class</tt>). If this option is specified
-         * the named class is used to obtain an X590 CRL implementation.
-         */
-        public static final String CRLClass ="crl-class";
-        
-        /**
-         * Log errors (<tt>log-errors</tt>). If this option is specified,
-         * initialization errors are logged to the console.
-         */
-        public static final String LogErrors = "log-errors";
-        
-    }
+    public static final String OPTION_KEY_STORE = "key-store";
     
+
+    /**
+     * The trusted certificate list (<tt>trusted-certs</tt>). If this
+     * option is not specified, all the trusted certificates in the
+     * key store are used.
+     */
+    public static final String OPTION_TRUSTED_CERTS = "trusted-certs";
+
+        
+    /**
+     * The CRL class (<tt>crl-class</tt>). If this option is specified
+     * the named class is used to obtain an X590 CRL implementation.
+     */
+    public static final String OPTION_CRL_CLASS ="crl-class";
+    
+    
+    /**
+     * Log errors (<tt>log-errors</tt>). If this option is specified,
+     * initialization errors are logged to the console.
+     */
+    public static final String OPTION_LOG_ERRORS = "log-errors";
+
 
     /**
      * The default key store name.
      */
-    private static final String DefaultKeyStore = "JKS";
+    private static final String DEFAULT_KEY_STORE = "JKS";
     
     
     /**
      * The name of this module.
      */
-    private static final String ModuleName = "X509CertificateLoginModule";
+    private static final String MODULE_NAME = "X509CertificateLoginModule";
     
     
     /**
@@ -202,9 +198,9 @@ public final class X509CertificateLoginModule
             String   keyStoreName;
             KeyStore keyStore;
             
-            keyStoreName = (String) options.get( Options.KeyStore );
+            keyStoreName = (String) options.get( OPTION_KEY_STORE );
             if ( keyStoreName == null )
-                keyStoreName = DefaultKeyStore;
+                keyStoreName = DEFAULT_KEY_STORE;
             keyStore = (KeyStore) sharedState.get( "key-store-" + keyStoreName );
             if ( keyStore == null ) {
                 try {
@@ -213,9 +209,9 @@ public final class X509CertificateLoginModule
                 } catch ( KeyStoreException except ) {
                     // We have a problem, the key store is not found. We can't proceed,
                     // this module will always return false.
-                    if ( options.get( Options.LogErrors ) != null )
-                        System.out.println( ModuleName + " error: key store " + keyStoreName +
-                                            " could not be loaded: " + except );
+                    if ( options.get( OPTION_LOG_ERRORS ) != null )
+                        Logger.security.error( MODULE_NAME + " error: key store " + keyStoreName +
+                                               " could not be loaded", except );
                     _trusted = new Hashtable();
                     return;
                 }
@@ -227,7 +223,7 @@ public final class X509CertificateLoginModule
             String          trusted;
             StringTokenizer token;
             
-            trusted = (String) options.get( Options.TrustedCerts );
+            trusted = (String) options.get( OPTION_TRUSTED_CERTS );
             if ( trusted != null ) {
                 _trusted = (Hashtable) sharedState.get( "trusted-certs-" + keyStoreName + "-" + trusted );
                 if ( _trusted == null ) {
@@ -245,9 +241,9 @@ public final class X509CertificateLoginModule
                                     _trusted.put( ( (X509Certificate) cert ).getIssuerDN(), cert );
                             }
                         } catch ( KeyStoreException except ) {
-                            if ( options.get( Options.LogErrors ) != null )
-                                System.out.println( ModuleName + " error: error accessing key store " + keyStoreName +
-                                                    " could not be loaded: " + except );
+                            if ( options.get( OPTION_LOG_ERRORS ) != null )
+                                Logger.security.error( MODULE_NAME + " error: error accessing key store " + keyStoreName +
+                                                       " could not be loaded", except );
                             return;
                         }
                     }
@@ -274,9 +270,9 @@ public final class X509CertificateLoginModule
                         }
                         sharedState.put( "trusted-certs-" + keyStoreName + "-all", _trusted );
                     } catch (KeyStoreException except ) {
-                        if ( options.get( Options.LogErrors ) != null )
-                            System.out.println( ModuleName + " error: error accessing key store " + keyStoreName +
-                                                " could not be loaded: " + except );
+                        if ( options.get( OPTION_LOG_ERRORS ) != null )
+                            Logger.security.error( MODULE_NAME + " error: error accessing key store " + keyStoreName +
+                                                   " could not be loaded", except );
                     }
                 }
             }
@@ -285,7 +281,7 @@ public final class X509CertificateLoginModule
             // and placed in the shared state of the login module.
             String crlClassName;
             
-            crlClassName = (String) options.get( Options.CRLClass );
+            crlClassName = (String) options.get( OPTION_CRL_CLASS );
             if ( crlClassName != null ) {
                 _crl = (X509CRL) sharedState.get( "crl-" + crlClassName );
                 if ( _crl == null ) {
@@ -293,8 +289,8 @@ public final class X509CertificateLoginModule
                         _crl = (X509CRL) Class.forName( crlClassName ).newInstance();
                         sharedState.put( "crl-" + crlClassName, _crl );
                     } catch ( Exception except ) {
-                        if ( options.get( Options.LogErrors ) != null )
-                            System.out.println( ModuleName + " error: error loading CRL class " + crlClassName + ": " + except );
+                        if ( options.get( OPTION_LOG_ERRORS ) != null )
+                            Logger.security.error( MODULE_NAME + " error: error loading CRL class " + crlClassName, except );
                     }
                 }
             }

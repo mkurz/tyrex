@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TestHarness.java,v 1.11 2001/02/23 17:17:39 omodica Exp $
+ * $Id: TestHarness.java,v 1.12 2001/03/19 17:39:03 arkin Exp $
  */
 
 package tests;
@@ -50,47 +50,48 @@ import java.util.Enumeration;
 
 import junit.framework.*;
 
-import concurrency.Concurrency;
+import lock.Lock;
 import naming.Naming;
-import util.BackgroundThreadTest;
+/*
 import jdbc.XADataSourceTestSuite;
 import transaction.Transaction;
+*/
 
 /**
  * Test harness.
  */
 public class TestHarness
 {
+
     static public void main( String args[] )
     {
         try {
             // define all the test suites
             TestSuite main = new TestSuite("Tyrex Test Harness");
-            TestSuite concurrency = new Concurrency( "Concurrency service tests" );
+            TestSuite lock = new Lock( "Lock service tests" );
             TestSuite naming = new Naming( "JNDI service provider" );
+            /*
             TestSuite jdbc = new XADataSourceTestSuite( "XADataSource test" );
-            TestSuite util = new BackgroundThreadTest( "Background thread test" );
             TestSuite transaction = new Transaction( "Transaction tests" );
+            */
            
-            // set up the concurrency test suite
-            for( java.util.Enumeration e = concurrency.tests(); e.hasMoreElements(); )
+            // set up the lock test suite
+            for( java.util.Enumeration e = lock.tests(); e.hasMoreElements(); )
              main.addTest( (Test)e.nextElement());
             
             // set up the naming test suite
             for( java.util.Enumeration e = naming.tests(); e.hasMoreElements(); )
              main.addTest( (Test)e.nextElement());
             
+            /*
             // set up the jdbc test suite
             for( java.util.Enumeration e = jdbc.tests(); e.hasMoreElements(); )
             main.addTest( (Test)e.nextElement());
              
-            // set up the util test suite
-            for( java.util.Enumeration e = util.tests(); e.hasMoreElements(); )
-            main.addTest( (Test)e.nextElement());
-            
             // set up the transaction test suite
             for( java.util.Enumeration e = transaction.tests(); e.hasMoreElements(); )
             main.addTest( (Test)e.nextElement());
+            */
             
             // Set up the verbose mode
             for(int i=0;i<args.length;i++) if(args[i].equals("-verbose")) VerboseStream.verbose=true;

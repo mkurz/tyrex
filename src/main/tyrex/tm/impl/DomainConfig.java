@@ -55,7 +55,7 @@ import tyrex.resource.Resources;
 /**
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.5 $ $Date: 2001/03/13 03:14:59 $
+ * @version $Revision: 1.6 $ $Date: 2001/03/19 17:39:02 $
  */
 public final class DomainConfig
 {
@@ -82,6 +82,9 @@ public final class DomainConfig
 
 
     private String              _journalFactory;
+
+
+    private boolean             _autoRecover;
 
 
     private TransactionDomain   _txDomain;
@@ -139,6 +142,18 @@ public final class DomainConfig
     public void setJournalFactory( String factory )
     {
         _journalFactory = factory;
+    }
+
+
+    public boolean getAutoRecover()
+    {
+        return _autoRecover;
+    }
+
+
+    public void setAutoRecover( boolean autoRecover )
+    {
+        _autoRecover = autoRecover;
     }
 
 
