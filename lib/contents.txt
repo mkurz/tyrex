@@ -1,0 +1,41 @@
+This file describes contents of the directory :
+===========================================================
+
+
+
+
+Ant Related jars
+-----------------------------------------------------------
+ant_1.5.3.1.jar - The ant build tool
+
+antoptional_1.5.3.1.jar - Optional targets of the ant build tool
+
+
+
+
+IIOP Related jars
+-----------------------------------------------------------
+avalon-logkit_1.2.jar - Used by openorb tools during build. 
+
+avalon-framework_4.1.2.jar - Used by openorb tools during build. 
+
+openorb-1.3.1.jar - Used by openorb tools during build. Also probably some compile dependencies 
+
+openorb_tools-1.3.1.jar - Openorb tools (i.e. idltojava) used during build of the iiop portion and iiop tests
+
+
+
+XML Related jars
+-----------------------------------------------------------
+dom_jbwsdp_1.1.jar - Originally dom.jar from the Sun JWSDP  1.1. / JAXP
+
+sax_jbwsdp_1.1.jar - Originally sax.jar from the Sun JWSDP  1.1. / JAXP
+
+jaxp-api_jbwsdp_1.1.jar - Originally jaxp-api.jar from the Sun JWSDP  1.1. / JAXP
+
+xalan_jbwsdp_1.1.jar - Originally xalan.jar from the Sun JWSDP  1.1. / JAXP
+
+xercesImpl_jbwsdp_1.1.jar - Originally xercesImpl.jar from the Sun JWSDP  1.1. / JAXP
+
+xsltc_jbwsdp_1.1.jar - Originally xsltc.jar from the Sun JWSDP  1.1. / JAXP
+
