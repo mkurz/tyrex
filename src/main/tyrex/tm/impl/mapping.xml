@@ -18,9 +18,11 @@
     <field name="waitNew" type="integer">
       <bind-xml name="waitNew" node="element" />
     </field>
+<!--    
     <field name="journalFactory" type="string">
       <bind-xml name="journalFactory" node="element" />
     </field>
+-->    
     <field name="resources" type="tyrex.resource.Resources">
       <bind-xml name="resources" node="element" />
     </field>
