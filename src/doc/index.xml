@@ -9,6 +9,8 @@
         services for security and authentication, local and distributed transactions,
         resource configuration and pooling, and TP monitoring.</p>
       
+      <p>Tyrex is now hosted on <a href="http://sourceforge.net/projects/tyrex/">SourceForge</a></p>
+      
       <p><b>Note:</b> Presently we are only hosting one mailing list. Traffic is not high, so if
         you are interested in keeping up to date with new releases, please <a href="lists.xml">subscribe
           to this list</a>.</p>
@@ -35,6 +37,8 @@
     </section>
 
     <section title="News">
+      <p>Tyrex is now hosted on <a href="http://sourceforge.net/projects/tyrex/">SourceForge</a></p>
+      
       <p>Version $VERSION$ is now <a href="download.xml">available for download</a>.
         <ul>
           <li>May 06, 2002: Version 1.0</li>

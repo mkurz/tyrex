@@ -115,7 +115,7 @@
       </navLink>
       <navLink>
         <url>lists.xml</url>
-        <display>Mailing Lists</display>
+        <display>Lists/Forums</display>
       </navLink>
       <navLink>
         <url>cvs.xml</url>

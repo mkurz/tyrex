@@ -1,14 +1,25 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <document url="http://tyrex.sourceforge.net/lists.xml">
   <body>
-    <title>Tyrex-users: Users' Mailing List</title>
-    <header>
+    <title>Mailing List, Forums</title>
+    <section title="Users' Mailing List">
       <p>Medium volume (possibly more than 5 messages a day) mailing list dedicated to the users of Tyrex.</p>
 
       <p><mailing-list post="tyrex-users@lists.sourceforge.net" description="The Tyrex Users' Mailing List"
                        archive="http://www.geocrawler.com/redir-sf.php3?list=tyrex-users" 
                        info="http://lists.sourceforge.net/lists/listinfo/tyrex-users"/></p>
 
-    </header>
+    </section>
+    
+    <section title="Forums">
+      <p>There are three forums available:
+      <ul>
+      <li><a href="http://sourceforge.net/forum/forum.php?forum_id=180321">Developers</a></li>
+      <li><a href="http://sourceforge.net/forum/forum.php?forum_id=180320">Help</a></li>
+      <li><a href="http://sourceforge.net/forum/forum.php?forum_id=180319">Open Discussion</a></li>
+      </ul>
+      </p>
+    
+    </section>
   </body>
 </document>

@@ -2,7 +2,10 @@
 <document url="http://tyrex.sourceforge.net/cvs.xml">
   <body>
     <title>CVS Access</title>
-
+    <header>
+    <p>More CVS information can be found <a href="http://sourceforge.net/cvs/?group_id=54149">here.</a></p>
+    </header>
+    
     <section title="WebCVS, Snapshots, Bugs">
 
       <p><a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/tyrex">WebCVS access to the repository.</a></p>
@@ -17,7 +20,7 @@
     <section title="Anonymous Access">
 
       <p>The source code, documentation and libraries are available for anonymous access
-         from the Exolab CVS server.</p>
+         from the SourceForge CVS server.</p>
 
       <p>The CVS is updated regularly and may contain an unstable version when you
          check it out. We commit working code to the CVS immediately prior to putting
