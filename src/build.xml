@@ -117,6 +117,7 @@
     <mkdir dir="${build.tests}" />
     <java classname="org.openorb.compiler.IdlCompiler" fork="yes">
     	<arg line="${source.tests}/ots/idl/test.idl -d ${build.tests}" />
+	<classpath refid="${java.class.path}" />
     </java>
     <javac srcdir="${build.tests}" destdir="${build.tests}"
            classpath="${classpath}:${build.tests}" debug="on" deprecation="${deprecation}" 
