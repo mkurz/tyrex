@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionImpl.java,v 1.24 2001/06/06 19:06:54 psq Exp $
+ * $Id: TransactionImpl.java,v 1.25 2001/07/27 22:31:31 jdaniel Exp $
  */
 
 
@@ -88,7 +88,7 @@ import tyrex.util.Messages;
  * they are added.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.24 $ $Date: 2001/06/06 19:06:54 $
+ * @version $Revision: 1.25 $ $Date: 2001/07/27 22:31:31 $
  * @see XAResourceHolder
  * @see TransactionManagerImpl
  * @see TransactionDomain
@@ -1933,7 +1933,7 @@ final class TransactionImpl
             throw new IllegalStateException( Messages.message( "tyrex.tx.cannotForget" ) );
         
         // only forget the resources if a heuristic exception occured
-        if ( ( _heuristic != ignoreHeuristic || _twoPhase ) &&
+        if ( ( _heuristic != ignoreHeuristic && _twoPhase ) &&
              ( ( _heuristic == Heuristic.ROLLBACK ) ||
                ( _heuristic == Heuristic.COMMIT ) ||
                ( _heuristic == Heuristic.MIXED ) ||
