@@ -40,42 +40,37 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Transaction.java,v 1.13 2001/11/12 02:50:42 mills Exp $
+ * $Id: Transaction.java,v 1.14 2003/11/10 23:27:26 metaboss Exp $
  */
 
 
 package transaction;
 
-import transaction.configuration.*;
+import VerboseStream;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.IOException;
 import java.io.Reader;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Hashtable;
-import java.util.Enumeration;
-import java.util.Vector;
-import javax.sql.DataSource;
+
 import javax.sql.XAConnection;
 import javax.sql.XADataSource;
-import javax.transaction.HeuristicRollbackException;
-import javax.transaction.Status;
 import javax.transaction.TransactionManager;
-import javax.transaction.xa.XAResource;
+
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
+
 import org.exolab.castor.xml.MarshalException;
 import org.exolab.castor.xml.ValidationException;
-
-import junit.framework.*;
 
 import transaction.configuration.Attribute;
 import transaction.configuration.Configuration;
@@ -83,10 +78,6 @@ import transaction.configuration.Datasource;
 import transaction.configuration.Performance;
 import transaction.configuration.types.Type;
 import tyrex.resource.jdbc.xa.EnabledDataSource;
-//import tyrex.tm.Tyrex;
-import tyrex.tm.TyrexTransaction;
-
-import VerboseStream;
 
 /**
  * Performs various tests with transactions using databases.
@@ -877,7 +868,8 @@ public class Transaction
             exception.printStackTrace();
         }*/
 		org.apache.log4j.BasicConfigurator.configure();
-		org.apache.log4j.BasicConfigurator.disableAll();
+// Removed by Rost. There does not seem to be a replacement in new log4j  		
+//		org.apache.log4j.BasicConfigurator.disableAll();
 		VerboseStream.verbose = true;
         TestSuite main = new Transaction( "Transaction Test", args[0]);
         
