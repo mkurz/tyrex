@@ -60,13 +60,13 @@ import java.sql.Statement;
  * when createStatement is called on a {@link TyrexConnection} object.
  * <p>
  * The reason for this class is for the method java.sql.Statement#getConnection
- * to return the correct connection.
+ * to return the Tyrex connection and not the actual underlying connection.
  * <p>
  * This class is thread safe.
  *
  * @author <a href="mohammed@intalio.com">Riad Mohammed</a>
  */
-public class TyrexStatementImpl 
+class TyrexStatementImpl 
     implements Statement, TyrexConnectionListener
 {
     /**
@@ -95,7 +95,7 @@ public class TyrexStatementImpl
      *      the statement.
      * @throws SQLException if there is a problem creating the statement
      */
-    public TyrexStatementImpl(Statement statement, TyrexConnection connection)
+    TyrexStatementImpl(Statement statement, TyrexConnection connection)
         throws SQLException
     {
         if (null == statement) {
@@ -120,7 +120,7 @@ public class TyrexStatementImpl
         // close the underlying statement ignoring any errors
         if (null != _statement) {
             try {    
-                _statement.close();
+                internalClose(false);
             }
             catch (SQLException e) {
             }
@@ -146,9 +146,72 @@ public class TyrexStatementImpl
 
         synchronized (this) {
             statement = getStatement();
+            // close the existing result set before getting
+            // the new one just in case the underlying
+            // statement does not close its underlying
+            // result set. There is no way to query a result
+            // set whether it is closed or not.
+            closeResultSet();
         }
         
-        return statement.executeQuery(sql);
+        return setResultSet(statement.executeQuery(sql));
+    }
+
+
+    /**
+     * Set the result set as a result of executing a query
+     * on this statement. 
+     * <P>
+     * This method assumes that the existing result is closed.
+     * <P>
+     * If the specified result set is of type {@link TyrexResultSetImpl}
+     * then the result set of the statement is set to the specified result
+     * set. Else the specified result set is wrapped in a {@link TyrexResultSetImpl}
+     * which is then set as the result set of the statement.
+     *
+     * @param resultSet the underlying result set of the underlying statement.
+     *      Can be null.
+     * @return the  result set to be returned as the result of a query. 
+     * @see #closeResultSet
+     */
+    protected synchronized ResultSet setResultSet(ResultSet resultSet)
+    {
+        _resultSet = null == resultSet 
+                        ? null 
+                        : ((resultSet instanceof TyrexResultSetImpl) 
+                            ? (TyrexResultSetImpl)resultSet 
+                            : new TyrexResultSetImpl(resultSet, this));
+
+        return _resultSet;
+    }
+
+
+    /**
+     * Close the existing result set associated with the statement.
+     * If there is no existing result set nothing is done. 
+     * <p>
+     * This method assumes that the calling method
+     * synchronizes on this instance.
+     * <P>
+     * Any exceptions caused by closing the result set are ignored.
+     */
+    protected void closeResultSet()
+    {
+        ResultSet resultSet;
+
+        if (null != _resultSet) {
+            try {    
+                // set the instance variable _resultSet
+                // to null before calling close
+                resultSet = _resultSet;
+                _resultSet = null;
+
+                resultSet.close();
+            }
+            catch (SQLException e) {
+                // ignore sql exception on old result set
+            }
+        }
     }
 
     /**
@@ -179,12 +242,12 @@ public class TyrexStatementImpl
     }
 
     /**
-	 * Releases this <code>Statement</code> object's database 
-	 * and JDBC resources immediately instead of waiting for
-	 * this to happen when it is automatically closed.
+     * Releases this <code>Statement</code> object's database 
+     * and JDBC resources immediately instead of waiting for
+     * this to happen when it is automatically closed.
      * It is generally good practice to release resources as soon as
-	 * you are finished with them to avoid tying up database
-	 * resources.
+     * you are finished with them to avoid tying up database
+     * resources.
      * <P><B>Note:</B> A <code>Statement</code> object is automatically closed when it is
      * garbage collected. When a <code>Statement</code> object is closed, its current
      * <code>ResultSet</code> object, if one exists, is also closed.  
@@ -194,21 +257,47 @@ public class TyrexStatementImpl
     public final synchronized void close() 
         throws SQLException
     {
-        if (null != _statement) {
-            try {
-                _statement.close();    
-            }
-            finally {
+        internalClose(true);
+    }
+
+
+    /**
+     * The method that actually closes the underlying statement.
+     * Any existing result sets are closed as well.
+     * <P>
+     * This method assumes that the calling methods are synchronized
+     * on the statement
+     *
+     * @param removeListener true if the statement is removed as a listener
+     *      on the connection
+     * @throws SQLException if the statement is already closed or if there
+     *      is a problem closing the underlying statement.
+     */
+    private void internalClose(boolean removeListener) 
+        throws SQLException
+    {
+        if (null == _statement) {
+            throw new SQLException("The statement is already closed");    
+        }
+
+        // close any existing result set
+        closeResultSet();
+
+        try {
+            _statement.close();    
+        }
+        finally {
+            if (removeListener) {
                 try {
                     _connection.removeListener(this);
                 }
                 catch (Exception e) {
                     // ignore
                 }
-                _statement = null;
-                _connection = null;
-
             }
+            _statement = null;
+            _connection = null;
+
         }
     }
 
@@ -455,10 +544,26 @@ public class TyrexStatementImpl
      * @exception SQLException if a database access error occurs
      * @see #execute 
      */
-    public final synchronized ResultSet getResultSet() 
+    public final ResultSet getResultSet() 
         throws SQLException
     {
-        return getStatement().getResultSet();
+        Statement statement;
+
+        synchronized (this){
+            statement = getStatement();
+
+            // close the existing result set before getting
+            // the new one just in case the underlying
+            // statement does not close its underlying
+            // result set. There is no way to query a result
+            // set whether it is closed or not.
+            closeResultSet();
+        }
+        
+        // the call to statement.getResultSet is not synchronized so that
+        // cancel can be called.
+        
+        return setResultSet(statement.getResultSet());
     }
 
     /**

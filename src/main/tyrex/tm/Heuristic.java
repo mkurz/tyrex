@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Heuristic.java,v 1.2 2000/09/08 23:06:13 mohammed Exp $
+ * $Id: Heuristic.java,v 1.3 2000/12/19 02:21:36 mohammed Exp $
  */
 
 
@@ -87,12 +87,11 @@ package tyrex.tm;
  *
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $ $Date: 2000/09/08 23:06:13 $
+ * @version $Revision: 1.3 $ $Date: 2000/12/19 02:21:36 $
  * @see Transaction
  * @see TransactionImpl#normalize
  */
 public interface Heuristic
-//    extends tyrex.interceptor.Heuristic
 {
 
 

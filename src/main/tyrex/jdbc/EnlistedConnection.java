@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: EnlistedConnection.java,v 1.8 2000/10/10 00:57:08 mohammed Exp $
+ * $Id: EnlistedConnection.java,v 1.9 2000/12/19 02:21:35 mohammed Exp $
  */
 
 
@@ -130,108 +130,6 @@ public class EnlistedConnection
     }
 
 
-    public Statement createStatement()
-        throws SQLException
-    {
-	return new TyrexStatementImpl(getUnderlying().createStatement(), this);
-    }
-
-
-    public Statement createStatement( int resultSetType, int resultSetConcurrency )
-        throws SQLException
-    {
-	return new TyrexStatementImpl( getUnderlying().createStatement( resultSetType, resultSetConcurrency ),
-                                  this );
-    }
-
-
-    public PreparedStatement prepareStatement( String sql )
-        throws SQLException
-    {
-	return new TyrexPreparedStatementImpl( getUnderlying().prepareStatement( sql ), this );
-    }
-
-
-    public PreparedStatement prepareStatement( String sql, int resultSetType, int resultSetConcurrency )
-        throws SQLException
-    {
-	return new TyrexPreparedStatementImpl( getUnderlying().prepareStatement( sql, resultSetType, resultSetConcurrency ),
-                                           this );
-    }
-
-
-    public CallableStatement prepareCall( String sql )
-        throws SQLException
-    {
-	return new TyrexCallableStatementImpl( getUnderlying().prepareCall( sql ),
-                                           this );
-    }
-
-
-    public CallableStatement prepareCall( String sql, int resultSetType, int resultSetConcurrency )
-        throws SQLException
-    {
-	return new TyrexCallableStatementImpl( getUnderlying().prepareCall( sql, resultSetType, resultSetConcurrency ),
-                                           this );
-    }
-
-
-    public String nativeSQL( String sql )
-        throws SQLException
-    {
-	return getUnderlying().nativeSQL( sql );
-    }
-
-
-    public DatabaseMetaData getMetaData()
-        throws SQLException
-    {
-	return getUnderlying().getMetaData();
-    }
-
-
-    public void setCatalog( String catalog )
-        throws SQLException
-    {
-	getUnderlying().setCatalog( catalog );
-    }
-
-
-    public String getCatalog()
-        throws SQLException
-    {
-	return getUnderlying().getCatalog();
-    }
-
-
-    public SQLWarning getWarnings()
-        throws SQLException
-    {
-	return getUnderlying().getWarnings();
-    }
-
-
-    public void clearWarnings()
-        throws SQLException
-    {
-	getUnderlying().clearWarnings();
-    }
-
-
-    public Map getTypeMap()
-        throws SQLException
-    {
-	return getUnderlying().getTypeMap();
-    }
-
-
-    public void setTypeMap( Map map )
-        throws SQLException
-    {
-	getUnderlying().setTypeMap( map );
-    }
-
-
     public void setAutoCommit( boolean autoCommit )
         throws SQLException
     {
@@ -269,42 +167,13 @@ public class EnlistedConnection
     }
 
 
-    public void setReadOnly( boolean readOnly )
-        throws SQLException
-    {
-	getUnderlying().setReadOnly( readOnly );
-    }
-
-
-    public boolean isReadOnly()
-        throws SQLException
-    {
-	return getUnderlying().isReadOnly();
-    }
-    
-
-    public void setTransactionIsolation( int level )
-        throws SQLException
-    {
-	getUnderlying().setTransactionIsolation( level );
-    }
-
-
-    public int getTransactionIsolation()
-        throws SQLException
-    {
-	return getUnderlying().getTransactionIsolation();
-    }
-
-
-    public synchronized void close()
+    protected void internalClose()
 	throws SQLException
     {
         if (!isClosed()) {
             _underlying.close();
-        	_underlying = null;
-        	_xaRes = null;        
-            notifyConnectionClosed();
+            _underlying = null;
+            _xaRes = null;        
         }
     }
 
@@ -312,13 +181,6 @@ public class EnlistedConnection
     public synchronized boolean isClosed()
     {
 	return ( _underlying == null );
-    }
-
-
-    protected void finalize()
-	throws Throwable
-    {
-	close();
     }
 
 
@@ -392,13 +254,10 @@ public class EnlistedConnection
      * this connection has been closed or there is a problem enlisting the
      * the underlying connection with the resource manager.
      */
-    Connection getUnderlying()
+    protected Connection internalGetUnderlyingConnection()
         throws SQLException
     {
-    if (isClosed()) {
-        throw new SQLException("Connection is closed.");    
-    }
-	enlist();
+        enlist();
 
 	return _underlying;
     }

@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionImpl.java,v 1.4 2000/10/11 18:16:48 mohammed Exp $
+ * $Id: TransactionImpl.java,v 1.5 2000/12/19 02:21:36 mohammed Exp $
  */
 
 
@@ -79,7 +79,7 @@ import tyrex.util.Messages;
  * they are added.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.4 $ $Date: 2000/10/11 18:16:48 $
+ * @version $Revision: 1.5 $ $Date: 2000/12/19 02:21:36 $
  * @see XAResourceHolder
  * @see TransactionManagerImpl
  * @see TransactionDomain
@@ -641,7 +641,7 @@ final class TransactionImpl
         //System.out.println("TransactionImpl:using 1PC " + canUseOnePhaseCommit);
         
         try {
-        	    _txDomain.notifyCommit( _xid );
+        	_txDomain.notifyCommit( _xid );
 
         	if (!canUseOnePhaseCommit) {
                 // This is two phase commit. Notify the domain about request
@@ -1358,7 +1358,7 @@ final class TransactionImpl
     private void xaExceptionOccurred( XAException except )
     {
         //RM
-        Debug.printXAException(except );
+        //Debug.printXAException(except );
     if ( except.errorCode == XAException.XA_HEURMIX )
         _heuristic = _heuristic | Heuristic.Mixed; 
     else if ( except.errorCode == XAException.XA_HEURHAZ )
@@ -1798,7 +1798,7 @@ final class TransactionImpl
     			xaRes.xa.forget( xaRes.xid );
     		} catch ( XAException except ) {
                 //RM
-                except.printStackTrace();
+                //except.printStackTrace();
     		    error( except );
     		} catch ( Exception except ) {
     		    error( except );
@@ -1822,7 +1822,7 @@ final class TransactionImpl
     			xaRes.xa.forget( xaRes.xid );
     		} catch ( XAException except ) {
                 //RM
-                except.printStackTrace();
+                //except.printStackTrace();
     		    error( except );
     		} catch ( Exception except ) {
     		    error( except );
@@ -2338,7 +2338,7 @@ final class TransactionImpl
         //except.printStackTrace();
         return false;
 	} catch ( Exception except ) {
-        except.printStackTrace();
+        //except.printStackTrace();
         throw new SystemException( except.toString() );
 	}
 

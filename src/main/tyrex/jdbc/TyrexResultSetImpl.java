@@ -68,12 +68,19 @@ import java.util.Map;
 /////////////////////////////////////////////////////////////////////
 
 /**
- * 
+ * This class implements java.sql.ResultSet so that it can be returned
+ * by the various Tyrex jdbc classes that return java.sql.ResultSet
+ * objects. This is done so that java.sql.ResultSet#getStatement returns
+ * a Tyrex implementation, so that java.sql.ResultSet#getConnection returns
+ * the Tyrex java.sql.Connection implementation. The actual underlying connection
+ * can never be accessed.
+ * <p>
+ * This class is thread safe.
  *
  * @author <a href="mohammed@intalio.com">Riad Mohammed</a>
  */
 public final class TyrexResultSetImpl 
-    implements ResultSet
+    implements ResultSet, TyrexConnectionListener
 {
     /**
      * The underlying result set
@@ -89,13 +96,47 @@ public final class TyrexResultSetImpl
 
 
     /**
+     * The tyrex connection used to create   
+     * a {@link TyrexStatementImpl} object
+     * lazily when the method {@link #getStatement} is called.
+     */
+    private TyrexConnection _connection;
+
+
+    /**
      * True if the result set has been closed
      */
     private boolean _isClosed;
 
 
     /**
-     * Create the TyrexResultSetImpl
+     * Create the TyrexResultSetImpl.
+     *
+     * @param _resultSet the underlying result set
+     * @param statement the statement that returns this
+     *      result set.
+     */
+    public TyrexResultSetImpl(ResultSet resultSet, 
+                              TyrexConnection connection)
+    {
+        if (null == resultSet) {
+            throw new IllegalArgumentException("The argument 'resultSet' is null.");
+        }
+
+        if (null == connection) {
+            throw new IllegalArgumentException("The argument 'connection' is null.");    
+        }
+
+        _resultSet = resultSet;
+        _connection = connection;
+        _statement = null;
+        _isClosed = false;
+    }
+
+
+
+    /**
+     * Create the TyrexResultSetImpl.
      *
      * @param _resultSet the underlying result set
      * @param statement the statement that returns this
@@ -109,13 +150,29 @@ public final class TyrexResultSetImpl
         }
 
         if (null == statement) {
-            throw new IllegalArgumentException("The argument 'statement' is null.");
+            throw new IllegalArgumentException("The argument 'statement' is null.");    
         }
 
         _resultSet = resultSet;
         _statement = statement;
+        _connection = null;
         _isClosed = false;
     }
+
+    /**
+     * The connection has been closed so close the
+     * the result set.
+     */
+    public void connectionClosed()
+    {
+        try {
+            close();
+        }
+        catch (SQLException e) {
+            // ignore
+        }
+    }
+    
 
     /**
      * Moves the cursor down one row from its current position.
@@ -167,39 +224,50 @@ public final class TyrexResultSetImpl
         // The deadlock will
         // occur because the locks on the result set, and statement
         // are gotten in a different order.
-        // The first thread (closing result set) acquires locks in the order
+        // The first thread (closing result set) acquires locks in the order:
         // result set, statement whereas the other thread (get new result set
-        // from statement) acquires locks in the order statement, result set.
+        // from statement) acquires locks in the order: statement, result set.
         // By synchronizing within the try statement means that the lock on the
         // result set is released when statement.resultSetIsClosed is executed.
         // There is no other method that potentially tries to get a lock on the
-        // statement.
+        // statement in the result set.
         // statement.resultSetIsClosed is only executed once because the thread
         // that gets past the validateOpen method call sets the instance variables
-        // to null and the method variable statement to the non-null _statement.
+        // to null and the method variable statement to the _statement.
         // All other threads will fail on validateOpen with the method variable statement
-        // setto null.
+        // being set to null.
+        // There is a similar situation with connection.
 
         TyrexStatementImpl statement = null;
         ResultSet resultSet = null;
+        TyrexConnection connection = null;
 
         try {
             synchronized(this){
-                validateOpen();
                 statement = _statement;
                 resultSet = _resultSet;
+                connection = _connection;
                 _statement = null;
                 _resultSet = null;
+                _connection = null;
                 resultSet.close();
             }
         }
         finally {
-            // statement will be non-null only for the
+            // statement can be non-null only for the
             // thread that closed the underlying result set
-            // so statemnt.resultSetIsClosed is only executed
+            // so statement.resultSetIsClosed is only executed
             // once
             if (null != statement) {
                 statement.resultSetIsClosed(this);
+            }
+
+            // connection can be non-null only for the
+            // thread that closed the underlying result set
+            // so connection.removeListener is only executed
+            // once
+            if (null != connection) {
+                connection.removeListener(this);    
             }
         }
     }
@@ -2705,7 +2773,23 @@ public final class TyrexResultSetImpl
     public synchronized Statement getStatement() 
         throws SQLException
     {
+        Statement statement;
+
         validateOpen();
+
+        if (null == _statement) {
+            // get the statement
+            statement = _resultSet.getStatement();
+
+            if (null == statement) {
+                //throw new SQLException("The result set does not have a statement associated with it.");    
+                return null;
+            }
+            _statement = new TyrexStatementImpl(statement, _connection);
+            // there is no existing result set since we just created the
+            // statement.
+            _statement.setResultSet(this);
+        }
 
         return _statement;
     }

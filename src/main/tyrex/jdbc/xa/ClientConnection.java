@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: ClientConnection.java,v 1.9 2000/10/10 01:02:49 mohammed Exp $
+ * $Id: ClientConnection.java,v 1.10 2000/12/19 02:21:36 mohammed Exp $
  */
 
 
@@ -50,9 +50,6 @@ package tyrex.jdbc.xa;
 import java.util.*;
 import java.sql.*;
 import tyrex.jdbc.AbstractTyrexConnectionImpl;
-import tyrex.jdbc.TyrexCallableStatementImpl;
-import tyrex.jdbc.TyrexPreparedStatementImpl;
-import tyrex.jdbc.TyrexStatementImpl;
 
 /**
  * Encapsulates an application's view of an XA/pooled connection.
@@ -129,180 +126,6 @@ final class ClientConnection
     }
 
 
-    public Statement createStatement()
-        throws SQLException
-    {
-	try {
-	    return new TyrexStatementImpl(getUnderlying().createStatement(), 
-                                       this);
-	} catch ( SQLException except ) {
-	    notifyError( except );
-	    throw except;
-	}
-    }
-
-
-    public Statement createStatement( int resultSetType, int resultSetConcurrency )
-        throws SQLException
-    {
-	try {
-	    return new TyrexStatementImpl(getUnderlying().createStatement( resultSetType, resultSetConcurrency ),
-                                       this);
-	} catch ( SQLException except ) {
-	    notifyError( except );
-	    throw except;
-	}
-    }
-
-
-    public PreparedStatement prepareStatement( String sql )
-        throws SQLException
-    {
-	try {
-	    return new TyrexPreparedStatementImpl(getUnderlying().prepareStatement( sql ),
-                                               this);
-	} catch ( SQLException except ) {
-	    notifyError( except );
-	    throw except;
-	}
-    }
-
-
-    public PreparedStatement prepareStatement( String sql, int resultSetType, int resultSetConcurrency )
-        throws SQLException
-    {
-	try {
-	    return new TyrexPreparedStatementImpl(getUnderlying().prepareStatement( sql, resultSetType, resultSetConcurrency ),
-                                               this);
-	} catch ( SQLException except ) {
-	    notifyError( except );
-	    throw except;
-	}
-    }
-
-
-    public CallableStatement prepareCall( String sql )
-        throws SQLException
-    {
-	try {
-	    return new TyrexCallableStatementImpl(getUnderlying().prepareCall( sql ),
-                                               this);
-	} catch ( SQLException except ) {
-	    notifyError( except );
-	    throw except;
-	}
-    }
-
-
-    public CallableStatement prepareCall( String sql, int resultSetType, int resultSetConcurrency )
-        throws SQLException
-    {
-	try {
-	    return new TyrexCallableStatementImpl(getUnderlying().prepareCall( sql, resultSetType, resultSetConcurrency ),
-                                              this);
-	} catch ( SQLException except ) {
-	    notifyError( except );
-	    throw except;
-	}
-    }
-
-
-    public String nativeSQL( String sql )
-        throws SQLException
-    {
-	try {
-	    return getUnderlying().nativeSQL( sql );
-	} catch ( SQLException except ) {
-	    notifyError( except );
-	    throw except;
-	}
-    }
-
-
-    public DatabaseMetaData getMetaData()
-        throws SQLException
-    {
-	try {
-	    return getUnderlying().getMetaData();
-	} catch ( SQLException except ) {
-	    notifyError( except );
-	    throw except;
-	}
-    }
-
-
-    public void setCatalog( String catalog )
-        throws SQLException
-    {
-	try {
-	    getUnderlying().setCatalog( catalog );
-	} catch ( SQLException except ) {
-	    notifyError( except );
-	    throw except;
-	}
-    }
-
-
-    public String getCatalog()
-        throws SQLException
-    {
-	try {
-	    return getUnderlying().getCatalog();
-	} catch ( SQLException except ) {
-	    notifyError( except );
-	    throw except;
-	}
-    }
-
-
-    public SQLWarning getWarnings()
-        throws SQLException
-    {
-	try {
-	    return getUnderlying().getWarnings();
-	} catch ( SQLException except ) {
-	    notifyError( except );
-	    throw except;
-	}
-    }
-
-
-    public void clearWarnings()
-        throws SQLException
-    {
-	try {
-	    getUnderlying().clearWarnings();
-	} catch ( SQLException except ) {
-	    notifyError( except );
-	    throw except;
-	}
-    }
-
-
-    public Map getTypeMap()
-        throws SQLException
-    {
-	try {
-	    return getUnderlying().getTypeMap();
-	} catch ( SQLException except ) {
-	    notifyError( except );
-	    throw except;
-	}
-    }
-
-
-    public void setTypeMap( Map map )
-        throws SQLException
-    {
-	try {
-	    getUnderlying().setTypeMap( map );
-	} catch ( SQLException except ) {
-	    notifyError( except );
-	    throw except;
-	}
-    }
-
-
     public void setAutoCommit( boolean autoCommit )
         throws SQLException
     {
@@ -310,7 +133,7 @@ final class ClientConnection
 	if ( _xaConn.insideGlobalTx() )
 	    throw new SQLException( "Cannot commit/rollback a connection managed by the transaction manager" );
 	try {
-	    getUnderlying().setAutoCommit( autoCommit );
+	    super.setAutoCommit( autoCommit );
 	} catch ( SQLException except ) {
 	    notifyError( except );
 	    throw except;
@@ -322,7 +145,7 @@ final class ClientConnection
         throws SQLException
     {
 	try {
-	    return getUnderlying().getAutoCommit();
+	    return super.getAutoCommit();
 	} catch ( SQLException except ) {
 	    notifyError( except );
 	    throw except;
@@ -342,7 +165,7 @@ final class ClientConnection
 
 	// This only occurs if not inside a local transaction.
 	try {
-	    getUnderlying().commit();
+	    super.commit();
 	} catch ( SQLException except ) {
 	    notifyError( except );
 	    throw except;
@@ -360,7 +183,7 @@ final class ClientConnection
 
 	// This only occurs if not inside a local transaction.
 	try {
-	    getUnderlying().rollback();
+	    super.rollback();
 	} catch ( SQLException except ) {
 	    notifyError( except );
 	    throw except;
@@ -368,68 +191,18 @@ final class ClientConnection
     }
 
 
-    public void setReadOnly( boolean readOnly )
-        throws SQLException
-    {
-	try {
-	    getUnderlying().setReadOnly( readOnly );
-	} catch ( SQLException except ) {
-	    notifyError( except );
-	    throw except;
-	}
-    }
-
-
-    public boolean isReadOnly()
-        throws SQLException
-    {
-	try {
-	    return getUnderlying().isReadOnly();
-	} catch ( SQLException except ) {
-	    notifyError( except );
-	    throw except;
-	}
-    }
-    
-
-    public void setTransactionIsolation( int level )
-        throws SQLException
-    {
-	try {
-	    getUnderlying().setTransactionIsolation( level );
-	} catch ( SQLException except ) {
-	    notifyError( except );
-	    throw except;
-	}
-    }
-
-
-    public int getTransactionIsolation()
-        throws SQLException
-    {
-	try {
-	    return getUnderlying().getTransactionIsolation();
-	} catch ( SQLException except ) {
-	    notifyError( except );
-	    throw except;
-	}
-    }
-
-
-    public synchronized void close()
+    protected void internalClose()
 	throws SQLException
     {
-    if ( _xaConn == null ) 
-	    return;
-
-	// Notify the XA connection that we are no longer going
-	// to be used. Whether the underlying connection is released,
-	// held until the transaction terminates, etc is not
-	// a concern of us.
-	_xaConn.notifyClose( _clientId );
-	_xaConn = null;
-    _xaDataSource = null;
-    notifyConnectionClosed();
+        if ( !isClosed() ) { 
+            // Notify the XA connection that we are no longer going
+    	    // to be used. Whether the underlying connection is released,
+    	    // held until the transaction terminates, etc is not
+    	    // a concern of us.
+    	    _xaConn.notifyClose( _clientId );
+    	    _xaConn = null;
+            _xaDataSource = null;
+        }
     }
 
 
@@ -458,19 +231,15 @@ final class ClientConnection
     */
 
 
-    protected void finalize()
-	throws Throwable
-    {
-	close();
-    }
-
-
     public String toString()
     {
+        if (isClosed()) {
+            return "XAConnection: Connection closed";    
+        }
 	try {
-	    return getUnderlying().toString();
+	    return internalGetUnderlyingConnection().toString();
 	} catch ( SQLException except ) {
-        return "XAConnection: Connection closed";
+            return "XAConnection: Connection closed";
 	}
     }
 
@@ -484,7 +253,7 @@ final class ClientConnection
      * @param except The exception thrown by the underlying
      *   connection
      */
-    void notifyError( SQLException except )
+    protected void notifyError( SQLException except )
     {
 	if ( _xaConn != null )
 	    _xaConn.notifyError( _clientId, except );
@@ -496,11 +265,9 @@ final class ClientConnection
      * operations are performed against it. Throws an SQLException if
      * this connection has been closed.
      */
-    Connection getUnderlying()
+    protected Connection internalGetUnderlyingConnection()
         throws SQLException
     {
-	if ( _xaConn == null )
-	    throw new SQLException( "This connection has been closed" );
 	// Must pass the client identifier so XAConnection can determine
 	// whether we are still valid. If it tells us we're no longer
 	// valid, we have little to do.

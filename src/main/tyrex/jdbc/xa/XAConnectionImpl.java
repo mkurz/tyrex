@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: XAConnectionImpl.java,v 1.14 2000/10/07 01:53:37 mohammed Exp $
+ * $Id: XAConnectionImpl.java,v 1.15 2000/12/19 02:21:36 mohammed Exp $
  */
 
 
@@ -443,8 +443,8 @@ public final class XAConnectionImpl
 
     public synchronized void start( Xid xid, int flags )
         throws XAException
-    {
-	// General checks.
+    {   
+        // General checks.
 	if ( xid == null )
 	    throw new XAException( XAException.XAER_INVAL );
 	if ( _txConn != null )
@@ -467,17 +467,20 @@ public final class XAConnectionImpl
 		    if ( _underlying != null ) {
 			_txConn.conn = _underlying;
 			_underlying = null;
-		    } else
-			_txConn.conn = _resManager.newConnection( _userName, _password );
+		    } 
+                    else {
+                        _txConn.conn = _resManager.newConnection( _userName, _password );
+                    }
+			
 		    _txConn.xid = xid;
 		    _txConn.count = 1;
 		    _txConn.started = System.currentTimeMillis();
 		    _txConn.timeout = _txConn.started + ( _txTimeout * 1000 );
-            _txConn.userName = _userName;
-            _txConn.password = _password;
+                    _txConn.userName = _userName;
+                    _txConn.password = _password;
 		    _resManager.setTxConnection( xid, _txConn );
 		} catch ( SQLException except ) {
-		    // If error occured at this point, we can only
+                    // If error occured at this point, we can only
 		    // report it as resource manager error.
 		    if ( _resManager.getLogWriter() != null )
 			_resManager.getLogWriter().println( "XAConnection: failed to begin a transaction: " + except );
@@ -520,7 +523,7 @@ public final class XAConnectionImpl
 		    if ( _txConn.conn instanceof TwoPhaseConnection )
 			( (TwoPhaseConnection) _txConn.conn ).enableSQLTransactions( false );
 		} catch ( SQLException except ) {
-            except.printStackTrace(); // riad
+            
 		    // If error occured at this point, we can only
 		    // report it as resource manager error.
 		    if ( _resManager.getLogWriter() != null )

@@ -75,7 +75,7 @@ import java.util.Map;
  *
  * @author <a href="mohammed@intalio.com">Riad Mohammed</a>
  */
-public class TyrexCallableStatementImpl 
+final class TyrexCallableStatementImpl 
     extends TyrexPreparedStatementImpl 
     implements CallableStatement
 {
@@ -89,8 +89,8 @@ public class TyrexCallableStatementImpl
      *      the statement.
      * @throws SQLException if there is a problem creating the statement
      */
-    public TyrexCallableStatementImpl(CallableStatement statement,
-                                      TyrexConnection connection)
+    TyrexCallableStatementImpl(CallableStatement statement,
+                               TyrexConnection connection)
         throws SQLException
     {
         super(statement, connection);

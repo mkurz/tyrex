@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: ErrorLogger.java,v 1.2 2000/09/08 23:06:29 mohammed Exp $
+ * $Id: ErrorLogger.java,v 1.3 2000/12/19 02:21:36 mohammed Exp $
  */
 
 
@@ -51,13 +51,13 @@ import java.io.PrintWriter;
 import javax.transaction.xa.Xid;
 import tyrex.util.Logger;
 import tyrex.interceptor.TransactionInterceptor;
-import tyrex.interceptor.Heuristic;
+import tyrex.tm.Heuristic;
 
 
 /**
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $ $Date: 2000/09/08 23:06:29 $
+ * @version $Revision: 1.3 $ $Date: 2000/12/19 02:21:36 $
  */
 public class ErrorLogger
     implements TransactionInterceptor 

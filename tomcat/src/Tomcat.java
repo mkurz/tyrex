@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Tomcat.java,v 1.1 2000/09/25 21:15:30 mohammed Exp $
+ * $Id: Tomcat.java,v 1.2 2000/12/19 02:22:18 mohammed Exp $
  */
 
 
@@ -79,7 +79,7 @@ import org.apache.tomcat.util.URLUtil;
  *
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2000/09/25 21:15:30 $
+ * @version $Revision: 1.2 $ $Date: 2000/12/19 02:22:18 $
  */
 public final class Tomcat
     extends BaseInterceptor
@@ -173,10 +173,14 @@ public final class Tomcat
 	    } catch ( Exception except ) {
 	    }
         appName = context.getDocBase();
+        // add tyrex environment valirables
+        TomcatContextHelper.addEnvEntries( memoryContext, appName );
+        // add the resources in web.xml that are visible in tyrex.xml
+        // override the tyrex environment valirables if necessary
         loadWebApplication(memoryContext, 
                            getWebApplicationConfigPath(context.getContextManager().getTomcatHome(), appName), 
                            appName);
-        TomcatContextHelper.addEnvEntries( memoryContext, appName );
+        // do not add all resources from tyrex.xml
         //TomcatContextHelper.addResources( memoryContext, appName );
     } 
 	return memoryContext;
