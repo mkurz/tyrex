@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: javaURLContextFactory.java,v 1.2 2000/01/17 22:18:50 arkin Exp $
+ * $Id: javaURLContextFactory.java,v 1.3 2000/04/11 20:24:47 arkin Exp $
  */
 
 
@@ -53,13 +53,12 @@ import javax.naming.Context;
 import javax.naming.Name;
 import javax.naming.spi.InitialContextFactory;
 import javax.naming.spi.ObjectFactory;
-import tyrex.naming.JavaContext;
 
 
 /**
- * Implements context factory for the <tt>java:</tt> URL. Exposes the
- * environment (<tt>java:/comp</tt> and <tt>java:/comp/env</tt>) as
- * read only contexts as per the J2EE container requirements.
+ * Implements a URL context factory for the <tt>java:</tt> URL. Exposes
+ * the environment naming context (<tt>java:/comp</tt>) as a read-only
+ * context as per the J2EE container requirements.
  * <p>
  * To use this context factory the JNDI properties file must include
  * the following property:
@@ -69,7 +68,7 @@ import tyrex.naming.JavaContext;
  *
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $ $Date: 2000/01/17 22:18:50 $
+ * @version $Revision: 1.3 $ $Date: 2000/04/11 20:24:47 $
  * @see JavaContext
  */
 public class javaURLContextFactory

@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: MemoryBinding.java,v 1.2 2000/01/17 22:18:50 arkin Exp $
+ * $Id: MemoryBinding.java,v 1.3 2000/04/11 20:24:47 arkin Exp $
  */
 
 
@@ -48,7 +48,6 @@ package tyrex.naming;
 
 
 import java.io.PrintWriter;
-import java.io.Serializable;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Enumeration;
@@ -57,29 +56,44 @@ import javax.naming.Binding;
 
 
 /**
- *
+ * Name/value bindings for use inside {@link MemoryContext}.
+ * This one is never constructed directly but through {@link
+ * MemoryContext}, {@link MemoryContextFactory} and related classes.
+ * <p>
+ * Provides heirarchial storage for name/value binding in memory
+ * that is exposed through the JNDI context model. Each context
+ * (not in the tree) is represented by one instance of {@link
+ * MemoryBinding}, with each sub-context (child node) or bound
+ * value represented by a name/value pair.
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $ $Date: 2000/01/17 22:18:50 $
+ * @version $Revision: 1.3 $ $Date: 2000/04/11 20:24:47 $
  */
-public final class MemoryBinding
+final class MemoryBinding
     extends Dictionary
-    implements Serializable
 {
 
 
+    /**
+     * The path of this binding.
+     */
     private String    _name = "";
 
 
-    private Hashtable _bindings;
+    /**
+     * The name/value bindings in this space.
+     */
+    private final Hashtable _bindings = new Hashtable();
 
 
+    /**
+     * The parent space.
+     */
     protected MemoryBinding _parent;
 
 
-    public MemoryBinding()
+    MemoryBinding()
     {
-	_bindings = new Hashtable();
     }
 
 
@@ -91,12 +105,8 @@ public final class MemoryBinding
 
     public Object put( Object key, Object value )
     {
-	if ( value instanceof TyrexContext ) {
-	    value = ( (TyrexContext) value ).getBindings();
-	}
-	if ( value instanceof MemoryBinding ) {
+	if ( value instanceof MemoryBinding )
 	    ( (MemoryBinding) value ).setContext( this, key.toString() );
-	}
 	return _bindings.put( key, value );
     }
 
@@ -140,7 +150,7 @@ public final class MemoryBinding
     public String getName()
     {
 	if ( _parent != null && _parent.getName().length() > 0 ) {
-	    return _parent.getName() + Constants.Naming.Separator + _name;
+	    return _parent.getName() + MemoryContext.NameSeparator + _name;
 	}
 	return _name;
     }
@@ -152,6 +162,18 @@ public final class MemoryBinding
     }
 
 
+    public boolean isRoot()
+    {
+        return ( _parent == null );
+    }
+
+
+    /**
+     * Called when binding these bindings to a parent binding.
+     *
+     * @param binding The parent binding
+     * @param name The name of this binding
+     */
     protected void setContext( MemoryBinding parent, String name )
     {
 	_parent = parent;
@@ -159,13 +181,21 @@ public final class MemoryBinding
     }
 
 
+    /**
+     * Called when destroying the subcontext and binding associated
+     * with it.
+     */
     public void destroy()
     {
 	_bindings.clear();
-	_bindings = null;
     }
 
 
+    /**
+     * Returns an array of all the name/value bindings in this binding,
+     * exclusing sub-contexts. Each entry is of type {@link Binding} as
+     * defined in the JNDI API.
+     */
     public Binding[] getBinding()
     {
 	Vector      list;
@@ -184,6 +214,9 @@ public final class MemoryBinding
     }
 
 
+    /**
+     * Returns an array of all the sub-contexts of this binding.
+     */
     public MemoryBinding[] getContext()
     {
 	Vector      list;
