@@ -54,11 +54,11 @@ import tyrex.tm.Heuristic;
 
 
 /**
- * Debug utilities
+ * Utility methods.
  *
  * @author <a href="mohammed@intalio.com">Riad Mohammed</a>
  */
-final class Debug 
+final class Util 
 {
 
 
@@ -67,14 +67,6 @@ final class Debug
      * the ISO 8601 lexical representation.
      */
     private final static SimpleDateFormat _dateFormat = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss.SSS" );
-
-
-    /**
-     * No instances
-     */
-    private Debug()
-    {
-    }
 
 
     /**

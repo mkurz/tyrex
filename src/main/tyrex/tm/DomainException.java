@@ -38,70 +38,62 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
+ * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: InterceptorHolder.java,v 1.7 2001/02/27 00:34:05 arkin Exp $
+ * $Id: DomainException.java,v 1.1 2001/03/03 03:09:58 arkin Exp $
  */
 
 
-package tyrex.conf;
+package tyrex.tm;
 
 
-import java.io.Serializable;
-import tyrex.tm.TransactionInterceptor;
-import tyrex.util.Messages;
-import tyrex.util.Logger;
+import tyrex.util.NestedException;
 
 
 /**
+ * A general exception associated with transaction domains.
+ *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.7 $ $Date: 2001/02/27 00:34:05 $
+ * @version $Revision: 1.1 $
  */
-public class InterceptorHolder
-    implements Serializable
+public class DomainException
+    extends NestedException
 {
 
 
-    private String       _className;
-
-
-    private TransactionInterceptor  _interceptor;
-
-
-    public String getClassName()
+    /**
+     * Construct a new exception with the specified message.
+     *
+     * @param message The message text
+     */
+    public DomainException( String message )
     {
-	return _className;
+        super( message );
     }
 
 
-    public void setClassName( String className )
+    /**
+     * Construct a new exception based on an underlying exception.
+     *
+     * @param except The underlying exception
+     */
+    public DomainException( Exception except )
     {
-	_className = className;
+        super( except );
     }
 
 
-    public void setInterceptor( TransactionInterceptor interceptor )
+    /**
+     * Construct a new exception based on an underlying exception.
+     *
+     * @param message The message text
+     * @param except The underlying exception
+     */
+    public DomainException( String message, Exception except )
     {
-	_interceptor = interceptor;
-    }
-
-
-    public TransactionInterceptor getInterceptor()
-    {
-	return _interceptor;
-    }
-
-
-    public Object createInterceptor()
-    {
-	try {
-	    return Class.forName( _className ).newInstance();
-	} catch ( Exception except ) {
-	    Logger.conf.warn( Messages.format( "tyrex.conf.cannotCreateInterceptor",
-							       _className, except ) );
-	    return null;
-	}
+        super( message, except );
     }
 
 
 }
+
