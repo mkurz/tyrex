@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: XAConnectionImpl.java,v 1.7 2001/09/21 18:14:23 mohammed Exp $
+ * $Id: XAConnectionImpl.java,v 1.8 2001/12/13 21:27:36 mohammed Exp $
  */
 
 
@@ -284,7 +284,9 @@ public final class XAConnectionImpl
         // transaction.
         if ( _underlying != null ) {
             try {
-                _underlying.commit();
+                if ( !_underlying.getAutoCommit() ) {
+                    _underlying.commit();
+                }
             } catch ( SQLException except ) {
                 ConnectionEvent event;
                 if ( _listener != null ) {
