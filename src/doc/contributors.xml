@@ -9,7 +9,7 @@
 
   <contributor type="Committer">
     <name surname="Arkin" given="Assaf"/>
-    <email>arkin@intalio.com</email>
+    <email/>
     <company id="intalio"/>
     <description>
       Most of the code released in Tyrex has been developed by Assaf.
@@ -28,7 +28,7 @@
 
   <contributor type="Committer">
     <name surname="Daniel" given="Jerome"/>
-    <email>jdaniel@intalio.com</email>
+    <email/>
     <company id="intalio"/>
     <description>
     </description>

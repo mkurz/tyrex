@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!-- $Id: configuration.xml,v 1.6 2001/03/20 19:29:08 arkin Exp $ -->
+<!-- $Id: configuration.xml,v 1.7 2002/04/17 00:34:16 mohammed Exp $ -->
 <document>
   <properties>
     <title>Tyrex Configuration</title>
@@ -427,10 +427,10 @@ uuid.clockSequence=100</code></p>
 
       <p>The initial number of connections to create. When the pool is first created it will
         open up the specified number of connections. Even if this value is zero, one connection
-        will always be created for recovery and access to meta-data information.</p>
+        will always be created for access to meta-data information.</p>
 
       <p>If this element is missing, the default (zero) is assumed, and only one connection
-        will be created, as required for recovery and meta-data access.</p>
+        will be created, as required for meta-data access.</p>
 
       <h4>limits/maxRetain</h4>
 

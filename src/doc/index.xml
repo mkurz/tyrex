@@ -7,8 +7,7 @@
       <p>Tyrex is the missing piece in the J2EE puzzle, a J2EE service provider for both
         Servlet and EJB container, JMS providers and generic connectors. It provides
         services for security and authentication, local and distributed transactions,
-        resource configuration and pooling, and TP monitoring. Tyrex is presently
-        integrated with Tomcat and OpenEJB.</p>
+        resource configuration and pooling, and TP monitoring.</p>
       
       <p><b>Note:</b> Presently we are only hosting one mailing list. Traffic is not high, so if
         you are interested in keeping up to date with new releases, please <a href="lists.xml">subscribe
@@ -38,6 +37,7 @@
     <section title="News">
       <p>Version $VERSION$ is now <a href="download.xml">available for download</a>.
         <ul>
+          <li>April 23, 2002: Version 1.0</li>
           <li>March 23, 2001: Version 0.9.8</li>
           <li>January 11, 2001: Version 0.9.7</li>
           <li>August 25, 2000: Version 0.9.6</li>
@@ -52,13 +52,10 @@
     <section title="About Tyrex">
       
       <p>Tyrex is the missing piece in the J2EE puzzle, the hidden back end behind the
-        Servlet, EJB and JMS servers. Tyrex was originally developed as a separate back-end
-        that can be used with Tomcat, OpenEJB, OpenJMS and a variety of other servers.
-        Due to its nature as a back-end system, Tyrex is probably one of the most boring
+        Servlet, EJB and JMS servers. Due to its nature as a back-end system, Tyrex is probably one of the most boring
         open source projects on earth.</p>
       
-      <p>Most of the code released in Tyrex has been developed by Assaf Arkin, CTO
-        &lt;<email>arkin@intalio.com</email>&gt;. Contributors are welcome
+      <p>Most of the code released in Tyrex has been developed by Assaf Arkin, CTO. Contributors are welcome
         to join this project. Please join us on the <a href="lists.xml">mailing list</a>.</p>
     </section>
     

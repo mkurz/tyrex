@@ -13,9 +13,7 @@
     <section title="Introduction">
 
       <p>The information presented here is based on the J2EE role-based security model,
-         the JAAS API, the proposed connector architecture, and the J2EE 1.3 security model.
-         The security provider for Tomcat and OpenEJB is provided as reference implementation
-         for a J2EE security provider SPI.</p>
+         the JAAS API, the proposed connector architecture, and the J2EE 1.3 security model.</p>
 
     </section>
 

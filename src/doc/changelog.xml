@@ -2,6 +2,10 @@
 <document url="http://tyrex.exolab.org/changelog.xml">
   <body>
     <title>Change log</title>
+<section title="Version 1.0  April 23 2002"><pre>
+- Added Log 4 J code from Sam Ruby.
+- Removed recovery code as it is experimental.
+    </pre></section>    
     <section title="Version 0.9.7.1  January 11 2001"><pre>
 - Changed the Log system to use Log 4 J.
 - Changed the XID branch and global ID generator by an UUID generator.

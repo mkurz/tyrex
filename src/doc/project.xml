@@ -79,6 +79,10 @@
       <navLink>
         <url>databases.xml</url>
         <display>Databases</display>
+      </navLink>
+      <navLink>
+        <url>tomcat.xml</url>
+        <display>Tomcat</display>
       </navLink>  
       <navLink>
         <url>download.xml</url>

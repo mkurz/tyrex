@@ -13,20 +13,22 @@
     <section title="Oracle">
       <p><b>Tested Versions</b>
         <ul>
-          <li>Oracle 8i version 8.1.6.0.0</li>
+          <li>Oracle 8.1.6</li>
+          <li>Oracle 8.1.7</li>
+          <li>Oracle 9.0.1</li>
         </ul>
       </p>
         
       <p><b>Notes</b>
-        <p>Tyrex provides a workaround (<b><api>tyrex.tm.OracleXAResourceHelper</api></b> 
-          for two known Oracle XA issues:
+        <p>Oracle 8.1.7 and above is recommended for XA support.
+          Tyrex provides a workaround (<b><api>tyrex.tm.OracleXAResourceHelper</api></b>) 
+          for known Oracle XA issues:
           <ul>
-            <li>Oracle XA resource transaction enlistment requires Oracle's implementation
+            <li>Oracle 8.1.6 - Oracle XA resource transaction enlistment requires Oracle's implementation
               of <b>javax.transaction.xa.Xid</b>.</li>
-            <li>Suspended Oracle XA resources must be resumed first before they can be ended.</li>
+            <li>XAResource.start(XAResource.TMJOIN) is not supported</li>
+            <li>The Xid passed to Oracle must not have a null or empty branch qualifier</li>
           </ul>
-          For the workaround to execute classes12.zip <b>must</b> be in the classpath. 
-          Classes12.zip is not necessary for the code to compile.
         </p>
       </p>                  
                   
@@ -49,29 +51,40 @@
     </section>
     
     <section title="Sybase">
+      <p><b>Tested Versions</b>
+        <ul>
+          <li>Sybase 12.0</li>
+          <li>Sybase 12.5</li>
+        </ul>
+      </p>
+      
       <p><b>Notes</b>
-        <p>Hopefully coming soon.
-          <br></br>
-          Sybase Adaptive Server 12.0
-          requires "Distributed Transaction Management" component,
-          which is not available for download, for XA support.
-        </p>
+        <p></p>
       </p>
     </section>
     
-    <section title="Informix (Dynamic Server)">
-      <p><b>Notes</b>
-        <p>Please send email about the serial number
-          and key required for the Dynamic Server JDBC driver (version 2.11) installation
-          to <a href="mailto:tyrex-dev@exolab.org">Tyrex Developer's Mailing List</a>
-        </p>
+    <section title="DB2">
+      <p><b>Tested Versions</b>
+        <ul>
+          <li>DB2 7.1</li>
+        </ul>
+      </p>
+      
+      <p><b>7.1 Notes</b>
+        The IBM app driver, that is type 2, provides XA support.
+        There a bug in pooling mechanism that causes a NullpointerException when the logical connection is closed.
       </p>
     </section>
     
     <section title="Interbase">
       <p><b>Notes</b>
-        <p>The current JDBC driver (Version 2.0) does not support XA transactions yet.
-        </p>
+        <p>The current JDBC driver (Version 2.0) does not support XA transactions yet.</p>
+      </p>
+    </section>
+    
+    <section title="Interbase">
+      <p><b>Notes</b>
+        <p>The current JDBC driver (Version 2.0) does not support XA transactions yet.</p>
       </p>
     </section>
     
@@ -83,8 +96,7 @@
       </p>
       
       <p><b>Notes</b>
-        <p>Cloudscape's XA implementation has passed the most Tyrex tests.
-        </p>
+        <p>Cloudscape's XA implementation has passed the most Tyrex tests.</p>
       </p>                  
       
       <p><b>Issues</b>

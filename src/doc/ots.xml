@@ -63,12 +63,6 @@
         <br/>
         -ior : this option implies the generation of a file named 'ots.ior' that contains the 
         transaction factory IOR.
-        <br/>
-        -log : this option is used to activate the log mechanism ( for recovery ). By the way, this 
-        option is used to specify the log files directory, example : -log /home/me/tyrex/logs
-        <br/>
-        -recover : this option is used to activate the recovery mechanism. If you start the recovery
-        be  sure to use at the same time the '-log' option to specify the log files directory.
       </p>              
     </section>
 
