@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: ControlImpl.java,v 1.3 2001/01/11 23:26:33 jdaniel Exp $
+ * $Id: ControlImpl.java,v 1.4 2001/02/09 00:06:02 jdaniel Exp $
  */
 
 
@@ -71,7 +71,7 @@ import javax.transaction.xa.Xid;
  *
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.3 $ $Date: 2001/01/11 23:26:33 $
+ * @version $Revision: 1.4 $ $Date: 2001/02/09 00:06:02 $
  * @see TransactionImpl
  *
  * Changes 
@@ -335,8 +335,10 @@ public class ControlImpl
 
     public boolean is_same_transaction( Coordinator coord )
     {
-	return ( ( coord instanceof ControlImpl ) &&
-		 ( (ControlImpl) coord )._tx.equals( _tx ) );
+	if ( hash_transaction() == coord.hash_transaction() )
+            return true;
+        
+        return false;
     }
 
 
@@ -355,20 +357,22 @@ public class ControlImpl
 
     public boolean is_ancestor_transaction( Coordinator coord )
     {
-	int i;
-
-	if ( _parents == null )
-	    return false;
-	for ( i = 0 ; i < _parents.length ; ++i )
-	    if ( _parents[ i ].coord.is_same_transaction( coord ) )
-		return true;
-	return false;
+        return coord.is_descendant_transaction( coordinator() );
     }
 
 
     public boolean is_descendant_transaction( Coordinator coord )
     {
-	return coord.is_ancestor_transaction( this );
+       if ( _parents == null )
+            return false;
+        
+       for ( int i=0; i<_parents.length; i++ )
+       {
+            if ( _parents[i].coord.is_same_transaction( coord ) )
+                return true;
+       }
+        
+       return false;
     }
 
 
@@ -474,6 +478,7 @@ public class ControlImpl
 
 	try {
 	    tx = _tx.getTransactionDomain().createTransaction( _tx, null );
+            tx.setORB( _orb );
 	    return tx.getControl();
 	} catch ( SystemException except ) {
 	    throw new Inactive();

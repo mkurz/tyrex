@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionFactoryImpl.java,v 1.3 2001/01/11 23:26:33 jdaniel Exp $
+ * $Id: TransactionFactoryImpl.java,v 1.4 2001/02/09 00:06:02 jdaniel Exp $
  */
 
 
@@ -62,7 +62,7 @@ import org.omg.CosTransactions._TransactionFactoryImplBase;
  * of remote transactions.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.3 $ $Date: 2001/01/11 23:26:33 $
+ * @version $Revision: 1.4 $ $Date: 2001/02/09 00:06:02 $
  * @see TransactionImpl
  *
  * Changes 
@@ -103,6 +103,7 @@ public final class TransactionFactoryImpl
 	// Create a new transaction and return the control
 	// interface of that transaction.
 	try {
+            _txDomain.setTransactionTimeout( timeout );
 	    tx = _txDomain.createTransaction( null, null );
             
             // <---------- CORBA Part ----------->

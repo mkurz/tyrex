@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionImpl.java,v 1.6 2001/01/11 23:26:33 jdaniel Exp $
+ * $Id: TransactionImpl.java,v 1.7 2001/02/09 00:06:02 jdaniel Exp $
  */
 
 
@@ -79,7 +79,7 @@ import tyrex.util.Messages;
  * they are added.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.6 $ $Date: 2001/01/11 23:26:33 $
+ * @version $Revision: 1.7 $ $Date: 2001/02/09 00:06:02 $
  * @see XAResourceHolder
  * @see TransactionManagerImpl
  * @see TransactionDomain
@@ -267,7 +267,10 @@ final class TransactionImpl
 	// remote transaction.
 	_pgContext = pgContext;
 	try {
-	    _pgContext.current.coord.register_resource( new ResourceImpl( this ) );
+            ResourceImpl res = new ResourceImpl( this );
+            if ( _orb != null )
+                _orb.connect( res );
+	    _pgContext.current.coord.register_resource( res );
 	} catch ( RuntimeException except ) {
 	    // Anything that the remote transaction throws us
 	    // is considered an illegal state.
