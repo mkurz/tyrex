@@ -56,7 +56,7 @@ import junit.extensions.*;
 /**
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 
 
@@ -81,14 +81,76 @@ public class UUIDTest extends TestCase
 
 
     /**
-     * <p>.</p>
+     * <p>All the methods of the class is static and so an instance of
+     * the class is not required for the tests.  Apart from the
+     * methods fromBytes() and toBytes() it is not possible to fully
+     * verify that the ids returned truely conform to the IETF draft.
+     * Testing can only verify that the ids are of the correct
+     * form.</p>
      *
-     * @result 
+     * <p>Set up several prefixes both short and long.</p>
+     *
+     * @result Call create() without a prefix argument.  It should
+     * return a String 36 characters in length.  Call it again with an
+     * empty prefix.  Again it should return a 36 character String.
+     * Call it with a single character prefix.  It should return a 37
+     * character String.  In general it should return a string whose
+     * length is 36 plus the length of the prefix.  Calling trim() and
+     * any id that is not longer than MAXIMUM_LENGTH should result in
+     * the same String.  Longer ids will be truncated to the
+     * MAXIMUM_LENGTH.
+     *
+     * <p>Using an example id call toBytes() and then fromBytes() on
+     * the result.  The original id should be returned.</p>
      */
 
     public void testBasicFunctionality()
         throws Exception
     {
+        String emptyPrefix = "";
+        String smallestPrefix = "p";
+        String smallPrefix = "prefix";
+        String prefix = "ALongerPrefix";
+        String longerThanMaximumPrefix = "AMaximumPrefixXXXXXXXXXXXXXXXXXXXXX";
+
+        // This loop is most certainly not needed - but just in case.
+        while (longerThanMaximumPrefix.length() < UUID.MAXIMUM_PREFIX)
+        {
+            longerThanMaximumPrefix = longerThanMaximumPrefix
+                + longerThanMaximumPrefix;
+        }
+        String maximumPrefix
+            = longerThanMaximumPrefix.substring(0, UUID.MAXIMUM_PREFIX);
+        String id =  UUID.create();
+        assertEquals("ID length", 36, id.length());
+        assertEquals("Trimmed ID", id, UUID.trim(id));
+        id =  UUID.create(emptyPrefix);
+        assertEquals("ID length", 36, id.length());
+        assertEquals("Trimmed ID", id, UUID.trim(id));
+        id =  UUID.create(smallestPrefix);
+        assertEquals("ID length", 37, id.length());
+        assertEquals("Trimmed ID", id, UUID.trim(id));
+        id =  UUID.create(prefix);
+        assertEquals("ID length", 36 + prefix.length(), id.length());
+        assertEquals("Trimmed ID", id, UUID.trim(id));
+        id =  UUID.create(maximumPrefix);
+        assertEquals("ID length", UUID.MAXIMUM_LENGTH, id.length());
+        assertEquals("Trimmed ID", id, UUID.trim(id));
+        id =  UUID.create(longerThanMaximumPrefix);
+        assert("ID length", id.length() > UUID.MAXIMUM_LENGTH);
+        assertEquals("Trimmed ID length", UUID.MAXIMUM_LENGTH,
+                     UUID.trim(UUID.create(longerThanMaximumPrefix)).length());
+        assertEquals("Trimmed ID", id.substring(0, UUID.MAXIMUM_LENGTH),
+                     UUID.trim(id));
+        String anID = "4f0874ff-b23e-1004-847f-76480adaf1a8";
+        byte[] bytes = UUID.toBytes(anID);
+        assertEquals("Coverted ID", anID, UUID.fromBytes(bytes));
+        char[] chars = UUID.createTimeUUIDChars();
+//        System.out.println(chars);
+        bytes = UUID.createTimeUUIDBytes();
+//        System.out.println(bytes);
+        bytes = UUID.createBinary();
+//        System.out.println(bytes);
     }
 
 
