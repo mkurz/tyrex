@@ -55,7 +55,7 @@ public class OTSTest extends TestCase
         }
         
         Properties props = new Properties();
-        props.setProperty("ImportModule.tyrex", "tyrex_module");
+        props.setProperty("ImportModule.tyrex", "tyrex");
         props.setProperty("InitRef.NameService", nsStringRef );
         
         _orb = org.omg.CORBA.ORB.init(args, props);
