@@ -1,4 +1,4 @@
-package tyrex.server;
+package tyrex.tools;
 
 
 import java.awt.*;
@@ -7,10 +7,10 @@ import java.io.FileOutputStream;
 import java.util.Random;
 import javax.transaction.TransactionManager;
 import javax.transaction.Transaction;
-import tyrex.server.Tyrex;
+import tyrex.tm.Tyrex;
 import tyrex.server.Configure;
-import tyrex.util.PoolManager;
-import org.exolab.fx.*;
+//import tyrex.util.PoolManager;
+//import org.exolab.fx.*;
 
 
 /**
@@ -74,9 +74,9 @@ public class Demo
 	    config.startServer();
 
 	    if ( hasArgument( args, "choke" ) ) {
-		config.getPoolManager().setActiveLimit( 30 );
-		config.getPoolManager().setUpperLimit( 50 );
-		config.getPoolManager().setWaitTimeout( 5 );
+		//config.getPoolManager().setActiveLimit( 30 );
+		//config.getPoolManager().setUpperLimit( 50 );
+		//config.getPoolManager().setWaitTimeout( 5 );
 		config.setTransactionTimeout( 10 );
 		config.setThreadTerminate( true );
 	    }
@@ -88,12 +88,12 @@ public class Demo
 	    */
 
 	    // --noawt Unless requested we are running with GUI
-	    if ( ! hasArgument( args, "noawt" ) ) {
+	    /*if ( ! hasArgument( args, "noawt" ) ) {
 		DemoFrame demo;
 
 		demo = new DemoFrame( config );
 		demo.show();
-	    }
+	    }*/
 
 	    // Obtain a transaction manager.
 	    _tmManager = Tyrex.getTransactionManager();
@@ -165,7 +165,7 @@ public class Demo
     {
 	System.out.println( "java tyrex.server.Demo [options]" );
 	System.out.println( "  --help      Show this message" );
-	System.out.println( "  --noawt     Do not start GUI" );
+	//System.out.println( "  --noawt     Do not start GUI" );
 	System.out.println( "  --count n   How many threads to run (default 100)" );
 	System.out.println( "  --log file  Dump all logs to the named file" );
 	System.out.println( "  --meter     Log: meter counters" );
@@ -182,9 +182,10 @@ public class Demo
 
 	while ( true ) {
 	    try {
+                //System.out.println(Thread.currentThread().getName() + "begin");
 		_tmManager.begin();
 		Thread.sleep( _random.nextInt( 5000 ) );
-		if ( _random.nextBoolean() ) {
+		/*if ( _random.nextBoolean() ) {
 		    _tmManager.begin();
 		    Thread.sleep( _random.nextInt( 1000 ) );
 		    if ( _random.nextBoolean() )
@@ -192,19 +193,27 @@ public class Demo
 		    else
 			_tmManager.rollback();
 		    Thread.sleep( _random.nextInt( 1000 ) );
-		} else if ( _random.nextBoolean() ) {
+		} else*/ if ( _random.nextBoolean() ) {
+                    //System.out.println(Thread.currentThread().getName() + "suspend");
 		    tx = _tmManager.suspend();
 		    Thread.sleep( _random.nextInt( 5000 ) );
+                    //System.out.println(Thread.currentThread().getName() + "resume");
 		    _tmManager.resume( tx );
 		}
-		if ( _random.nextBoolean() )
-		    _tmManager.commit();
-		else
-		    _tmManager.rollback();
+		if ( _random.nextBoolean() ) {
+                    //System.out.println(Thread.currentThread().getName() + "commit");
+                    _tmManager.commit();
+                }
+		    
+                else {
+                    //System.out.println(Thread.currentThread().getName() + "rollback");
+                    _tmManager.rollback();
+                }
 		Thread.sleep( _random.nextInt( 5000 ) );
 	    } catch ( Exception except ) {
 		_writer.println( except );
-		try {
+                except.printStackTrace();
+                try {
 		    Tyrex.dumpCurrentTransaction( _writer );
 		    Tyrex.recycleThread();
 		} catch ( Exception except2 ) { }
@@ -213,7 +222,7 @@ public class Demo
     }
 
 
-    static class DemoFrame
+    /*static class DemoFrame
 	extends Frame
     {
 
@@ -238,10 +247,10 @@ public class Demo
 	}
 
 
-    }
+    }*/
 
 
-    static class MeterDataFeeder
+    /*static class MeterDataFeeder
 	extends StatusDataFeed
     {
 
@@ -342,7 +351,7 @@ public class Demo
 
 
 
-    }
+    }*/
 
 
 }
