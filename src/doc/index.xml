@@ -30,6 +30,8 @@
           <li>JNDI environment naming context</li>
           <li>Transaction context propagation over IIOP and RMI</li>
           <li>Tomcat 3.1 connector</li>
+          <li>Recovery mechanism</li>
+          <li>Can be used as a stand alone OTS server</li>
         </ul></p>
 
     </section>
@@ -37,6 +39,7 @@
     <section title="News">
       <p>Version $VERSION$ is now <a href="download.xml">available for download</a>.
       <ul>
+        <li>January 11, 2001: Version 0.9.7</li>
         <li>August 25, 2000: Version 0.9.6</li>
         <li>April 10, 2000: Version 0.9.5</li>
         <li>Feb 10, 2000: Version 0.9.4</li>

@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Configure.java,v 1.6 2000/11/01 00:20:27 mohammed Exp $
+ * $Id: Configure.java,v 1.7 2001/01/11 23:26:33 jdaniel Exp $
  */
 
 
@@ -89,7 +89,7 @@ import tyrex.conf.Server;
  *
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.6 $ $Date: 2000/11/01 00:20:27 $
+ * @version $Revision: 1.7 $ $Date: 2001/01/11 23:26:33 $
  */
 public final class Configure
     implements Serializable
@@ -178,15 +178,6 @@ public final class Configure
 
     }
 
-
-    /**
-     * The recovery log is used to record all transactions
-     * so prepared transactions can be recovered in the
-     * event of a server crash.
-     */
-    private transient RecoveryLog     _recoveryLog;
-
-
     /**
      * The default transaction timeout in milliseconds.
      */
@@ -223,7 +214,16 @@ public final class Configure
      */
     private transient PrintWriter    _logWriter;
 
-
+    /**
+     * Is the log activated
+     */
+     private boolean _use_log = false;
+     
+     /**
+      * Log directory
+      */
+     private String _log_directory;
+     
     /**
      * If loaded from a configuration file this will reference the
      * server configuration object allowing us to save back to the
@@ -231,28 +231,20 @@ public final class Configure
      */
     private transient Server         _serverConf;
 
+    /**
+     * Reference to the ORB reference
+     */
+    private org.omg.CORBA.ORB _orb;
 
-
-
+    /**
+     * This flag is used to set if recovery mechanism must be used
+     */
+    private boolean _recovery = false;
+    
     public Configure()
     {
 	super();
     }
-
-
-    public void setRecoveryLog( RecoveryLog log )
-    {
-	if ( log == null )
-	    throw new NullPointerException( "Argument 'log' is null" );
-	_recoveryLog = log;
-    }
-
-
-    public RecoveryLog getRecoveryLog()
-    {
-	return _recoveryLog;
-    }
-
 
     /**
      * Sets the timeout for transactions. Transactions taking longer
@@ -364,8 +356,44 @@ public final class Configure
     {
     _limits = limits;
     }
+    
+    public void setLogProperty( String directory )
+    {
+        _log_directory = directory;
+        if ( directory != null )
+            _use_log = true;
+    }    
 
-
+    public boolean isLogActivated()
+    {
+        return _use_log;
+    }
+    
+    public String getLogDirectory()
+    {
+        return _log_directory;
+    }
+    
+    public void setORB( org.omg.CORBA.ORB orb )
+    {
+        _orb = orb;
+    }
+    
+    public org.omg.CORBA.ORB getORB()
+    {
+        return _orb;
+    }
+    
+    public void activateRecovery()
+    {
+        _recovery = true;
+    }
+    
+    public boolean isRecoveryActivated()
+    {
+        return _recovery;
+    }
+    
     /**
      * Returns the pool manager for use with this server.
      * If not pool manager was associated, a default one is

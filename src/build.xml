@@ -82,7 +82,7 @@
   
   <target name="main" depends="prepare">
     <javac srcdir="${main}" destdir="${classes}" 
-           excludes="**/package.html,**/*.disabled,**/*.disable,**/*.old,tyrex/tools/Tomcat.java,tyrex/jdbc/util/*"
+           excludes="**/package.html,**/*.disabled,**/*.disable,**/*.old,tyrex/tools/Tomcat.java,tyrex/jdbc/util/*,tyrex/corba/*"
            classpath="${classpath}" debug="on" deprecation="off" />
   </target>
 
@@ -92,8 +92,13 @@
   <!-- Same as main, but optimization, no debug and no deprecation -->
   <target name="main-opt" depends="prepare">
     <javac srcdir="${main}" destdir="${classes}" 
-           excludes="**/package.html,**/*.disabled,**/*.disable,**/*.old,tyrex/tools/Tomcat.java,tyrex/jdbc/util/*"
+           excludes="**/package.html,**/*.disabled,**/*.disable,**/*.old,tyrex/tools/Tomcat.java,tyrex/jdbc/util/*,tyrex/corba/*"
            classpath="${classpath}" debug="off" deprecation="off" optimize="on" />
+  </target>
+
+  <target name="main-iiop" >
+    <javac srcdir="${main}" destdir="${classes}" 
+           includes="tyrex/corba/*"/>
   </target>
 
   <!-- Build the test packages -->
@@ -114,12 +119,17 @@
     <copydir  src="${source}/etc" dest="${classes}" includes="LICENSE,README,CHANGELOG" />
 
     <jar      jarfile="${dist}/${archive}.jar" basedir="${classes}"
-              manifest="${classes}/MANIFEST.MF" includes="LICENSE,README,CHANGELOG,tyrex/**" />
+              manifest="${classes}/MANIFEST.MF" includes="LICENSE,README,CHANGELOG,tyrex/**" excludes="tyrex/corba/*" />
     <jar      jarfile="${dist}/connector.jar" basedir="${classes}"
               manifest="${classes}/MANIFEST.MF" includes="tyrex/connector/*.java" />
   </target>
 
-
+  <target name="iiop" depends="main-iiop">
+    <delete   file="${dist}/${archive}-iiop.jar" />
+    
+    <jar      jarfile="${dist}/${archive}-iiop.jar" basedir="${classes}"
+              includes="tyrex/corba/*" />
+  </target>
 
   <!-- Build the documentation -->
   <!-- doc without style

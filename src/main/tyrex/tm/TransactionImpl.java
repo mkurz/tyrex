@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionImpl.java,v 1.5 2000/12/19 02:21:36 mohammed Exp $
+ * $Id: TransactionImpl.java,v 1.6 2001/01/11 23:26:33 jdaniel Exp $
  */
 
 
@@ -79,11 +79,14 @@ import tyrex.util.Messages;
  * they are added.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.5 $ $Date: 2000/12/19 02:21:36 $
+ * @version $Revision: 1.6 $ $Date: 2001/01/11 23:26:33 $
  * @see XAResourceHolder
  * @see TransactionManagerImpl
  * @see TransactionDomain
  * @see ResourceImpl
+ *
+ * Changes
+ * 1/5/2001     Jerome DANIEL       Recovery feature
  */
 final class TransactionImpl
     implements TyrexTransaction, Status, Heuristic
@@ -186,8 +189,15 @@ final class TransactionImpl
      * the transaction.
      */
     private TransactionDomain     _txDomain;
-
-
+    
+    /**
+     * To be used as a CORBA object, the control object must be
+     * activated by  its object adapter. In this implementation, we are
+     * using BOA. To provide more flexibility we only used the ORB interface
+     * to connect and disconnect CORBA objects.
+     */
+    private org.omg.CORBA.ORB _orb;
+    
     /**
      * Hidden constructor used by {@link TransactionDomain} to create
      * a new transaction. A transaction can only be created through
@@ -220,6 +230,10 @@ final class TransactionImpl
 	}
     }
 
+    public void setORB( org.omg.CORBA.ORB orb )
+    {
+        _orb = orb;
+    }
 
     TransactionDomain getTransactionDomain()
     {
@@ -261,7 +275,13 @@ final class TransactionImpl
 	} catch ( Inactive except ) {
 	    throw except;
 	}
+        
 	_control = new ControlImpl( this, _pgContext );
+        
+        // <---------- CORBA Part ----------->
+        if ( _orb != null )
+            _control.setORB( _orb );
+        // </---------- CORBA Part ----------->
     }
 
     /**
@@ -595,7 +615,7 @@ final class TransactionImpl
     	// preperation. The heuristic decision will be remembered.
     	if ( _parent != null || _pgContext != null )
     	    return;
-
+        
         commit( true );
 
     }
@@ -617,7 +637,7 @@ final class TransactionImpl
     	// preperation. The heuristic decision will be remembered.
     	if ( _parent != null || _pgContext != null )
     	    return;
-
+        
         commit( canUseOnePhaseCommit() );
     }
 
@@ -639,6 +659,10 @@ final class TransactionImpl
     {
         //RM
         //System.out.println("TransactionImpl:using 1PC " + canUseOnePhaseCommit);
+        
+        //<------------ LOG ----------->
+        tyrex.recovery.LogWriter.out.commit_begin( _xid, !canUseOnePhaseCommit );
+        //</--------------------------->
         
         try {
         	_txDomain.notifyCommit( _xid );
@@ -697,6 +721,10 @@ final class TransactionImpl
                     try {
                         forgetOnRollback();
                     } catch ( IllegalStateException e ) { }
+                    //<------------ LOG ----------->
+                    tyrex.recovery.LogWriter.out.commit_end( _xid, _heuristic );
+                    tyrex.recovery.LogWriter.out.completed( _xid );
+                    //</--------------------------->
                 }
         
             case Heuristic.Commit:
@@ -711,6 +739,10 @@ final class TransactionImpl
                     try {
                     forgetOnCommit();
                     } catch ( IllegalStateException e ) { }    
+                    //<------------ LOG ----------->
+                    tyrex.recovery.LogWriter.out.commit_end( _xid, _heuristic );
+                    tyrex.recovery.LogWriter.out.completed( _xid );
+                    //</--------------------------->
                 }
         }
          
@@ -755,6 +787,10 @@ final class TransactionImpl
     {
 	int                i;
 	XAResourceHolder xaRes;
+        
+        //<------------ LOG ----------->
+        tyrex.recovery.LogWriter.out.rollback_begin( _xid );
+        //</--------------------------->
 
 	// --------------------------------
 	// General state checks
@@ -778,6 +814,11 @@ final class TransactionImpl
     	try {
     	    forgetOnRollback();
     	} catch ( IllegalStateException e ) { }
+        
+        //<------------ LOG ----------->        
+        tyrex.recovery.LogWriter.out.rollback_end( _xid, _heuristic );
+        tyrex.recovery.LogWriter.out.completed( _xid );
+        //</--------------------------->
     }
 	
 	// If this transaction is nested inside a parent transaction,
@@ -832,6 +873,10 @@ final class TransactionImpl
 	int                committing;
 	Resource           resource;
 
+        // <-------------------- LOG -------------------->
+        tyrex.recovery.LogWriter.out.prepare_begin( _xid );
+        //</--------------------------------------------->
+        
 	// Proper notification for transactions that timed out.
 	if ( _timedOut )
 	    throw new RollbackException( Messages.message( "tyrex.tx.timedOut" ) );
@@ -909,6 +954,11 @@ final class TransactionImpl
 		    int vote;
 
 		    vote = resource.prepare().value();
+                    
+                    //<-------- LOG ------->
+                    tyrex.recovery.LogWriter.out.prepare_ots_resource( _xid, resource, vote );                    
+                    //</------------------->
+                    
 		    if ( vote == Vote._VoteReadOnly ) {
 			// The resource is read-only, no need to commit/
 			// rollback or even forget this one.
@@ -1041,6 +1091,10 @@ final class TransactionImpl
 	    _heuristic = Heuristic.Commit;
 	else
 	    _heuristic = normalize( _heuristic );
+        
+        //<------------- LOG -------------->
+        tyrex.recovery.LogWriter.out.prepare_end( _xid, _heuristic );
+        //</------------------------------->
     }
 
 
@@ -1434,19 +1488,23 @@ final class TransactionImpl
 	// We deal with OTS (remote transactions and subtransactions)
 	// first because we expect a higher likelyhood of failure over
 	// there, and we can easly recover over here.
-	if ( _resources != null ) {
-	    for ( i = 0 ; i < _resources.length ; ++i ) {
-		resource = _resources[ i ];
-		if ( resource == null )
-		    continue;
-		try {
-            if (onePhaseCommit) {
-                resource.commit_one_phase();
-            }
-            else {
-                resource.commit();
-            }
-		    
+        if ( _resources != null ) {
+            for ( i = 0 ; i < _resources.length ; ++i ) {
+                resource = _resources[ i ];
+                if ( resource == null )
+                    continue;
+                try {
+                    if (onePhaseCommit) {
+                        resource.commit_one_phase();
+                    }
+                    else {
+                        resource.commit();
+                    }
+                    
+                    //<-------- LOG -------->
+                    tyrex.recovery.LogWriter.out.commit_ots_resource( _xid, resource );
+                    //</-------------------->
+
 		    // At least one resource commited, we are either
 		    // commit or mixed.
 		    _heuristic = _heuristic | Heuristic.TX_COMMITTED;
@@ -1477,7 +1535,7 @@ final class TransactionImpl
 	_status = STATUS_COMMITTED;
     
 	_heuristic = normalize( _heuristic );
-	_txDomain.notifyCompletion( _xid, _heuristic );
+	_txDomain.notifyCompletion( _xid, _heuristic );                
     }
 
 
@@ -1611,6 +1669,11 @@ final class TransactionImpl
 		    _heuristic = _heuristic | Heuristic.Unknown;
 		    error( except );
 		}
+                finally {
+                    //<------------ LOG ----------->
+                    tyrex.recovery.LogWriter.out.rollback_ots_resource( _xid, resource );
+                    //</--------------------------->
+                }
 	    }
 	}
 
@@ -2452,7 +2515,11 @@ final class TransactionImpl
 	    System.arraycopy( _resources, 0, newResources,  0, _resources.length );
 	    newResources[ _resources.length ] = resource;
 	    _resources = newResources;
-	}
+            
+            //<---------- LOG ----------->
+            tyrex.recovery.LogWriter.out.register_ots_resource( _xid, resource );            
+            //</------------------------->
+	}        
     }
 
 
@@ -2855,7 +2922,16 @@ final class TransactionImpl
     synchronized ControlImpl getControl()
     {
 	if ( _control == null )
+        {
 	    _control = new ControlImpl( this );
+            // <---------- CORBA Part ----------->
+            if ( _orb != null )
+            {
+                _orb.connect( _control );
+                _control.setORB( _orb );
+            }
+            // </---------- CORBA Part ----------->
+        }
 	return _control;
     }
 

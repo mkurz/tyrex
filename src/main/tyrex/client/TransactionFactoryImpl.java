@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionFactoryImpl.java,v 1.4 2000/09/08 23:04:27 mohammed Exp $
+ * $Id: TransactionFactoryImpl.java,v 1.5 2001/01/11 23:26:32 jdaniel Exp $
  */
 
 
@@ -50,15 +50,11 @@ package tyrex.client;
 import java.util.Properties;
 import org.omg.CORBA.INVALID_TRANSACTION;
 import org.omg.CORBA.ORB;
-import org.omg.CORBA.TSIdentification;
 import org.omg.CosTransactions.TransactionFactory;
 import org.omg.CosTransactions.Control;
 import org.omg.CosTransactions.PropagationContext;
 import org.omg.CosTransactions._TransactionFactoryImplBase;
 import org.omg.CosTransactions.TransactionFactoryHelper;
-import org.omg.CosTSPortability.Sender;
-import org.omg.CosTSPortability.Receiver;
-import javax.jts.TransactionService;
 
 
 /**
@@ -72,12 +68,11 @@ import javax.jts.TransactionService;
  *
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.4 $ $Date: 2000/09/08 23:04:27 $
+ * @version $Revision: 1.5 $ $Date: 2001/01/11 23:26:32 $
  * @see CurrentImpl
  */
 public final class TransactionFactoryImpl
     extends _TransactionFactoryImplBase
-    implements TransactionService
 {
 
 
@@ -120,23 +115,5 @@ public final class TransactionFactoryImpl
     {
 	return _remoteFactory.recreate( pgContext );
     }
-
-
-    public void identifyORB( ORB orb, TSIdentification tsi, Properties prop )
-    {
-	CurrentImpl current;
-
-	try {
-	    current = new CurrentImpl();
-	    tsi.identify_sender( (Sender) current );
-	    tsi.identify_receiver( (Receiver) current );
-	} catch ( Exception except ) {
-	    // The ORB might tell us it's already using some sender/reciever,
-	    // or any other error we are not interested in reporting back
-	    // to the caller (i.e. the ORB).
-	    //TransactionServer.logMessage( except.toString() );
-	}
-    }
-
 
 }

@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionDomain.java,v 1.2 2000/09/08 23:06:13 mohammed Exp $
+ * $Id: TransactionDomain.java,v 1.3 2001/01/11 23:26:33 jdaniel Exp $
  */
 
 
@@ -73,7 +73,7 @@ import tyrex.util.Messages;
 /**
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $ $Date: 2000/09/08 23:06:13 $
+ * @version $Revision: 1.3 $ $Date: 2001/01/11 23:26:33 $
  */
 public class TransactionDomain
     implements ResourcePool, RemoteTransactionServer
@@ -156,7 +156,6 @@ public class TransactionDomain
 
     private UserTransaction      _userTx;
 
-
     public TransactionDomain( String domainName, ResourceLimits limits )
     {
 	_domainName = domainName;
@@ -165,7 +164,7 @@ public class TransactionDomain
 	_limits = limits;
 	_interceptors = new TransactionInterceptor[ 0 ];
 	_txManager = new TransactionManagerImpl( this );
-	_userTx = new UserTransactionImpl( _txManager );
+	_userTx = new UserTransactionImpl( _txManager );        
     }
 
     /**
@@ -340,7 +339,11 @@ public class TransactionDomain
     	txh.tx = new TransactionImpl( xid, parent, this );
     	txh.started = System.currentTimeMillis();
     	txh.timeout = _txTimeout * 1000;
-    
+        
+        // <---------------------- LOG --------------------->                
+        tyrex.recovery.LogWriter.out.begin_transaction( xid );
+        // </--------------------- LOG --------------------->
+        
     	// Nested transactions are not registered directly
     	// with the transaction server. They are not considered
     	// new creation/activation and are not subject to timeout.
@@ -863,6 +866,10 @@ public class TransactionDomain
 		if ( txh.threads[ i ] == thread )
 		    return true;
 	}
+        // <---- required for OTS ----->
+        if ( txh != null && txh.threads == null )
+            return true;
+        // </---- required for OTS ----->
 	return false;
     }
 

@@ -2,6 +2,17 @@
 <document url="http://tyrex.exolab.org/changelog.xml">
   <body>
     <title>Change log</title>
+    <section title="Version 0.9.7.0  January 11 2001"><pre>
+- Added Recovery mechanism. Each transactional event is logged
+  into a file. When the transaction service fails ( and shutdowns ),
+  it is possible to restart it and to activate the recovery. In this
+  case, all non completed transaction that could be commited are 
+  commited ( all remote resources are invoked, all XA resources too ).
+  If an error occurs or if it is not possible to commit the transaction,
+  then the transaction is rolled back.
+- Modified Tyrex OTS interfaces to be compliant with CORBA development rules.
+  It is now possible to use Tyrex as an OTS by running it with OpenORB.
+    </pre></section>
     <section title="Version 0.9.6.1  September 25, 2000"><pre>
 - Defined Castor mapping file. Ships with updated castor.0.8.8.jar 
   (different from released castor.0.8.8.jar; requires a fix to 

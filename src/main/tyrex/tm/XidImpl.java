@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: XidImpl.java,v 1.2 2000/09/08 23:06:13 mohammed Exp $
+ * $Id: XidImpl.java,v 1.3 2001/01/11 23:26:33 jdaniel Exp $
  */
 
 
@@ -83,7 +83,11 @@ import tyrex.util.Logger;
  * 
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $ $Date: 2000/09/08 23:06:13 $
+ * @version $Revision: 1.3 $ $Date: 2001/01/11 23:26:33 $
+ *
+ * Date     Author      Change
+ * 1/8/1    J.Daniel    Added a new constructor to be able to restore an
+ *                      XID from its stringified representation.
  */
 public final class XidImpl
     implements Xid, Serializable
@@ -184,7 +188,14 @@ public final class XidImpl
 	_global = _branch;
     }
 
-
+    /**
+     * Construct a nex XID from its stringified format
+     */
+    public XidImpl( String xid_str )
+    {
+        unmarshalXID( xid_str );
+    }
+    
     /**
      * Returns a new Xid that represents a unique branch
      * of this Xid. The new Xid will bear the same format and
@@ -258,6 +269,28 @@ public final class XidImpl
 	return buffer.toString();
     }
 
+    /**
+     * This operation unmarshals an XID from its stringified representation.
+     */
+    private void unmarshalXID( String xid )
+    {
+        long format = 0;
+        
+        for ( int i=0; i<8; i++ )
+        {
+            format = ( format << 4 ) + fromHex( xid.charAt(i) );
+        }
+        if ( format == XID_FORMAT )
+        {
+            _global = new byte[ GLOBAL_XID_LENGTH ];
+            for ( int i=0; i<GLOBAL_XID_LENGTH; i++ )
+                _global[i] = ( byte ) fromHex( xid.charAt( i + 9 ) );
+            
+            _branch = new byte[ GLOBAL_XID_LENGTH ];
+            for ( int i=0; i<GLOBAL_XID_LENGTH; i++ )
+                _branch[i] = ( byte ) fromHex( xid.charAt( i + 10 + GLOBAL_XID_LENGTH ) );
+        }
+    }
 
     public boolean equals( Object other )
     {
@@ -356,7 +389,21 @@ public final class XidImpl
 	else
 	    return (char) ( 'A' - 0x0A + value );
     }
-
+    
+    /**
+     * Return a decimal value from an hexadecimal value
+     */
+    long fromHex( char c )
+    {
+        if(c >= '0' && c <= '9')
+            return (c-'0');
+        else if(c >= 'a' && c <= 'f')
+            return (c-'a'+0xA);
+        else if(c >= 'A' && c <= 'F')
+            return (c-'A'+0xA);
+        
+        return 0;
+    }
 
     /**
      * Used internally to textually present global and branch

@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: ControlImpl.java,v 1.2 2000/09/08 23:06:13 mohammed Exp $
+ * $Id: ControlImpl.java,v 1.3 2001/01/11 23:26:33 jdaniel Exp $
  */
 
 
@@ -71,8 +71,12 @@ import javax.transaction.xa.Xid;
  *
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $ $Date: 2000/09/08 23:06:13 $
+ * @version $Revision: 1.3 $ $Date: 2001/01/11 23:26:33 $
  * @see TransactionImpl
+ *
+ * Changes 
+ *
+ * J. Daniel : Changed code to be compliant with CORBA developing rules.
  */
 public class ControlImpl
     extends _ControlImplBase
@@ -102,7 +106,26 @@ public class ControlImpl
      */
     private PropagationContext _pgContext;
 
-
+    // <------------------- CORBA Parts -------------------->
+    /**
+     * To be used as a CORBA object, the control object must be
+     * activated by  its object adapter. In this implementation, we are
+     * using BOA. To provide more flexibility we only used the ORB interface
+     * to connect and disconnect CORBA objects.
+     */
+    private org.omg.CORBA.ORB _orb;
+    
+    /**
+     * CORBA Reference to the terminator interface
+     */
+    private org.omg.CosTransactions.Terminator _terminator;
+    
+    /**
+     * CORBA Reference to the coordinator interface
+     */
+    private org.omg.CosTransactions.Coordinator _coordinator;
+    // </------------------- CORBA Parts -------------------->
+    
     /**
      * Creates a new control for a transaction that has been imported
      * using the specified propagation context. The local transaction
@@ -151,9 +174,13 @@ public class ControlImpl
 		_parents[ 0 ] = parent.get_identity();
 	    }
 	}
+    }   
+
+    public void setORB( org.omg.CORBA.ORB orb )
+    {
+        _orb = orb;
     }
-
-
+    
     public org.omg.CosTransactions.Terminator get_terminator()
 	throws Unavailable
     {
@@ -164,10 +191,33 @@ public class ControlImpl
 	status = _tx.getStatus();
 	if ( status == javax.transaction.Status.STATUS_ACTIVE ||
 	     status == javax.transaction.Status.STATUS_MARKED_ROLLBACK )
-	    return this;
+	    return terminator();
 	throw new Unavailable();
     }
-
+    
+    /**
+     * ----------------------------- CORBA ------------------------------------
+     * This operation is used to return the CORBA reference for the terminator
+     * interface. As an object implementation cannot inherit from several
+     * CORBA skeletons, this class doesn't inherit from the Terminator 
+     * interface skeleton. So, we need to use the delegation approach.
+     * If the delegation object is not previously created this operation creates
+     * it.
+     */
+    private org.omg.CosTransactions.Terminator terminator()
+    {
+        if ( _orb == null )
+            return this;
+        
+        if ( _terminator != null )
+            return _terminator;
+        
+        _terminator = new org.omg.CosTransactions.TerminatorTie( this );
+        
+        _orb.connect( _terminator );
+        
+        return _terminator;
+    }
 
     public Coordinator get_coordinator()
 	throws Unavailable
@@ -179,14 +229,37 @@ public class ControlImpl
 	status = _tx.getStatus();
 	if ( status == javax.transaction.Status.STATUS_ACTIVE ||
 	     status == javax.transaction.Status.STATUS_MARKED_ROLLBACK )
-	    return this;
+	    return coordinator();
 	throw new Unavailable();
     }
-
+    
+    /**
+     * ----------------------------- CORBA ------------------------------------
+     * This operation is used to return the CORBA reference for the terminator
+     * interface. As an object implementation cannot inherit from several
+     * CORBA skeletons, this class doesn't inherit from the Terminator 
+     * interface skeleton. So, we need to use the delegation approach.
+     * If the delegation object is not previously created this operation creates
+     * it.
+     */
+    private org.omg.CosTransactions.Coordinator coordinator()
+    {
+        if ( _orb == null )
+            return this;
+        
+        if ( _coordinator != null )
+            return _coordinator;
+        
+        _coordinator = new org.omg.CosTransactions.CoordinatorTie( this );
+        
+        _orb.connect( _coordinator );
+        
+        return _coordinator;
+    }
 
     public void commit( boolean reportHeuristic )
 	throws HeuristicMixed, HeuristicHazard
-    {
+    {        
 	// No heuristics are reported on subtransaction completion.
 	if ( _parents != null )
 	    reportHeuristic = false;
@@ -206,10 +279,13 @@ public class ControlImpl
 	    if ( reportHeuristic )
 		throw new HeuristicMixed();
 	} catch ( SecurityException except ) {
+            except.printStackTrace();
 	    if ( reportHeuristic )
 		throw new HeuristicHazard();
 	    throw new INVALID_TRANSACTION( except.toString() );
-	}
+        } finally {
+            deactivate();
+        }
     }
 
 
@@ -221,7 +297,9 @@ public class ControlImpl
 	    throw new INVALID_TRANSACTION( except.getMessage() );
 	} catch ( SystemException except ) {
 	    throw new INVALID_TRANSACTION( except.toString() );
-	}
+	} finally {
+            deactivate();
+        }
     }
 
 
@@ -403,15 +481,46 @@ public class ControlImpl
     }
 
 
+    /**
+     * ----------------------------- CORBA --------------------------------
+     * This operation has been modified to return CORBA compliant values.
+     */
     public synchronized PropagationContext get_txcontext()
     {
-	if ( _pgContext == null )
+        if ( _pgContext != null )
+            return _pgContext;
+        
+        if ( _orb == null )
+        {
 	    _pgContext = new PropagationContext( _tx.getTransactionDomain().getTransactionTimeout( _tx ),
-                get_identity(), _parents != null ? _parents : new TransIdentity[ 0 ], null );
-	return _pgContext;
+                    get_identity(), _parents != null ? _parents : new TransIdentity[ 0 ], null );	    
+        }
+        else
+        {
+            org.omg.CORBA.Any any = _orb.create_any();
+            
+            _pgContext = new PropagationContext( _tx.getTransactionDomain().getTransactionTimeout( _tx ),
+                    get_identity(), _parents != null ? _parents : new TransIdentity[ 0 ], any );
+        }
+        
+        return _pgContext;
     }
 
-
+    /**
+     * ---------------------------- CORBA -----------------------------
+     * This operation is used to deactivate all CORBA objects. It is used
+     * when a transaction is ended ( rolled back or commited ).
+     */
+    private void deactivate()
+    {
+        if ( _orb != null )
+        {
+            _orb.disconnect( this );
+            _orb.disconnect( _coordinator );
+            _orb.disconnect( _terminator );
+        }
+    }
+    
     public Status replay_completion( Resource resource )
     {
 	return get_status();
@@ -427,7 +536,7 @@ public class ControlImpl
 	xid = _tx.getXid();
 	branch = xid.getGlobalTransactionId();
 	otid = new otid_t( xid.getFormatId(), branch.length, branch );
-	return new TransIdentity( this, this, otid );
+	return new TransIdentity( coordinator(), terminator(), otid );
     }
 
 
@@ -470,8 +579,7 @@ public class ControlImpl
 	    return Status.StatusUnknown;
 	}
     }
-
-
+ 
 }
 
 
@@ -518,8 +626,7 @@ class SynhronizationWrapper
     public void beforeCompletion()
     {
 	_sync.before_completion();
-    }
-
+    }   
 
 }
 
@@ -606,6 +713,5 @@ class SubtransactionAwareWrapper
 	if ( status == javax.transaction.Status.STATUS_ROLLEDBACK )
 	    _aware.rollback_subtransaction();
     }
-
-
+    
 }

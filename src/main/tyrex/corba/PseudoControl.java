@@ -39,82 +39,55 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
- *
- * $Id: NullRecoveryLog.java,v 1.4 2000/09/08 23:06:04 mohammed Exp $
  */
 
-
-package tyrex.server;
-
-
-import java.io.IOException;
-import javax.sql.XADataSource;
-import javax.transaction.xa.Xid;
-
+package tyrex.corba;
 
 /**
- * Implementation of a null recovery log. Does not write or
- * read from any resource.
+ * This object is used to provide a pseudo control object. On the client and server sides, the control object cannot be
+ * found ( since its reference is not set in the propagation context ). However, this object only provides two accessors to
+ * get the coordinator and the terminator. These objects reference are set in the propagation context, so it is possible
+ * to simulate the original control object.
  *
- *
- * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.4 $ $Date: 2000/09/08 23:06:04 $
+ * @author <a href="jdaniel@intalio.com">Jerome Daniel</a>
+ * @version 1.0
  */
-final class NullRecoveryLog
-    implements RecoveryLog
+public class PseudoControl extends org.omg.CORBA.LocalObject implements org.omg.CosTransactions.Control
 {
-
-
-    public void startLogging()
-	throws IOException
+    /**
+     * Reference to the coordinator
+     */
+    private org.omg.CosTransactions.Coordinator _coord;
+    
+    /**
+     * Reference to the terminator
+     */
+    private org.omg.CosTransactions.Terminator _term;
+    
+    /**
+     * Constructor. The parameters are the coordinator and terminator references.
+     */
+    public PseudoControl( org.omg.CosTransactions.Coordinator coord, org.omg.CosTransactions.Terminator term )
     {
+       _coord = coord;
+       _term = term;
     }
-
-
-    public void beginTransaction( byte[] gxid )
+    
+    /**
+     * Return the terminator
+     */
+    public org.omg.CosTransactions.Terminator get_terminator()
+        throws org.omg.CosTransactions.Unavailable
     {
+        return _term;
     }
-
-
-    public void commitTransaction( byte[] gxid )
+    
+    /**
+     * Return the coordinator
+     */
+    public org.omg.CosTransactions.Coordinator get_coordinator()
+        throws org.omg.CosTransactions.Unavailable
     {
+        return _coord;
     }
-
-
-    public void rollbackTransaction( byte[] gxid )
-    {
-    }
-
-
-    public void addResource( XADataSource ds )
-    {
-    }
-
-
-    public void startRecovery()
-	throws IOException
-    {
-    }
-
-
-    public Object[] listResources()
-	throws IOException
-    {
-	return new Object[ 0 ];
-    }
-
-
-    public byte[][] listTransactions()
-	throws IOException
-    {
-	return new byte[0][];
-    }
-
-
-    public IOException getLastException()
-    {
-	return null;
-    }
-
-
 }

@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionServer.java,v 1.5 2000/09/08 23:06:04 mohammed Exp $
+ * $Id: TransactionServer.java,v 1.6 2001/01/11 23:26:33 jdaniel Exp $
  */
 
 
@@ -90,7 +90,7 @@ import tyrex.util.Logger;
  *
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.5 $ $Date: 2000/09/08 23:06:04 $
+ * @version $Revision: 1.6 $ $Date: 2001/01/11 23:26:33 $
  * @see Configure
  * @see Tyrex
  * @see TransactionManagerImpl
@@ -113,18 +113,6 @@ public final class TransactionServer
      */
     private static TransactionServer _instance;
 
-
-    /**
-     * The recovery log is used to record all transactions
-     * so prepared transactions can be recovered in the
-     * event of a server crash. This one is obtained from the
-     * configuration object and kept here for direct access.
-     * It is set upon initialization, never changes and is
-     * never null.
-     */
-    private static RecoveryLog     _recoveryLog;
-
-
     /**
      * The configuration object for this transaction server.
      */
@@ -141,7 +129,6 @@ public final class TransactionServer
      * All the transaction domains listed with this server.
      */
     private static Hashtable       _txDomains = new Hashtable();
-
 
 
     /**
@@ -310,19 +297,22 @@ public final class TransactionServer
 		    Logger.getSystemLogger().println( pkg.getImplementationVendor() );
 		}
 
-		// Use the pool manager and recovery log specified in
-		// the configuration object.
-		_recoveryLog = _config.getRecoveryLog();
-		if ( _recoveryLog == null ) {
-		    _recoveryLog = new NullRecoveryLog();
-		    _config.setRecoveryLog( _recoveryLog );
-		}
 		getTransactionDomain( DefaultDomain, true );
-
+                
+                tyrex.recovery.LogWriter.newWriter( config.getLogDirectory(), config.getORB(), config.isLogActivated(), config.isRecoveryActivated() );
+                if ( config.isLogActivated() )
+                    Logger.getSystemLogger().println( Messages.message("tyrex.recovery.enable") );
+                else
+                    Logger.getSystemLogger().println( Messages.message("tyrex.recovery.disable") );     
+                
+                tyrex.recovery.RecoveryManager.newRecoveryManager( config.getLogDirectory(), config.getORB() );                
+                if ( config.isRecoveryActivated() )
+                {
+                    tyrex.recovery.RecoveryManager.manager.recover_transactions();                
+                    tyrex.recovery.LogWriter.out.recovery_completed();
+                }
 	    } else  if ( _status == Configure.Status.Active ) {
-
-		RecoveryLog recoveryLog;
-
+		
 		// The server has been started before, we are merely
 		// reseting the configuration. Make sure we are using
 		// the same configuration object to do that.
@@ -343,17 +333,7 @@ public final class TransactionServer
 		try {
 		    config.refresh();
 		} catch ( IOException except ) { }
-		*/
-
-		// We cannot at any point set _recoveryLog to null,
-		// so we need to use an intermediate.
-		recoveryLog = _config.getRecoveryLog();
-		if ( recoveryLog == null ) {
-		    _recoveryLog = new NullRecoveryLog();
-		    _config.setRecoveryLog( _recoveryLog );
-		} else
-		    _recoveryLog = _recoveryLog;
-
+		*/				               
 	    }
 
 	    // Reload the resources configuration file. This also
@@ -365,7 +345,7 @@ public final class TransactionServer
 	    // available once more.
 	    _status = Configure.Status.Active;
 	    _instance.notifyAll();
-	}
+	}                               
 
 	Logger.getSystemLogger().println(
 	    Messages.message( "tyrex.server.serverStarted" ) );
@@ -453,36 +433,7 @@ public final class TransactionServer
     }
 
 
-    static void logTransaction( XidImpl xid, int heuristic )
-    {
-	if ( _recoveryLog == null )
-	    return;
-
-	switch ( heuristic ) {
-	case Heuristic.BEGIN_TX:
-	    _recoveryLog.beginTransaction( xid.getGlobalTransactionId() );
-	    TransactionServer.logMessage( "Begin " + xid.toString() );
-	    break;
-	case Heuristic.Commit:
-	    _recoveryLog.commitTransaction( xid.getGlobalTransactionId() );
-	    TransactionServer.logMessage( "Commit " + xid.toString() );
-	    break;
-	case Heuristic.ReadOnly:
-	    _recoveryLog.commitTransaction( xid.getGlobalTransactionId() );
-	    TransactionServer.logMessage( "Read-only " + xid.toString() );
-	    break;
-	case Heuristic.Rollback:
-	    _recoveryLog.rollbackTransaction( xid.getGlobalTransactionId() );
-	    TransactionServer.logMessage( "Rollback " +  xid.toString() );
-	    break;
-	case Heuristic.Mixed:
-	case Heuristic.Hazard:
-	    _recoveryLog.rollbackTransaction( xid.getGlobalTransactionId() );
-	    TransactionServer.logMessage( "Mixed " + xid.toString() );
-	    break;
-	}
-    }
-
+ 
 
     public byte[] createRemoteTransaction()
 	throws SystemException, RemoteException

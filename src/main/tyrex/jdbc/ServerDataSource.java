@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: ServerDataSource.java,v 1.11 2000/09/26 18:27:17 mohammed Exp $
+ * $Id: ServerDataSource.java,v 1.12 2001/01/11 23:26:32 jdaniel Exp $
  */
 
 
@@ -99,7 +99,7 @@ import tyrex.util.Messages;
  * {@link tyrex.resource.ResourcePool}.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.11 $ $Date: 2000/09/26 18:27:17 $
+ * @version $Revision: 1.12 $ $Date: 2001/01/11 23:26:32 $
  *
  * Date         Author          Changes
  * ?            Assaf Arkin     Created  
@@ -502,9 +502,14 @@ public class ServerDataSource
 	    } catch ( NamingException except ) {
 		throw new SQLException( except.toString() );
 	    }
-	}
-
-	if ( _dataSource instanceof XADataSource ) {
+	}       
+        
+	if ( _dataSource instanceof XADataSource ) 
+        {
+            // <--------- LOG ---------->
+            if  ( !(_dataSource instanceof tyrex.jdbc.xa.EnabledDataSource ) )
+                tyrex.recovery.LogWriter.out.open_connection( user, password, _dataSourceName );
+            // </----------------------->
 	    if ( user == null )
 		return ( (XADataSource) _dataSource ).getXAConnection();
 	    else

@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionFactoryImpl.java,v 1.2 2000/09/08 23:06:13 mohammed Exp $
+ * $Id: TransactionFactoryImpl.java,v 1.3 2001/01/11 23:26:33 jdaniel Exp $
  */
 
 
@@ -50,44 +50,49 @@ package tyrex.tm;
 import java.util.Properties;
 import org.omg.CORBA.INVALID_TRANSACTION;
 import org.omg.CORBA.ORB;
-import org.omg.CORBA.TSIdentification;
 import org.omg.CosTransactions.TransactionFactory;
 import org.omg.CosTransactions.Control;
 import org.omg.CosTransactions.PropagationContext;
 import org.omg.CosTransactions._TransactionFactoryImplBase;
-import org.omg.CosTSPortability.Sender;
-import org.omg.CosTSPortability.Receiver;
-import javax.jts.TransactionService;
 
 
 /**
  * Implements an OTS transaction factory and identification interfaces.
  * Allows the creation of new OTS transactions as well as the importing
- * of remote transactions. The identification interface allows the
- * transaction server to be registered as a service with any ORB.
- *
+ * of remote transactions.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $ $Date: 2000/09/08 23:06:13 $
+ * @version $Revision: 1.3 $ $Date: 2001/01/11 23:26:33 $
  * @see TransactionImpl
+ *
+ * Changes 
+ *
+ * J. Daniel : Changed code to be compliant with CORBA developing rules.
  */
 public final class TransactionFactoryImpl
-    extends _TransactionFactoryImplBase
-    implements TransactionService
+    extends _TransactionFactoryImplBase    
 {
 
-
+    /**
+     * To be used as a CORBA object, the control object must be
+     * activated by  its object adapter. In this implementation, we are
+     * using BOA. To provide more flexibility we only used the ORB interface
+     * to connect and disconnect CORBA objects.
+     */
+    private org.omg.CORBA.ORB _orb;
+    
     /**
      * The transaction domain to which this factory belongs.
      */
     private TransactionDomain  _txDomain;
 
 
-    TransactionFactoryImpl( TransactionDomain txDomain )
+    public TransactionFactoryImpl( TransactionDomain txDomain, org.omg.CORBA.ORB orb )
     {
 	if ( txDomain == null )
 	    throw new IllegalArgumentException( "Argument 'txDomain' is null" );
 	_txDomain = txDomain;
+        _orb = orb;
     }
 
 
@@ -99,6 +104,12 @@ public final class TransactionFactoryImpl
 	// interface of that transaction.
 	try {
 	    tx = _txDomain.createTransaction( null, null );
+            
+            // <---------- CORBA Part ----------->
+            if ( _orb != null )
+                tx.setORB( _orb );            
+            // </---------- CORBA Part ----------->
+            
 	    return tx.getControl();
 	} catch ( Exception except ) {
 	    throw new INVALID_TRANSACTION();
@@ -112,28 +123,16 @@ public final class TransactionFactoryImpl
 
 	try {
 	    tx = _txDomain.recreateTransaction( pgContext );
-	    return tx.getControl();
+            
+            // <---------- CORBA Part ----------->
+            if ( _orb != null )
+                tx.setORB( _orb );
+            // </---------- CORBA Part ----------->
+	    
+            return tx.getControl();
 	} catch ( Exception except ) {
 	    throw new INVALID_TRANSACTION();
 	}
     }
-
-
-    public void identifyORB( ORB orb, TSIdentification tsi, Properties prop )
-    {
-	CurrentImpl current;
-
-	try {
-	    current = new CurrentImpl( this, (TransactionManagerImpl) _txDomain.getTransactionManager() );
-	    tsi.identify_sender( (Sender) current );
-	    tsi.identify_receiver( (Receiver) current );
-	} catch ( Exception except ) {
-	    // The ORB might tell us it's already using some sender/reciever,
-	    // or any other error we are not interested in reporting back
-	    // to the caller (i.e. the ORB).
-	    _txDomain.logMessage( except.toString() );
-	}
-    }
-
-
+     
 }
