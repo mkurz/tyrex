@@ -1,6 +1,9 @@
+<?xml version="1.0"?>
+<!--
 <!DOCTYPE resources
   PUBLIC "-//EXOLAB/Tyrex Resources DTD Version 1.0//EN"
          "http://tyrex.exolab.org/resources.dtd">
+-->
 <!--
      Sample resources file specifies mapping of resources to the
      running Servlet.
@@ -26,7 +29,9 @@
   <res:resource res-name="jdbc/mydb" res-type="postgresql.PostgresqlDataSource">
     <res:param database-name="test" description="PostgreSQL test database"
            user="test" password="test"/>
-    <res:pool upper-limit="100" desired-size="10"/>
+    <res:pool>
+        <res:resource-limits upper-limit="100" desired-size="10"/>
+    </res:pool>
     <res:visible>
        <res:app-path>file:*</res:app-path>
     </res:visible>
