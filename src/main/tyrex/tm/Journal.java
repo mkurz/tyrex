@@ -38,9 +38,9 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
+ * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Journal.java,v 1.1 2001/03/03 00:36:04 arkin Exp $
+ * $Id: Journal.java,v 1.2 2001/03/12 19:20:19 arkin Exp $
  */
 
 
@@ -83,7 +83,7 @@ import javax.transaction.xa.Xid;
  * the transaction should be recovered.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 public abstract class Journal
 {

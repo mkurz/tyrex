@@ -38,9 +38,9 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
+ * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Performance.java,v 1.6 2001/03/05 18:25:12 arkin Exp $
+ * $Id: Performance.java,v 1.7 2001/03/12 19:20:20 arkin Exp $
  */
 
 
@@ -59,7 +59,7 @@ import tyrex.tm.TyrexTransactionManager;
 /**
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.6 $ $Date: 2001/03/05 18:25:12 $
+ * @version $Revision: 1.7 $ $Date: 2001/03/12 19:20:20 $
  */
 public class Performance
 {
@@ -76,81 +76,81 @@ public class Performance
 
     public static void main( String args[] )
     {
-	PrintWriter  writer;
-	int          test;
+        PrintWriter  writer;
+        int          test;
         int          count;
         Transaction  tx;
         long         clock;
 
-	test = -1;
-	if ( args.length > 0 ) {
-	    if ( "perf".startsWith( args[ 0 ] ) )
-		test = TEST_PERFORMANCE;
-	    else if ( "tm".startsWith( args[ 0 ] ) )
-		test = TEST_TM_TIMEOUT;
-	}
-	if ( test == -1 ) {
-	    System.out.println( "Usage: <test> [debug]\nWhere <test> is one of:\n" );
-	    System.out.println( "  p[erf]      Performance test" );
-	    System.out.println( "  tm          Transaction manager timeout" );
-	    System.exit ( 1 );
-	}
-	writer = new PrintWriter( System.out, true );
-
-	try {
+        test = -1;
+        if ( args.length > 0 ) {
+            if ( "perf".startsWith( args[ 0 ] ) )
+                test = TEST_PERFORMANCE;
+            else if ( "tm".startsWith( args[ 0 ] ) )
+                test = TEST_TM_TIMEOUT;
+        }
+        if ( test == -1 ) {
+            System.out.println( "Usage: <test> [debug]\nWhere <test> is one of:\n" );
+            System.out.println( "  p[erf]      Performance test" );
+            System.out.println( "  tm          Transaction manager timeout" );
+            System.exit ( 1 );
+        }
+        writer = new PrintWriter( System.out, true );
+        
+        try {
             if ( _configFile == null )
                 _configFile = Performance.class.getResourceAsStream( "test.xml" );
             _txDomain = TransactionDomain.createDomain( _configFile );
             _txManager = (TyrexTransactionManager) _txDomain.getTransactionManager();
-
-	    System.out.println( "Creating transaction locally" );
-	    _txManager.begin();
-	    tx = _txManager.getTransaction();
-	    System.out.println( "Transaction: " + tx.toString() );
-	    System.out.println( "Commiting transaction" );
-	    _txManager.commit();
-
-	    System.out.println( "Creating transaction locally" );
+            
+            System.out.println( "Creating transaction locally" );
+            _txManager.begin();
+            tx = _txManager.getTransaction();
+            System.out.println( "Transaction: " + tx.toString() );
+            System.out.println( "Commiting transaction" );
+            _txManager.commit();
+            
+            System.out.println( "Creating transaction locally" );
             _txManager.setTransactionTimeout( 1 );
-	    _txManager.begin();
-	    tx = _txManager.getTransaction();
-	    System.out.println( "Transaction: " + tx.toString() );
-
-	    if ( test == TEST_TM_TIMEOUT ) {
-		new SecondThread( tx, writer ).start();
-
+            _txManager.begin();
+            tx = _txManager.getTransaction();
+            System.out.println( "Transaction: " + tx.toString() );
+            
+            if ( test == TEST_TM_TIMEOUT ) {
+                new SecondThread( tx, writer ).start();
+                
                 _txManager.dumpCurrentTransaction( writer );
                 try {
                     Thread.sleep( 3000 );
                 } catch ( Exception except ) { }
                 _txManager.dumpCurrentTransaction( writer );
-	    }
-
-	    System.out.println( "Aborting transaction" );
-	    _txManager.rollback();
-
-	    if ( test == TEST_PERFORMANCE ) {
-		clock = System.currentTimeMillis();
+            }
+            
+            System.out.println( "Aborting transaction" );
+            _txManager.rollback();
+            
+            if ( test == TEST_PERFORMANCE ) {
+                clock = System.currentTimeMillis();
                 count = 100000;
-		for ( int i = 0 ; i < count ; ++i ) {
-		    _txManager.begin();
-		    _txManager.commit();
-		}
+                for ( int i = 0 ; i < count ; ++i ) {
+                    _txManager.begin();
+                    _txManager.commit();
+                }
                 clock = System.currentTimeMillis() - clock;
                 System.out.println( "Rate " + (double) count / ( (double) clock / 1000 ) + "/sec" );
-	    }
-	} catch ( Exception except ) {
-	    System.out.println( except );
-	    except.printStackTrace();
-	}
-	System.out.println( "[Test end]" );
-            
+            }
+        } catch ( Exception except ) {
+            System.out.println( except );
+            except.printStackTrace();
+        }
+        System.out.println( "[Test end]" );
+        
         _txManager.dumpTransactionList( writer );
         _txManager.dumpCurrentTransaction( writer );
-	System.exit( 0 );
+        System.exit( 0 );
     }
-
-
+    
+    
     /**
      * Perform performance test comparing transaction per minute with and
      * without the transaction monitor.
@@ -167,34 +167,34 @@ public class Performance
 
 
     static class SecondThread
-	extends Thread
+        extends Thread
     {
 
 
-	Transaction tx;
+        Transaction tx;
 
 
-	PrintWriter writer;
+        PrintWriter writer;
 
 
-	SecondThread( Transaction tx, PrintWriter writer )
-	{
-	    this.tx = tx;
-	    this.writer = writer;
-	}
+        SecondThread( Transaction tx, PrintWriter writer )
+        {
+            this.tx = tx;
+            this.writer = writer;
+        }
 
 
-	public void run()
-	{
-	    try {
-		_txManager.resume( tx );
-		while ( _txManager.getTransaction() != null ) {
-		    sleep( 2000 );
-		}
-	    } catch ( Exception except ) {
-		System.out.println( "Second thread reports: " + except.toString() );
-	    }
-	}
+        public void run()
+        {
+            try {
+                _txManager.resume( tx );
+                while ( _txManager.getTransaction() != null ) {
+                    sleep( 2000 );
+                }
+            } catch ( Exception except ) {
+                System.out.println( "Second thread reports: " + except.toString() );
+            }
+        }
 
 
     }

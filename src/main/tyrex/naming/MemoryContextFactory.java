@@ -38,9 +38,9 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
+ * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: MemoryContextFactory.java,v 1.4 2000/09/08 23:05:19 mohammed Exp $
+ * $Id: MemoryContextFactory.java,v 1.5 2001/03/12 19:20:16 arkin Exp $
  */
 
 
@@ -48,8 +48,6 @@ package tyrex.naming;
 
 
 import java.util.Hashtable;
-import java.util.Enumeration;
-import java.security.AccessController;
 import javax.naming.Context;
 import javax.naming.NamingException;
 import javax.naming.CompositeName;
@@ -76,7 +74,7 @@ import javax.naming.spi.InitialContextFactory;
  * 
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.4 $ $Date: 2000/09/08 23:05:19 $
+ * @version $Revision: 1.5 $ $Date: 2001/03/12 19:20:16 $
  * @see MemoryContext
  * @see JavaContext
  */
@@ -98,40 +96,33 @@ public final class MemoryContextFactory
      *
      * @param path The path
      * @return The memory binding for the path
-     * @throws NamingException Name is invalid or caller does not have
-     *  adequate permission to access shared memory context
+     * @throws NamingException Name is invalid
      */
     synchronized static MemoryBinding getBindings( String path )
         throws NamingException
     {
-	MemoryBinding  binding;
-	MemoryBinding  newBinding;
-	CompositeName  name;
-	int            i;
-
-        try {
-	    AccessController.checkPermission( NamingPermission.Shared );
-	} catch ( SecurityException except ) {
-	    throw new NoPermissionException( "Caller has no permission to reset environment naming context" );
-	}
-
-	name = new CompositeName( path );
-	binding = _root;
-	for ( i = 0 ; i < name.size() ; ++i ) {
-	    if ( name.get( i ).length() > 0 ) {
-		try {
-		    newBinding = (MemoryBinding) binding.get( name.get( i ) );
-		    if ( newBinding == null ) {
-			newBinding = new MemoryBinding();
-			binding.put( name.get( i ), newBinding );
-		    }
-		    binding = newBinding;
-		} catch ( ClassCastException except ) {
-		    throw new NotContextException( path + " does not specify a context" );
-		}
-	    }
-	}
-	return binding;
+        MemoryBinding  binding;
+        MemoryBinding  newBinding;
+        CompositeName  name;
+        int            i;
+        
+        name = new CompositeName( path );
+        binding = _root;
+        for ( i = 0 ; i < name.size() ; ++i ) {
+            if ( name.get( i ).length() > 0 ) {
+                try {
+                    newBinding = (MemoryBinding) binding.get( name.get( i ) );
+                    if ( newBinding == null ) {
+                        newBinding = new MemoryBinding();
+                        binding.put( name.get( i ), newBinding );
+                    }
+                    binding = newBinding;
+                } catch ( ClassCastException except ) {
+                    throw new NotContextException( path + " does not specify a context" );
+                }
+            }
+        }
+        return binding;
     }
 
 
@@ -142,16 +133,16 @@ public final class MemoryContextFactory
      * will be returned relative to the root.
      */
     public Context getInitialContext( Hashtable env )
-        throws NamingException
+       throws NamingException
     {
-	if ( env.get( Context.PROVIDER_URL ) == null )
-	    return new MemoryContext( env );
-	else {
-            String url;
-
-	    url = env.get( Context.PROVIDER_URL ).toString();
-	    return new MemoryContext( getBindings( url ), env );
-	}
+        String url;
+        
+        if ( env.get( Context.PROVIDER_URL ) == null )
+            return new MemoryContext( env );
+        else {
+            url = env.get( Context.PROVIDER_URL ).toString();
+            return new MemoryContext( getBindings( url ), env );
+        }
     }
 
 

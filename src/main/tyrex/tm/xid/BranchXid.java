@@ -38,9 +38,9 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
+ * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: BranchXid.java,v 1.1 2001/02/27 00:37:53 arkin Exp $
+ * $Id: BranchXid.java,v 1.2 2001/03/12 19:20:20 arkin Exp $
  */
 
 
@@ -58,7 +58,7 @@ import tyrex.util.Messages;
  * is always the same.
  * 
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 public final class BranchXid
     extends BaseXid
@@ -117,29 +117,29 @@ public final class BranchXid
 
     public int getFormatId()
     {
-	return GlobalXid.GLOBAL_FORMAT_ID;
+        return GlobalXid.GLOBAL_FORMAT_ID;
     }
 
 
     public byte[] getGlobalTransactionId()
     {
-	return _global;
+        return _global;
     }
 
 
     public byte[] getBranchQualifier()
     {
-	return _branch;
+        return _branch;
     }
 
 
     public boolean equals( Object other )
     {
-	Xid     xid;
+        Xid     xid;
         byte[]  bytes;
 
-	if ( other == this )
-	    return true;
+        if ( other == this )
+            return true;
         if ( other instanceof BaseXid )
             return _string.equals( ( (BaseXid) other )._string );
         if ( other instanceof Xid ) {

@@ -38,9 +38,9 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
+ * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TerminatorImpl.java,v 1.1 2001/03/05 18:25:39 arkin Exp $
+ * $Id: TerminatorImpl.java,v 1.2 2001/03/12 19:20:20 arkin Exp $
  */
 
 
@@ -63,7 +63,7 @@ import org.omg.CORBA.TRANSACTION_ROLLEDBACK;
  * Implements a {@link Terminator} interface into a transaction.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2001/03/05 18:25:39 $
+ * @version $Revision: 1.2 $ $Date: 2001/03/12 19:20:20 $
  */
 final class TerminatorImpl
     extends _TerminatorImplBase
@@ -93,23 +93,23 @@ final class TerminatorImpl
             reportHeuristic = false;
         try {
             _control._tx.commit();
-	} catch ( IllegalStateException except ) {
-	    throw new INVALID_TRANSACTION( except.getMessage() );
-	} catch ( SystemException except ) {
-	    if ( reportHeuristic )
-		throw new HeuristicHazard();
-	} catch ( RollbackException except ) {
-	    throw new TRANSACTION_ROLLEDBACK( except.getMessage() );
-	} catch ( HeuristicRollbackException except ) {
-	    if ( reportHeuristic )
-		throw new TRANSACTION_ROLLEDBACK( except.getMessage() );
-	} catch ( HeuristicMixedException except ) {
-	    if ( reportHeuristic )
-		throw new HeuristicMixed();
-	} catch ( SecurityException except ) {
-	    if ( reportHeuristic )
-		throw new HeuristicHazard();
-	    throw new INVALID_TRANSACTION( except.toString() );
+        } catch ( IllegalStateException except ) {
+            throw new INVALID_TRANSACTION( except.getMessage() );
+        } catch ( SystemException except ) {
+            if ( reportHeuristic )
+                throw new HeuristicHazard();
+        } catch ( RollbackException except ) {
+            throw new TRANSACTION_ROLLEDBACK( except.getMessage() );
+        } catch ( HeuristicRollbackException except ) {
+            if ( reportHeuristic )
+                throw new TRANSACTION_ROLLEDBACK( except.getMessage() );
+        } catch ( HeuristicMixedException except ) {
+            if ( reportHeuristic )
+                throw new HeuristicMixed();
+        } catch ( SecurityException except ) {
+            if ( reportHeuristic )
+                throw new HeuristicHazard();
+            throw new INVALID_TRANSACTION( except.toString() );
         } finally {
             _control.deactivate();
         }
@@ -118,15 +118,15 @@ final class TerminatorImpl
 
     public void rollback()
     {
-	try {
-	    _control._tx.rollback();
-	} catch ( IllegalStateException except ) {
-	    throw new INVALID_TRANSACTION( except.getMessage() );
-	} catch ( SystemException except ) {
-	    throw new INVALID_TRANSACTION( except.toString() );
-	} finally {
+        try {
+            _control._tx.rollback();
+        } catch ( IllegalStateException except ) {
+            throw new INVALID_TRANSACTION( except.getMessage() );
+        } catch ( SystemException except ) {
+            throw new INVALID_TRANSACTION( except.toString() );
+        } finally {
             _control.deactivate();
-        }
+       }
     }
 
 

@@ -38,9 +38,9 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
+ * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: XAConnectionImpl.java,v 1.2 2001/03/05 18:25:09 arkin Exp $
+ * $Id: XAConnectionImpl.java,v 1.3 2001/03/12 19:20:18 arkin Exp $
  */
 
 
@@ -212,7 +212,7 @@ public final class XAConnectionImpl
         /* Deprecated: see _clientId
            if ( _clientConn != null )
            _clientConn.terminate();
-	*/
+        */
         _clientId = -1;
 
         // The underlying connection is closed and this connection
@@ -390,7 +390,7 @@ public final class XAConnectionImpl
             if ( _txConn.conn == null ||
                  ! ( _txConn.conn instanceof TwoPhaseConnection ) ||
                  ! ( (TwoPhaseConnection) _txConn.conn ).isCriticalError( except ) )
-    		return;    
+                return;    
         }
         
         // The client connection is no longer useable, the underlying
@@ -470,165 +470,165 @@ public final class XAConnectionImpl
                   else {
                         _txConn.conn = _resManager.newConnection( _userName, _password );
                     }
-			
-		    _txConn.xid = xid;
-		    _txConn.count = 1;
-		    _txConn.started = System.currentTimeMillis();
-		    _txConn.timeout = _txConn.started + ( _txTimeout * 1000 );
+
+                    _txConn.xid = xid;
+                    _txConn.count = 1;
+                    _txConn.started = System.currentTimeMillis();
+                    _txConn.timeout = _txConn.started + ( _txTimeout * 1000 );
                     _txConn.userName = _userName;
                     _txConn.password = _password;
-		    _resManager.setTxConnection( xid, _txConn );
-		} catch ( SQLException except ) {
+                    _resManager.setTxConnection( xid, _txConn );
+                } catch ( SQLException except ) {
                     // If error occured at this point, we can only
-		    // report it as resource manager error.
-		    if ( _resManager.getLogWriter() != null )
-			_resManager.getLogWriter().println( "XAConnection: failed to begin a transaction: " + except );
-		    throw new XAException( XAException.XAER_RMERR );
-		}
-
-		try {
-		    _txConn.conn.setAutoCommit( false );
-		    try {
-            // NOTE: Some JDBC drivers do not cache isolation levels so the method #getTransactionIsolation
-            // is expensive and can use up resources. The Cloudspace 3.5, Sybase 5.2 drivers suffers from this.
-
-            //if ( _resManager.getIsolationLevel() != _txConn.conn.getTransactionIsolation() )
-			    _txConn.conn.setTransactionIsolation( _resManager.getIsolationLevel() );
-		    } catch ( SQLException e ) {
-                // The underlying driver might not support this
-			    // isolation level that we use by default.
-
-                // See NOTE above why the code below is commented out
-                // We'll hope for the best in this case :-).
-                /*
-                // not wrapping the call to conn getTransactionIsolation in a
-                // try-catch block because if we can't determine the isolation level
-                // then it can be TRANSACTION_NONE and what's the point of continuing.
-                int isolationLevel = _txConn.conn.getTransactionIsolation();
-                // if transactions are not supported abort
-                if ( isolationLevel == Connection.TRANSACTION_NONE ) {
+                    // report it as resource manager error.
                     if ( _resManager.getLogWriter() != null )
-			            _resManager.getLogWriter().println( "XAConnection <" + 
-                                                            toString() + 
-                                                            ">: does not support transactions." );
-                    throw new XAException( XAException.XAER_RMERR );    
+                        _resManager.getLogWriter().println( "XAConnection: failed to begin a transaction: " + except );
+                    throw new XAException( XAException.XAER_RMERR );
                 }
-                else*/ if ( _resManager.getLogWriter() != null ) {
-			            _resManager.getLogWriter().println( "XAConnection <" + 
-                                                            toString() +
-                                                            ">: cannot set isolation level.");
+                
+                try {
+                    _txConn.conn.setAutoCommit( false );
+                    try {
+                        // NOTE: Some JDBC drivers do not cache isolation levels so the method #getTransactionIsolation
+                        // is expensive and can use up resources. The Cloudspace 3.5, Sybase 5.2 drivers suffers from this.
+                        
+                        //if ( _resManager.getIsolationLevel() != _txConn.conn.getTransactionIsolation() )
+                        _txConn.conn.setTransactionIsolation( _resManager.getIsolationLevel() );
+                    } catch ( SQLException e ) {
+                        // The underlying driver might not support this
+                        // isolation level that we use by default.
+                        
+                        // See NOTE above why the code below is commented out
+                        // We'll hope for the best in this case :-).
+                        /*
+                          // not wrapping the call to conn getTransactionIsolation in a
+                          // try-catch block because if we can't determine the isolation level
+                          // then it can be TRANSACTION_NONE and what's the point of continuing.
+                          int isolationLevel = _txConn.conn.getTransactionIsolation();
+                          // if transactions are not supported abort
+                          if ( isolationLevel == Connection.TRANSACTION_NONE ) {
+                          if ( _resManager.getLogWriter() != null )
+                          _resManager.getLogWriter().println( "XAConnection <" + 
+                          toString() + 
+                          ">: does not support transactions." );
+                          throw new XAException( XAException.XAER_RMERR );    
+                          }
+                          else*/ if ( _resManager.getLogWriter() != null ) {
+                              _resManager.getLogWriter().println( "XAConnection <" + 
+                                                                  toString() +
+                                                                  ">: cannot set isolation level.");
+                          }
+                    }
+                    if ( _txConn.conn instanceof TwoPhaseConnection )
+                        ( (TwoPhaseConnection) _txConn.conn ).enableSQLTransactions( false );
+                } catch ( SQLException except ) {
+                    
+                    // If error occured at this point, we can only
+                    // report it as resource manager error.
+                    if ( _resManager.getLogWriter() != null )
+                        _resManager.getLogWriter().println( "XAConnection: failed to begin a transaction: " + except );
+                    throw new XAException( XAException.XAER_RMERR );
                 }
-			}
-		    if ( _txConn.conn instanceof TwoPhaseConnection )
-			( (TwoPhaseConnection) _txConn.conn ).enableSQLTransactions( false );
-		} catch ( SQLException except ) {
-            
-		    // If error occured at this point, we can only
-		    // report it as resource manager error.
-		    if ( _resManager.getLogWriter() != null )
-			_resManager.getLogWriter().println( "XAConnection: failed to begin a transaction: " + except );
-		    throw new XAException( XAException.XAER_RMERR );
-		}
-	    } else if ( flags == TMJOIN || flags == TMRESUME ) {
-		// We are joining another transaction with an
-		// existing TxConnection.
-		_txConn = _resManager.getTxConnection( xid );
-		if ( _txConn == null )
-		    throw new XAException( XAException.XAER_INVAL );
-
-		// Update the number of XAConnections sharing this
-		// transaction connection.
-		if ( flags == TMJOIN && _txConn.count == 0 )
-		    throw new XAException( XAException.XAER_PROTO );
-		++_txConn.count;
-
-		// If we already have an underlying connection (as we can
-		// expect to), we should release that underlying connection
-		// and make it available to the resource manager.
-		if ( _underlying != null ) {
-            // this should not happen
-		    releaseConnection( _underlying );
-		    _underlying = null;
-		}
-	    } else
-		// No other flags supported in start().
-		throw new XAException( XAException.XAER_INVAL );
-	}
+            } else if ( flags == TMJOIN || flags == TMRESUME ) {
+                // We are joining another transaction with an
+                // existing TxConnection.
+                _txConn = _resManager.getTxConnection( xid );
+                if ( _txConn == null )
+                    throw new XAException( XAException.XAER_INVAL );
+                
+                // Update the number of XAConnections sharing this
+                // transaction connection.
+                if ( flags == TMJOIN && _txConn.count == 0 )
+                    throw new XAException( XAException.XAER_PROTO );
+                ++_txConn.count;
+                
+                // If we already have an underlying connection (as we can
+                // expect to), we should release that underlying connection
+                // and make it available to the resource manager.
+                if ( _underlying != null ) {
+                    // this should not happen
+                    releaseConnection( _underlying );
+                    _underlying = null;
+                }
+            } else
+                // No other flags supported in start().
+                throw new XAException( XAException.XAER_INVAL );
+        }
     }
 
 
     public synchronized void end( Xid xid, int flags )
         throws XAException
     {
-	// General checks.
-	if ( xid == null )
-	    throw new XAException( XAException.XAER_INVAL );
-	// Note: we could get end with success or failure even it
-	// we were previously excluded from the transaction.
-	if ( ( _txConn == null ) && 
-         ( ( flags == TMSUSPEND ) || ( flags == TMFAIL ) ) ) 
-	    throw new XAException( XAException.XAER_NOTA );
-
-	synchronized ( _resManager ) {
-	    if ( flags == TMSUCCESS || flags == TMFAIL) {
-		// We are now leaving a transaction we started or
-		// joined before. We can expect any of prepare/
-		// commit/rollback to be called next, so TxConnection
-		// is still valid.
-
-		// If we were suspended from the transaction, we'll
-		// join it for the duration of this operation.
-		// Make sure the reference count reaches zero by the
-		// time we get to prepare.
-		if ( _txConn == null ) {
-		    _txConn = _resManager.getTxConnection( xid );
-		    if ( _txConn == null )
-			throw new XAException( XAException.XAER_NOTA );
-		} else {
-		    if ( _txConn.xid != null && ! _txConn.xid.equals( xid ) )
-			throw new XAException( XAException.XAER_NOTA );
-		    --_txConn.count;
-		}
-
-		// If transaction failed, we can rollback the
-		// transaction and release the underlying connection.
-		// We can expect all other resources to recieved the
-		// same end notification. We don't expect forget to happen.
-		if ( flags == TMFAIL && _txConn.conn != null ) {
-		    try {
-			if ( _txConn.conn instanceof TwoPhaseConnection )
-			    ( (TwoPhaseConnection) _txConn.conn ).enableSQLTransactions( true );
-			_txConn.conn.rollback();
-			releaseConnection( _txConn.conn );
-		    } catch ( SQLException except ) {
-			// There is a problem with the underlying
-			// connection, but it was not added to the poll.
-		    }
-		    _resManager.setTxConnection( _txConn.xid, null );
-		    _txConn.conn = null;
-		    _txConn.xid = null;
-		}
-
-		if ( flags == TMSUCCESS) {
-		    // We should be looking for a new transaction.
-		    // Next thing we might be participating in a new
-		    // transaction while the current one is being
-		    // rolled back.
-            //releaseConnection( _txConn.conn );
-		    _txConn = null;
-		}
-	    } else if ( flags == TMSUSPEND ) {
-		// We no longer take part in this transaction.
-		// Possibly we'll be asked to resume later on, but
-		// right now we have to forget about the transaction
-		// and the underlying connection.
-		--_txConn.count;
-        //releaseConnection( _txConn.conn );
-		_txConn = null;
-	    } else
-		// No other flags supported in end().
-		throw new XAException( XAException.XAER_INVAL );
-	}
+        // General checks.
+        if ( xid == null )
+            throw new XAException( XAException.XAER_INVAL );
+        // Note: we could get end with success or failure even it
+        // we were previously excluded from the transaction.
+        if ( ( _txConn == null ) && 
+             ( ( flags == TMSUSPEND ) || ( flags == TMFAIL ) ) ) 
+            throw new XAException( XAException.XAER_NOTA );
+        
+        synchronized ( _resManager ) {
+            if ( flags == TMSUCCESS || flags == TMFAIL) {
+                // We are now leaving a transaction we started or
+                // joined before. We can expect any of prepare/
+                // commit/rollback to be called next, so TxConnection
+                // is still valid.
+                
+                // If we were suspended from the transaction, we'll
+                // join it for the duration of this operation.
+                // Make sure the reference count reaches zero by the
+                // time we get to prepare.
+                if ( _txConn == null ) {
+                    _txConn = _resManager.getTxConnection( xid );
+                    if ( _txConn == null )
+                        throw new XAException( XAException.XAER_NOTA );
+                } else {
+                    if ( _txConn.xid != null && ! _txConn.xid.equals( xid ) )
+                        throw new XAException( XAException.XAER_NOTA );
+                    --_txConn.count;
+                }
+                
+                // If transaction failed, we can rollback the
+                // transaction and release the underlying connection.
+                // We can expect all other resources to recieved the
+                // same end notification. We don't expect forget to happen.
+                if ( flags == TMFAIL && _txConn.conn != null ) {
+                    try {
+                        if ( _txConn.conn instanceof TwoPhaseConnection )
+                            ( (TwoPhaseConnection) _txConn.conn ).enableSQLTransactions( true );
+                        _txConn.conn.rollback();
+                        releaseConnection( _txConn.conn );
+                    } catch ( SQLException except ) {
+                        // There is a problem with the underlying
+                        // connection, but it was not added to the poll.
+                    }
+                    _resManager.setTxConnection( _txConn.xid, null );
+                    _txConn.conn = null;
+                    _txConn.xid = null;
+                }
+                
+                if ( flags == TMSUCCESS) {
+                    // We should be looking for a new transaction.
+                    // Next thing we might be participating in a new
+                    // transaction while the current one is being
+                    // rolled back.
+                    //releaseConnection( _txConn.conn );
+                    _txConn = null;
+                }
+            } else if ( flags == TMSUSPEND ) {
+                // We no longer take part in this transaction.
+                // Possibly we'll be asked to resume later on, but
+                // right now we have to forget about the transaction
+                // and the underlying connection.
+                --_txConn.count;
+                //releaseConnection( _txConn.conn );
+                _txConn = null;
+            } else
+                // No other flags supported in end().
+                throw new XAException( XAException.XAER_INVAL );
+        }
     }
 
 
@@ -643,248 +643,246 @@ public final class XAConnectionImpl
     }
 
     public synchronized void forget( Xid xid )
-	throws XAException
+        throws XAException
     {
-	TxConnection txConn;
+        TxConnection txConn;
 
-	// General checks.
-	if ( xid == null )
-	    throw new XAException( XAException.XAER_INVAL );
-	synchronized ( _resManager ) {
-	    // We have to forget about the transaction, meaning the
-	    // transaction no longer exists for this or any other
-	    // connection. We might be called multiple times.
-	    txConn = _resManager.setTxConnection( xid, null );
-	    if ( txConn != null ) {
-		if ( txConn.conn != null ) {
-            releaseConnection( txConn.conn );
-            txConn.conn = null;
-		}
-		txConn.xid = null;
-	    }
-        if ( _txConn == txConn )
-		_txConn = null;
-    }
+        // General checks.
+        if ( xid == null )
+            throw new XAException( XAException.XAER_INVAL );
+        synchronized ( _resManager ) {
+            // We have to forget about the transaction, meaning the
+            // transaction no longer exists for this or any other
+            // connection. We might be called multiple times.
+            txConn = _resManager.setTxConnection( xid, null );
+            if ( txConn != null ) {
+                if ( txConn.conn != null ) {
+                    releaseConnection( txConn.conn );
+                    txConn.conn = null;
+                }
+                txConn.xid = null;
+            }
+            if ( _txConn == txConn )
+                _txConn = null;
+        }
     }
 
 
     public synchronized int prepare( Xid xid )
-	throws XAException
+        throws XAException
     {
-	TxConnection txConn;
+        TxConnection txConn;
 
-	// General checks.
-	if ( xid == null )
-	    throw new XAException( XAException.XAER_INVAL );
+        // General checks.
+        if ( xid == null )
+            throw new XAException( XAException.XAER_INVAL );
 
-	synchronized ( _resManager ) {
-	    // Technically, prepare may be called for any connection,
-	    // not just this one.
-	    txConn = _resManager.getTxConnection( xid );
-	    if ( txConn == null )
-		throw new XAException( XAException.XAER_NOTA );
-
-	    // This is an error and should never happen. All other
-	    // parties in the transaction should have left it before.
-	    if ( txConn.count > 0 )
-		throw new XAException( XAException.XAER_PROTO );
-
-	    // If the transaction failed, we have to force a rollback.
-	    // We track the case of failure due to a timeout.
-	    if ( txConn.timedOut )
-		throw new XAException( XAException.XA_RBTIMEOUT );
-	    if ( txConn.conn == null )
-		throw new XAException( XAException.XA_RBROLLBACK );
-
-	    // Since there is no preparation mechanism in a generic
-	    // JDBC driver, we only test for read-only transaction
-	    // but do not commit at this point.
-	    try {
-		txConn.prepared = true;
-		if ( txConn.conn instanceof TwoPhaseConnection ) {
-		    // For 2pc connection we ask it to prepare and determine
-		    // whether it's commiting or read-only. If a rollback
-		    // exception happens, we report it.
-		    try {
-			if ( ( (TwoPhaseConnection) txConn.conn ).prepare() )
-			    return XA_OK;
-			else {
-			    txConn.readOnly = true;
-			    return XA_RDONLY;
-			}
-		    } catch ( SQLException except ) {
-			throw new XAException( XAException.XA_RBROLLBACK );
-		    }
-		} else {
-		    // For standard connection we cannot prepare, we can
-		    // only guess if it's read only.
-		    if ( txConn.conn.isReadOnly() ) {
-			txConn.readOnly = true;
-			return XA_RDONLY;
-		    }
-		    return XA_OK;
-		}
-	    } catch ( SQLException except ) {
-		try {
-		    // Fatal error in the connection, kill it.
-		    txConn.conn.close();
-		} catch ( SQLException e ) { }
-		txConn.conn = null;
-		if ( _resManager.getLogWriter() != null )
-		    _resManager.getLogWriter().println( "XAConnection: failed to commit a transaction: " + except );
-		// If we cannot commit the transaction, force a rollback.
-		throw new XAException( XAException.XA_RBROLLBACK );
-	    }
-	}
+        synchronized ( _resManager ) {
+            // Technically, prepare may be called for any connection,
+            // not just this one.
+            txConn = _resManager.getTxConnection( xid );
+            if ( txConn == null )
+                throw new XAException( XAException.XAER_NOTA );
+            
+            // This is an error and should never happen. All other
+            // parties in the transaction should have left it before.
+            if ( txConn.count > 0 )
+                throw new XAException( XAException.XAER_PROTO );
+            
+            // If the transaction failed, we have to force a rollback.
+            // We track the case of failure due to a timeout.
+            if ( txConn.timedOut )
+                throw new XAException( XAException.XA_RBTIMEOUT );
+            if ( txConn.conn == null )
+                throw new XAException( XAException.XA_RBROLLBACK );
+            
+            // Since there is no preparation mechanism in a generic
+            // JDBC driver, we only test for read-only transaction
+            // but do not commit at this point.
+            try {
+                txConn.prepared = true;
+                if ( txConn.conn instanceof TwoPhaseConnection ) {
+                    // For 2pc connection we ask it to prepare and determine
+                    // whether it's commiting or read-only. If a rollback
+                    // exception happens, we report it.
+                    try {
+                        if ( ( (TwoPhaseConnection) txConn.conn ).prepare() )
+                            return XA_OK;
+                        else {
+                            txConn.readOnly = true;
+                            return XA_RDONLY;
+                        }
+                    } catch ( SQLException except ) {
+                        throw new XAException( XAException.XA_RBROLLBACK );
+                    }
+                } else {
+                    // For standard connection we cannot prepare, we can
+                    // only guess if it's read only.
+                    if ( txConn.conn.isReadOnly() ) {
+                        txConn.readOnly = true;
+                        return XA_RDONLY;
+                    }
+                    return XA_OK;
+                }
+            } catch ( SQLException except ) {
+                try {
+                    // Fatal error in the connection, kill it.
+                    txConn.conn.close();
+                } catch ( SQLException e ) { }
+                txConn.conn = null;
+                if ( _resManager.getLogWriter() != null )
+                    _resManager.getLogWriter().println( "XAConnection: failed to commit a transaction: " + except );
+                // If we cannot commit the transaction, force a rollback.
+                throw new XAException( XAException.XA_RBROLLBACK );
+            }
+        }
     }
 
 
     public Xid[] recover( int flags )
         throws XAException
     {
-	synchronized ( _resManager ) {
-	    return _resManager.getTxRecover();
-	}
+        synchronized ( _resManager ) {
+            return _resManager.getTxRecover();
+        }
     }
 
 
     public synchronized void commit( Xid xid, boolean onePhase )
         throws XAException
     {
-	TxConnection txConn;
+        TxConnection txConn;
 
-	// General checks.
-	if ( xid == null )
-	    throw new XAException( XAException.XAER_INVAL );
-
-	synchronized ( _resManager ) {
-	    // Technically, commit may be called for any connection,
-	    // not just this one.
-	    txConn = _resManager.getTxConnection( xid );
-	    if ( txConn == null )
-		throw new XAException( XAException.XAER_NOTA );
-
-	    // If the transaction failed, we have to force
-	    // a rollback.
-	    if ( txConn.conn == null )
-		throw new XAException( XAException.XA_RBROLLBACK );
-
-	    // If connection has been prepared and is read-only,
-	    // nothing to do at this stage.
-	    if ( txConn.readOnly )
-		return;
-
-	    // This must be a one-phase commite, or the connection
-	    // should have been prepared before.
-	    if ( onePhase || txConn.prepared ) {
-		try {
-		    // Prevent multiple commit attempts.
-		    txConn.readOnly = true;
-		    if ( txConn.conn instanceof TwoPhaseConnection )
-			( (TwoPhaseConnection) txConn.conn ).enableSQLTransactions( true );
-            txConn.conn.commit();
-		} catch ( SQLException except ) {
-		    try {
-			// Unknown error in the connection, better kill it.
-			txConn.conn.close();
-		    } catch ( SQLException e ) { }
-		    txConn.conn = null;
-		    if ( _resManager.getLogWriter() != null )
-			_resManager.getLogWriter().println( "XAConnection: failed to commit a transaction: " + except );
-		    // If we cannot commit the transaction, a heuristic hazard.
-		    throw new XAException( XAException.XA_HEURHAZ );
-		}  finally {
-		    forget( xid );
-	    }
-	    } else {
-		// 2pc we should have prepared before.
-		if ( ! txConn.prepared )
-		    throw new XAException( XAException.XAER_PROTO );
-	    }
-	}
+        // General checks.
+        if ( xid == null )
+            throw new XAException( XAException.XAER_INVAL );
+        
+        synchronized ( _resManager ) {
+            // Technically, commit may be called for any connection,
+            // not just this one.
+            txConn = _resManager.getTxConnection( xid );
+            if ( txConn == null )
+                throw new XAException( XAException.XAER_NOTA );
+            
+            // If the transaction failed, we have to force
+            // a rollback.
+            if ( txConn.conn == null )
+                throw new XAException( XAException.XA_RBROLLBACK );
+            // If connection has been prepared and is read-only,
+            // nothing to do at this stage.
+            if ( txConn.readOnly )
+                return;
+            
+            // This must be a one-phase commite, or the connection
+            // should have been prepared before.
+            if ( onePhase || txConn.prepared ) {
+                try {
+                    // Prevent multiple commit attempts.
+                    txConn.readOnly = true;
+                    if ( txConn.conn instanceof TwoPhaseConnection )
+                        ( (TwoPhaseConnection) txConn.conn ).enableSQLTransactions( true );
+                    txConn.conn.commit();
+                } catch ( SQLException except ) {
+                    try {
+                        // Unknown error in the connection, better kill it.
+                        txConn.conn.close();
+                    } catch ( SQLException e ) { }
+                    txConn.conn = null;
+                    if ( _resManager.getLogWriter() != null )
+                        _resManager.getLogWriter().println( "XAConnection: failed to commit a transaction: " + except );
+                    // If we cannot commit the transaction, a heuristic hazard.
+                    throw new XAException( XAException.XA_HEURHAZ );
+                }  finally {
+                    forget( xid );
+                }
+            } else {
+                // 2pc we should have prepared before.
+                if ( ! txConn.prepared )
+                    throw new XAException( XAException.XAER_PROTO );
+            }
+        }
     }
 
 
     public synchronized void rollback( Xid xid )
         throws XAException
     {
-	TxConnection txConn;
+        TxConnection txConn;
 
 
-	// General checks.
-	if ( xid == null )
-	    throw new XAException( XAException.XAER_INVAL );
+        // General checks.
+        if ( xid == null )
+            throw new XAException( XAException.XAER_INVAL );
 
-	synchronized ( _resManager ) {
-	    // Technically, rollback may be called for any connection,
-	    // not just this one.
-	    txConn = _resManager.getTxConnection( xid );
-	    if ( txConn == null )
-		throw new XAException( XAException.XAER_NOTA );
-
-	    // If connection has been prepared and is read-only,
-	    // nothing to do at this stage. If connection has
-	    // been terminated any other way, nothing to do
-	    // either.
-	    if ( txConn.readOnly || txConn.conn == null  )
-		return;
-
-	    try {
-		txConn.prepared = false;
-		if ( txConn.conn instanceof TwoPhaseConnection )
-		    ( (TwoPhaseConnection) txConn.conn ).enableSQLTransactions( true );
-		txConn.conn.rollback();
-	    } catch ( SQLException except ) {
-		try {
-		    // Unknown error in the connection, better kill it.
-		    txConn.conn.close();
-		} catch ( SQLException e ) { }
-		txConn.conn = null;
-		if ( _resManager.getLogWriter() != null )
-		    _resManager.getLogWriter().println( "XAConnection: failed to rollback a transaction: " + except );
-		// If we cannot commit the transaction, a heuristic tollback.
-		throw new XAException( XAException.XA_RBROLLBACK );
-	    } finally {
-        forget( xid );
-	    }
-	}
+        synchronized ( _resManager ) {
+            // Technically, rollback may be called for any connection,
+            // not just this one.
+            txConn = _resManager.getTxConnection( xid );
+            if ( txConn == null )
+                throw new XAException( XAException.XAER_NOTA );
+            // If connection has been prepared and is read-only,
+            // nothing to do at this stage. If connection has
+            // been terminated any other way, nothing to do
+            // either.
+            if ( txConn.readOnly || txConn.conn == null  )
+                return;
+            
+            try {
+                txConn.prepared = false;
+                if ( txConn.conn instanceof TwoPhaseConnection )
+                    ( (TwoPhaseConnection) txConn.conn ).enableSQLTransactions( true );
+                txConn.conn.rollback();
+            } catch ( SQLException except ) {
+                try {
+                    // Unknown error in the connection, better kill it.
+                    txConn.conn.close();
+                } catch ( SQLException e ) { }
+                txConn.conn = null;
+                if ( _resManager.getLogWriter() != null )
+                    _resManager.getLogWriter().println( "XAConnection: failed to rollback a transaction: " + except );
+                // If we cannot commit the transaction, a heuristic tollback.
+                throw new XAException( XAException.XA_RBROLLBACK );
+            } finally {
+                forget( xid );
+            }
+        }
     }
 
 
     public synchronized boolean isSameRM( XAResource xaRes )
-	throws XAException
+        throws XAException
     {
-	// Two resource managers are equal if they produce equivalent
-	// connection (i.e. same database, same user). If the two are
-	// equivalent they would share a transaction by joining.
-	if ( xaRes == null || ! ( xaRes instanceof XAConnectionImpl ) )
-	    return false;
-	if ( _resManager.equals( ( (XAConnectionImpl) xaRes )._resManager ) )
-	    return true;
-	return false;
+        // Two resource managers are equal if they produce equivalent
+        // connection (i.e. same database, same user). If the two are
+        // equivalent they would share a transaction by joining.
+        if ( xaRes == null || ! ( xaRes instanceof XAConnectionImpl ) )
+            return false;
+        if ( _resManager.equals( ( (XAConnectionImpl) xaRes )._resManager ) )
+            return true;
+        return false;
     }
 
 
     public synchronized boolean setTransactionTimeout( int seconds )
-	throws XAException
+        throws XAException
     {
-	if ( seconds < 0 )
-	    throw new XAException( XAException.XAER_INVAL );
-	// Zero resets to the default for all transactions.
-	_txTimeout = ( seconds == 0 ) 
-                    ? _resManager.getTransactionTimeout()
-                    : seconds;
-	// If a transaction has started, change it's timeout to the new value.
-	if ( _txConn != null ) {
-	    _txConn.timeout = _txConn.started + ( _txTimeout * 1000 );
-	}
-	return true;
+        if ( seconds < 0 )
+            throw new XAException( XAException.XAER_INVAL );
+        // Zero resets to the default for all transactions.
+        _txTimeout = ( seconds == 0 ) 
+            ? _resManager.getTransactionTimeout()
+            : seconds;
+        // If a transaction has started, change it's timeout to the new value.
+        if ( _txConn != null ) {
+            _txConn.timeout = _txConn.started + ( _txTimeout * 1000 );
+        }
+        return true;
     }
 
 
     public int getTransactionTimeout()
     {
-	return _txTimeout;
+        return _txTimeout;
     }
 
 
@@ -896,7 +894,7 @@ public final class XAConnectionImpl
      */
     boolean insideGlobalTx()
     {
-	return ( _txConn != null );
+        return ( _txConn != null );
     }
 
 
@@ -910,27 +908,27 @@ public final class XAConnectionImpl
      * @param clientId The {@link ClientConnection} identifier
      */
     Connection getUnderlying( int clientId )
-	throws SQLException
+        throws SQLException
     {
-	// If we were notified of the client closing, or have been
-	// requested to have a new client connection since then,
-	// the client id will not match to that of the caller.
-	// We use that to decide that the caller has been closed.
-	if ( clientId != _clientId )
-	    throw new SQLException( "This application connection has been closed" );
-
-	if ( _txConn != null ) {
-	    if ( _txConn.timedOut )
-		throw new SQLException( "The transaction has timed out and has been rolledback and closed" );
-	    if ( _txConn.conn == null )
-		throw new SQLException( "The transaction has been terminated and this connection has been closed" );
-	    return _txConn.conn;
-	}
-	if ( _underlying == null ) {
+        // If we were notified of the client closing, or have been
+        // requested to have a new client connection since then,
+        // the client id will not match to that of the caller.
+        // We use that to decide that the caller has been closed.
+        if ( clientId != _clientId )
+            throw new SQLException( "This application connection has been closed" );
+        
+        if ( _txConn != null ) {
+            if ( _txConn.timedOut )
+                throw new SQLException( "The transaction has timed out and has been rolledback and closed" );
+            if ( _txConn.conn == null )
+                throw new SQLException( "The transaction has been terminated and this connection has been closed" );
+            return _txConn.conn;
+        }
+        if ( _underlying == null ) {
             _underlying = _resManager.newConnection( _userName, _password );
-	    _underlying.setAutoCommit( true );
-	}
-	return _underlying;
+            _underlying.setAutoCommit( true );
+        }
+        return _underlying;
     }
 
 

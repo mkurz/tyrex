@@ -38,9 +38,9 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
+ * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: WeakList.java,v 1.4 2000/09/08 23:06:38 mohammed Exp $
+ * $Id: WeakList.java,v 1.5 2001/03/12 19:20:21 arkin Exp $
  */
 
 
@@ -76,19 +76,20 @@ import java.lang.reflect.Array;
  * <ul>
  * <li>The internal array is not created until the first entry is
  * placed in it -- the assumption is that many lists will go empty
- * for the duration of their life
+ * for the duration of their life/</li>
  * <li>The array is initialized with a place for {@link #INITIAL_SIZE}
- * entries whiche seems a good compromise
+ * entries whiche seems a good compromise.</li>
  * <li>When entries are removed from the array, their location in the
  * table is set to null and reused later on, the array is not compacted
  * <li>Unreferenced entries are discarded first, before performing any
- * operation on the table
+ * operation on the table.</li>
  * </ul>
+ * <p>
+ * This object is not thread-safe.
  *
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.4 $ $Date: 2000/09/08 23:06:38 $
- * @see WeakReference
+ * @version $Revision: 1.5 $ $Date: 2001/03/12 19:20:21 $
  */
 public class WeakList
 {
@@ -115,41 +116,45 @@ public class WeakList
      * array resizing we need if usage does grow within these bounds.
      * 2 looks like a reasonable compromise for most cases.
      */
-    public static final int INITIAL_SIZE = 2;
+    public static final int       INITIAL_SIZE = 2;
 
 
     /**
      * Adds a new object to the list.
      *
-     * @param obj The object to add
+     * @param object The object to add
      */
-    public void add( Object obj )
+    public void add( Object object )
     {
-	Reference[] newTable;
-	int         i;
+        Reference[] table;
+        Reference[] newTable;
+        int         length;
 
-	if ( obj == null )
-	    throw new NullPointerException( "Argument 'obj' is null" );
-	// If table is null, create a new one with the initial size.
-	if ( _table == null ) {
-	    _table = new Reference[ INITIAL_SIZE ];
-	    _table[ 0 ] = new WeakReference( obj, _queue );
-	} else {
-	    // Discard all unreferenced entries from the table first.
-	    // Look for empty places in the array and use them.
-	    // We assume the array is small enough and this is more
-	    // efficient than resizing it.
-	    processQueue();
-	    for ( i = 0 ; i < _table.length ; ++i )
-		if ( _table[ i ] == null || _table[ i ].get() == null ) {
-		    _table[ i ] = new WeakReference( obj, _queue );
-		    return;
-		}
-	    newTable = new Reference[ _table.length + 1 ];
-	    System.arraycopy( _table, 0, newTable, 0, _table.length );
-	    newTable[ _table.length ] = new WeakReference( obj, _queue );
-	    _table = newTable;
-	}
+        if ( object == null )
+            throw new IllegalArgumentException( "Argument object is null" );
+        // If table is null, create a new one with the initial size.
+        if ( _table == null ) {
+            _table = new Reference[ INITIAL_SIZE ];
+            _table[ 0 ] = new WeakReference( object, _queue );
+        } else {
+            // Discard all unreferenced entries from the table first.
+            // Look for empty places in the array and use them.
+            // We assume the array is small enough and this is more
+            // efficient than resizing it.
+            processQueue();
+            table = _table;
+            length = table.length;
+            for ( int i = length ; i-- > 0 ; )
+                if ( table[ i ] == null || table[ i ].get() == null ) {
+                    table[ i ] = new WeakReference( object, _queue );
+                    return;
+                }
+            newTable = new Reference[ length * 2 ];
+            for ( int i = length ; i-- > 0 ; )
+                newTable[ i ] = table[ i ];
+            newTable[ length ] = new WeakReference( object, _queue );
+            _table = newTable;
+        }
     }
 
 
@@ -157,31 +162,32 @@ public class WeakList
      * Removes an object from the list. If the object was in the list,
      * it is returned. Returns null if the object was not in the list.
      *
-     * @param obj The object to remove
+     * @param object The object to remove
      * @return The removed object, null if the object was not there
      */
-    public Object remove( Object obj )
+    public Object remove( Object object )
     {
-	Reference   ref;
-	int         i;
+        Reference   ref;
+        Reference[] table;
 
-	if ( obj == null )
-	    throw new NullPointerException( "Argument 'obj' is null" );
-	if ( _table == null )
-	    return null;
-	// Kill all unreferenced entries first, so it will accurately
-	// report an entry that was garbage collected with a null
-	// return. Note that we just nullify the entry in the array,
-	// we don't attempt to compact the array.
-	processQueue();
-	for ( i = 0 ; i < _table.length ; ++i ) {
-	    ref = _table[ i ];
-	    if ( ref != null && ref.get() == obj ) {
-		_table[ i ] = null;
-		return obj;
-	    }
-	}
-	return null;
+        if ( object == null )
+            throw new IllegalArgumentException( "Argument object is null" );
+        table = _table;
+        if ( table == null )
+            return null;
+        // Kill all unreferenced entries first, so it will accurately
+        // report an entry that was garbage collected with a null
+        // return. Note that we just nullify the entry in the array,
+        // we don't attempt to compact the array.
+        processQueue();
+        for ( int i = table.length ; i-- > 0 ; ) {
+            ref = table[ i ];
+            if ( ref != null && ref.get() == object ) {
+                table[ i ] = null;
+                return object;
+            }
+        }
+        return null;
     }
 
 
@@ -190,14 +196,15 @@ public class WeakList
      */
     public void clear()
     {
-	int i;
+        Reference[] table;
 
-	if ( _table != null ) {
-	    for ( i = 0 ; i < _table.length ; ++i )
-		_table[ i ] = null;
-	    _table = null;
-	}
-	processQueue();
+        table = _table;
+        if ( table != null ) {
+            for ( int i = table.length ; i-- > 0 ; )
+                table[ i ] = null;
+            table = null;
+        }
+        processQueue();
     }
 
 
@@ -205,126 +212,137 @@ public class WeakList
      * Returns true if the element is contained in the list and has not
      * been garbage collected yet.
      *
-     * @param obj The object to test
+     * @param object The object to test
      * @return True if the object is contained in the list
      */
-    public boolean contains( Object obj )
+    public boolean contains( Object object )
     {
-	Reference   ref;
-	int         i;
+        Reference   ref;
+        Reference[] table;
 
-	if ( _table == null )
-	    return false;
-	// Kill all unreferenced entries first, so it will accurately
-	// report an entry that was garbage collected with a null
-	// return. Note that we just nullify the entry in the array,
-	// we don't attempt to compact the array.
-	processQueue();
-	for ( i = 0 ; i < _table.length ; ++i ) {
-	    ref = _table[ i ];
-	    if ( ref != null && ref.get() == obj )
-		return true;
-	}
-	return false;
+        if ( object == null )
+            throw new IllegalArgumentException( "Argument object is null" );
+        table = _table;
+        if ( table == null )
+            return false;
+        // Kill all unreferenced entries first, so it will accurately
+        // report an entry that was garbage collected with a null
+        // return. Note that we just nullify the entry in the array,
+        // we don't attempt to compact the array.
+        processQueue();
+        for ( int i = table.length ; i-- > 0 ; ) {
+            ref = table[ i ];
+            if ( ref != null && ref.get() == object )
+                return true;
+        }
+        return false;
     }
 
 
     /**
-     * Returns an array representing the contents of this list. Only
-     * objects that are referenced will be returned in the array,
-     * and these objects will be referenced by the array and not
-     * discarded for as long as the returned array is referenced.
+     * Returns an array representing the contents of this list.
+     * <p>
+     * Only objects that are referenced will be returned in the
+     * array, and these objects will be referenced by the array
+     * and not discarded for as long as the returned array is
+     * referenced.
+     * <p>
      * This is the only way to access the list by index and operate
      * on it without safety checks.
+     * <p>
+     * The returned array is a sparse array, it may contain null
+     * entries for objects that no longer exist.
      *
      * @return An array representing the contents of the list
      */
     public Object[] list()
     {
-	Reference ref;
-	int       i;
-	Object[]  list;
-	int       index;
-
-	if ( _table == null )
-	    return new Object[ 0 ];
-	// First discard of all unreferenced entries.
-	processQueue();
-	list = new Object[ _table.length ];
-	index = 0;
-	for ( i = 0 ; i < _table.length ; ++i ) {
-	    ref = _table[ i ];
-	    if ( ref != null ) {
-		list[ index] = ref.get();
-		if ( list[ index ] != null )
-		    ++index;
-	    }
-	}
-	// The list might not be the same size of the array if we
-	// lost entries recently, so update the returned array to
-	// reflect the true size.
-	if ( index == 0 )
-	    return new Object[ 0 ];
-	else if ( index == list.length )
-	    return list;
-	else {
-	    Object[] newList;
-
-	    newList = new Object[ index ];
-	    System.arraycopy( list, 0, newList, 0, index );
-	    return newList;
-	}
+        Reference   ref;
+        Reference[] table;
+        Object[]    list;
+        Object      object;
+        int         index;
+        int         length;
+        
+        table = _table;
+        if ( table == null )
+            return new Object[ 0 ];
+        length = table.length;
+        list = new Object[ length ];
+        index = 0;
+        for ( int i = length ; i-- > 0 ; ) {
+            ref = table[ i ];
+            if ( ref != null ) {
+                object = ref.get();
+                if ( object != null ) {
+                    list[ index] = object;
+                    ++index;
+                }
+            }
+        }
+        // The list might not be the same size of the array if we
+        // lost entries recently, so update the returned array to
+        // reflect the true size.
+        if ( index == 0 )
+            return new Object[ 0 ];
+        else
+            return list;
     }
 
 
     /**
-     * Returns an array representing the contents of this list. Only
-     * objects that are referenced will be returned in the array,
-     * and these objects will be referenced by the array and not
-     * discarded for as long as the returned array is referenced.
+     * Returns an array representing the contents of this list.
+     * <p>
+     * Only objects that are referenced will be returned in the
+     * array, and these objects will be referenced by the array
+     * and not discarded for as long as the returned array is
+     * referenced.
+     * <p>
      * This is the only way to access the list by index and operate
      * on it without safety checks.
+     * <p>
+     * The returned array is a sparse array, it may contain null
+     * entries for objects that no longer exist.
      *
+     * @param type The object type requested
      * @return An array representing the contents of the list
      */
     public Object[] list( Class type )
     {
-	Reference ref;
-	int       i;
-	Object[]  list;
-	int       index;
+        Reference   ref;
+        Object[]    list;
+        Reference[] table;
+        Object      object;
+        int         index;
+        int         length;
 
-	if ( _table == null )
-	    return (Object[]) Array.newInstance( type, 0 );
-	// First discard of all unreferenced entries.
-	processQueue();
-	list = (Object[]) Array.newInstance( type, _table.length );
-	index = 0;
-	for ( i = 0 ; i < _table.length ; ++i ) {
-	    ref = _table[ i ];
-	    if ( ref != null ) {
-		list[ index] = ref.get();
-		if ( list[ index ] != null )
-		    ++index;
-	    }
-	}
-	// The list might not be the same size of the array if we
-	// lost entries recently, so update the returned array to
-	// reflect the true size.
-	if ( index == 0 )
-	    return (Object[]) Array.newInstance( type, 0 );
-	else if ( index == list.length )
-	    return list;
-	else {
-	    Object[] newList;
-
-	    newList = (Object[]) Array.newInstance( type, index );
-	    System.arraycopy( list, 0, newList, 0, index );
-	    return newList;
-	}
+        if ( type == null )
+            throw new IllegalArgumentException( "Argument type is null" );
+        table = _table;
+        if ( table == null )
+            return (Object[]) Array.newInstance( type, 0 );
+        length = table.length;
+        list = (Object[]) Array.newInstance( type, length );
+        index = 0;
+        for ( int i = length ; i-- > 0 ; ) {
+            ref = table[ i ];
+            if ( ref != null ) {
+                object = ref.get();
+                if ( object != null && type.isAssignableFrom( object.getClass() ) ) {
+                    list[ index] = object;
+                    ++index;
+                }
+            }
+        }
+        // The list might not be the same size of the array if we
+        // lost entries recently, so update the returned array to
+        // reflect the true size.
+        if ( index == 0 )
+            return (Object[]) Array.newInstance( type, 0 );
+        else
+            return list;
     }
 
-	
 
     /**
      * Used internally to discard entries in the array which hold
@@ -332,58 +350,59 @@ public class WeakList
      */
     private void processQueue()
     {
-	Reference ref;
-	int       i;
-
-	ref = _queue.poll();
-	while ( ref != null ) {
-	    for ( i = 0 ; i < _table.length ; ++i )
-		if ( _table[ i ] == ref ) {
-		    _table[ i ] = null;
-		    break;
-		}
-	    ref = _queue.poll();
-	}
+        Reference[] table;
+        Reference   ref;
+        
+        ref = _queue.poll();
+        table = _table;
+        while ( ref != null ) {
+            for ( int i = table.length ; i-- > 0 ; )
+                if ( table[ i ] == ref ) {
+                    table[ i ] = null;
+                    break;
+                }
+            ref = _queue.poll();
+        }
     }
 
 
     public static void main( String args[] )
     {
-	try {
-	    
-	    Integer one = new Integer( 1 );
-	    Integer two = new Integer( 2 );
-	    Integer[] list;
-	    int      i;
-	    
-	    WeakList wl = new WeakList();
-	    wl.add( one );
-	    wl.add( two );
-	    list = (Integer[]) wl.list( Integer.class );
-	    for ( i = 0 ; i < list.length ; ++i ) {
-		System.out.println( list[ i ] );
-		list[ i ] = null;
-	    }
-	    list = null;
-	    two = null;
-	    Runtime.getRuntime().gc();
-	    list = (Integer[]) wl.list( Integer.class );
-	    for ( i = 0 ; i < list.length ; ++i ) {
-		System.out.println( list[ i ] );
-		list[ i ] = null;
-	    }
-	    
-	    list = null;
-	    one = null;
-	    Runtime.getRuntime().gc();
-	    list = (Integer[]) wl.list( Integer.class );
-	    for ( i = 0 ; i < list.length ; ++i )
-		System.out.println( list[ i ] );
-	    
-	} catch ( Exception except ) {
-	    System.out.println( except );
-	    except.printStackTrace();
-	}
+        try {
+            Integer one = new Integer( 1 );
+            Integer two = new Integer( 2 );
+            Integer[] list;
+            WeakList wl = new WeakList();
+            
+            System.out.println( "First try: one and two" );
+            wl.add( one );
+            wl.add( two );
+            list = (Integer[]) wl.list( Integer.class );
+            for ( int i = 0 ; i < list.length ; ++i ) {
+                System.out.println( list[ i ] );
+                list[ i ] = null;
+            }
+            list = null;
+            two = null;
+            Runtime.getRuntime().gc();
+            System.out.println( "Second try: one only" );
+            list = (Integer[]) wl.list( Integer.class );
+            for ( int i = 0 ; i < list.length ; ++i ) {
+                System.out.println( list[ i ] );
+                list[ i ] = null;
+            }
+            
+            list = null;
+            one = null;
+            Runtime.getRuntime().gc();
+            System.out.println( "Third try: empty" );
+            list = (Integer[]) wl.list( Integer.class );
+            for ( int i = 0 ; i < list.length ; ++i )
+                System.out.println( list[ i ] );
+        } catch ( Exception except ) {
+            System.out.println( except );
+            except.printStackTrace();
+        }
     }
 
 

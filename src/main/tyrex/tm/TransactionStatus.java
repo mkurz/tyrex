@@ -38,9 +38,9 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
+ * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionStatus.java,v 1.4 2001/03/03 03:00:55 arkin Exp $
+ * $Id: TransactionStatus.java,v 1.5 2001/03/12 19:20:19 arkin Exp $
  */
 
 
@@ -61,7 +61,7 @@ import javax.transaction.xa.Xid;
  * resources and thread association.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.4 $ $Date: 2001/03/03 03:00:55 $
+ * @version $Revision: 1.5 $ $Date: 2001/03/12 19:20:19 $
  * @see Tyrex
  */
 public abstract class TransactionStatus

@@ -38,9 +38,9 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
+ * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Messages.java,v 1.6 2001/02/23 21:42:54 jdaniel Exp $
+ * $Id: Messages.java,v 1.7 2001/03/12 19:20:21 arkin Exp $
  */
 
 
@@ -55,7 +55,7 @@ import java.util.*;
  *
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.6 $ $Date: 2001/02/23 21:42:54 $
+ * @version $Revision: 1.7 $ $Date: 2001/03/12 19:20:21 $
  */
 public class Messages
 {
@@ -133,15 +133,15 @@ public class Messages
     
     public static void setLocale( Locale locale )
     {
-	try {
-	    if ( locale == null )
-		_messages = ResourceBundle.getBundle( ResourceName ); 
-	    else
-		_messages = ResourceBundle.getBundle( ResourceName, locale ); 
-	    _formats = new Hashtable();
-	} catch ( Exception except ) {
-	    _messages = new EmptyResourceBundle();
-	}
+        try {
+            if ( locale == null )
+                _messages = ResourceBundle.getBundle( ResourceName ); 
+            else
+                _messages = ResourceBundle.getBundle( ResourceName, locale ); 
+            _formats = new Hashtable();
+        } catch ( Exception except ) {
+            _messages = new EmptyResourceBundle();
+        }
     }
     
     
@@ -152,29 +152,29 @@ public class Messages
 
 
     static class EmptyResourceBundle
-	extends ResourceBundle
-	implements Enumeration
+        extends ResourceBundle
+        implements Enumeration
     {
 
-	public Enumeration getKeys()
-	{
-	    return this;
-	}
-
-	protected Object handleGetObject( String name )
-	{
-	    return "[Missing message " + name + "]";
-	}
-
-	public boolean hasMoreElements()
-	{
-	    return false;
-	}
-
-	public Object nextElement()
-	{
-	    return null;
-	}
+        public Enumeration getKeys()
+        {
+            return this;
+        }
+        
+        protected Object handleGetObject( String name )
+        {
+            return "[Missing message " + name + "]";
+        }
+        
+        public boolean hasMoreElements()
+        {
+            return false;
+        }
+        
+        public Object nextElement()
+        {
+            return null;
+        }
 
     }
 

@@ -38,9 +38,9 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
+ * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: MemoryBinding.java,v 1.5 2000/09/08 23:05:19 mohammed Exp $
+ * $Id: MemoryBinding.java,v 1.6 2001/03/12 19:20:16 arkin Exp $
  */
 
 
@@ -48,11 +48,16 @@ package tyrex.naming;
 
 
 import java.io.PrintWriter;
-import java.util.Dictionary;
-import java.util.Hashtable;
-import java.util.Enumeration;
-import java.util.Vector;
+import java.util.NoSuchElementException;
+import javax.naming.Reference;
+import javax.naming.NamingEnumeration;
+import javax.naming.NameClassPair;
 import javax.naming.Binding;
+import javax.naming.Context;
+import javax.naming.LinkRef;
+import javax.naming.CompositeName;
+import javax.naming.NamingException;
+import javax.naming.spi.NamingManager;
 
 
 /**
@@ -65,100 +70,186 @@ import javax.naming.Binding;
  * (not in the tree) is represented by one instance of {@link
  * MemoryBinding}, with each sub-context (child node) or bound
  * value represented by a name/value pair.
+ * <p>
+ * This object is thread-safe.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.5 $ $Date: 2000/09/08 23:05:19 $
+ * @version $Revision: 1.6 $ $Date: 2001/03/12 19:20:16 $
  */
-final class MemoryBinding
-    extends Dictionary
+public final class MemoryBinding
 {
+
+
+    /**
+     * The initial capacity for the hashtable.
+     */
+    public static final int   INITIAL_CAPACITY    = 11;
+
+
+    /**
+     * The maximum capacity for the hashtable.
+     */
+    public static final int   MAXIMUM_CAPACITY    = 191;
+
+
+    /**
+     * The load factor for the hashtable.
+     */
+    public static final float LOAD_FACTOR         = 0.75f;
+
 
 
     /**
      * The path of this binding.
      */
-    private String    _name = "";
+    private String            _name = "";
 
 
     /**
-     * The name/value bindings in this space.
+     * The parent memory binding.
      */
-    private final Hashtable _bindings = new Hashtable();
+    protected MemoryBinding  _parent;
 
 
     /**
-     * The parent space.
+     * The number of bindings in the hash table.
      */
-    protected MemoryBinding _parent;
+    private int              _count;
 
 
-    MemoryBinding()
+    /**
+     * The threshold for resizing the hash table.
+     */
+    private int              _threshold;
+
+
+    /**
+     * The hashtable of memory binding entries.
+     */
+    private BindingEntry[]   _hashTable;
+
+
+    public MemoryBinding()
     {
+        _hashTable = new BindingEntry[ INITIAL_CAPACITY ];
+        _threshold = (int)( INITIAL_CAPACITY * LOAD_FACTOR );
     }
 
 
-    public Object get( Object key )
+    public Context getContext()
+    
     {
-	return _bindings.get( key );
+        return new MemoryContext( this, null );
     }
 
 
-    public Object put( Object key, Object value )
+    public Object get( String name )
     {
-	if ( value instanceof MemoryBinding )
-	    ( (MemoryBinding) value ).setContext( this, key.toString() );
-	return _bindings.put( key, value );
+        int          hashCode;
+        int          index;
+        BindingEntry entry;
+
+        if ( name == null )
+            throw new IllegalArgumentException( "Argument name is null" );
+        hashCode = name.hashCode();
+        index = ( hashCode & 0x7FFFFFFF ) % _hashTable.length;
+        entry = _hashTable[ index ];
+        while ( entry != null ) {
+            if ( entry._hashCode == hashCode && entry._name.equals( name ) )
+                return entry._value;
+            entry = entry._next;
+        }
+        return null;
     }
 
 
-    public Object remove( Object key )
+    public synchronized void put( String name, Object value )
     {
-	Object value;
+        int          hashCode;
+        int          index;
+        BindingEntry entry;
+        BindingEntry next;
 
-	value = _bindings.remove( key );
-	if ( value instanceof MemoryBinding ) {
-	    ( (MemoryBinding) value ).setContext( null, "" );
-	}
-	return value;
+        if ( name == null )
+            throw new IllegalArgumentException( "Argument name is null" );
+        if ( value == null )
+            throw new IllegalArgumentException( "Argument value is null" );
+
+        if ( value instanceof MemoryBinding ) {
+            ( (MemoryBinding) value )._parent = this;
+            ( (MemoryBinding) value )._name = name;
+        }
+
+        hashCode = name.hashCode();
+        index = ( hashCode & 0x7FFFFFFF ) % _hashTable.length;
+        entry = _hashTable[ index ];
+        if ( entry == null ) {
+            if ( _count + 1 >= _threshold )
+                rehash();
+            entry = new BindingEntry( name, hashCode, value );
+            _hashTable[ index ] = entry;
+            ++_count;
+        } else {
+            if ( entry._hashCode == hashCode && entry._name.equals( name ) ) {
+                entry._value = value;
+                return;
+            } else {
+                next = entry._next;
+                while ( next != null ) {
+                    if ( next._hashCode == hashCode && next._name.equals( name ) ) {
+                        next._value = value;
+                        return;
+                    }
+                    entry = next;
+                    next = next._next;
+                }
+                if ( _count + 1 >= _threshold )
+                    rehash();
+                entry._next = new BindingEntry( name, hashCode, value );
+                ++_count;
+            }
+        }
     }
 
 
-    public int size()
-    {
-	return _bindings.size();
-    }
+    public synchronized Object remove( String name )
+    { 
+        int          hashCode;
+        int          index;
+        BindingEntry entry;
+        BindingEntry next;
 
-
-    public boolean isEmpty()
-    {
-	return _bindings.isEmpty();
-    }
-
-
-    public Enumeration elements()
-    {
-	return _bindings.elements();
-    }
-
-
-    public Enumeration keys()
-    {
-	return _bindings.keys();
+        if ( name == null )
+            throw new IllegalArgumentException( "Argument name is null" );
+        hashCode = name.hashCode();
+        index = ( hashCode & 0x7FFFFFFF ) % _hashTable.length;
+        entry = _hashTable[ index ];
+        if ( entry == null )
+            return null;
+        if ( entry._hashCode == hashCode && entry._name.equals( name ) ) {
+            _hashTable[ index ] = entry._next;
+            --_count;
+            return entry._value;
+        }
+        next = entry._next;
+        while ( next != null ) {
+            if ( next._hashCode == hashCode && next._name.equals( name ) ) {
+                entry._next = next._next;
+                --_count;
+                return next._value;
+            }
+            entry = next;
+            next = next._next;
+        }
+        return null;
     }
 
 
     public String getName()
     {
-	if ( _parent != null && _parent.getName().length() > 0 ) {
-	    return _parent.getName() + MemoryContext.NameSeparator + _name;
-	}
-	return _name;
-    }
-
-
-    public void setName( String name )
-    {
-	_name = name;
+        if ( _parent != null && _parent.getName().length() > 0 )
+            return _parent.getName() + MemoryContext.NameSeparator + _name;
+        return _name;
     }
 
 
@@ -168,16 +259,9 @@ final class MemoryBinding
     }
 
 
-    /**
-     * Called when binding these bindings to a parent binding.
-     *
-     * @param binding The parent binding
-     * @param name The name of this binding
-     */
-    protected void setContext( MemoryBinding parent, String name )
+    public boolean isEmpty()
     {
-	_parent = parent;
-	_name = name;
+        return _count == 0;
     }
 
 
@@ -187,7 +271,7 @@ final class MemoryBinding
      */
     public void destroy()
     {
-	_bindings.clear();
+        _hashTable = null;
     }
 
 
@@ -196,81 +280,329 @@ final class MemoryBinding
      * exclusing sub-contexts. Each entry is of type {@link Binding} as
      * defined in the JNDI API.
      */
+    /*
     public Binding[] getBinding()
     {
-	Vector      list;
-	Enumeration enum;
-	String      key;
-
-	list = new Vector();
-	enum = _bindings.keys();
-	while ( enum.hasMoreElements() ) {
-	    key = (String) enum.nextElement();
-	    if ( ! ( _bindings.get( key ) instanceof MemoryBinding ) ) {
-		list.addElement( new Binding( key, _bindings.get( key ) ) );
-	    }
-	}
-	return (Binding[]) list.toArray( new Binding[ list.size() ] );
+        Vector      list;
+        Enumeration enum;
+        String      key;
+        
+        list = new Vector();
+        enum = _bindings.keys();
+        while ( enum.hasMoreElements() ) {
+            key = (String) enum.nextElement();
+            if ( ! ( _bindings.get( key ) instanceof MemoryBinding ) ) {
+                list.addElement( new Binding( key, _bindings.get( key ) ) );
+            }
+        }
+        return (Binding[]) list.toArray( new Binding[ list.size() ] );
     }
+    */
 
 
     /**
      * Returns an array of all the sub-contexts of this binding.
      */
+    /*
     public MemoryBinding[] getContext()
     {
-	Vector      list;
-	Enumeration enum;
-	String      key;
+        Vector      list;
+        Enumeration enum;
+        String      key;
 
-	list = new Vector();
-	enum = _bindings.keys();
-	while ( enum.hasMoreElements() ) {
-	    key = (String) enum.nextElement();
-	    if ( _bindings.get( key ) instanceof MemoryBinding ) {
-		list.addElement( _bindings.get( key ) );
-	    }
-	}
-	return (MemoryBinding[]) list.toArray( new MemoryBinding[ list.size() ] );
+        list = new Vector();
+        enum = _bindings.keys();
+        while ( enum.hasMoreElements() ) {
+            key = (String) enum.nextElement();
+            if ( _bindings.get( key ) instanceof MemoryBinding ) {
+                list.addElement( _bindings.get( key ) );
+            }
+        }
+        return (MemoryBinding[]) list.toArray( new MemoryBinding[ list.size() ] );
     }
+    */
 
 
     void debug( PrintWriter writer )
     {
-	debug( writer, 0 );
+        debug( writer, 0 );
     }
 
 
-    private void debug( PrintWriter writer, int level )
+    private synchronized void debug( PrintWriter writer, int level )
     {
-	Enumeration enum;
-	String      key;
-	Object      value;
-	int         i;
+        BindingEntry  entry;
+        Object        value;
 
-	for ( i = 0 ; i < level ; ++i )
-	    writer.print( "  " );
-	if ( this instanceof MemoryBinding )
-	    writer.println( "MemoryBinding: " + getName() );
-	else
-	    writer.println( "ThreadedBinding: " + getName() );
-	enum = keys();
-	if ( ! enum.hasMoreElements() ) {
-	    for ( i = 0 ; i < level ; ++i )
-		writer.print( "  " );
-	    writer.println( "Empty" );
-	} else {
-	    while ( enum.hasMoreElements() ) {
-		key = (String) enum.nextElement();
-		value = get( key );
-		for ( i = 0 ; i < level ; ++i )
-		    writer.print( "  " );
-		writer.println( "  " + key + " = " + value );
-		if ( value instanceof MemoryBinding ) {
-		    ( (MemoryBinding) value ).debug( writer, level + 1 );
-		}
-	    }
-	}
+        for ( int j = level ; j-- > 0 ; )
+            writer.print( "  " );
+        if ( this instanceof MemoryBinding )
+            writer.println( "MemoryBinding: " + getName() );
+        else
+            writer.println( "ThreadedBinding: " + getName() );
+        if ( _count == 0 )
+            writer.println( "Empty" );
+        else {
+            for ( int i = _hashTable.length ; i-- > 0 ; ) {
+                entry = _hashTable[ i ];
+                while ( entry != null ) {
+                    for ( int j = level ; j-- > 0 ; )
+                        writer.print( "  " );
+                    value = entry._value;
+                    if ( value instanceof MemoryBinding )
+                        ( (MemoryBinding) value ).debug( writer, level + 1 );
+                    else
+                        writer.println( "  " + entry._name + " = " + value );
+                }
+            }
+        }
+    }
+    
+    
+    protected NamingEnumeration enumerate( Context context, boolean nameOnly )
+    {
+        return new MemoryBindingEnumeration( context, nameOnly );
+    }
+
+
+    private void rehash()
+    {
+        int             newSize;
+        BindingEntry[]  newTable;
+        BindingEntry    entry;
+        BindingEntry    next;
+        int             index;
+
+        newSize = _hashTable.length * 2 + 1;
+        // Prevent the hash table from being resized beyond some maximum capacity limit.
+        if ( newSize > MAXIMUM_CAPACITY ) {
+            _threshold = Integer.MAX_VALUE;
+            return;
+        }
+
+        newTable = new BindingEntry[ newSize ];
+        for ( int i = _hashTable.length ; i-- > 0 ; ) {
+            entry = _hashTable[ i ];
+            while ( entry != null ) {
+                next = entry._next;
+                index = ( entry._hashCode & 0x7FFFFFFF) % newSize;
+                entry._next = newTable[ index ];
+                newTable[ index ] = entry;
+                entry = next;
+            }
+        }
+        _hashTable = newTable;
+        _threshold = (int)( newSize * LOAD_FACTOR );
+    }
+
+
+    /**
+     * Name to value binding entry in the memory binding hashtable.
+     */
+    private static class BindingEntry
+    {
+
+
+        /**
+         * The binding name.
+         */
+        final String  _name;
+
+
+        /**
+         * The binding name hash code.
+         */
+        final int     _hashCode;
+
+
+        /**
+         * The bound value.
+         */
+        Object        _value;
+
+
+        /**
+         * The next binding in the hash table entry.
+         */
+        BindingEntry  _next;
+
+
+        BindingEntry( String name, int hashCode, Object value )
+        {
+            _name = name;
+            _hashCode = hashCode;
+            _value = value;
+        }
+
+
+    }
+
+
+    /**
+     * Naming enumeration supporting {@link NamClassPair} and {@link Binding},
+     * created based of a {@link MemoryBinding}.
+     *
+     * @author <a href="arkin@intalio.com">Assaf Arkin</a>
+     * @version $Revision: 1.6 $ $Date: 2001/03/12 19:20:16 $
+     * @see MemoryBinding
+     */
+    private final class MemoryBindingEnumeration
+        implements NamingEnumeration
+    {
+        
+        
+        /**
+         * Holds a reference to the next entry to be returned by
+         * {@link next}. Becomes null when there are no more
+         * entries to return.
+         */
+        private BindingEntry    _entry;
+        
+        
+        /**
+         * Index to the current position in the hash table.
+         */
+        private int             _index;
+
+
+        /**
+         * True to return an enumeration of {@link NameClassPair},
+         * false to return an enumeration of {@link Binding}
+         */
+        private final boolean   _nameOnly;
+
+
+        /**
+         * The context is required to create a duplicate.
+         */
+        private final Context   _context;
+
+
+        MemoryBindingEnumeration( Context context, boolean nameOnly )
+        {
+            if ( context == null )
+                throw new IllegalArgumentException( "Argument context is null" );
+            _context = context;
+            _nameOnly = nameOnly;
+            _index = _hashTable.length;
+        }
+
+
+
+        public boolean hasMoreElements()
+        {
+            return hasMore();
+        }
+        
+        
+        public Object nextElement()
+        {
+            return next();
+        }
+        
+    
+        public void close()
+        {
+            _entry = null;
+            _index = -1;
+        }
+    
+
+        public boolean hasMore()
+        {
+            BindingEntry   entry;
+            int            index;
+            BindingEntry[] table;
+            
+            entry = _entry;
+            table = _hashTable;
+            index = _index;
+            while ( entry == null && index > 0 ) {
+                entry = table[ --index ];
+                if ( entry != null ) {
+                    _entry = entry;
+                    _index = index;
+                    return true;
+                }
+            }
+            _entry = null;
+            _index = -1;
+            return false;
+        }
+        
+        
+        public Object next()
+            throws NoSuchElementException
+        {
+            BindingEntry  entry;
+            Object        value;
+            
+            entry = nextEntry();
+            value = entry._value;
+            if ( value instanceof MemoryBinding ) {
+                if ( _nameOnly )
+                    return new NameClassPair( entry._name, MemoryContext.class.getName(), true );
+                else {
+                    try {
+                        // If another context, must use lookup to create a duplicate.
+                        value = _context.lookup( entry._name );
+                        return new Binding( entry._name, value.getClass().getName(), value, true );
+                    } catch ( NamingException except ) {
+                        // Skip this entry and go immediately to next one.
+                        return next();
+                    }
+                }
+            } else if ( value instanceof Reference ) {
+                if ( _nameOnly )
+                    return new NameClassPair( entry._name, ( (Reference) value ).getClassName(), true );
+                else {
+                    try {
+                        value = NamingManager.getObjectInstance( value, new CompositeName( entry._name ), _context, null );
+                        return new Binding( entry._name, value.getClass().getName(), value, true );
+                    } catch ( Exception except ) {
+                        // Skip this entry and go immediately to next one.
+                        return next();
+                    }
+                }
+            } else if ( ! ( value instanceof LinkRef )  ) {
+                if ( _nameOnly )
+                    return new NameClassPair( entry._name, value.getClass().getName(), true );
+                else
+                    return new Binding( entry._name, value.getClass().getName(), value, true );
+            }
+            // Skip this entry and go immediately to next one.
+            return next();
+        }
+        
+        
+        private BindingEntry nextEntry()
+            throws NoSuchElementException
+        {
+            BindingEntry   entry;
+            int            index;
+            BindingEntry[] table;
+            
+            entry = _entry;
+            if ( entry != null ) {
+                _entry = entry._next;
+                return entry;
+            }
+            table = _hashTable;
+            index = _index;
+            while ( entry == null && index > 0 ) {
+                entry = table[ --index ];
+                if ( entry != null ) {
+                    _entry = entry._next;
+                    _index = index;
+                    return entry;
+                }
+            }
+            _entry = null;
+            _index = -1;
+            throw new NoSuchElementException( "No more elements in collection" );
+        }
+        
+        
     }
 
 

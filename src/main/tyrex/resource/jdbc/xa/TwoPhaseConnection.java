@@ -38,9 +38,9 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
+ * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TwoPhaseConnection.java,v 1.1 2001/03/02 19:02:08 arkin Exp $
+ * $Id: TwoPhaseConnection.java,v 1.2 2001/03/12 19:20:18 arkin Exp $
  */
 
 

@@ -38,7 +38,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
+ * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
  */
 
@@ -131,6 +131,24 @@ public interface TyrexTransaction
         throws RollbackException, HeuristicMixedException,
                HeuristicRollbackException, SecurityException,
                IllegalStateException, SystemException;
+
+
+    /**
+     * Returns the parent of this transaction.
+     *
+     * @return The parent of this transaction, null if the transaction
+     * is top-level
+     */
+    public Transaction getParent();
+
+
+    /**
+     * Returns the top level parent of this transaction, or this
+     * transaction if this is a top level transaction.
+     *
+     * @return The top level transaction
+     */ 
+    public Transaction getTopLevel();
 
 
 }

@@ -38,9 +38,9 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
+ * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: ClientConnection.java,v 1.2 2001/03/02 20:43:24 arkin Exp $
+ * $Id: ClientConnection.java,v 1.3 2001/03/12 19:20:18 arkin Exp $
  */
 
 
@@ -120,87 +120,85 @@ final class ClientConnection
      */
     ClientConnection( XAConnectionImpl xaConn, XADataSourceImpl xaDataSource, int clientId )
     {
-	_xaConn = xaConn;
+        _xaConn = xaConn;
         _xaDataSource = xaDataSource;
-	_clientId = clientId;
+        _clientId = clientId;
     }
 
 
     public void setAutoCommit( boolean autoCommit )
         throws SQLException
     {
-	// Cannot set auto-commit inside a transaction.
-	if ( _xaConn.insideGlobalTx() )
-	    throw new SQLException( "Cannot commit/rollback a connection managed by the transaction manager" );
-	try {
-	    super.setAutoCommit( autoCommit );
-	} catch ( SQLException except ) {
-	    notifyError( except );
-	    throw except;
-	}
+        // Cannot set auto-commit inside a transaction.
+        if ( _xaConn.insideGlobalTx() )
+            throw new SQLException( "Cannot commit/rollback a connection managed by the transaction manager" );
+        try {
+            super.setAutoCommit( autoCommit );
+        } catch ( SQLException except ) {
+            notifyError( except );
+            throw except;
+        }
     }
 
 
     public boolean getAutoCommit()
         throws SQLException
     {
-	try {
-	    return super.getAutoCommit();
-	} catch ( SQLException except ) {
-	    notifyError( except );
-	    throw except;
-	}
+        try {
+            return super.getAutoCommit();
+        } catch ( SQLException except ) {
+            notifyError( except );
+            throw except;
+        }
     }
 
 
     public void commit()
         throws SQLException
     {
-	// Cannot commit directly if we're inside a global transaction.
-	if ( _xaConn.insideGlobalTx() )
-	    throw new SQLException( "Cannot commit/rollback a connection managed by the transaction manager" );
-	// Cannot commit a read-only transaction.
-	if ( isReadOnly() )
-	    throw new SQLException( "Cannot commit/rollback a read-only transaction" );
+        // Cannot commit directly if we're inside a global transaction.
+        if ( _xaConn.insideGlobalTx() )
+            throw new SQLException( "Cannot commit/rollback a connection managed by the transaction manager" );
+        // Cannot commit a read-only transaction.
+        if ( isReadOnly() )
+            throw new SQLException( "Cannot commit/rollback a read-only transaction" );
 
-	// This only occurs if not inside a local transaction.
-	try {
-	    super.commit();
-	} catch ( SQLException except ) {
-	    notifyError( except );
-	    throw except;
-	}
+        // This only occurs if not inside a local transaction.
+        try {
+            super.commit();
+        } catch ( SQLException except ) {
+            notifyError( except );
+            throw except;
+        }
     }
-
 
 
     public void rollback()
         throws SQLException
     {
-	// Cannot commit directly if we're inside a global transaction.
-	if ( _xaConn.insideGlobalTx() )
-	    throw new SQLException( "Cannot commit/rollback a connection managed by the transaction manager" );
-
-	// This only occurs if not inside a local transaction.
-	try {
-	    super.rollback();
-	} catch ( SQLException except ) {
-	    notifyError( except );
-	    throw except;
-	}
+        // Cannot commit directly if we're inside a global transaction.
+        if ( _xaConn.insideGlobalTx() )
+            throw new SQLException( "Cannot commit/rollback a connection managed by the transaction manager" );
+        // This only occurs if not inside a local transaction.
+        try {
+            super.rollback();
+        } catch ( SQLException except ) {
+            notifyError( except );
+            throw except;
+        }
     }
 
 
     protected void internalClose()
-	throws SQLException
+        throws SQLException
     {
         if ( !isClosed() ) { 
             // Notify the XA connection that we are no longer going
-    	    // to be used. Whether the underlying connection is released,
-    	    // held until the transaction terminates, etc is not
-    	    // a concern of us.
-    	    _xaConn.notifyClose( _clientId );
-    	    _xaConn = null;
+            // to be used. Whether the underlying connection is released,
+            // held until the transaction terminates, etc is not
+            // a concern of us.
+            _xaConn.notifyClose( _clientId );
+            _xaConn = null;
             _xaDataSource = null;
         }
     }
@@ -208,9 +206,9 @@ final class ClientConnection
 
     public synchronized boolean isClosed()
     {
-	// Simple way of determining if this connection is closed.
-	// The actual connection is never closed, it is pooled.
-	return ( _xaConn == null );
+        // Simple way of determining if this connection is closed.
+        // The actual connection is never closed, it is pooled.
+        return ( _xaConn == null );
     }
 
 
@@ -226,7 +224,7 @@ final class ClientConnection
     /* Deprecated: see XAConnection._clientId
     void terminate()
     {
-	_xaConn = null;
+    _xaConn = null;
     }
     */
 
@@ -236,11 +234,11 @@ final class ClientConnection
         if (isClosed()) {
             return "XAConnection: Connection closed";    
         }
-	try {
-	    return internalGetUnderlyingConnection().toString();
-	} catch ( SQLException except ) {
+        try {
+            return internalGetUnderlyingConnection().toString();
+        } catch ( SQLException except ) {
             return "XAConnection: Connection closed";
-	}
+        }
     }
 
 
@@ -255,8 +253,8 @@ final class ClientConnection
      */
     protected void notifyError( SQLException except )
     {
-	if ( _xaConn != null )
-	    _xaConn.notifyError( _clientId, except );
+        if ( _xaConn != null )
+            _xaConn.notifyError( _clientId, except );
     }
 
 
@@ -268,16 +266,16 @@ final class ClientConnection
     protected Connection internalGetUnderlyingConnection()
         throws SQLException
     {
-	// Must pass the client identifier so XAConnection can determine
-	// whether we are still valid. If it tells us we're no longer
-	// valid, we have little to do.
-	try {
-	    return _xaConn.getUnderlying( _clientId );
-	} catch ( SQLException except ) {
-	    _xaConn = null;
+        // Must pass the client identifier so XAConnection can determine
+        // whether we are still valid. If it tells us we're no longer
+        // valid, we have little to do.
+        try {
+            return _xaConn.getUnderlying( _clientId );
+        } catch ( SQLException except ) {
+            _xaConn = null;
             _xaDataSource = null;
-	    throw except;
-	}
+            throw except;
+        }
     }
 
 

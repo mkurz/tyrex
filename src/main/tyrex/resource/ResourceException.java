@@ -38,9 +38,9 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
+ * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: ResourceException.java,v 1.1 2001/03/03 04:30:53 arkin Exp $
+ * $Id: ResourceException.java,v 1.2 2001/03/12 19:20:17 arkin Exp $
  */
 
 
@@ -54,7 +54,7 @@ import tyrex.util.NestedException;
  * A general exception associated with resource management.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 public class ResourceException
     extends NestedException

@@ -38,9 +38,9 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
+ * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: NestedException.java,v 1.1 2001/03/02 23:07:49 arkin Exp $
+ * $Id: NestedException.java,v 1.2 2001/03/12 19:20:21 arkin Exp $
  */
 
 
@@ -70,7 +70,7 @@ import java.sql.SQLException;
  * {@link org.xml.sax.SAXException}.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 public abstract class NestedException
     extends Exception

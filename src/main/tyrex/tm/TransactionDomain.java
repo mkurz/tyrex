@@ -38,9 +38,9 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
+ * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionDomain.java,v 1.13 2001/03/03 03:00:55 arkin Exp $
+ * $Id: TransactionDomain.java,v 1.14 2001/03/12 19:20:19 arkin Exp $
  */
 
 
@@ -50,6 +50,7 @@ package tyrex.tm;
 import java.io.PrintWriter;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.Iterator;
 import org.omg.CosTransactions.TransactionFactory;
 import org.xml.sax.InputSource;
 import org.exolab.castor.xml.Unmarshaller;
@@ -78,7 +79,7 @@ import tyrex.resource.Resources;
  * relevant documentation and <tt>domain.xsd</tt>.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.13 $ $Date: 2001/03/03 03:00:55 $
+ * @version $Revision: 1.14 $ $Date: 2001/03/12 19:20:19 $
  */
 public abstract class TransactionDomain
 {
@@ -189,6 +190,63 @@ public abstract class TransactionDomain
         }
         _domains.put( domain.getDomainName(), domain );
         return domain;
+    }
+
+
+    /**
+     * Returns a transaction based on the transaction identifier.
+     * <p>
+     * Returns the transaction object is the transaction is known to
+     * any transaction domain. The transaction may be in the prepared
+     * or complete state.
+     *
+     * @param xid The transaction identifier
+     * @return The transaction, or null if no such transaction exists
+     */
+    public static Transaction getTransaction( Xid xid )
+    {
+        Iterator              iterator;
+        TransactionDomainImpl domain;
+        Transaction           tx;
+
+        iterator = _domains.values().iterator();
+        while ( iterator.hasNext() ) {
+            domain = (TransactionDomainImpl) iterator.next();
+            tx = domain.findTransaction( xid );
+            if ( tx != null )
+                return tx;
+        }
+        return null;
+    }
+
+
+    /**
+     * Returns a transaction based on the transaction identifier.
+     * <p>
+     * Returns the transaction object is the transaction is known to
+     * any transaction domain. The transaction may be in the prepared
+     * or complete state.
+     * <p>
+     * The transaction identifier is a string obtained by calling
+     * <tt>toString()</tt> on the transaction or <tt>Xid</tt> object.
+     *
+     * @param xid The transaction identifier
+     * @return The transaction, or null if no such transaction exists
+     */
+    public static Transaction getTransaction( String xid )
+    {
+        Iterator              iterator;
+        TransactionDomainImpl domain;
+        Transaction           tx;
+
+        iterator = _domains.values().iterator();
+        while ( iterator.hasNext() ) {
+            domain = (TransactionDomainImpl) iterator.next();
+            tx = domain.findTransaction( xid );
+            if ( tx != null )
+                return tx;
+        }
+        return null;
     }
 
 

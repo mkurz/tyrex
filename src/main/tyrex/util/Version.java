@@ -38,9 +38,9 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
+ * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Version.java,v 1.1 2001/03/05 18:25:40 arkin Exp $
+ * $Id: Version.java,v 1.2 2001/03/12 19:20:21 arkin Exp $
  */
 
 
@@ -53,7 +53,7 @@ import java.util.StringTokenizer;
 /**
  *
  * @author <a href="mailto:arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2001/03/05 18:25:40 $
+ * @version $Revision: 1.2 $ $Date: 2001/03/12 19:20:21 $
  */
 public class Version
 {
@@ -86,54 +86,54 @@ public class Version
      */
     public static boolean isCompatibleWith( String available, String required )
     {
-	StringTokenizer avlTok;
-	StringTokenizer reqTok;
-	int             avlVer;
-	int             reqVer;
+        StringTokenizer avlTok;
+        StringTokenizer reqTok;
+        int             avlVer;
+        int             reqVer;
 
-	// Return true if both are same version or same text string
-	if ( available.equals( required ) )
-	    return true;
-	
-	// The version string consists of any number of version components,
-	// as in, 2.1.0 or 99/8/20. The first version component is the most
-	// significant and must be matched first (2.1 is higher than 1.2).
-	avlTok = new StringTokenizer( available, ".,/-" );
-	reqTok = new StringTokenizer( required, ".,/-" );
-	try {
-	    while ( avlTok.hasMoreTokens() || reqTok.hasMoreTokens() ) {
-		// Get the next significant version component.
-		// If a less significant component is not available,
-		// just assume zero (thus, 2.1 equals 2.1.0.0).
-		if ( avlTok.hasMoreTokens() )
-		    avlVer = Integer.parseInt( avlTok.nextToken() );
-		else
-		    avlVer = 0;
-		if ( reqTok.hasMoreTokens() )
-		    reqVer = Integer.parseInt( reqTok.nextToken() );
-		else
-		    reqVer = 0;
+        // Return true if both are same version or same text string
+        if ( available.equals( required ) )
+            return true;
 
-		// If available is 2 and required is 1, return true.
-		// If available is 1 and required is 2, return false.
-		// If available is 2 and required is 2, continue to
-		// next version number, and if all match return
-		// true at the end.
-		if ( avlVer < reqVer )
-		    return false;
-		if ( avlVer > reqVer )
-		    return true;
-	    }
-	} catch ( NumberFormatException except ) {
-	    // Cannot process any non-numerical portion in the
-	    // version string, so just return false.
-	    return false;
-	}
-	// We reached this point is all version components were
-	// equal in both version strings all along (including
-	// missing zeros in either one).
-	return true;
+        // The version string consists of any number of version components,
+        // as in, 2.1.0 or 99/8/20. The first version component is the most
+        // significant and must be matched first (2.1 is higher than 1.2).
+        avlTok = new StringTokenizer( available, ".,/-" );
+        reqTok = new StringTokenizer( required, ".,/-" );
+        try {
+            while ( avlTok.hasMoreTokens() || reqTok.hasMoreTokens() ) {
+                // Get the next significant version component.
+                // If a less significant component is not available,
+                // just assume zero (thus, 2.1 equals 2.1.0.0).
+                if ( avlTok.hasMoreTokens() )
+                    avlVer = Integer.parseInt( avlTok.nextToken() );
+                else
+                    avlVer = 0;
+                if ( reqTok.hasMoreTokens() )
+                    reqVer = Integer.parseInt( reqTok.nextToken() );
+                else
+                    reqVer = 0;
+                
+                // If available is 2 and required is 1, return true.
+                // If available is 1 and required is 2, return false.
+                // If available is 2 and required is 2, continue to
+                // next version number, and if all match return
+                // true at the end.
+                if ( avlVer < reqVer )
+                    return false;
+                if ( avlVer > reqVer )
+                    return true;
+            }
+        } catch ( NumberFormatException except ) {
+            // Cannot process any non-numerical portion in the
+            // version string, so just return false.
+            return false;
+        }
+        // We reached this point is all version components were
+        // equal in both version strings all along (including
+        // missing zeros in either one).
+        return true;
     }
-
+    
 
 }

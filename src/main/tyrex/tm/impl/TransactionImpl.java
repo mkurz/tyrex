@@ -38,9 +38,9 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
+ * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionImpl.java,v 1.6 2001/03/05 18:25:12 arkin Exp $
+ * $Id: TransactionImpl.java,v 1.7 2001/03/12 19:20:20 arkin Exp $
  */
 
 
@@ -88,7 +88,7 @@ import tyrex.util.Messages;
  * they are added.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.6 $ $Date: 2001/03/05 18:25:12 $
+ * @version $Revision: 1.7 $ $Date: 2001/03/12 19:20:20 $
  * @see XAResourceHolder
  * @see TransactionManagerImpl
  * @see TransactionDomain
@@ -273,11 +273,11 @@ final class TransactionImpl
             try {
                 parent.registerResource( new ResourceImpl( this ) );
             } catch ( IllegalStateException except ) {
-		// The parent is being or has committed/rolledback,
+                // The parent is being or has committed/rolledback,
                 // so we did not register as a resource. Generally
                 // this should not happen, but even if it does,
-		// nothing breaks.
-	    }
+                // nothing breaks.
+            }
         }
     }
     
@@ -298,8 +298,8 @@ final class TransactionImpl
      * @param timeout The timeout for this transaction, in milliseconds
      */
     TransactionImpl( BaseXid xid, PropagationContext pgContext,
-		     TransactionDomainImpl txDomain, long timeout )
-	throws Inactive
+                     TransactionDomainImpl txDomain, long timeout )
+        throws Inactive
     {
         ResourceImpl res;
     
@@ -310,31 +310,31 @@ final class TransactionImpl
         if ( pgContext == null )
             throw new IllegalArgumentException( "Argument pgContext is null" );
 
-	_xid = xid;
+        _xid = xid;
         _hashCode = xid.hashCode();
-	_txDomain = txDomain;
-	_pgContext = pgContext;
+        _txDomain = txDomain;
+        _pgContext = pgContext;
         _parent = null;
-	_status = STATUS_ACTIVE;
+        _status = STATUS_ACTIVE;
         _started = Clock.clock();
         _timeout = _started + timeout;
         
-	// If this transaction is a local copy of a remote
-	// transaction, we register it as a resource with the
-	// remote transaction.
-	try {
+        // If this transaction is a local copy of a remote
+        // transaction, we register it as a resource with the
+        // remote transaction.
+        try {
             res = new ResourceImpl( this );
             if ( _txDomain._orb != null )
                 _txDomain._orb.connect( res );
-	    _pgContext.current.coord.register_resource( res );
-	} catch ( RuntimeException except ) {
-	    // Anything that the remote transaction throws us
-	    // is considered an illegal state.
-	    throw new Inactive();
-	} catch ( Inactive except ) {
-	    throw except;
-	}
-	_control = new ControlImpl( this, _pgContext );
+            _pgContext.current.coord.register_resource( res );
+        } catch ( RuntimeException except ) {
+            // Anything that the remote transaction throws us
+            // is considered an illegal state.
+            throw new Inactive();
+        } catch ( Inactive except ) {
+            throw except;
+        }
+        _control = new ControlImpl( this, _pgContext );
     }
 
 
@@ -353,10 +353,10 @@ final class TransactionImpl
             throw new IllegalArgumentException( "Argument xid is null" );
         if ( txDomain == null )
             throw new IllegalArgumentException( "Argument txDomain is null" );
-	_xid = xid;
+        _xid = xid;
         _hashCode = xid.hashCode();
-	_txDomain = txDomain;
-	_pgContext = null;
+        _txDomain = txDomain;
+        _pgContext = null;
         _parent = null;
         _started = 0;
         _timeout = 0;
@@ -417,21 +417,21 @@ final class TransactionImpl
 
     public String toString()
     {
-	return _xid.toString();
+        return _xid.toString();
     }
 
 
     public int hashCode()
     {
-	return _hashCode;
+        return _hashCode;
     }
 
 
     public boolean equals( Object other )
     {
-	// By design choice there will only be one transaction object
-	// per unique transaction (identifier).
-	return ( this == other );
+        // By design choice there will only be one transaction object
+        // per unique transaction (identifier).
+        return ( this == other );
     }
 
 
@@ -448,89 +448,86 @@ final class TransactionImpl
 
     
     public synchronized void registerSynchronization( Synchronization sync )
-	throws RollbackException, IllegalStateException, SystemException
+        throws RollbackException, IllegalStateException, SystemException
     {
         if ( sync == null )
             throw new IllegalArgumentException( "Argument sync is null" );
 
-	// Proper notification for transactions that timed out.
-	if ( _timedOut )
-	    throw new RollbackException( Messages.message( "tyrex.tx.timedOut" ) );
+        // Proper notification for transactions that timed out.
+        if ( _timedOut )
+            throw new RollbackException( Messages.message( "tyrex.tx.timedOut" ) );
         
-	// Check the status of the transaction and act accordingly.
-	switch ( _status ) {
-	case STATUS_ACTIVE:
-	    // Transaction is active, we can register the synchronization.
-	    break;
+        // Check the status of the transaction and act accordingly.
+        switch ( _status ) {
+        case STATUS_ACTIVE:
+            // Transaction is active, we can register the synchronization.
+            break;
+        case STATUS_MARKED_ROLLBACK:
+            // Transaction marked for rollback, we cannot possibly register..
+            throw new RollbackException( Messages.message( "tyrex.tx.markedRollback" ) );
+        case STATUS_PREPARED:
+        case STATUS_PREPARING:
+        case STATUS_COMMITTING:
+            // Transaction is preparing, cannotr register.
+            throw new IllegalStateException( Messages.message( "tyrex.tx.inCommit" ) );
+        case STATUS_ROLLEDBACK:
+        case STATUS_ROLLING_BACK:
+        case STATUS_COMMITTED:
+        case STATUS_NO_TRANSACTION:
+        case STATUS_UNKNOWN:
+        default:
+            throw new IllegalStateException( Messages.message( "tyrex.tx.inactive" ) );
+        }
 
-	case STATUS_MARKED_ROLLBACK:
-	    // Transaction marked for rollback, we cannot possibly register..
-	    throw new RollbackException( Messages.message( "tyrex.tx.markedRollback" ) );
-
-	case STATUS_PREPARED:
-	case STATUS_PREPARING:
-	case STATUS_COMMITTING:
-	    // Transaction is preparing, cannotr register.
-	    throw new IllegalStateException( Messages.message( "tyrex.tx.inCommit" ) );
-
-	case STATUS_ROLLEDBACK:
-	case STATUS_ROLLING_BACK:
-	case STATUS_COMMITTED:
-	case STATUS_NO_TRANSACTION:
-	case STATUS_UNKNOWN:
-	default:
-	    throw new IllegalStateException( Messages.message( "tyrex.tx.inactive" ) );
-	}
-
-	if ( _syncs == null ) {
-	    _syncs = new Synchronization[] { sync };
-	} else {
-	    Synchronization[] newSyncs;
+        if ( _syncs == null ) {
+            _syncs = new Synchronization[] { sync };
+        } else {
+            Synchronization[] newSyncs;
             
-	    // In many cases we will get duplicity in synchronization
-	    // registration, but we don't want to fire duplicate events.
-	    for ( int i = _syncs.length ; i-- > 0 ; )
-		if ( _syncs[ i ] == sync )
-		    return;
-	    newSyncs = new Synchronization[ _syncs.length + 1 ];
-	    for ( int i = _syncs.length ; i-- > 0 ; )
+            // In many cases we will get duplicity in synchronization
+            // registration, but we don't want to fire duplicate events.
+            for ( int i = _syncs.length ; i-- > 0 ; )
+                if ( _syncs[ i ] == sync )
+                    return;
+            newSyncs = new Synchronization[ _syncs.length + 1 ];
+            for ( int i = _syncs.length ; i-- > 0 ; )
                 newSyncs[ i ] = _syncs[ i ];
-	    newSyncs[ _syncs.length ] = sync;
-	    _syncs = newSyncs;
-	}
+            newSyncs[ _syncs.length ] = sync;
+            _syncs = newSyncs;
+        }
     }
 
 
     public synchronized void commit()
         throws  RollbackException, HeuristicMixedException, HeuristicRollbackException,
-	        SecurityException, SystemException
+                SecurityException, SystemException
     {
         // Proper notification for transactions that timed out.
-    	if ( _timedOut )
-    	    throw new RollbackException( Messages.message( "tyrex.tx.timedOut" ) );
+        if ( _timedOut )
+            throw new RollbackException( Messages.message( "tyrex.tx.timedOut" ) );
         
-    	// If this is a subtransaction, it cannot commit directly,
-    	// only once the parent transaction commits through the
-    	// {@link #internalCommit} call. We simply do nothing after
-    	// preperation. The heuristic decision will be remembered.
-    	if ( _parent != null || _pgContext != null )
-    	    return;
+        // If this is a subtransaction, it cannot commit directly,
+        // only once the parent transaction commits through the
+        // {@link #internalCommit} call. We simply do nothing after
+        // preperation. The heuristic decision will be remembered.
+        if ( _parent != null || _pgContext != null )
+            return;
         commit( canUseOnePhaseCommit() );
     }
 
 
     public synchronized void rollback()
-	throws IllegalStateException, SystemException
+        throws IllegalStateException, SystemException
     {
-	// Proper notification for transactions that timed out.
-	if ( _timedOut )
-	    throw new IllegalStateException( Messages.message( "tyrex.tx.timedOut" ) );
+        // Proper notification for transactions that timed out.
+        if ( _timedOut )
+            throw new IllegalStateException( Messages.message( "tyrex.tx.timedOut" ) );
         
-	// Perform the rollback, pass IllegalStateException to
-	// the caller, ignore the returned heuristics.
-	try {
+        // Perform the rollback, pass IllegalStateException to
+        // the caller, ignore the returned heuristics.
+        try {
             _txDomain.notifyRollback( this );
-	    internalRollback();
+            internalRollback();
         }
         finally {
             // The transaction will now tell all it's resources to
@@ -544,119 +541,114 @@ final class TransactionImpl
                 _txDomain._category.error( "Internal error", except );
             }
         }
-	
-	// If this transaction is nested inside a parent transaction,
-	// then we have just rolledback a section in the larger transaction,
-	// but the larger transaction may still complete. We dissociate
-	// this sub-transaction from it's parent.
-	if ( _parent != null )
-	    _parent.unregisterResource( new ResourceImpl( this ) );
         
-	// If a system error occured during this stage, report it.
-	if ( _sysError != null )
-	    throw _sysError;
+        // If this transaction is nested inside a parent transaction,
+        // then we have just rolledback a section in the larger transaction,
+        // but the larger transaction may still complete. We dissociate
+        // this sub-transaction from it's parent.
+        if ( _parent != null )
+            _parent.unregisterResource( new ResourceImpl( this ) );
+        
+        // If a system error occured during this stage, report it.
+        if ( _sysError != null )
+            throw _sysError;
     }
 
 
     public synchronized boolean enlistResource( XAResource xaResource )
-	throws IllegalStateException, SystemException, RollbackException
+        throws IllegalStateException, SystemException, RollbackException
     {
-	XAResourceHolder resHolder;
-
+        XAResourceHolder resHolder;
+        
         if ( xaResource == null )
             throw new IllegalArgumentException( "Argument xaResource is null" );
-
-	// Proper notification for transactions that timed out.
-	if ( _timedOut )
-	    throw new RollbackException( Messages.message( "tyrex.tx.timedOut" ) );
+        
+        // Proper notification for transactions that timed out.
+        if ( _timedOut )
+            throw new RollbackException( Messages.message( "tyrex.tx.timedOut" ) );
+   
+        // Check the status of the transaction and act accordingly.
+        switch ( _status ) {
+        case STATUS_ACTIVE:
+            // Transaction is active, we can enlist the resource.
+            break;
+        case STATUS_MARKED_ROLLBACK:
+            // Transaction marked for rollback, we cannot possibly enlist.
+            throw new RollbackException( Messages.message( "tyrex.tx.markedRollback" ) );
+        case STATUS_PREPARED:
+        case STATUS_PREPARING:
+        case STATUS_COMMITTING:
+            // Transaction is preparing, cannot enlist resource.
+            throw new IllegalStateException( Messages.message( "tyrex.tx.inCommit" ) );
+        case STATUS_ROLLEDBACK:
+        case STATUS_ROLLING_BACK:
+        case STATUS_COMMITTED:
+        case STATUS_NO_TRANSACTION:
+        case STATUS_UNKNOWN:
+        default:
+            throw new IllegalStateException( Messages.message( "tyrex.tx.inactive" ) );
+        }
     
-	// Check the status of the transaction and act accordingly.
-	switch ( _status ) {
-	case STATUS_ACTIVE:
-	    // Transaction is active, we can enlist the resource.
-	    break;
-
-	case STATUS_MARKED_ROLLBACK:
-	    // Transaction marked for rollback, we cannot possibly enlist.
-	    throw new RollbackException( Messages.message( "tyrex.tx.markedRollback" ) );
-
-	case STATUS_PREPARED:
-	case STATUS_PREPARING:
-	case STATUS_COMMITTING:
-	    // Transaction is preparing, cannot enlist resource.
-	    throw new IllegalStateException( Messages.message( "tyrex.tx.inCommit" ) );
-            
-	case STATUS_ROLLEDBACK:
-	case STATUS_ROLLING_BACK:
-	case STATUS_COMMITTED:
-	case STATUS_NO_TRANSACTION:
-	case STATUS_UNKNOWN:
-	default:
-	    throw new IllegalStateException( Messages.message( "tyrex.tx.inactive" ) );
-	}
-    
-	if ( _enlisted != null ) {
-	    // Look if we alredy got the resource enlisted. If the
-	    // resource was suspended, we just resume it and go out.
-	    // If the resource was started, we do not enlist it a
-	    // second time.
+        if ( _enlisted != null ) {
+            // Look if we alredy got the resource enlisted. If the
+            // resource was suspended, we just resume it and go out.
+            // If the resource was started, we do not enlist it a
+            // second time.
             resHolder = _enlisted;
             while ( resHolder != null ) {
-		if ( resHolder._xaResource == xaResource ) {
-		    if ( resHolder._endFlag == XAResource.TMSUSPEND ) {
-			try {
-			    xaResource.start( resHolder._xid, XAResource.TMRESUME );
+                if ( resHolder._xaResource == xaResource ) {
+                    if ( resHolder._endFlag == XAResource.TMSUSPEND ) {
+                        try {
+                            xaResource.start( resHolder._xid, XAResource.TMRESUME );
                             resHolder._endFlag = XAResource.TMNOFLAGS;
-			    return true;
-			} catch ( XAException except ) {
-			    return false;
-			} catch ( Exception except ) {
-			    throw new SystemException( except.toString() );
-			}
-		    } else
-			return false;
-		}
+                            return true;
+                        } catch ( XAException except ) {
+                            return false;
+                        } catch ( Exception except ) {
+                            throw new SystemException( except.toString() );
+                        }
+                    } else
+                        return false;
+                }
                 resHolder = resHolder._nextHolder;
-	    }
+            }
         }
-	return addNewResource( xaResource );
+        return addNewResource( xaResource );
     }
 
 
     public synchronized boolean delistResource( XAResource xaResource, int flag )
-	throws IllegalStateException, SystemException
+        throws IllegalStateException, SystemException
     {
-	XAResourceHolder resHolder;
-	XAResourceHolder lastHolder;
+        XAResourceHolder resHolder;
+        XAResourceHolder lastHolder;
     
         if ( xaResource == null )
             throw new IllegalArgumentException( "Argument xaResource is null" );
 
-	// Check the status of the transaction and act accordingly.
-	switch ( _status ) {
-	case STATUS_ACTIVE:
-	case STATUS_MARKED_ROLLBACK:
-	    // Transaction is active, we can delist the resource.
-	    break;
-            
-	case STATUS_PREPARED:
-	case STATUS_PREPARING:
-	case STATUS_COMMITTING:
-	    // Transaction is preparing, cannot delist resource.
-	    throw new IllegalStateException( Messages.message( "tyrex.tx.inCommit" ) );
-            
-	case STATUS_ROLLEDBACK:
-	case STATUS_ROLLING_BACK:
-	case STATUS_COMMITTED:
-	case STATUS_NO_TRANSACTION:
-	case STATUS_UNKNOWN:
-	default:
-	    throw new IllegalStateException( Messages.message( "tyrex.tx.inactive" ) );
-	}
+        // Check the status of the transaction and act accordingly.
+        switch ( _status ) {
+        case STATUS_ACTIVE:
+        case STATUS_MARKED_ROLLBACK:
+            // Transaction is active, we can delist the resource.
+            break;
+        case STATUS_PREPARED:
+        case STATUS_PREPARING:
+        case STATUS_COMMITTING:
+            // Transaction is preparing, cannot delist resource.
+            throw new IllegalStateException( Messages.message( "tyrex.tx.inCommit" ) );
+        case STATUS_ROLLEDBACK:
+        case STATUS_ROLLING_BACK:
+        case STATUS_COMMITTED:
+        case STATUS_NO_TRANSACTION:
+        case STATUS_UNKNOWN:
+        default:
+            throw new IllegalStateException( Messages.message( "tyrex.tx.inactive" ) );
+        }
         
-	// Look up the enlisted resource. If the resource is not
-	// enlisted, return false.
-	resHolder = _enlisted;
+        // Look up the enlisted resource. If the resource is not
+        // enlisted, return false.
+        resHolder = _enlisted;
         lastHolder = null;
         while( resHolder != null ) {
             if ( resHolder._xaResource == xaResource )
@@ -667,39 +659,39 @@ final class TransactionImpl
         if ( resHolder == null )
             return false;
 
-	switch ( flag ) {
-	case XAResource.TMSUSPEND:
-	    // If the resource is being suspended, we simply suspend
-	    // it and return. The resource will be resumed when we
-	    // commit/rollback, i.e. it's not removed from the
-	    // list of enlisted resources.
-	    try {
-		xaResource.end( resHolder._xid, XAResource.TMSUSPEND );
-		resHolder._endFlag = XAResource.TMSUSPEND;
-		return true;
-	    } catch ( XAException except ) {
-		return false;
-	    } catch ( Exception except ) {
-		throw new SystemException( except.toString() );
-	    }
+        switch ( flag ) {
+        case XAResource.TMSUSPEND:
+            // If the resource is being suspended, we simply suspend
+            // it and return. The resource will be resumed when we
+            // commit/rollback, i.e. it's not removed from the
+            // list of enlisted resources.
+            try {
+                xaResource.end( resHolder._xid, XAResource.TMSUSPEND );
+                resHolder._endFlag = XAResource.TMSUSPEND;
+                return true;
+            } catch ( XAException except ) {
+                return false;
+            } catch ( Exception except ) {
+                throw new SystemException( except.toString() );
+            }
 
         case XAResource.TMSUCCESS:
         case XAResource.TMFAIL:
-	    // If we got the fail flag, the resource has failed (e.g.
-	    // the JDBC connection died), we simply end the resource
-	    // with a failure and remove it from the list. We will
-	    // never need to commit or rollback this resource.
-
+            // If we got the fail flag, the resource has failed (e.g.
+            // the JDBC connection died), we simply end the resource
+            // with a failure and remove it from the list. We will
+            // never need to commit or rollback this resource.
+            
             // If we got the success flag then end the resource with a
             // success, remove it from the enlisted list and add it to
             // the delisted list
             
-	    try {
+            try {
                 if ( lastHolder == null )
                     _enlisted = resHolder._nextHolder;
                 else
                     lastHolder._nextHolder = resHolder._nextHolder;
-        
+                
                 if ( flag == XAResource.TMFAIL )
                     xaResource.end( resHolder._xid, XAResource.TMFAIL );
                 else {
@@ -708,51 +700,48 @@ final class TransactionImpl
                     _delisted = resHolder;
                 }
                 resHolder._endFlag = flag;
-		return true;
-	    } catch ( XAException except ) {
-		return false;
-	    } catch ( Exception except ) {
-		throw new SystemException( except.toString() );
-	    } finally {
+                return true;
+            } catch ( XAException except ) {
+                return false;
+            } catch ( Exception except ) {
+                throw new SystemException( except.toString() );
+            } finally {
                 // if this is resource failure set rollback
                 if ( flag == XAResource.TMFAIL )
                     setRollbackOnly();    
             }
         default:
-	    throw new IllegalArgumentException( Messages.message( "tyrex.tx.invalidFlag" ) );
-	}
-    }
+            throw new IllegalArgumentException( Messages.message( "tyrex.tx.invalidFlag" ) );
+        }
+   }
     
 
     public synchronized void setRollbackOnly()
-	throws IllegalStateException, SystemException
+        throws IllegalStateException, SystemException
     {
-	// Check the status of the transaction and act accordingly.
-	switch ( _status ) {
-	case STATUS_ACTIVE:
-	case STATUS_MARKED_ROLLBACK:
-	    // Transaction is active, we'll mark it for roll back.
-	    _status = STATUS_MARKED_ROLLBACK;
-	    break;
-	    
-	case STATUS_PREPARED:
-	case STATUS_PREPARING:
-	case STATUS_COMMITTING:
-	    // Transaction is right now in the process of being commited,
-	    // cannot change it to roll back.
-	    throw new IllegalStateException( Messages.message( "tyrex.tx.inCommit" ) );
-
-	case STATUS_ROLLEDBACK:
-	case STATUS_ROLLING_BACK:
-	    // Transaction has been or is being rolled back, just leave.
-	    return;
-	    
-	case STATUS_COMMITTED:
-	case STATUS_NO_TRANSACTION:
-	case STATUS_UNKNOWN:
-	default:
-	    throw new IllegalStateException( Messages.message( "tyrex.tx.inactive" ) );
-	}
+        // Check the status of the transaction and act accordingly.
+        switch ( _status ) {
+        case STATUS_ACTIVE:
+        case STATUS_MARKED_ROLLBACK:
+            // Transaction is active, we'll mark it for roll back.
+            _status = STATUS_MARKED_ROLLBACK;
+            break;
+        case STATUS_PREPARED:
+        case STATUS_PREPARING:
+        case STATUS_COMMITTING:
+            // Transaction is right now in the process of being commited,
+            // cannot change it to roll back.
+            throw new IllegalStateException( Messages.message( "tyrex.tx.inCommit" ) );
+        case STATUS_ROLLEDBACK:
+        case STATUS_ROLLING_BACK:
+            // Transaction has been or is being rolled back, just leave.
+            return;
+        case STATUS_COMMITTED:
+        case STATUS_NO_TRANSACTION:
+        case STATUS_UNKNOWN:
+        default:
+            throw new IllegalStateException( Messages.message( "tyrex.tx.inactive" ) );
+        }
     }
 
 
@@ -783,8 +772,8 @@ final class TransactionImpl
         Thread thread;
         
         // Proper notification for transactions that timed out.
-    	if ( _timedOut )
-    	    throw new RollbackException( Messages.message( "tyrex.tx.timedOut" ) );
+        if ( _timedOut )
+            throw new RollbackException( Messages.message( "tyrex.tx.timedOut" ) );
 
         // Dissociated the tranaction from the current thread,
         // before embarking on asynchronous commit.
@@ -905,16 +894,31 @@ final class TransactionImpl
                IllegalStateException, SystemException
     {
         // Proper notification for transactions that timed out.
-    	if ( _timedOut )
-    	    throw new RollbackException( Messages.message( "tyrex.tx.timedOut" ) );
+        if ( _timedOut )
+            throw new RollbackException( Messages.message( "tyrex.tx.timedOut" ) );
         
-    	// If this is a subtransaction, it cannot commit directly,
-    	// only once the parent transaction commits through the
-    	// {@link #internalCommit} call. We simply do nothing after
-    	// preperation. The heuristic decision will be remembered.
-    	if ( _parent != null || _pgContext != null )
-    	    return;
+        // If this is a subtransaction, it cannot commit directly,
+        // only once the parent transaction commits through the
+        // {@link #internalCommit} call. We simply do nothing after
+        // preperation. The heuristic decision will be remembered.
+        if ( _parent != null || _pgContext != null )
+            return;
         commit( true );
+    }
+
+
+    public Transaction getParent()
+    {
+        return _parent;
+    }
+
+
+    public Transaction getTopLevel()
+    {
+        if ( _parent == null )
+            return this;
+        else
+            return _parent.getTopLevel();
     }
 
 
@@ -954,219 +958,212 @@ final class TransactionImpl
      *   is in the process of being commited
      */
     protected void prepare()
-	throws IllegalStateException, RollbackException
+        throws IllegalStateException, RollbackException
     {
-	XAResourceHolder resHolder;
-	int              committing;
-	Resource         resource;
+        XAResourceHolder resHolder;
+        int              committing;
+        Resource         resource;
         int              decision;
         
-	// Proper notification for transactions that timed out.
-	if ( _timedOut )
-	    throw new RollbackException( Messages.message( "tyrex.tx.timedOut" ) );
+        // Proper notification for transactions that timed out.
+        if ( _timedOut )
+            throw new RollbackException( Messages.message( "tyrex.tx.timedOut" ) );
         
-	// Check the status of the transaction and act accordingly.
-	switch ( _status ) {
-	case STATUS_ACTIVE:
-	    // Transaction is active, we'll commit it.
-	    break;
-            
-	case STATUS_PREPARED:
-	    // If this transaction has been prepared before, we do not
-	    // prepare it a second time. It would have been prepared if this
-	    // is a subtransaction that was commited directly and is now
-	    // being commited by the parent transaction. The heuristic
-	    // decision is remembered from the previous preparation.
-	    return;
-            
-	case STATUS_COMMITTING:
-	case STATUS_PREPARING:
-	    // Transaction is in the middle of being commited.
-	    throw new IllegalStateException( Messages.message( "tyrex.tx.inCommit" ) );
-	    
-	case STATUS_MARKED_ROLLBACK:
-	    // Transaction has been marked for roll-back, no preparation
-	    // necessary.
-	    _heuristic = Heuristic.ROLLBACK;
-	    return;
-	    
-	case STATUS_ROLLEDBACK:
-	    // Transaction has been or is being rolled back.
-	    throw new RollbackException( Messages.message( "tyrex.tx.rolledback" ) );
-            
-	case STATUS_ROLLING_BACK:
-	    // Transaction has been or is being rolled back.
-	    throw new IllegalStateException( Messages.message( "tyrex.tx.inRollback" ) );
-	    
-	case STATUS_COMMITTED:
-	case STATUS_NO_TRANSACTION:
-	case STATUS_UNKNOWN:
-	default:
-	    throw new IllegalStateException( Messages.message( "tyrex.tx.inactive" ) );
-	}
+        // Check the status of the transaction and act accordingly.
+        switch ( _status ) {
+        case STATUS_ACTIVE:
+            // Transaction is active, we'll commit it.
+            break;
+        case STATUS_PREPARED:
+            // If this transaction has been prepared before, we do not
+            // prepare it a second time. It would have been prepared if this
+            // is a subtransaction that was commited directly and is now
+            // being commited by the parent transaction. The heuristic
+            // decision is remembered from the previous preparation.
+            return;
+        case STATUS_COMMITTING:
+        case STATUS_PREPARING:
+            // Transaction is in the middle of being commited.
+            throw new IllegalStateException( Messages.message( "tyrex.tx.inCommit" ) );
+        case STATUS_MARKED_ROLLBACK:
+            // Transaction has been marked for roll-back, no preparation
+            // necessary.
+            _heuristic = Heuristic.ROLLBACK;
+            return;
+        case STATUS_ROLLEDBACK:
+            // Transaction has been or is being rolled back.
+            throw new RollbackException( Messages.message( "tyrex.tx.rolledback" ) );
+        case STATUS_ROLLING_BACK:
+            // Transaction has been or is being rolled back.
+            throw new IllegalStateException( Messages.message( "tyrex.tx.inRollback" ) );
+        case STATUS_COMMITTED:
+        case STATUS_NO_TRANSACTION:
+        case STATUS_UNKNOWN:
+        default:
+            throw new IllegalStateException( Messages.message( "tyrex.tx.inactive" ) );
+        }
     
         // We begin by having no heuristics at all, but during
-	// the process we might reach a conclusion to have a
-	// commit or rollback heuristic.
-	_heuristic = Heuristic.READONLY;
-	_status = STATUS_PREPARING;
-	committing = 0;
+        // the process we might reach a conclusion to have a
+        // commit or rollback heuristic.
+        _heuristic = Heuristic.READONLY;
+        _status = STATUS_PREPARING;
+        committing = 0;
     
         // Call before completion on all the registered synchronizations.
         if ( _syncs != null )
             beforeCompletion();
         
-	// We deal with OTS (remote transactions and subtransactions)
-	// first because we expect a higher likelyhood of failure over
-	// there, and we can easly recover over here.
-	if ( _resources != null ) {
-	    // We are starting with a heuristic decision that is read-only,
-	    // and no need to commit. At the end we might reach a heuristic
-	    // decision to rollback, or mixed/hazard, but never commit.
-	    for ( int i = _resources.length ; i-- > 0 ; ) {
-        
-		// If at least one resource failed to prepare, we will
-		// not prepare the remaining resources, but rollback.
-		if ( _heuristic != Heuristic.READONLY && _heuristic != Heuristic.COMMIT )
-		    break;
+        // We deal with OTS (remote transactions and subtransactions)
+        // first because we expect a higher likelyhood of failure over
+        // there, and we can easly recover over here.
+        if ( _resources != null ) {
+            // We are starting with a heuristic decision that is read-only,
+            // and no need to commit. At the end we might reach a heuristic
+            // decision to rollback, or mixed/hazard, but never commit.
+            for ( int i = _resources.length ; i-- > 0 ; ) {
                 
-		resource = _resources[ i ];
-		if ( resource == null )
-		    continue;
-		try {
-		    int vote;
+                // If at least one resource failed to prepare, we will
+                // not prepare the remaining resources, but rollback.
+                if ( _heuristic != Heuristic.READONLY && _heuristic != Heuristic.COMMIT )
+                    break;
+                
+                resource = _resources[ i ];
+                if ( resource == null )
+                    continue;
+                try {
+                    int vote;
                     
-		    vote = resource.prepare().value();
-            
-		    if ( vote == Vote._VoteReadOnly ) {
-			// The resource is read-only, no need to commit/
-			// rollback or even forget this one.
-			_resources[ i ] = null;
-		    } else if ( vote == Vote._VoteCommit ) {
-			// If at least one resource decided to commit,
-			// we still have no heuristic decision, but at
-			// least we can commit.
-			++ committing;
-		    } else if ( vote == Vote._VoteRollback ) {
-			// Our heuristic so far can only be read-only,
-			// so the only decision was can make is to
-			// rollback. We do not need to rollback this
-			// resource or forget it.
-			_heuristic = _heuristic | Heuristic.ROLLBACK;
-			_resources[ i ] = null;
-		    }
-		} catch ( HeuristicMixed except ) {
-		    // Resource indicated mixed/hazard heuristic, so the
-		    // entire transaction is mixed heuristics.
-		    _heuristic = _heuristic | Heuristic.MIXED;
-		} catch ( HeuristicHazard except ) {
-		    _heuristic = _heuristic | Heuristic.HAZARD;
-		} catch ( Exception except ) {
-		    if ( except instanceof TRANSACTION_ROLLEDBACK )
-			_heuristic = _heuristic | Heuristic.ROLLBACK;
-		    else {
-			_heuristic = _heuristic | Heuristic.HAZARD;
-			error( except );
-		    }
-		}
-	    }	
-	}
+                    vote = resource.prepare().value();
+                    if ( vote == Vote._VoteReadOnly ) {
+                        // The resource is read-only, no need to commit/
+                        // rollback or even forget this one.
+                        _resources[ i ] = null;
+                    } else if ( vote == Vote._VoteCommit ) {
+                        // If at least one resource decided to commit,
+                        // we still have no heuristic decision, but at
+                        // least we can commit.
+                        ++ committing;
+                    } else if ( vote == Vote._VoteRollback ) {
+                        // Our heuristic so far can only be read-only,
+                        // so the only decision was can make is to
+                        // rollback. We do not need to rollback this
+                        // resource or forget it.
+                        _heuristic = _heuristic | Heuristic.ROLLBACK;
+                        _resources[ i ] = null;
+                    }
+                } catch ( HeuristicMixed except ) {
+                    // Resource indicated mixed/hazard heuristic, so the
+                    // entire transaction is mixed heuristics.
+                    _heuristic = _heuristic | Heuristic.MIXED;
+                } catch ( HeuristicHazard except ) {
+                    _heuristic = _heuristic | Heuristic.HAZARD;
+                } catch ( Exception except ) {
+                    if ( except instanceof TRANSACTION_ROLLEDBACK )
+                        _heuristic = _heuristic | Heuristic.ROLLBACK;
+                    else {
+                        _heuristic = _heuristic | Heuristic.HAZARD;
+                        error( except );
+                    }
+                }
+            }
+        }
         
         // If there are any resources, perform two phase commit on them.
-	// We always end these resources, even if we made a heuristic
-	// decision not to commit this transaction.
+        // We always end these resources, even if we made a heuristic
+        // decision not to commit this transaction.
         resHolder = _enlisted;
-	if ( resHolder != null ) {
-	    endEnlistedResourcesForCommit();
-
-	    // Prepare all the resources that we are about to commit.
-	    // Shared resources do not need preparation, they will not
-	    // be commited/rolledback directly. Read-only resources
-	    // will not be commited/rolled back.
+        if ( resHolder != null ) {
+            endEnlistedResourcesForCommit();
+            
+            // Prepare all the resources that we are about to commit.
+            // Shared resources do not need preparation, they will not
+            // be commited/rolledback directly. Read-only resources
+            // will not be commited/rolled back.
             resHolder = _enlisted;
             while ( resHolder != null ) {
-		// If at least one resource failed to prepare, we will
-		// not prepare the remaining resources, but rollback.
-		if ( _heuristic != Heuristic.READONLY && _heuristic != Heuristic.COMMIT )
-		    break;
-		try {
-		    if ( ! resHolder._shared ) {
-			// We do not commit/rollback a read-only resource.
-			// If all resources are read only, we can return
-			// a read-only heuristic.
-			if ( resHolder._xaResource.prepare( resHolder._xid ) == XAResource.XA_RDONLY )
+                // If at least one resource failed to prepare, we will
+                // not prepare the remaining resources, but rollback.
+                if ( _heuristic != Heuristic.READONLY && _heuristic != Heuristic.COMMIT )
+                    break;
+                try {
+                    if ( ! resHolder._shared ) {
+                        // We do not commit/rollback a read-only resource.
+                        // If all resources are read only, we can return
+                        // a read-only heuristic.
+                        if ( resHolder._xaResource.prepare( resHolder._xid ) == XAResource.XA_RDONLY )
                             resHolder._readOnly = true;
                         else
-			    ++ committing;
-		    }
+                            ++ committing;
+                    }
                     
-		    // Note: We will not commit read-only resources,
-		    // but if we get a heuristic that requires rollback,
-		    // we will rollback all resources including this one.
-		    // An error does not change it's state to read-only,
-		    // since we can call rollback more than once.
-		} catch ( XAException except ) {
+                    // Note: We will not commit read-only resources,
+                    // but if we get a heuristic that requires rollback,
+                    // we will rollback all resources including this one.
+                    // An error does not change it's state to read-only,
+                    // since we can call rollback more than once.
+                } catch ( XAException except ) {
                     xaError( resHolder, except );
-		}  catch ( Exception except ) {
-		    // Any error will cause us to rollback the entire
-		    // transaction or at least the remaining part of it.
-		    _heuristic = _heuristic | Heuristic.HAZARD;
-		    error( except );
-		}
-                resHolder = resHolder._nextHolder;
-	    }
-	}
-        
-        resHolder = _delisted;
-	if ( resHolder != null ) {
-            // Prepare all the resources that we are about to commit.
-	    // Shared resources do not need preparation, they will not
-	    // be commited/rolledback directly. Read-only resources
-	    // will not be commited/rolled back.
-            while ( resHolder != null ) {
-        
-		// If at least one resource failed to prepare, we will
-		// not prepare the remaining resources, but rollback.
-		if ( _heuristic != Heuristic.READONLY && _heuristic != Heuristic.COMMIT )
-		    break;
-                
-		try {
-		    if ( ! resHolder._shared ) {
-			// We do not commit/rollback a read-only resource.
-			// If all resources are read only, we can return
-			// a read-only heuristic.
-			if ( resHolder._xaResource.prepare( resHolder._xid ) == XAResource.XA_RDONLY )
-                            resHolder._readOnly = true;
-                        else
-			    ++ committing;
-		    }
-                    
-		    // Note: We will not commit read-only resources,
-		    // but if we get a heuristic that requires rollback,
-		    // we will rollback all resources including this one.
-		    // An error does not change it's state to read-only,
-		    // since we can call rollback more than once.
-		} catch ( XAException except ) {
-                    xaError( resHolder, except );
-		}  catch ( Exception except ) {
-		    // Any error will cause us to rollback the entire
-		    // transaction or at least the remaining part of it.
-		    _heuristic = _heuristic | Heuristic.HAZARD;
-		    error( except );
-		}
+                }  catch ( Exception except ) {
+                    // Any error will cause us to rollback the entire
+                    // transaction or at least the remaining part of it.
+                    _heuristic = _heuristic | Heuristic.HAZARD;
+                    error( except );
+                }
                 resHolder = resHolder._nextHolder;
             }
         }
         
-	_status = STATUS_PREPARED;
+        resHolder = _delisted;
+        if ( resHolder != null ) {
+            // Prepare all the resources that we are about to commit.
+            // Shared resources do not need preparation, they will not
+            // be commited/rolledback directly. Read-only resources
+            // will not be commited/rolled back.
+            while ( resHolder != null ) {
+                
+                // If at least one resource failed to prepare, we will
+                // not prepare the remaining resources, but rollback.
+                if ( _heuristic != Heuristic.READONLY && _heuristic != Heuristic.COMMIT )
+                    break;
+                
+                try {
+                    if ( ! resHolder._shared ) {
+                        // We do not commit/rollback a read-only resource.
+                        // If all resources are read only, we can return
+                        // a read-only heuristic.
+                        if ( resHolder._xaResource.prepare( resHolder._xid ) == XAResource.XA_RDONLY )
+                            resHolder._readOnly = true;
+                        else
+                            ++ committing;
+                    }
+                    
+                    // Note: We will not commit read-only resources,
+                    // but if we get a heuristic that requires rollback,
+                    // we will rollback all resources including this one.
+                    // An error does not change it's state to read-only,
+                    // since we can call rollback more than once.
+                } catch ( XAException except ) {
+                    xaError( resHolder, except );
+                }  catch ( Exception except ) {
+                    // Any error will cause us to rollback the entire
+                    // transaction or at least the remaining part of it.
+                    _heuristic = _heuristic | Heuristic.HAZARD;
+                    error( except );
+                }
+                resHolder = resHolder._nextHolder;
+            }
+        }
         
-	// We make a heuristic decision to commit only if we made no other
-	// heuristic decision during perparation and we have at least
-	// one resource interested in committing.
-	if ( _heuristic == Heuristic.READONLY  && committing > 0 )
-	    _heuristic = Heuristic.COMMIT;
-	else
-	    _heuristic = normalize( _heuristic );
+        _status = STATUS_PREPARED;
+        
+        // We make a heuristic decision to commit only if we made no other
+        // heuristic decision during perparation and we have at least
+        // one resource interested in committing.
+        if ( _heuristic == Heuristic.READONLY  && committing > 0 )
+            _heuristic = Heuristic.COMMIT;
+        else
+            _heuristic = normalize( _heuristic );
         
         // Must mark transaction as two-phase in order to record decision
         // in recovery log.
@@ -1221,35 +1218,35 @@ final class TransactionImpl
      * @throws IllegalStateException Transaction has not been prepared
      */
     protected void internalCommit( boolean onePhaseCommit )
-	throws IllegalStateException
+        throws IllegalStateException
     {
-	Resource  resource;
+        Resource  resource;
         int       decision;
-
-        // If already committed we just return. The previous heuristic
-	// is still remembered.
-	if ( _status == STATUS_COMMITTED || _status == STATUS_ROLLEDBACK )
-            return;
-    
-	// We should never reach this state unless transaction has been
-	// prepared first.
-	if ( ( !onePhaseCommit && ( _status != STATUS_PREPARED ) ) ||
-             ( onePhaseCommit && ( _status != STATUS_COMMITTING ) ) )
-	    throw new IllegalStateException( Messages.message( "tyrex.tx.notPrepared" ) );
         
-	// 2PC: Phase two - commit
-
-	// Transaction has been prepared fully or partially.
-	// If at least one resource requested roll back (or
-	// indicated mixed heuristics) we'll roll back all resources.
-	// We start as read-only until at least one resource indicates
-	// it actually commited.
-	_status = STATUS_COMMITTING;
-	_heuristic = Heuristic.READONLY;
-    
-	// We deal with OTS (remote transactions and subtransactions)
-	// first because we expect a higher likelyhood of failure over
-	// there, and we can easly recover over here.
+        // If already committed we just return. The previous heuristic
+        // is still remembered.
+        if ( _status == STATUS_COMMITTED || _status == STATUS_ROLLEDBACK )
+            return;
+        
+        // We should never reach this state unless transaction has been
+        // prepared first.
+        if ( ( !onePhaseCommit && ( _status != STATUS_PREPARED ) ) ||
+             ( onePhaseCommit && ( _status != STATUS_COMMITTING ) ) )
+            throw new IllegalStateException( Messages.message( "tyrex.tx.notPrepared" ) );
+        
+        // 2PC: Phase two - commit
+        
+        // Transaction has been prepared fully or partially.
+        // If at least one resource requested roll back (or
+        // indicated mixed heuristics) we'll roll back all resources.
+        // We start as read-only until at least one resource indicates
+        // it actually commited.
+        _status = STATUS_COMMITTING;
+        _heuristic = Heuristic.READONLY;
+        
+        // We deal with OTS (remote transactions and subtransactions)
+        // first because we expect a higher likelyhood of failure over
+        // there, and we can easly recover over here.
         if ( _resources != null ) {
             for ( int i = _resources.length ; i-- > 0 ; ) {
                 resource = _resources[ i ];
@@ -1261,34 +1258,33 @@ final class TransactionImpl
                     else
                         resource.commit();
                     
-		    // At least one resource commited, we are either
-		    // commit or mixed.
-		    _heuristic = _heuristic | Heuristic.COMMIT;
+                    // At least one resource commited, we are either
+                    // commit or mixed.
+                    _heuristic = _heuristic | Heuristic.COMMIT;
                 } catch ( HeuristicMixed except ) {
-		    _heuristic = _heuristic | Heuristic.MIXED;
-		} catch ( HeuristicHazard except ) {
-		    _heuristic = _heuristic | Heuristic.HAZARD;
-		} catch ( HeuristicRollback except ) {
-		    _heuristic = _heuristic | Heuristic.ROLLBACK;
-		} catch ( Exception except ) {
-		    if ( except instanceof TRANSACTION_ROLLEDBACK )
-			_heuristic = _heuristic | Heuristic.ROLLBACK;
-		    else {
-			_heuristic = _heuristic | Heuristic.HAZARD;
-			error( except );
-		    }
-		}
-	    }
-	}
+                    _heuristic = _heuristic | Heuristic.MIXED;
+                } catch ( HeuristicHazard except ) {
+                    _heuristic = _heuristic | Heuristic.HAZARD;
+                } catch ( HeuristicRollback except ) {
+                    _heuristic = _heuristic | Heuristic.ROLLBACK;
+                } catch ( Exception except ) {
+                    if ( except instanceof TRANSACTION_ROLLEDBACK )
+                        _heuristic = _heuristic | Heuristic.ROLLBACK;
+                    else {
+                        _heuristic = _heuristic | Heuristic.HAZARD;
+                        error( except );
+                    }
+                }
+            }
+        }
         if ( _enlisted != null )
-	    commitXAResources( _enlisted, onePhaseCommit );
+            commitXAResources( _enlisted, onePhaseCommit );
         if ( _delisted != null)
             commitXAResources( _delisted, onePhaseCommit );    
-
-	_status = STATUS_COMMITTED;
-	_heuristic = normalize( _heuristic );
-	_txDomain.notifyCompletion( this, _heuristic );
-
+        
+        _status = STATUS_COMMITTED;
+        _heuristic = normalize( _heuristic );
+        _txDomain.notifyCompletion( this, _heuristic );
         // We record the transaction only if two-phase commit,
         // or we didn't expect the heuristic decision.
         if ( _txDomain._journal != null ) {
@@ -1347,78 +1343,70 @@ final class TransactionImpl
      */
     protected void internalRollback()
     {
-	Resource         resource;
+        Resource         resource;
         XAResourceHolder resHolder;
 
-	// --------------------------------
-	// General state checks
-	// --------------------------------
-
-	// Check the status of the transaction and act accordingly.
-	switch ( _status ) {
-	case STATUS_ACTIVE:
-	case STATUS_MARKED_ROLLBACK:
-	    // Transaction is active, we'll roll it back.
-	    break;
-            
-	case STATUS_PREPARED:
-	case STATUS_PREPARING:
-	case STATUS_COMMITTING:
-	    // Transaction is right now in the process of being commited.
-	    throw new IllegalStateException( Messages.message( "tyrex.tx.inCommit" ) );
-
-	case STATUS_ROLLING_BACK:
-	    // Transaction has been or is being rolled back, just leave.
-	    _heuristic = Heuristic.ROLLBACK;
-	    return;
-	    
-	case STATUS_NO_TRANSACTION:
-	case STATUS_UNKNOWN:
-	default:
-	    throw new IllegalStateException( Messages.message( "tyrex.tx.inactive" ) );
-
-	case STATUS_COMMITTED:
-	case STATUS_ROLLEDBACK:
-	    // If already rolled back or committed we just return.
-	    // The previous heuristic is still remembered.
-	    return;
-	}
+        // Check the status of the transaction and act accordingly.
+        switch ( _status ) {
+        case STATUS_ACTIVE:
+        case STATUS_MARKED_ROLLBACK:
+            // Transaction is active, we'll roll it back.
+            break;
+        case STATUS_PREPARED:
+        case STATUS_PREPARING:
+        case STATUS_COMMITTING:
+            // Transaction is right now in the process of being commited.
+            throw new IllegalStateException( Messages.message( "tyrex.tx.inCommit" ) );
+        case STATUS_ROLLING_BACK:
+            // Transaction has been or is being rolled back, just leave.
+            _heuristic = Heuristic.ROLLBACK;
+            return;
+        case STATUS_NO_TRANSACTION:
+        case STATUS_UNKNOWN:
+        default:
+            throw new IllegalStateException( Messages.message( "tyrex.tx.inactive" ) );
+        case STATUS_COMMITTED:
+        case STATUS_ROLLEDBACK:
+            // If already rolled back or committed we just return.
+            // The previous heuristic is still remembered.
+            return;
+        }
     
-	// If we got to this point, we'll start rolling back the
-	// transaction. Change the status immediately, so the
-	// transaction cannot be altered by a synchronization
-	// or XA resource. Our initial heuristic is read-only,
-	// since unless there's at least one rollback resource,
-	// we never truely rollback.
-	_status = STATUS_ROLLING_BACK;
-	_heuristic = Heuristic.READONLY;
-    
-	if ( _resources != null ) {
-	    // Tell all the OTS resources to rollback their transaction
-	    // regardless of state.
-	    for ( int i = _resources.length ; i-- > 0 ; ) {
-		resource = _resources[ i ];
-		if ( resource == null )
-		    continue;
-		try {
-		    resource.rollback();
-		    // Initially we're readonly so we switch to rollback.
-		    // If we happen to be in commit, we switch to mixed.
-		    _heuristic = _heuristic | Heuristic.ROLLBACK;
-		    _resources[ i ] = null;
-		} catch ( HeuristicMixed except ) {
-		    _heuristic = _heuristic | Heuristic.MIXED;
-		} catch ( HeuristicHazard except ) {
-		    _heuristic = _heuristic | Heuristic.HAZARD;
-		} catch ( HeuristicCommit except ) {
-		    _heuristic = _heuristic | Heuristic.COMMIT;
-		} catch ( Exception except ) {
-		    _heuristic = _heuristic | Heuristic.HAZARD;
-		    error( except );
-		}
-	    }
-	}
-
+        // If we got to this point, we'll start rolling back the
+        // transaction. Change the status immediately, so the
+        // transaction cannot be altered by a synchronization
+        // or XA resource. Our initial heuristic is read-only,
+        // since unless there's at least one rollback resource,
+        // we never truely rollback.
+        _status = STATUS_ROLLING_BACK;
+        _heuristic = Heuristic.READONLY;
+        
+        if ( _resources != null ) {
+            // Tell all the OTS resources to rollback their transaction
+            // regardless of state.
+            for ( int i = _resources.length ; i-- > 0 ; ) {
+                resource = _resources[ i ];
+                if ( resource == null )
+                    continue;
+                try {
+                    resource.rollback();
+                    // Initially we're readonly so we switch to rollback.
+                    // If we happen to be in commit, we switch to mixed.
+                    _heuristic = _heuristic | Heuristic.ROLLBACK;
+                    _resources[ i ] = null;
+                } catch ( HeuristicMixed except ) {
+                    _heuristic = _heuristic | Heuristic.MIXED;
+                } catch ( HeuristicHazard except ) {
+                    _heuristic = _heuristic | Heuristic.HAZARD;
+                } catch ( HeuristicCommit except ) {
+                    _heuristic = _heuristic | Heuristic.COMMIT;
+                } catch ( Exception except ) {
+                    _heuristic = _heuristic | Heuristic.HAZARD;
+                    error( except );
+                }
+            }
+        }
+        
         resHolder = _enlisted;
         if ( resHolder != null ) {
             while ( resHolder != null ) {
@@ -1438,10 +1426,10 @@ final class TransactionImpl
         if ( _delisted != null)
             rollbackXAResources( _delisted );
         
-	_status = STATUS_ROLLEDBACK;
-	_heuristic = normalize( _heuristic );
-	_txDomain.notifyCompletion( this, _heuristic );
-
+        _status = STATUS_ROLLEDBACK;
+        _heuristic = normalize( _heuristic );
+        _txDomain.notifyCompletion( this, _heuristic );
+        
         // We record the transaction only if two-phase commit,
         // or we didn't expect the heuristic decision, or
         // the transaction has timed out.
@@ -1469,30 +1457,28 @@ final class TransactionImpl
     {
         XAResourceHolder resHolder;
         
-	// Check the status of the transaction and act accordingly.
-	switch ( _status ) {
-	case STATUS_ACTIVE:
-	case STATUS_MARKED_ROLLBACK:
-	    // Transaction is active, we can suspend resources.
-	    break;
-            
-	case STATUS_PREPARED:
-	case STATUS_PREPARING:
-	case STATUS_COMMITTING:
-	    // Transaction is preparing, cannot suspend resource.
-	    throw new IllegalStateException( Messages.message( "tyrex.tx.inCommit" ) );
-            
-	case STATUS_ROLLEDBACK:
-	case STATUS_ROLLING_BACK:
-	case STATUS_COMMITTED:
-	case STATUS_NO_TRANSACTION:
-	case STATUS_UNKNOWN:
-	default:
-	    throw new IllegalStateException( Messages.message( "tyrex.tx.inactive" ) );
-	}
+        // Check the status of the transaction and act accordingly.
+        switch ( _status ) {
+        case STATUS_ACTIVE:
+        case STATUS_MARKED_ROLLBACK:
+            // Transaction is active, we can suspend resources.
+            break;
+        case STATUS_PREPARED:
+        case STATUS_PREPARING:
+        case STATUS_COMMITTING:
+            // Transaction is preparing, cannot suspend resource.
+            throw new IllegalStateException( Messages.message( "tyrex.tx.inCommit" ) );
+        case STATUS_ROLLEDBACK:
+        case STATUS_ROLLING_BACK:
+        case STATUS_COMMITTED:
+        case STATUS_NO_TRANSACTION:
+        case STATUS_UNKNOWN:
+        default:
+            throw new IllegalStateException( Messages.message( "tyrex.tx.inactive" ) );
+        }
 
-	// Look up the enlisted resource. If the resource is not
-	// enlisted, return false.
+        // Look up the enlisted resource. If the resource is not
+        // enlisted, return false.
         resHolder = _enlisted;
         while ( resHolder != null ) {
             // we simply suspend it. The resource will be resumed when we
@@ -1531,47 +1517,44 @@ final class TransactionImpl
           This is not the cleanest way of performing the operation (this operation
           should be split in two) but it is the most efficient.
         */
-	XAResourceHolder resHolder;
+        XAResourceHolder resHolder;
         XAResource       xaResource;
 
-	// Proper notification for transactions that timed out.
-	if ( _timedOut )
-	    throw new RollbackException( Messages.message( "tyrex.tx.timedOut" ) );
+        // Proper notification for transactions that timed out.
+        if ( _timedOut )
+            throw new RollbackException( Messages.message( "tyrex.tx.timedOut" ) );
     
-	// Check the status of the transaction and act accordingly.
-	switch ( _status ) {
-	case STATUS_ACTIVE:
-	    // Transaction is active, we can enlist the resource.
-	    break;
-            
-	case STATUS_MARKED_ROLLBACK:
-	    // Transaction marked for rollback, we cannot possibly enlist.
-	    throw new RollbackException( Messages.message( "tyrex.tx.markedRollback" ) );
-
-	case STATUS_PREPARED:
-	case STATUS_PREPARING:
-	case STATUS_COMMITTING:
-	    // Transaction is preparing, cannot enlist resource.
-	    throw new IllegalStateException( Messages.message( "tyrex.tx.inCommit" ) );
-
-	case STATUS_ROLLEDBACK:
-	case STATUS_ROLLING_BACK:
-	case STATUS_COMMITTED:
-	case STATUS_NO_TRANSACTION:
-	case STATUS_UNKNOWN:
-	default:
-	    throw new IllegalStateException( Messages.message( "tyrex.tx.inactive" ) );
-	}
+        // Check the status of the transaction and act accordingly.
+        switch ( _status ) {
+        case STATUS_ACTIVE:
+            // Transaction is active, we can enlist the resource.
+            break;
+        case STATUS_MARKED_ROLLBACK:
+            // Transaction marked for rollback, we cannot possibly enlist.
+            throw new RollbackException( Messages.message( "tyrex.tx.markedRollback" ) );
+        case STATUS_PREPARED:
+        case STATUS_PREPARING:
+        case STATUS_COMMITTING:
+            // Transaction is preparing, cannot enlist resource.
+            throw new IllegalStateException( Messages.message( "tyrex.tx.inCommit" ) );
+        case STATUS_ROLLEDBACK:
+        case STATUS_ROLLING_BACK:
+        case STATUS_COMMITTED:
+        case STATUS_NO_TRANSACTION:
+        case STATUS_UNKNOWN:
+        default:
+            throw new IllegalStateException( Messages.message( "tyrex.tx.inactive" ) );
+        }
 
         if ( _enlisted != null ) {
         
-	    // Look if we alredy got the resource enlisted. If the
-	    // resource was suspended, we just resume it and go out.
-	    // If the resource was started, we do not enlist it a
-	    // second time.
+            // Look if we alredy got the resource enlisted. If the
+            // resource was suspended, we just resume it and go out.
+            // If the resource was started, we do not enlist it a
+            // second time.
             resHolder = _enlisted;
             while ( resHolder != null ) {
-		if ( resHolder._endFlag == XAResource.TMSUSPEND ) {
+                if ( resHolder._endFlag == XAResource.TMSUSPEND ) {
                     try {
                         resHolder._xaResource.start( resHolder._xid, XAResource.TMRESUME );
                         resHolder._endFlag = XAResource.TMNOFLAGS;
@@ -1613,49 +1596,47 @@ final class TransactionImpl
      * @param res The OTS resource to register
      */
     protected synchronized void registerResource( Resource resource )
-	throws IllegalStateException
+        throws IllegalStateException
     {
         Resource[] newResources;
 
         if ( resource == null )
             throw new IllegalArgumentException( "Argument resource is null" );
 
-	// Check the status of the transaction and act accordingly.
-	switch ( _status ) {
-	case STATUS_ACTIVE:
-	case STATUS_MARKED_ROLLBACK:
-	    // Transaction is active, or marked for rollback, 
-	    // we can register this resource.
-	    break;
+        // Check the status of the transaction and act accordingly.
+        switch ( _status ) {
+        case STATUS_ACTIVE:
+        case STATUS_MARKED_ROLLBACK:
+            // Transaction is active, or marked for rollback, 
+            // we can register this resource.
+            break;
+        case STATUS_PREPARED:
+        case STATUS_PREPARING:
+        case STATUS_COMMITTING:
+            // Transaction is preparing, cannotr register.
+            throw new IllegalStateException( Messages.message( "tyrex.tx.inCommit" ) );
+        case STATUS_ROLLEDBACK:
+        case STATUS_ROLLING_BACK:
+        case STATUS_COMMITTED:
+        case STATUS_NO_TRANSACTION:
+        case STATUS_UNKNOWN:
+        default:
+            throw new IllegalStateException( Messages.message( "tyrex.tx.inactive" ) );
+        }
 
-	case STATUS_PREPARED:
-	case STATUS_PREPARING:
-	case STATUS_COMMITTING:
-	    // Transaction is preparing, cannotr register.
-	    throw new IllegalStateException( Messages.message( "tyrex.tx.inCommit" ) );
-
-	case STATUS_ROLLEDBACK:
-	case STATUS_ROLLING_BACK:
-	case STATUS_COMMITTED:
-	case STATUS_NO_TRANSACTION:
-	case STATUS_UNKNOWN:
-	default:
-	    throw new IllegalStateException( Messages.message( "tyrex.tx.inactive" ) );
-	}
-
-	if ( _resources == null ) {
-	    _resources = new Resource[] { resource };
-	} else {
-	    // It is less likely, but still possible to get
-	    // duplicity in resource registration.
-	    for ( int i = _resources.length ; i-- > 0 ; )
-		if ( _resources[ i ] == resource )
-		    return;
+        if ( _resources == null ) {
+            _resources = new Resource[] { resource };
+        } else {
+            // It is less likely, but still possible to get
+            // duplicity in resource registration.
+            for ( int i = _resources.length ; i-- > 0 ; )
+                if ( _resources[ i ] == resource )
+                    return;
             newResources = new Resource[ _resources.length + 1 ];
-	    for ( int i = _resources.length ; i-- > 0 ; )
+            for ( int i = _resources.length ; i-- > 0 ; )
                 newResources[ i ] = _resources[ i ];
-	    newResources[ _resources.length ] = resource;
-	    _resources = newResources;
+            newResources[ _resources.length ] = resource;
+            _resources = newResources;
         }    
     }
 
@@ -1672,43 +1653,16 @@ final class TransactionImpl
      */
     protected int normalize( int heuristic )
     {
-	if ( ( heuristic & Heuristic.HAZARD ) != 0 )
-	    return Heuristic.HAZARD;
-	else if ( ( heuristic & Heuristic.MIXED ) != 0 )
-	    return Heuristic.MIXED;
+        if ( ( heuristic & Heuristic.HAZARD ) != 0 )
+            return Heuristic.HAZARD;
+        else if ( ( heuristic & Heuristic.MIXED ) != 0 )
+            return Heuristic.MIXED;
         else if ( ( heuristic & Heuristic.OTHER ) != 0 )
             return Heuristic.OTHER;    
         else if ( ( heuristic & ( Heuristic.COMMIT + Heuristic.ROLLBACK ) ) != 0 )
             return Heuristic.MIXED;
-	else
-	    return heuristic;
-    }
-
-
-    /**
-     * Returns the parent of this transaction.
-     *
-     * @return The parent of this transaction, null if the transaction
-     * is top-level or has been rolled back
-     */
-    protected TransactionImpl getParent()
-    {
-	return _parent;
-    }
-
-
-    /**
-     * Returns the top level parent of this transaction, or this
-     * transaction if this is a top level transaction.
-     *
-     * @return The top level transaction
-     */ 
-    protected TransactionImpl getTopLevel()
-    {
-	if ( _parent == null )
-	    return this;
-	else
-	    return _parent.getTopLevel();
+        else
+            return heuristic;
     }
 
 
@@ -1721,7 +1675,7 @@ final class TransactionImpl
      */
     protected int getHeuristic()
     {
-	return _heuristic;
+        return _heuristic;
     }
 
 
@@ -1736,7 +1690,7 @@ final class TransactionImpl
      */
     protected void internalSetTransactionTimeout( int seconds )
     {
-	XAResourceHolder resHolder;
+        XAResourceHolder resHolder;
     
         resHolder = _enlisted;
         while ( resHolder != null ) {
@@ -1748,7 +1702,7 @@ final class TransactionImpl
                 // might not timeout when we expect it anyway.
             }
             resHolder = resHolder._nextHolder;    
-	}
+        }
     }
 
 
@@ -1759,8 +1713,8 @@ final class TransactionImpl
      */
     protected synchronized void timedOut()
     {
-	// Let the rollback mechanism know that the transaction has failed.
-	_timedOut = true;
+        // Let the rollback mechanism know that the transaction has failed.
+        _timedOut = true;
         // Perform the rollback, ignore the returned heuristics.
         internalRollback();
     }
@@ -1771,7 +1725,7 @@ final class TransactionImpl
      */
     protected boolean getTimedOut()
     {
-	return _timedOut;
+        return _timedOut;
     }
 
 
@@ -1785,12 +1739,12 @@ final class TransactionImpl
      */
     protected synchronized ControlImpl getControl()
     {
-	if ( _control == null ) {
-	    _control = new ControlImpl( this );
+        if ( _control == null ) {
+            _control = new ControlImpl( this );
             if ( _txDomain._orb != null )
                 _txDomain._orb.connect( _control );
         }
-	return _control;
+        return _control;
     }
 
 
@@ -1800,7 +1754,7 @@ final class TransactionImpl
      */
     protected PropagationContext getPropagationContext()
     {
-	return _pgContext;
+        return _pgContext;
     }
 
 
@@ -1814,14 +1768,14 @@ final class TransactionImpl
      */
     protected synchronized String[] listResources()
     {
-	String[]         resList;
+        String[]         resList;
         XAResourceHolder resHolder;
         int              index;
 
         resHolder = _enlisted;
         for ( index = 0 ; resHolder != null ; ++index )
             resHolder = resHolder._nextHolder;
-	resList = new String[ index + ( _resources == null ? 0 : _resources.length ) ];
+        resList = new String[ index + ( _resources == null ? 0 : _resources.length ) ];
         
         resHolder = _enlisted;
         for ( index = 0 ; resHolder != null ; ++index ) {
@@ -1832,12 +1786,12 @@ final class TransactionImpl
                         : ( resHolder._endFlag == XAResource.TMSUCCESS ? "ended" : "failed" ) ) ) +  "]";
             resHolder = resHolder._nextHolder;
         }
-	if ( _resources != null )
-	    for ( int i = _resources.length ; i-- > 0 ; ) {
-		resList[ index ] = _resources[ i ].toString();
-		++index;
-	    }
-	return resList;
+        if ( _resources != null )
+            for ( int i = _resources.length ; i-- > 0 ; ) {
+                resList[ index ] = _resources[ i ].toString();
+                ++index;
+            }
+        return resList;
     }
     
 
@@ -1861,49 +1815,43 @@ final class TransactionImpl
     protected void endResources()
         throws IllegalStateException, RollbackException
     {
-	int         committing;
-	Resource    resource;
+        int         committing;
+        Resource    resource;
         Transaction suspended;
     
         // Proper notification for transactions that timed out.
-	if ( _timedOut )
-	    throw new RollbackException( Messages.message( "tyrex.tx.timedOut" ) );
+        if ( _timedOut )
+            throw new RollbackException( Messages.message( "tyrex.tx.timedOut" ) );
         
-	// Check the status of the transaction and act accordingly.
-	switch ( _status ) {
-	case STATUS_ACTIVE:
-	    // Transaction is active, we'll commit it.
-	    break;
-
-	case STATUS_PREPARED:
-	    // logic error by user
-        throw new IllegalStateException( Messages.message( "tyrex.tx.inOnePhaseCommit" ) );
-        
-	case STATUS_COMMITTING:
-	case STATUS_PREPARING:
-	    // Transaction is in the middle of being commited.
-	    throw new IllegalStateException( Messages.message( "tyrex.tx.inCommit" ) );
-	    
-	case STATUS_MARKED_ROLLBACK:
-	    // Transaction has been marked for roll-back, no preparation
-	    // necessary.
-	    _heuristic = Heuristic.ROLLBACK;
-	    return;
-	    
-	case STATUS_ROLLEDBACK:
-	    // Transaction has been or is being rolled back.
-	    throw new RollbackException( Messages.message( "tyrex.tx.rolledback" ) );
-
-	case STATUS_ROLLING_BACK:
-	    // Transaction has been or is being rolled back.
-	    throw new IllegalStateException( Messages.message( "tyrex.tx.inRollback" ) );
-	    
-	case STATUS_COMMITTED:
-	case STATUS_NO_TRANSACTION:
-	case STATUS_UNKNOWN:
-	default:
-	    throw new IllegalStateException( Messages.message( "tyrex.tx.inactive" ) );
-	}
+        // Check the status of the transaction and act accordingly.
+        switch ( _status ) {
+        case STATUS_ACTIVE:
+            // Transaction is active, we'll commit it.
+            break;
+        case STATUS_PREPARED:
+            // logic error by user
+            throw new IllegalStateException( Messages.message( "tyrex.tx.inOnePhaseCommit" ) );
+        case STATUS_COMMITTING:
+        case STATUS_PREPARING:
+            // Transaction is in the middle of being commited.
+            throw new IllegalStateException( Messages.message( "tyrex.tx.inCommit" ) );
+        case STATUS_MARKED_ROLLBACK:
+            // Transaction has been marked for roll-back, no preparation
+            // necessary.
+            _heuristic = Heuristic.ROLLBACK;
+            return;
+        case STATUS_ROLLEDBACK:
+            // Transaction has been or is being rolled back.
+            throw new RollbackException( Messages.message( "tyrex.tx.rolledback" ) );
+        case STATUS_ROLLING_BACK:
+            // Transaction has been or is being rolled back.
+            throw new IllegalStateException( Messages.message( "tyrex.tx.inRollback" ) );
+        case STATUS_COMMITTED:
+        case STATUS_NO_TRANSACTION:
+        case STATUS_UNKNOWN:
+        default:
+            throw new IllegalStateException( Messages.message( "tyrex.tx.inactive" ) );
+        }
     
         // If we are not running in the same thread as
         // this transaction, need to make this transaction
@@ -1912,11 +1860,11 @@ final class TransactionImpl
         suspended = makeCurrentTransactionIfNecessary();
         
         // We begin by having no heuristics at all, but during
-	// the process we might reach a conclusion to have a
-	// commit or rollback heuristic.
+        // the process we might reach a conclusion to have a
+        // commit or rollback heuristic.
         _status = STATUS_COMMITTING;
         _heuristic = Heuristic.READONLY;
-        
+       
         try {
             beforeCompletion();
         } finally {
@@ -1927,11 +1875,11 @@ final class TransactionImpl
         }
     
         // We always end these resources, even if we made a heuristic
-	// decision not to commit this transaction.
-	if ( _enlisted != null )
+        // decision not to commit this transaction.
+        if ( _enlisted != null )
             endEnlistedResourcesForCommit();
 
-	// if the heuristic has not changed set it to commit
+        // if the heuristic has not changed set it to commit
         if ( _heuristic == Heuristic.READONLY )
             _heuristic = Heuristic.COMMIT;    
         else
@@ -1975,8 +1923,8 @@ final class TransactionImpl
         Transaction        suspended;
         Resource           resource;
         
-	if ( _status != STATUS_COMMITTED && _status != STATUS_ROLLEDBACK )
-	    throw new IllegalStateException( Messages.message( "tyrex.tx.cannotForget" ) );
+        if ( _status != STATUS_COMMITTED && _status != STATUS_ROLLEDBACK )
+            throw new IllegalStateException( Messages.message( "tyrex.tx.cannotForget" ) );
         
         // only forget the resources if a heuristic exception occured
         if ( ( _heuristic != ignoreHeuristic || _twoPhase ) &&
@@ -2038,35 +1986,35 @@ final class TransactionImpl
         _resources = null;
         _delisted = null;
     
-	// Notify all the synchronization objects that the
-	// transaction has completed with a status.
-	if ( _syncs != null ) {
+        // Notify all the synchronization objects that the
+        // transaction has completed with a status.
+        if ( _syncs != null ) {
         
-	    // If we are not running in the same thread as
-	    // this transaction, need to make this transaction
-	    // the current one before calling method.
-	    suspended = makeCurrentTransactionIfNecessary();
+            // If we are not running in the same thread as
+            // this transaction, need to make this transaction
+            // the current one before calling method.
+            suspended = makeCurrentTransactionIfNecessary();
             
-	    for ( int i = _syncs.length ; i-- > 0 ; ) {
-		try {
-		    _syncs[ i ].afterCompletion( _status );
-		} catch ( Exception except ) {
-		    error( except );
-		}
-	    }
-	    _syncs = null;
-	    
-	    // Resume the previous transaction associated with
-	    // the thread.
-	    if ( suspended != null )
-                resumeTransaction( suspended );
-	}
-        
-	// Only top level transaction is registered with the
-	// transaction server and should be unlisted.
-	if ( _parent == null )
-	    _txDomain.forgetTransaction( this );
+            for ( int i = _syncs.length ; i-- > 0 ; ) {
+                try {
+                    _syncs[ i ].afterCompletion( _status );
+                } catch ( Exception except ) {
+                    error( except );
+                }
+            }
+            _syncs = null;
 
+            // Resume the previous transaction associated with
+            // the thread.
+            if ( suspended != null )
+                resumeTransaction( suspended );
+        }
+        
+        // Only top level transaction is registered with the
+        // transaction server and should be unlisted.
+        if ( _parent == null )
+            _txDomain.forgetTransaction( this );
+        
         // If two-phase commit, must record completion of
         // transaction in journal.
         if ( _twoPhase && _txDomain._journal != null ) {
@@ -2382,11 +2330,11 @@ final class TransactionImpl
         Transaction  suspended;
 
         // First, notify all the synchronization objects that
-	// we are about to complete a transaction. They might
-	// decide to roll back the transaction, in which case
-	// we'll do a rollback.
-	// might decide to rollback the transaction.
-	if ( _syncs != null ) {
+        // we are about to complete a transaction. They might
+        // decide to roll back the transaction, in which case
+        // we'll do a rollback.
+        // might decide to rollback the transaction.
+        if ( _syncs != null ) {
             
             // If we are not running in the same thread as
             // this transaction, need to make this transaction
@@ -2439,11 +2387,11 @@ final class TransactionImpl
         XAResourceHolder resHolder;
 
         // We always end these resources, even if we made a heuristic
-	// decision not to commit this transaction.
+        // decision not to commit this transaction.
         resHolder = _enlisted;
         while ( resHolder != null ) {
             // Tell all the XAResources that their transaction
-	    // has ended successfuly. 
+            // has ended successfuly. 
             try {
                 endForTransactionBoundary( resHolder );
             } catch ( Exception except ) {
@@ -2701,25 +2649,25 @@ final class TransactionImpl
     {
         Resource[] newResources;
 
-	// Note about equality tests:
-	//   We are called to remove a resource R1 previously created
-	//   for same transaction, but are called with resource R2
-	//   created for the same transaction. The only way to detect
-	//   if the two are equivalent is through object equality.
+        // Note about equality tests:
+        //   We are called to remove a resource R1 previously created
+        //   for same transaction, but are called with resource R2
+        //   created for the same transaction. The only way to detect
+        //   if the two are equivalent is through object equality.
 
-	if ( _resources != null ) {
-	    if ( _resources.length == 1 && _resources[ 0 ].equals( resource ) )
-		_resources = null;
-	    else
+        if ( _resources != null ) {
+            if ( _resources.length == 1 && _resources[ 0 ].equals( resource ) )
+                _resources = null;
+            else
                 for ( int i = _resources.length ; i-- > 0 ; ) {
-		    if ( _resources[ i ].equals( resource ) ) {
-			_resources[ i ] = _resources[ _resources.length - 1 ];
-			newResources = new Resource[ _resources.length - 1 ];
-			System.arraycopy( _resources, 0, newResources,  0, _resources.length - 1 );
-			_resources = newResources;
-		    }
+                    if ( _resources[ i ].equals( resource ) ) {
+                        _resources[ i ] = _resources[ _resources.length - 1 ];
+                        newResources = new Resource[ _resources.length - 1 ];
+                        System.arraycopy( _resources, 0, newResources,  0, _resources.length - 1 );
+                        _resources = newResources;
+                    }
                 }
-	}
+        }
     }
     
 
@@ -2736,80 +2684,80 @@ final class TransactionImpl
      */
     private void error( Throwable except )
     {
-	// If a remote exception, we would rather record the underlying
-	// exception directly.
-	if ( except instanceof RemoteException &&
-	     ( (RemoteException) except ).detail != null )
-	    except = ( (RemoteException) except ).detail;
+        // If a remote exception, we would rather record the underlying
+        // exception directly.
+        if ( except instanceof RemoteException &&
+             ( (RemoteException) except ).detail != null )
+            except = ( (RemoteException) except ).detail;
         
-	// In the event of an XAException, we would like to
-	// provide a meaningful description of the exception.
-	// The error code just doesn't cut it.
-	if ( except instanceof XAException ) {
-	    switch ( ( (XAException) except ).errorCode ) {
-	    case XAException.XA_RBROLLBACK:
-		except = new SystemException( Messages.message( "tyrex.xa.rbrollback" ) );
-		break;
-	    case XAException.XA_RBTIMEOUT:
-		except = new SystemException( Messages.message( "tyrex.xa.rbtimeout" ) );
-		break;
-	    case XAException.XA_RBCOMMFAIL:
-		except = new SystemException( Messages.message( "tyrex.xa.rbcommfail" ) );
-		break;
-	    case XAException.XA_RBDEADLOCK:
-		except = new SystemException( Messages.message( "tyrex.xa.rbdeadlock" ) );
-		break;
-	    case XAException.XA_RBINTEGRITY:
-		except = new SystemException( Messages.message( "tyrex.xa.rbintegrity" ) );
-		break;
-	    case XAException.XA_RBOTHER:
-		except = new SystemException( Messages.message( "tyrex.xa.rbother" ) );
-		break;
-	    case XAException.XA_RBPROTO:
-		except = new SystemException( Messages.message( "tyrex.xa.rbproto" ) );
-		break;
-	    case XAException.XA_HEURHAZ:
-		except = new SystemException( Messages.message( "tyrex.xa.heurhaz" ) );
-		break;
-	    case XAException.XA_HEURCOM:
-		except = new SystemException( Messages.message( "tyrex.xa.heurcom" ) );
-		break;
-	    case XAException.XA_HEURRB:
-		except = new SystemException( Messages.message( "tyrex.xa.heurrb" ) );
-		break;
-	    case XAException.XA_HEURMIX:
-		except = new SystemException( Messages.message( "tyrex.xa.heurmix" ) );
-		break;
-	    case XAException.XA_RDONLY:
-		except = new SystemException( Messages.message( "tyrex.xa.rdonly" ) );
-		break;
-	    case XAException.XAER_NOTA:
-		except = new SystemException( Messages.message( "tyrex.xa.nota" ) );
-		break;
-	    default:
-		except = new SystemException( Messages.format( "tyrex.xa.unknown", except ) );
-		break;
-	    }
-	}
-
-	// Log the message with whatever logging mechanism we have.
+        // In the event of an XAException, we would like to
+        // provide a meaningful description of the exception.
+        // The error code just doesn't cut it.
+        if ( except instanceof XAException ) {
+            switch ( ( (XAException) except ).errorCode ) {
+            case XAException.XA_RBROLLBACK:
+                except = new SystemException( Messages.message( "tyrex.xa.rbrollback" ) );
+                break;
+            case XAException.XA_RBTIMEOUT:
+                except = new SystemException( Messages.message( "tyrex.xa.rbtimeout" ) );
+                break;
+            case XAException.XA_RBCOMMFAIL:
+                except = new SystemException( Messages.message( "tyrex.xa.rbcommfail" ) );
+                break;
+            case XAException.XA_RBDEADLOCK:
+                except = new SystemException( Messages.message( "tyrex.xa.rbdeadlock" ) );
+                break;
+            case XAException.XA_RBINTEGRITY:
+                except = new SystemException( Messages.message( "tyrex.xa.rbintegrity" ) );
+                break;
+            case XAException.XA_RBOTHER:
+                except = new SystemException( Messages.message( "tyrex.xa.rbother" ) );
+                break;
+            case XAException.XA_RBPROTO:
+                except = new SystemException( Messages.message( "tyrex.xa.rbproto" ) );
+                break;
+            case XAException.XA_HEURHAZ:
+                except = new SystemException( Messages.message( "tyrex.xa.heurhaz" ) );
+                break;
+            case XAException.XA_HEURCOM:
+                except = new SystemException( Messages.message( "tyrex.xa.heurcom" ) );
+                break;
+            case XAException.XA_HEURRB:
+                except = new SystemException( Messages.message( "tyrex.xa.heurrb" ) );
+                break;
+            case XAException.XA_HEURMIX:
+                except = new SystemException( Messages.message( "tyrex.xa.heurmix" ) );
+                break;
+            case XAException.XA_RDONLY:
+                except = new SystemException( Messages.message( "tyrex.xa.rdonly" ) );
+                break;
+            case XAException.XAER_NOTA:
+                except = new SystemException( Messages.message( "tyrex.xa.nota" ) );
+                break;
+            default:
+                except = new SystemException( Messages.format( "tyrex.xa.unknown", except ) );
+                break;
+            }
+        }
+        
+        // Log the message with whatever logging mechanism we have.
         if ( except instanceof RuntimeException )
             _txDomain._category.error( "Error " + except.toString() + " reported in transaction " + _xid, except );
         else
             _txDomain._category.error( "Error " + except.toString() + " reported in transaction " + _xid );
-        
-	// Record the first general exception as a system exception,
-	// so it may be returned from commit/rollback.
-	if ( _sysError == null ) {
-	    if ( except instanceof SystemException )
-		_sysError = (SystemException) except;
-	    else
-		// For any other error, we produce a SystemException
-		// to wrap it up.
-		_sysError = new SystemException( except.toString() );
-	}
+       
+        // Record the first general exception as a system exception,
+        // so it may be returned from commit/rollback.
+        if ( _sysError == null ) {
+            if ( except instanceof SystemException )
+                _sysError = (SystemException) except;
+            else
+                // For any other error, we produce a SystemException
+                // to wrap it up.
+                _sysError = new SystemException( except.toString() );
+        }
     }
-
+    
 
     /**
      * Describes an {@link XAResource} enlisted with this transaction.
@@ -2821,24 +2769,24 @@ final class TransactionImpl
     {
     
 
-	/**
-	 * The xid under which this resource is enlisted.
-	 * Generally each resource will have the same global Xid,
-	 * but a different branch, but shared resources will also
-	 * share the same branch. In some cases the Xid implementation
+        /**
+         * The xid under which this resource is enlisted.
+         * Generally each resource will have the same global Xid,
+         * but a different branch, but shared resources will also
+         * share the same branch. In some cases the Xid implementation
          * is dictated by the RM.
-	 */
-	final Xid         _xid;
+         */
+        final Xid         _xid;
     
 
-	/**
-	 * The enlisted XA resource.
-	 */
-	final XAResource  _xaResource;
+        /**
+         * The enlisted XA resource.
+         */
+        final XAResource  _xaResource;
     
 
-	/**
-	 * The flag that the xa resource was ended with.
+        /**
+         * The flag that the xa resource was ended with.
          * If the xa resource has not been ended then the
          * value of the endFlag is XAResource.TMNOFLAGS. If
          * the resource has been suspended the flag is 
@@ -2850,27 +2798,27 @@ final class TransactionImpl
          * XAResource.TMFAIL. To sum up the valid values
          * are XAResource.TMNOFLAGS, XAResource.TMSUSPEND,
          * XAResource.TMSUCCESS, XAResource.TMFAIL.
-	 */
-	int               _endFlag = XAResource.TMNOFLAGS;
+         */
+        int               _endFlag = XAResource.TMNOFLAGS;
         
         
-	/**
-	 * A shared resource is one that shares it's transaction
-	 * branch with another resource (e.g. two JDBC connections
-	 * to the same database). Only one of the shared resources
-	 * must be commited or rolled back, although both should be
-	 * notified when the transaction terminates.
-	 */
-	boolean           _shared;
+        /**
+         * A shared resource is one that shares it's transaction
+         * branch with another resource (e.g. two JDBC connections
+         * to the same database). Only one of the shared resources
+         * must be commited or rolled back, although both should be
+         * notified when the transaction terminates.
+         */
+        boolean           _shared;
 
     
-	/**
-	 * This flag is used during 2pc to indicate whether the resource
-	 * should be commited/rolledback. Shared resources and those that
-	 * indicated they are read-only during preperation do not need
-	 * to be commited/rolledback.
-	 */
-	boolean           _readOnly;
+        /**
+         * This flag is used during 2pc to indicate whether the resource
+         * should be commited/rolledback. Shared resources and those that
+         * indicated they are read-only during preperation do not need
+         * to be commited/rolledback.
+         */
+        boolean           _readOnly;
 
 
         /**

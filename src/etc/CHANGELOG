@@ -10,6 +10,8 @@ Version 0.9.8  Mar 2, 2000
   consistent textual representation of Xids. Four Xid implementations
   are provided for global, branch, local and external Xids.
 
+- Improved performance of JNDI ENC and MemoryContext.
+
 - Added services package that includes internal clock, UUID generator
   and daemon master.
 

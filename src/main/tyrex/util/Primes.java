@@ -38,7 +38,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
+ * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
  */
 
@@ -52,7 +52,7 @@ package tyrex.util;
  * 11 and 2893249.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2001/02/28 18:28:54 $
+ * @version $Revision: 1.2 $ $Date: 2001/03/12 19:20:21 $
  */
 public final class Primes
 {

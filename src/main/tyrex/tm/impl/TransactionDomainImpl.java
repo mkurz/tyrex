@@ -38,9 +38,9 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
+ * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionDomainImpl.java,v 1.10 2001/03/05 18:25:12 arkin Exp $
+ * $Id: TransactionDomainImpl.java,v 1.11 2001/03/12 19:20:20 arkin Exp $
  */
 
 
@@ -93,7 +93,7 @@ import tyrex.util.Configuration;
  * Implementation of a transaction domain.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.10 $ $Date: 2001/03/05 18:25:12 $
+ * @version $Revision: 1.11 $ $Date: 2001/03/12 19:20:20 $
  */
 public class TransactionDomainImpl
     extends TransactionDomain
@@ -259,7 +259,7 @@ public class TransactionDomainImpl
         domainName = config.getName();
         if ( domainName == null || domainName.trim().length() == 0 )
             throw new DomainException( "The domain name is missing" );
-	_domainName = domainName.trim();
+        _domainName = domainName.trim();
         _maximum = config.getMaximum();
         _txTimeout = config.getTimeout();
 
@@ -275,9 +275,9 @@ public class TransactionDomainImpl
         } else
             _journal = null;
 
-	_interceptors = new TransactionInterceptor[ 0 ];
-	_txManager = new TransactionManagerImpl( this );
-	_userTx = new UserTransactionImpl( _txManager );
+        _interceptors = new TransactionInterceptor[ 0 ];
+        _txManager = new TransactionManagerImpl( this );
+        _userTx = new UserTransactionImpl( _txManager );
         _txFactory = new TransactionFactoryImpl( this );
         _category = Category.getInstance( "tyrex." + _domainName );
         _hashTable = new TransactionImpl[ TABLE_SIZE ];
@@ -334,7 +334,7 @@ public class TransactionDomainImpl
 
     public UserTransaction getUserTransaction()
     {
-	return _userTx;
+        return _userTx;
     }
 
     
@@ -346,49 +346,49 @@ public class TransactionDomainImpl
 
     public boolean getThreadTerminate()
     {
-	return _threadTerminate;
+        return _threadTerminate;
     }
 
     
     public int getTransactionTimeout()
     {
-	return _txTimeout;
+        return _txTimeout;
     }
 
 
     public boolean getNestedTransactions()
     {
-	return _nestedTx;
+        return _nestedTx;
     }
 
 
     public synchronized void addInterceptor( TransactionInterceptor interceptor )
     {
-	TransactionInterceptor[] newInterceptors;
+        TransactionInterceptor[] newInterceptors;
 
-	for ( int i = 0 ; i < _interceptors.length ; ++i )
-	    if ( _interceptors[ i ] == interceptor )
-		return;
-	newInterceptors = new TransactionInterceptor[ _interceptors.length + 1 ];
-	System.arraycopy( _interceptors, 0, newInterceptors, 0, _interceptors.length );
-	newInterceptors[ _interceptors.length ] = interceptor;
-	_interceptors = newInterceptors;
+        for ( int i = 0 ; i < _interceptors.length ; ++i )
+            if ( _interceptors[ i ] == interceptor )
+                return;
+        newInterceptors = new TransactionInterceptor[ _interceptors.length + 1 ];
+        System.arraycopy( _interceptors, 0, newInterceptors, 0, _interceptors.length );
+        newInterceptors[ _interceptors.length ] = interceptor;
+        _interceptors = newInterceptors;
     }
 
 
     public synchronized void removeInterceptor( TransactionInterceptor interceptor )
     {
-	TransactionInterceptor[] newInterceptors;
-
-	for ( int i = 0 ; i < _interceptors.length ; ++i ) {
-	    if ( _interceptors[ i ] == interceptor ) {
-		_interceptors[ i ] = _interceptors[ _interceptors.length - 1 ];
-		newInterceptors = new TransactionInterceptor[ _interceptors.length - 1 ];
-		System.arraycopy( _interceptors, 0, newInterceptors, 0, _interceptors.length - 1 );
-		_interceptors = newInterceptors;
-		break;
-	    }
-	}
+        TransactionInterceptor[] newInterceptors;
+        
+        for ( int i = 0 ; i < _interceptors.length ; ++i ) {
+            if ( _interceptors[ i ] == interceptor ) {
+                _interceptors[ i ] = _interceptors[ _interceptors.length - 1 ];
+                newInterceptors = new TransactionInterceptor[ _interceptors.length - 1 ];
+                System.arraycopy( _interceptors, 0, newInterceptors, 0, _interceptors.length - 1 );
+                _interceptors = newInterceptors;
+                break;
+            }
+        }
     }
 
 
@@ -421,9 +421,9 @@ public class TransactionDomainImpl
     //-------------------------------------------------------------------------
 
 
-    protected Transaction getTransaction( Xid xid )
+    public Transaction findTransaction( Xid xid )
     {
-    	TransactionImpl entry;
+        TransactionImpl entry;
         int             hashCode;
         int             index;
 
@@ -438,6 +438,31 @@ public class TransactionDomainImpl
             entry = entry._nextEntry;
             while ( entry != null ) {
                 if ( entry._hashCode == hashCode && entry._xid.equals( xid ) )
+                    return entry;
+                entry = entry._nextEntry;
+            }
+        }
+        return null;
+    }
+
+
+    public Transaction findTransaction( String xid )
+    {
+        TransactionImpl entry;
+        int             hashCode;
+        int             index;
+
+        if ( xid == null )
+            throw new IllegalArgumentException( "Argument xid is null" );
+        hashCode = xid.hashCode();
+        index = ( hashCode & 0x7FFFFFFF ) % _hashTable.length;
+        entry = _hashTable[ index ];
+        if ( entry != null ) {
+            if ( entry._hashCode == hashCode && entry._xid.toString().equals( xid ) )
+                return entry;
+            entry = entry._nextEntry;
+            while ( entry != null ) {
+                if ( entry._hashCode == hashCode && entry._xid.toString().equals( xid ) )
                     return entry;
                 entry = entry._nextEntry;
             }
@@ -467,14 +492,14 @@ public class TransactionDomainImpl
                                                  Thread thread, long timeout )
         throws SystemException
     {
-    	TransactionImpl newTx;
-    	TransactionImpl entry;
-    	TransactionImpl next;
-    	BaseXid         xid;
+        TransactionImpl newTx;
+        TransactionImpl entry;
+        TransactionImpl next;
+        BaseXid         xid;
         int             hashCode;
         int             index;
         
-    	// Create a new transaction with a new Xid. At the moment,
+        // Create a new transaction with a new Xid. At the moment,
         // this also works for nested transactions.
         xid = (BaseXid) XidUtils.newGlobal();
         if ( timeout <= 0 )
@@ -485,11 +510,11 @@ public class TransactionDomainImpl
         newTx = new TransactionImpl( xid, parent, this, timeout * 1000 );
         timeout = newTx._timeout;
 
-    	// Nested transactions are not registered directly
-    	// with the transaction server. They are not considered
-    	// new creation/activation and are not subject to timeout.
-    	if ( parent != null )
-    	    return newTx;
+        // Nested transactions are not registered directly
+        // with the transaction server. They are not considered
+        // new creation/activation and are not subject to timeout.
+        if ( parent != null )
+            return newTx;
     
         synchronized ( this ) {
             // Block if exceeded maximum number of transactions allowed.
@@ -556,7 +581,7 @@ public class TransactionDomainImpl
                 _timeoutLock.notify();
             }
         }
-    	return newTx;
+        return newTx;
     }
 
 
@@ -578,14 +603,14 @@ public class TransactionDomainImpl
      * @see PropagationContext
      */
     protected TransactionImpl recreateTransaction( PropagationContext pgContext )
-	throws SystemException
+        throws SystemException
     {
-    	TransactionImpl newTx;
-    	TransactionImpl entry;
-    	TransactionImpl next;
+        TransactionImpl newTx;
+        TransactionImpl entry;
+        TransactionImpl next;
         otid_t          otid;
         byte[]          global;
-    	BaseXid         xid;
+        BaseXid         xid;
         int             hashCode;
         int             index;
         long            timeout;
@@ -595,7 +620,7 @@ public class TransactionDomainImpl
         if ( pgContext.current == null || pgContext.current.otid == null )
             throw new SystemException( "Propagation context missing otid in current transaction identifier" );
         otid = pgContext.current.otid;
-        global = new byte[ otid.bexqual_length ];
+        global = new byte[ otid.bequal_length ];
         for ( int i = otid.bequal_length ; i-- > 0 ; )
             global[ i ] = otid.tid[ i ];
         xid = (BaseXid) XidUtils.importXid( otid.formatID, global, null );
@@ -607,9 +632,9 @@ public class TransactionDomainImpl
         // !!! Is pgContext timeout in seconds or milliseconds
         try {
             newTx = new TransactionImpl( xid, pgContext, this, timeout * 1000 );
-	} catch ( Inactive except ) {
-	    throw new SystemException( Messages.message( "tyrex.tx.inactive" ) );
-	}
+        } catch ( Inactive except ) {
+            throw new SystemException( Messages.message( "tyrex.tx.inactive" ) );
+        }
         hashCode = xid.hashCode();
         timeout = newTx._timeout;
 
@@ -653,7 +678,7 @@ public class TransactionDomainImpl
                 _timeoutLock.notify();
             }
         }
-    	return newTx;
+        return newTx;
     }
 
 
@@ -661,10 +686,10 @@ public class TransactionDomainImpl
      * Called by {@link TransactionImpl#forget forget} to forget about
      * the transaction once it has been commited/rolledback.
      * <p>
-     * The transaction will no longer be available to {@link #getTransaction
-     * getTransaction}. The transaction's association and global identifier
+     * The transaction will no longer be available to {@link #findTransaction
+     * findTransaction}. The transaction's association and global identifier
      * are forgotten as well as all thread associated with it.
-     * Subsequent calls to {@link #getTransaction getTransaction}
+     * Subsequent calls to {@link #findTransaction findTransaction}
      * and {@link #getControl getControl} will not be able to locate the
      * transaction.
      *
@@ -672,9 +697,9 @@ public class TransactionDomainImpl
      */
     protected void forgetTransaction( TransactionImpl tx )
     {
-	TransactionImpl entry;
-	TransactionImpl next;
-    	Xid             xid;
+        TransactionImpl entry;
+        TransactionImpl next;
+        Xid             xid;
         int             hashCode;
         int             index;
         Thread[]        threads;
@@ -753,9 +778,9 @@ public class TransactionDomainImpl
         if ( tx == null )
             throw new IllegalArgumentException( "Argument tx is null" );
 
-	// For zero we use the default timeout for all new transactions.
-	if ( timeout <= 0 )
-	    timeout = _txTimeout;
+        // For zero we use the default timeout for all new transactions.
+        if ( timeout <= 0 )
+            timeout = _txTimeout;
         else if ( timeout > MAXIMUM_TIMEOUT )
             timeout = MAXIMUM_TIMEOUT;
 
@@ -779,7 +804,7 @@ public class TransactionDomainImpl
                     _timeoutLock.notify();
                 }
             }
-	}
+        }
     }
 
 
@@ -909,29 +934,29 @@ public class TransactionDomainImpl
         if ( tx == null )
             throw new IllegalArgumentException( "Argument tx is null" );
         for ( int i = _interceptors.length ; i-- > 0 ; ) {
-	    try {
-		_interceptors[ i ].completed( tx._xid, heuristic );
+            try {
+                _interceptors[ i ].completed( tx._xid, heuristic );
             } catch ( Throwable thrw ) {
                 _category.error( "Interceptor " + _interceptors[ i ] + " reported error", thrw );
             }
-	}
+        }
     }
 
 
     protected void notifyCommit( TransactionImpl tx )
-	throws RollbackException
+        throws RollbackException
     {
         if ( tx == null )
             throw new IllegalArgumentException( "Argument tx is null" );
         for ( int i = _interceptors.length ; i-- > 0 ; ) {
-	    try {
-		_interceptors[ i ].commit( tx._xid );
-	    } catch ( RollbackException except ) {
-		throw except;
+            try {
+                _interceptors[ i ].commit( tx._xid );
+            } catch ( RollbackException except ) {
+                throw except;
             } catch ( Throwable thrw ) {
                 _category.error( "Interceptor " + _interceptors[ i ] + " reported error", thrw );
             }
-	}
+        }
         _metrics.recordCommitted( (int) ( Clock.clock() - tx._started ) );
     }
 
@@ -941,22 +966,22 @@ public class TransactionDomainImpl
         if ( tx == null )
             throw new IllegalArgumentException( "Argument tx is null" );
         for ( int i = _interceptors.length ; i-- > 0 ; ) {
-	    try {
-		_interceptors[ i ].rollback( tx._xid );
+            try {
+                _interceptors[ i ].rollback( tx._xid );
             } catch ( Throwable thrw ) {
                 _category.error( "Interceptor " + _interceptors[ i ] + " reported error", thrw );
             }
-	}
+        }
         _metrics.recordRolledback( (int) ( Clock.clock() - tx._started ) );
     }
 
 
     protected synchronized TransactionStatus[] listTransactions()
     {
-	TransactionStatus[]  txsList;
-	TransactionImpl      entry;
-	int                  index = 0;
-
+        TransactionStatus[]  txsList;
+        TransactionImpl      entry;
+        int                  index = 0;
+        
         txsList = new TransactionStatus[ _txCount ];
         for ( int i = _hashTable.length ; i-- > 0 ; ) {
             entry = _hashTable[ i ];
@@ -971,10 +996,10 @@ public class TransactionDomainImpl
 
     protected synchronized void dumpTransactionList( PrintWriter writer )
     {
-	TransactionImpl entry;
+        TransactionImpl entry;
         Thread[]        threads;
         int             count = 0;
-
+        
         if ( writer == null )
             throw new IllegalArgumentException( "Argument writer is null" );
         writer.println( "Transaction domain " + _domainName + " has " + _txCount + " transactions" );
@@ -1016,8 +1041,8 @@ public class TransactionDomainImpl
         Xid      xid;
 
         synchronized ( tx ) {
-	    if ( tx.getStatus() != Status.STATUS_ACTIVE &&
-		 tx.getStatus() != Status.STATUS_MARKED_ROLLBACK ) {
+            if ( tx.getStatus() != Status.STATUS_ACTIVE &&
+                 tx.getStatus() != Status.STATUS_MARKED_ROLLBACK ) {
                 threads = tx._threads;
                 if ( threads != null ) {
                     xid = tx._xid;
@@ -1031,7 +1056,7 @@ public class TransactionDomainImpl
                                 }
                             }
                             if ( _threadTerminate )
-				threads[ i ].stop( new TransactionTimeoutException() );
+                                threads[ i ].stop( new TransactionTimeoutException() );
                         }
                     }
                     tx._threads = null;
@@ -1090,8 +1115,8 @@ public class TransactionDomainImpl
         long            nextTimeout;
         long            clock;
 
-	while ( true ) {
-	    try {
+        while ( true ) {
+            try {
                 // We synchronize to be notified when the timeout of any
                 // transaction changes on the hashtable object, and we will
                 // need to remove records from the hashtable.
@@ -1144,11 +1169,11 @@ public class TransactionDomainImpl
                             }
                         }
                     }
-		}
-	    } catch ( InterruptedException except ) {
+                }
+            } catch ( InterruptedException except ) {
                 return;
-	    }
-	}
+            }
+        }
     }
 
 
@@ -1357,7 +1382,7 @@ public class TransactionDomainImpl
                         // Obtain the transaction from the Xid (ignoring the
                         // branch qualifier).
                         xid = XidUtils.importXid( xid.getFormatId(), xid.getGlobalTransactionId(), null );
-                        tx = (TransactionImpl) getTransaction( xid );
+                        tx = (TransactionImpl) findTransaction( xid );
                         if ( tx == null ) {
                             // No such transaction in the journal, we have no
                             // heuristic decision, and so we request that the

@@ -38,9 +38,9 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
+ * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: JavaContext.java,v 1.4 2000/12/05 01:00:06 mohammed Exp $
+ * $Id: JavaContext.java,v 1.5 2001/03/12 19:20:17 arkin Exp $
  */
 
 
@@ -49,11 +49,8 @@ package tyrex.naming.java;
 
 import java.io.Serializable;
 import java.io.PrintWriter;
-import java.util.Vector;
 import java.util.Hashtable;
 import java.util.Enumeration;
-import java.util.Dictionary;
-import java.security.AccessController;
 import javax.naming.Context;
 import javax.naming.NamingException;
 import javax.naming.LinkRef;
@@ -76,7 +73,7 @@ import tyrex.naming.MemoryContext;
  * the URL part of a name lookup.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.4 $ $Date: 2000/12/05 01:00:06 $
+ * @version $Revision: 1.5 $ $Date: 2001/03/12 19:20:17 $
  */
 public final class JavaContext
     implements Context, Serializable
@@ -106,7 +103,7 @@ public final class JavaContext
      * Create a new environment context.
      */
     public JavaContext()
-	throws NamingException
+        throws NamingException
     {
         _env = new Hashtable();
     }
@@ -116,22 +113,22 @@ public final class JavaContext
      * Create a new environment context.
      */
     public JavaContext( Hashtable env )
-	throws NamingException
+        throws NamingException
     {
-	Enumeration enum;
-	String      name;
+        Enumeration enum;
+        String      name;
 
-	// Use addToEnvironment to duplicate the environment variables.
-	// This takes care of setting certain flags appropriately.
-	if ( env != null ) {
-	    enum = env.keys();
-	    while ( enum.hasMoreElements() ) {
-		name = (String) enum.nextElement();
-		addToEnvironment( name, env.get( name ) );
-	    }
-	} else {
-	    _env = new Hashtable();
-	}
+        // Use addToEnvironment to duplicate the environment variables.
+        // This takes care of setting certain flags appropriately.
+        if ( env != null ) {
+            enum = env.keys();
+            while ( enum.hasMoreElements() ) {
+                name = (String) enum.nextElement();
+                addToEnvironment( name, env.get( name ) );
+            }
+        } else {
+            _env = new Hashtable();
+        }
     }
 
 
@@ -140,50 +137,50 @@ public final class JavaContext
     //--------//
 
     public Object lookup( String name )
-	throws NamingException
+        throws NamingException
     {
-	Context ctx;
+        Context ctx;
 
-	if ( ! name.startsWith( JavaURL ) )
-	    throw new NamingException( "Internal error: context not accessed as java JavaURL" );
-	ctx = new EnvContext( _env );
-	return ctx.lookup( name.substring( JavaURLLength ) );
+        if ( ! name.startsWith( JavaURL ) )
+            throw new NamingException( "Internal error: context not accessed as java JavaURL" );
+        ctx = new EnvContext( _env );
+        return ctx.lookup( name.substring( JavaURLLength ) );
     }
 
 
     public Object lookup( Name name )
-	throws NamingException
+        throws NamingException
     {
-	Context ctx;
-
-	if ( name.isEmpty() || ! name.get( 0 ).equals( JavaURL ) )
-	    throw new NamingException( "Internal error: context not accessed as java JavaURL" );
-	ctx = new EnvContext( _env );
-	return ctx.lookup( name.getSuffix( 1 ) );
+        Context ctx;
+        
+        if ( name.isEmpty() || ! name.get( 0 ).equals( JavaURL ) )
+            throw new NamingException( "Internal error: context not accessed as java JavaURL" );
+        ctx = new EnvContext( _env );
+        return ctx.lookup( name.getSuffix( 1 ) );
     }
 
 
     public Object lookupLink( String name )
-	throws NamingException
+        throws NamingException
     {
-	Context ctx;
-
-	if ( ! name.startsWith( JavaURL ) )
-	    throw new NamingException( "Internal error: context not accessed as java JavaURL" );
-	ctx = new EnvContext( _env );
-	return ctx.lookupLink( name.substring( JavaURLLength ) );
+        Context ctx;
+        
+        if ( ! name.startsWith( JavaURL ) )
+            throw new NamingException( "Internal error: context not accessed as java JavaURL" );
+        ctx = new EnvContext( _env );
+        return ctx.lookupLink( name.substring( JavaURLLength ) );
     }
 
 
     public Object lookupLink( Name name )
-	throws NamingException
+        throws NamingException
     {
-	Context ctx;
-
-	if ( name.isEmpty() || ! name.get( 0 ).equals( JavaURL ) )
-	    throw new NamingException( "Internal error: context not accessed as java JavaURL" );
-	ctx = new EnvContext( _env );
-	return ctx.lookupLink( name.getSuffix( 1 ) );
+        Context ctx;
+        
+        if ( name.isEmpty() || ! name.get( 0 ).equals( JavaURL ) )
+            throw new NamingException( "Internal error: context not accessed as java JavaURL" );
+        ctx = new EnvContext( _env );
+        return ctx.lookupLink( name.getSuffix( 1 ) );
     }
 
 
@@ -193,58 +190,58 @@ public final class JavaContext
 
 
     public void bind( String name, Object value )
-	throws NamingException
+        throws NamingException
     {
-	throw new OperationNotSupportedException( "Context is read-only" );
+        throw new OperationNotSupportedException( "Context is read-only" );
     }
-
-
+    
+    
     public void bind( Name name, Object value )
-	throws NamingException
+        throws NamingException
     {
-	throw new OperationNotSupportedException( "Context is read-only" );
+        throw new OperationNotSupportedException( "Context is read-only" );
     }
-
-
+    
+    
     public void rebind( String name, Object value )
-	throws NamingException
+        throws NamingException
     {
-	throw new OperationNotSupportedException( "Context is read-only" );
+        throw new OperationNotSupportedException( "Context is read-only" );
     }
-
-
+    
+    
     public void rebind( Name name, Object value )
-	throws NamingException
+        throws NamingException
     {
-	throw new OperationNotSupportedException( "Context is read-only" );
+        throw new OperationNotSupportedException( "Context is read-only" );
     }
-
-
+    
+    
     public void unbind( String name )
-	throws NamingException
+        throws NamingException
     {
-	throw new OperationNotSupportedException( "Context is read-only" );
+        throw new OperationNotSupportedException( "Context is read-only" );
     }
-
-
+    
+    
     public void unbind( Name name )
-	throws NamingException
+        throws NamingException
     {
-	throw new OperationNotSupportedException( "Context is read-only" );
+        throw new OperationNotSupportedException( "Context is read-only" );
     }
-
-
+    
+    
     public void rename( String oldName, String newName )
-	throws NamingException
+        throws NamingException
     {
-	throw new OperationNotSupportedException( "Context is read-only" );
+        throw new OperationNotSupportedException( "Context is read-only" );
     }
 
 
     public void rename( Name oldName, Name newName )
-	throws NamingException
+        throws NamingException
     {
-	throw new OperationNotSupportedException( "Context is read-only" );
+        throw new OperationNotSupportedException( "Context is read-only" );
     }
 
 
@@ -254,50 +251,50 @@ public final class JavaContext
 
 
     public NamingEnumeration list( String name )
-	throws NamingException
+        throws NamingException
     {
-	Context ctx;
-
-	if ( ! name.startsWith( JavaURL ) )
-	    throw new NamingException( "Internal error: context not accessed as java JavaURL" );
-	ctx = new EnvContext( _env );
-	return ctx.list( name.substring( JavaURLLength ) );
-    }
-
-
-    public NamingEnumeration list( Name name )
-	throws NamingException
-    {
-	Context ctx;
-
-	if ( name.isEmpty() || ! name.get( 0 ).equals( JavaURL ) )
-	    throw new NamingException( "Internal error: context not accessed as java JavaURL" );
-	ctx = new EnvContext( _env );
-	return ctx.list( name.getSuffix( 1 ) );
+        Context ctx;
+        
+        if ( ! name.startsWith( JavaURL ) )
+            throw new NamingException( "Internal error: context not accessed as java JavaURL" );
+        ctx = new EnvContext( _env );
+        return ctx.list( name.substring( JavaURLLength ) );
     }
     
-
-    public NamingEnumeration listBindings( String name )
-	throws NamingException
+    
+    public NamingEnumeration list( Name name )
+        throws NamingException
     {
-	Context ctx;
-
-	if ( ! name.startsWith( JavaURL ) )
-	    throw new NamingException( "Internal error: context not accessed as java JavaURL" );
-	ctx = new EnvContext( _env );
-	return ctx.listBindings( name.substring( JavaURLLength ) );
+        Context ctx;
+        
+        if ( name.isEmpty() || ! name.get( 0 ).equals( JavaURL ) )
+            throw new NamingException( "Internal error: context not accessed as java JavaURL" );
+        ctx = new EnvContext( _env );
+        return ctx.list( name.getSuffix( 1 ) );
     }
-
-
-    public NamingEnumeration listBindings( Name name )
-	throws NamingException
+    
+    
+    public NamingEnumeration listBindings( String name )
+        throws NamingException
     {
-	Context ctx;
-
-	if ( name.isEmpty() || ! name.get( 0 ).equals( JavaURL ) )
-	    throw new NamingException( "Internal error: context not accessed as java JavaURL" );
-	ctx = new EnvContext( _env );
-	return ctx.listBindings( name.getSuffix( 1 ) );
+        Context ctx;
+        
+        if ( ! name.startsWith( JavaURL ) )
+            throw new NamingException( "Internal error: context not accessed as java JavaURL" );
+        ctx = new EnvContext( _env );
+        return ctx.listBindings( name.substring( JavaURLLength ) );
+    }
+    
+    
+    public NamingEnumeration listBindings( Name name )
+        throws NamingException
+    {
+        Context ctx;
+        
+        if ( name.isEmpty() || ! name.get( 0 ).equals( JavaURL ) )
+            throw new NamingException( "Internal error: context not accessed as java JavaURL" );
+        ctx = new EnvContext( _env );
+        return ctx.listBindings( name.getSuffix( 1 ) );
     }
     
 
@@ -307,30 +304,30 @@ public final class JavaContext
 
 
     public Context createSubcontext( String name )
-	throws NamingException
+        throws NamingException
     {
-	throw new OperationNotSupportedException( "Context is read-only" );
+        throw new OperationNotSupportedException( "Context is read-only" );
     }
-
-
+    
+    
     public Context createSubcontext( Name name )
-	throws NamingException
+        throws NamingException
     {
-	throw new OperationNotSupportedException( "Context is read-only" );
+        throw new OperationNotSupportedException( "Context is read-only" );
     }
-
+    
     
     public void destroySubcontext( String name )
-	throws NamingException
+        throws NamingException
     {
-	throw new OperationNotSupportedException( "Context is read-only" );
+        throw new OperationNotSupportedException( "Context is read-only" );
     }
-
-
+    
+    
     public void destroySubcontext( Name name )
-	throws NamingException
+        throws NamingException
     {
-	throw new OperationNotSupportedException( "Context is read-only" );
+        throw new OperationNotSupportedException( "Context is read-only" );
     }
 
 
@@ -340,48 +337,48 @@ public final class JavaContext
 
 
     public NameParser getNameParser( String name )
-	throws NamingException
+        throws NamingException
     {
-	Context ctx;
-
-	if ( ! name.startsWith( JavaURL ) )
-	    throw new NamingException( "Internal error: context not accessed as java JavaURL" );
-	ctx = new EnvContext( _env );
-	return ctx.getNameParser( name.substring( JavaURLLength ) );
+        Context ctx;
+        
+        if ( ! name.startsWith( JavaURL ) )
+            throw new NamingException( "Internal error: context not accessed as java JavaURL" );
+        ctx = new EnvContext( _env );
+        return ctx.getNameParser( name.substring( JavaURLLength ) );
     }
-
-
+    
+    
     public NameParser getNameParser( Name name )
-	throws NamingException
+        throws NamingException
     {
-	Context ctx;
-
-	if ( name.isEmpty() || ! name.get( 0 ).equals( JavaURL ) )
-	    throw new NamingException( "Internal error: context not accessed as java JavaURL" );
-	ctx = new EnvContext( _env );
-	return ctx.getNameParser( name.getSuffix( 1 ) );
+        Context ctx;
+        
+        if ( name.isEmpty() || ! name.get( 0 ).equals( JavaURL ) )
+            throw new NamingException( "Internal error: context not accessed as java JavaURL" );
+        ctx = new EnvContext( _env );
+        return ctx.getNameParser( name.getSuffix( 1 ) );
     }
-
-
+    
+    
     public Name composeName( Name name, Name prefix )
-	throws NamingException
+        throws NamingException
     {
-	prefix = (Name) prefix.clone();
-	return prefix.addAll( name );
+        prefix = (Name) prefix.clone();
+        return prefix.addAll( name );
     }
-
-
+    
+    
     public String composeName( String name, String prefix )
     {
-	return prefix + MemoryContext.NameSeparator + name;
+        return prefix + MemoryContext.NameSeparator + name;
     }
-
-
+    
+    
     public String getNameInNamespace()
-	throws NamingException
+        throws NamingException
     {
-	// This is always java:
-	return JavaURL;
+        // This is always java:
+        return JavaURL;
     }
     
 
@@ -391,33 +388,33 @@ public final class JavaContext
 
 
     public Object addToEnvironment( String name, Object value )
-	throws NamingException
+throws NamingException
     {
-	return _env.put( name, value );
+        return _env.put( name, value );
     }
-
-
+    
+    
     public Hashtable getEnvironment()
     {
-	return _env;
+        return _env;
     }
-
-
+    
+    
     public Object removeFromEnvironment( String name )
     {
-	return _env.remove( name );
+        return _env.remove( name );
     }
-
-
+    
+    
     public void close()
     {
-	_env = null;
+        _env = null;
     }
-
-
+    
+    
     public String toString()
     {
-	return JavaURL;
+        return JavaURL;
     }
 
 

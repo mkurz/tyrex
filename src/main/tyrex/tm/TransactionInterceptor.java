@@ -38,9 +38,9 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
+ * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionInterceptor.java,v 1.2 2001/03/03 03:00:55 arkin Exp $
+ * $Id: TransactionInterceptor.java,v 1.3 2001/03/12 19:20:19 arkin Exp $
  */
 
 
@@ -69,7 +69,7 @@ import javax.transaction.xa.Xid;
  * all it's resources.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $ $Date: 2001/03/03 03:00:55 $
+ * @version $Revision: 1.3 $ $Date: 2001/03/12 19:20:19 $
  */
 public interface TransactionInterceptor
 {
@@ -96,7 +96,7 @@ public interface TransactionInterceptor
      *   transaction must not commit
      */
     public void commit( Xid xid )
-	throws RollbackException;
+        throws RollbackException;
 
 
     /**
@@ -134,7 +134,7 @@ public interface TransactionInterceptor
      * from being associated with this transaction
      */
     public void resume( Xid xid, Thread thread )
-	throws InvalidTransactionException;
+        throws InvalidTransactionException;
 
 
     /**

@@ -38,9 +38,9 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 2000,2001 (C) Intalio Inc. All Rights Reserved.
+ * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionFactoryImpl.java,v 1.3 2001/03/05 18:25:12 arkin Exp $
+ * $Id: TransactionFactoryImpl.java,v 1.4 2001/03/12 19:20:20 arkin Exp $
  */
 
 
@@ -72,7 +72,7 @@ import org.omg.CosTSPortability.Receiver;
  * of remote transactions.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.3 $ $Date: 2001/03/05 18:25:12 $
+ * @version $Revision: 1.4 $ $Date: 2001/03/12 19:20:20 $
  * @see TransactionImpl
  *
  * Changes 
@@ -93,44 +93,44 @@ final class TransactionFactoryImpl
 
     TransactionFactoryImpl( TransactionDomainImpl txDomain )
     {
-	if ( txDomain == null )
-	    throw new IllegalArgumentException( "Argument 'txDomain' is null" );
-	_txDomain = txDomain;
+        if ( txDomain == null )
+            throw new IllegalArgumentException( "Argument 'txDomain' is null" );
+        _txDomain = txDomain;
     }
 
 
     public Control create( int timeout )
     {
-	TransactionImpl tx;
-
-	// Create a new transaction and return the control
-	// interface of that transaction.
-	try {
-	    tx = _txDomain.createTransaction( null, null, timeout );
-	    return tx.getControl();
-	} catch ( Exception except ) {
-	    throw new INVALID_TRANSACTION();
-	}
+        TransactionImpl tx;
+        
+        // Create a new transaction and return the control
+        // interface of that transaction.
+        try {
+            tx = _txDomain.createTransaction( null, null, timeout );
+            return tx.getControl();
+        } catch ( Exception except ) {
+            throw new INVALID_TRANSACTION();
+        }
     }
 
 
     public Control recreate( PropagationContext pgContext )
     {
-	TransactionImpl tx;
-
-	try {
-	    tx = _txDomain.recreateTransaction( pgContext );
+        TransactionImpl tx;
+        
+        try {
+            tx = _txDomain.recreateTransaction( pgContext );
             return tx.getControl();
-	} catch ( Exception except ) {
-	    throw new INVALID_TRANSACTION();
-	}
+        } catch ( Exception except ) {
+            throw new INVALID_TRANSACTION();
+        }
     }
-
-     
+    
+    
     public void sending_request( int refId, PropagationContextHolder pgxh )
     {
         TransactionImpl txImpl;
-
+        
         // Sender:
         // Request about to be sent. The server has to deliver the current
         // transaction context to the reciever.
@@ -185,7 +185,7 @@ final class TransactionFactoryImpl
                 // one, we rollback the top level and throw an
                 // exception.
                 while ( txImpl.getParent() != null )
-                    txImpl = txImpl.getParent();
+                    txImpl = (TransactionImpl) txImpl.getParent();
                 if ( txImpl.getPropagationContext() != null ) {
                     try {
                         txImpl.getPropagationContext().current.coord.rollback_only();

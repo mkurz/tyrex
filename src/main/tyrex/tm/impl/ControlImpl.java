@@ -38,9 +38,9 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
+ * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: ControlImpl.java,v 1.2 2001/03/05 18:25:12 arkin Exp $
+ * $Id: ControlImpl.java,v 1.3 2001/03/12 19:20:20 arkin Exp $
  */
 
 
@@ -75,7 +75,7 @@ import javax.transaction.xa.Xid;
  * and indirectly by {@link TransactionFactory}.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $ $Date: 2001/03/05 18:25:12 $
+ * @version $Revision: 1.3 $ $Date: 2001/03/12 19:20:20 $
  * @see TransactionImpl
  *
  * Changes 
@@ -138,14 +138,14 @@ final class ControlImpl
             throw new IllegalArgumentException( "Argument tx is null" );
         if ( pgContext == null )
             throw new IllegalArgumentException( "Argument pgContext is null" );
-	_tx = tx;
-	// We have one more parent than the propagation context,
-	// the creator is a parent of ours and the transaction
-	// has already been registered as one of its resources.
-	_parents = new TransIdentity[ pgContext.parents.length + 1 ];
+        _tx = tx;
+        // We have one more parent than the propagation context,
+        // the creator is a parent of ours and the transaction
+        // has already been registered as one of its resources.
+        _parents = new TransIdentity[ pgContext.parents.length + 1 ];
         for ( int i = pgContext.parents.length ; i-- > 0 ; )
             _parents[ i + 1 ] = pgContext.parents[ i ];
-	_parents[ 0 ] = pgContext.current;
+        _parents[ 0 ] = pgContext.current;
     }
 
 
@@ -157,43 +157,43 @@ final class ControlImpl
      */
     ControlImpl( TransactionImpl tx )
     {
-	ControlImpl  parent;
+        ControlImpl  parent;
 
         if ( tx == null )
             throw new IllegalArgumentException( "Argument tx is null" );
-	_tx = tx;
-	// We need to create a list of parent identities based
-	// on the parents of the transaction.
-	if ( tx.getParent() != null ) {
-	    tx = tx.getParent();
-	    parent = tx.getControl();
-	    if ( parent._parents == null ) {
-		// Parent is a top-level one, this control has
-		// one parent.
-		_parents = new TransIdentity[] { parent.getIdentity() };
-	    } else {
-		// Parent is not a top level one, copy the list
-		// of its parents and add itself as the first one.
-		_parents = new TransIdentity[ parent._parents.length + 1 ];
+        _tx = tx;
+        // We need to create a list of parent identities based
+        // on the parents of the transaction.
+        if ( tx.getParent() != null ) {
+            tx = (TransactionImpl) tx.getParent();
+            parent = tx.getControl();
+            if ( parent._parents == null ) {
+                // Parent is a top-level one, this control has
+                // one parent.
+                _parents = new TransIdentity[] { parent.getIdentity() };
+            } else {
+                // Parent is not a top level one, copy the list
+                // of its parents and add itself as the first one.
+                _parents = new TransIdentity[ parent._parents.length + 1 ];
                 for ( int i = parent._parents.length ; i-- > 0 ; )
                     _parents[ i + 1 ] = parent._parents[ i ];
-		_parents[ 0 ] = parent.getIdentity();
-	    }
-	} else
+                _parents[ 0 ] = parent.getIdentity();
+            }
+        } else
             _parents = null;
     }   
 
 
     public Terminator get_terminator()
-	throws Unavailable
+        throws Unavailable
     {
-	int status;
+        int status;
 
-	// This object is returned as the terminator, but only
-	// if the transaction is active.
-	status = _tx.getStatus();
-	if ( status == javax.transaction.Status.STATUS_ACTIVE ||
-	     status == javax.transaction.Status.STATUS_MARKED_ROLLBACK ) {
+        // This object is returned as the terminator, but only
+        // if the transaction is active.
+        status = _tx.getStatus();
+        if ( status == javax.transaction.Status.STATUS_ACTIVE ||
+             status == javax.transaction.Status.STATUS_MARKED_ROLLBACK ) {
             return getTerminator();
         }
 	throw new Unavailable();
@@ -248,20 +248,20 @@ final class ControlImpl
     {
         ORB           orb;
         Any           any;
-	Xid           xid;
-	otid_t        otid;
-	byte[]        global;
+        Xid           xid;
+        otid_t        otid;
+        byte[]        global;
         TransIdentity identity;
-
+        
         if ( _pgContext != null )
             return _pgContext;
-	xid = _tx._xid;
-	global = xid.getGlobalTransactionId();
-	otid = new otid_t( xid.getFormatId(), global.length, global );
-	identity = new TransIdentity( getCoordinator(), getTerminator(), otid );
+        xid = _tx._xid;
+        global = xid.getGlobalTransactionId();
+        otid = new otid_t( xid.getFormatId(), global.length, global );
+        identity = new TransIdentity( getCoordinator(), getTerminator(), otid );
         orb = _tx._txDomain._orb;
         if ( orb == null ) 
-	    _pgContext = new PropagationContext( _tx._txDomain.getTransactionTimeout( _tx ),
+            _pgContext = new PropagationContext( _tx._txDomain.getTransactionTimeout( _tx ),
                                                  identity, _parents != null ? _parents :
                                                  new TransIdentity[ 0 ], null );	    
         else {
@@ -276,15 +276,15 @@ final class ControlImpl
 
     protected TransIdentity getIdentity()
     {
-	Xid           xid;
-	otid_t        otid;
-	byte[]        global;
+        Xid           xid;
+        otid_t        otid;
+        byte[]        global;
         TransIdentity identity;
-
-	xid = _tx._xid;
-	global = xid.getGlobalTransactionId();
-	otid = new otid_t( xid.getFormatId(), global.length, global );
-	identity = new TransIdentity( getCoordinator(), getTerminator(), otid );
+        
+        xid = _tx._xid;
+        global = xid.getGlobalTransactionId();
+        otid = new otid_t( xid.getFormatId(), global.length, global );
+        identity = new TransIdentity( getCoordinator(), getTerminator(), otid );
         return identity;
     } 
 
@@ -310,7 +310,7 @@ final class ControlImpl
 
     public Status replay_completion( Resource resource )
     {
-	return CoordinatorImpl.fromJTAStatus( _tx.getStatus() );
+        return CoordinatorImpl.fromJTAStatus( _tx.getStatus() );
     }
 
 
@@ -320,7 +320,7 @@ final class ControlImpl
      */
     TransactionImpl getTransaction()
     {
-	return _tx;
+        return _tx;
     }
 
 

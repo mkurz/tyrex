@@ -38,9 +38,9 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 2000,2001 (C) Intalio Inc. All Rights Reserved.
+ * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: ThreadContext.java,v 1.1 2001/02/27 00:37:52 arkin Exp $
+ * $Id: ThreadContext.java,v 1.2 2001/03/12 19:20:20 arkin Exp $
  */
 
 
@@ -48,6 +48,14 @@ package tyrex.tm.impl;
 
 
 import javax.transaction.xa.XAResource;
+import javax.naming.Context;
+import javax.naming.NamingException;
+import javax.security.auth.Subject;
+import javax.transaction.Transaction;
+import tyrex.tm.RuntimeContext;
+import tyrex.naming.MemoryContext;
+import tyrex.naming.MemoryContextFactory;
+import tyrex.naming.MemoryBinding;
 import tyrex.util.FastThreadLocal;
 
 
@@ -70,17 +78,11 @@ import tyrex.util.FastThreadLocal;
  * method invocations occuring in the same thread.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2001/02/27 00:37:52 $
+ * @version $Revision: 1.2 $ $Date: 2001/03/12 19:20:20 $
  */
 public class ThreadContext
+    extends RuntimeContext
 {
-	
-
-    /**
-     * Holds associations between threads and resources.
-     * Each entry is of type {@link ThreadResources}.
-     */
-    private static FastThreadLocal  _local = new FastThreadLocal();
 
 
     /**
@@ -90,7 +92,7 @@ public class ThreadContext
      */
     protected TransactionImpl       _tx;
 
-	
+
     /**
      * The XA resources that have been opened before or during the
      * transaction and must be enlisted with the transaction when
@@ -100,118 +102,236 @@ public class ThreadContext
     protected XAResource[]          _resources;
 
 
-    /**
-     * Reference to the previous context in the stack.
-     */
-    private ThreadContext           _previous;
+    private final Subject           _subject;
+
+
+    private final MemoryBinding     _bindings;
+
+
+    private static ThreadEntry[]    _table;
 
 
     /**
-     * True if this context is associated with any thread.
+     * Determines the size of the hash table. This must be a prime
+     * value and within range of the average number of threads we
+     * want to deal with. Potential values are:
+     * <pre>
+     * Threads  Prime
+     * -------  -----
+     *   256     239
+     *   512     521
+     *   1024    1103
+     *   2048    2333
+     *   4096    4049
+     * </pre>
      */
-    private boolean                 _inThread;
+    private static final int TABLE_SIZE = 1103;
 
 
-    /**
-     * Returns the thread context associated with the current thread.
-     *
-     * @return The thread context associated with the current thread
-     */
+    public ThreadContext( Subject subject )
+    {
+        _bindings = new MemoryBinding();
+        _subject = subject;
+    }
+
+
+    public ThreadContext( Context context, Subject subject )
+        throws NamingException
+    {
+        if ( context == null )
+            _bindings = new MemoryBinding();
+        else {
+            if ( ! ( context instanceof MemoryContext ) )
+                throw new NamingException( "The context was not created from " +
+                                           MemoryContextFactory.class.getName() );
+            _bindings = ( (MemoryContext) context ).getBindings();
+            if ( ! _bindings.isRoot() )
+                throw new NamingException( "The context is not a root context" );
+        }
+        _subject = subject;
+    }
+
+
+    static {
+        _table = new ThreadEntry[ TABLE_SIZE ];
+    }
+
+
     public static ThreadContext getThreadContext()
     {
-	ThreadContext context;
+        ThreadEntry   entry;
+        ThreadContext context;
+        Thread        thread;
+        int           index;
         
-	context = (ThreadContext) _local.get();
-	if ( context == null ) {
-	    context = new ThreadContext();
-            context._inThread = true;
-	    _local.set( context );
-	}
+        thread = Thread.currentThread();
+        index = ( thread.hashCode() & 0x7FFFFFFF ) % _table.length;
+        // Lookup the first entry that maps to the has code and
+        // continue iterating to the last entry until a matching entry
+        // is found. Even if the current entry is removed, we expect
+        // entry._next to point to the next entry.
+        entry = _table[ index ];
+        while ( entry != null ) {
+            if ( entry._thread != thread )
+                return entry._context;
+            entry = entry._nextEntry;
+        }
+        synchronized ( _table ) {
+            context = new ThreadContext( null );
+            entry = new ThreadEntry( context, thread, null );
+            entry._nextEntry = _table[ index ];
+            _table[ index ] = entry;
+        }
         return context;
     }
 
 
-    /**
-     * Pushes a thread context to the current thread. This context
-     * will be returned from a subsequent call to {@link #getThreadContext}
-     * until the context is popped.
-     *
-     * @param context The thread context to be associated with the
-     * current thread
-     */
-    protected static void pushThreadContext( ThreadContext context )
+    public static void setThreadContext( ThreadContext context )
     {
-        ThreadContext current;
+        Thread      thread;
+        ThreadEntry entry;
+        ThreadEntry next;
+        int         index;
 
         if ( context == null )
             throw new IllegalArgumentException( "Argument context is null" );
-        synchronized ( context ) {
-            if ( ! context._inThread ) {
-                current = (ThreadContext) _local.get();
-                if ( current != null )
-                    current._previous = context;
-                _local.set( context );
+        synchronized ( _table ) {
+            thread = Thread.currentThread();
+            index = ( thread.hashCode() & 0x7FFFFFFF ) % _table.length;
+            
+            entry = _table[ index ];
+            if ( entry != null && entry._thread == thread ) {
+                entry = new ThreadEntry( context, thread, entry );
+                _table[ index ] = entry;
+                return;
+            }
+            next = entry._nextEntry;
+            while ( next != null ) {
+                if ( next._thread == thread ) {
+                    next = new ThreadEntry( context, thread, next );
+                    entry._nextEntry = next;
+                    return;
+                }
+                entry = next;
+                next = next._nextEntry;
+            }
+            
+            entry = new ThreadEntry( context, thread, null );
+            entry._nextEntry = _table[ index ];
+            _table[ index ] = entry;
+        }
+    }
+
+
+    public static ThreadContext unsetThreadContext()
+    {
+        Thread      thread;
+        ThreadEntry entry;
+        ThreadEntry next;
+        ThreadEntry previous;
+        int         index;
+
+        synchronized ( _table ) {
+            thread = Thread.currentThread();
+            index = ( thread.hashCode() & 0x7FFFFFFF ) % _table.length;
+
+            entry = _table[ index ];
+            if ( entry != null && entry._thread == thread ) {
+                previous = entry._previous;
+                if ( previous == null )
+                    _table[ index ] = entry._nextEntry;
+                else {
+                    previous._nextEntry = entry._nextEntry;
+                    _table[ index ] = previous;
+                }
+                return entry._context;
+            }
+            next = entry._nextEntry;
+            while ( next != null ) {
+                if ( next._thread == thread ) {
+                    previous = next._previous;
+                    if ( previous == null )
+                        entry._nextEntry = next._nextEntry;
+                    else {
+                        previous._nextEntry = next._nextEntry;
+                        entry._nextEntry = previous;
+                    }
+                    return next._context;
+                }
+                entry = next;
+                next = next._nextEntry;
+            }
+        }
+        return null;
+    }
+
+
+    public static void cleanup( Thread thread )
+    {
+        ThreadEntry entry;
+        ThreadEntry next;
+        int         index;
+
+        if ( thread == null )
+            throw new IllegalArgumentException( "Argument thread is null" );
+
+        synchronized ( _table ) {
+            index = ( thread.hashCode() & 0x7FFFFFFF ) % _table.length;
+            entry = _table[ index ];
+            if ( entry == null )
+                return;
+            if ( entry._thread == thread ) {
+                _table[ index ] = entry._nextEntry;
+                return;
+            }
+            next = entry._nextEntry;
+            while ( next != null ) {
+                if ( next._thread == thread ) {
+                    entry._nextEntry = next._nextEntry;
+                    return;
+                }
+                entry = next;
+                next = next._nextEntry;
             }
         }
     }
 
 
-    /**
-     * Pops a thread context previously pushed with {@link #pushThreadContext}.
-     *
-     * @return The previous thread context, or null
-     */
-    protected static ThreadContext popThreadContext()
+    public Context getEnvContext()
     {
-        ThreadContext current;
-        ThreadContext previous;
-
-        current = (ThreadContext) _local.get();
-        if ( current != null ) {
-            previous = current._previous;
-            current._previous = null;
-            current._inThread = false;
-            _local.set( previous );
-            return previous;
-        } else
-            return null;
-    }
-	
-
-    /**
-     * Discards all resources associated with the thread context.
-     *
-     * @param context The thread context to discard
-     */
-    protected static void cleanup( ThreadContext context )
-    {
-        if ( context == null )
-            throw new IllegalArgumentException( "Argument context is null" );
-        if ( ! context._inThread ) {
-            context._tx = null;
-            context._resources = null;
-        }
+        return _bindings.getContext();
     }
 
 
-    /**
-     * Called to destroy all association with a thread. This method
-     * is called when the thread is no longer used.
-     *
-     * @param thread The thread
-     */
-    protected static void cleanup( Thread thread )
+    public Transaction getTransaction()
     {
-        if ( thread == null )
-            throw new IllegalArgumentException( "Argument thread is null" );
-        _local.remove( thread );
+        return _tx;
+    }
+
+
+    public Subject getSubject()
+    {
+        return _subject;
+    }
+
+
+    public void cleanup()
+    {
+        _tx = null;
+        _resources = null;
+    }
+
+
+    public MemoryBinding getMemoryBinding()
+    {
+        return _bindings;
     }
 
 
     /**
      * Adds an XA resource to the association list.
      */
-    public void add( XAResource xaResource )
+    protected void add( XAResource xaResource )
     {
         XAResource[] newResources;
         int          next = -1;
@@ -237,7 +357,7 @@ public class ThreadContext
                 newResources[ _resources.length ] = xaResource;
                 _resources = newResources;
             }
-	}
+        }
     }
     
     
@@ -247,7 +367,7 @@ public class ThreadContext
      * @param xaResource the XA resource
      * @return True if removed
      */
-    public boolean remove( XAResource xaResource )
+    protected boolean remove( XAResource xaResource )
     {
         if ( _resources != null ) {
             for ( int i = _resources.length ; i-- > 0 ; )
@@ -262,8 +382,7 @@ public class ThreadContext
 
     /**
      * Returns all the XA resources, or null if no resources
-     * are enlisted. This method returns XA resources for both
-     * the current thread and all previous threads.
+     * are enlisted.
      *
      * @return All XA resources, or null
      */
@@ -271,30 +390,13 @@ public class ThreadContext
     {
         int           count = 0;
         XAResource[]  resources;
-        ThreadContext previous;
 
-        if ( _resources == null && _previous == null )
+        if ( _resources == null )
             return null;
         if ( _resources != null ) {
             for ( int i = _resources.length ; i-- > 0 ; )
                 if ( _resources[ i ] != null )
                     ++count;
-        }
-        previous = _previous;
-        if ( previous == null ) {
-            if ( count == 0 )
-                return null;
-            if ( count == _resources.length )
-                return _resources;
-        } else {
-            while ( previous != null ) {
-                if ( previous._resources != null ) {
-                    for ( int i = previous._resources.length ; i-- > 0 ; )
-                        if ( previous._resources[ i ] != null )
-                            ++count;
-                }
-                previous = previous._previous;
-            }
         }
         if ( count == 0 )
             return null;
@@ -304,16 +406,55 @@ public class ThreadContext
         for ( int i = _resources.length ; i-- > 0 ; )
             if ( _resources[ i ] != null )
                 resources[ count++ ] = _resources[ i ];
-        previous = _previous;
-        while ( previous != null ) {
-            if ( previous._resources != null ) {
-                for ( int i = previous._resources.length ; i-- > 0 ; )
-                    if ( previous._resources[ i ] != null )
-                        resources[ count++ ] = previous._resources[ i ];
-            }
-            previous = previous._previous;
-        }
         return resources;
+    }
+
+
+    /**
+     * Each entry in the table has a key (thread), a value or null
+     * (we don't remove on null) and a reference to the next entry in
+     * the same table position.
+     */
+    static private final class ThreadEntry
+    {
+
+
+        /**
+         * The thread with which this entry is associated.
+         */
+        final Thread  _thread;
+        
+
+        /**
+         * The current thread context.
+         */
+        ThreadContext _context;
+        
+
+        /**
+         * The previous thread entry (single-linked stack)
+         * associated with this thead.
+         */
+        ThreadEntry   _previous;
+
+        
+        /**
+         * The next thread entry in this bucket.
+         */
+        ThreadEntry   _nextEntry;
+
+
+        ThreadEntry( ThreadContext context, Thread thread, ThreadEntry previous )
+        {
+            _context = context;
+            _thread = thread;
+            if ( previous != null ) {
+                _previous = previous;
+                _nextEntry = previous._nextEntry;
+            }
+        }
+
+
     }
 
 

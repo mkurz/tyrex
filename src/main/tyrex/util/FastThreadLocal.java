@@ -38,9 +38,9 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
+ * Copyright 1999 - 2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: FastThreadLocal.java,v 1.7 2001/02/27 00:34:08 arkin Exp $
+ * $Id: FastThreadLocal.java,v 1.8 2001/03/12 19:20:21 arkin Exp $
  */
 
 
@@ -127,7 +127,7 @@ package tyrex.util;
  * 
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.7 $ $Date: 2001/02/27 00:34:08 $
+ * @version $Revision: 1.8 $ $Date: 2001/03/12 19:20:21 $
  */
 public class FastThreadLocal
     //extends java.lang.ThreadLocal
@@ -169,48 +169,48 @@ public class FastThreadLocal
 
     public FastThreadLocal()
     {
-	this( TABLE_SIZE );
+        this( TABLE_SIZE );
     }
 
 
     public FastThreadLocal( int size )
     {
-	_table = new Entry[ size ];
+        _table = new Entry[ size ];
 
-	// This object will now start as a background thread to remove
-	// entries to stale (dead) threads.
-	Thread thread;
-
-	thread = new Thread( this, Messages.message( "tyrex.util.threadLocalDaemonName" ) );
-	thread.setPriority( Thread.MIN_PRIORITY );
-	thread.setDaemon( true );
-	thread.start();
+        // This object will now start as a background thread to remove
+        // entries to stale (dead) threads.
+        Thread thread;
+        
+        thread = new Thread( this, Messages.message( "tyrex.util.threadLocalDaemonName" ) );
+        thread.setPriority( Thread.MIN_PRIORITY );
+        thread.setDaemon( true );
+        thread.start();
     }
 
 
     public Object get()
     {
-	Thread thread;
-	int    hash;
-	Entry  entry;
+        Thread thread;
+        int    hash;
+        Entry  entry;
         
-	thread = Thread.currentThread();
-	hash = ( thread.hashCode() & 0x7FFFFFFF ) % _table.length;
+        thread = Thread.currentThread();
+        hash = ( thread.hashCode() & 0x7FFFFFFF ) % _table.length;
         
-	// Lookup the first entry that maps to the has code and
+        // Lookup the first entry that maps to the has code and
         // continue iterating to the last entry until a matching entry
         // is found. Even if the current entry is removed, we expect
         // entry.next to point to the next entry.
-	entry = _table[ hash ];
-	while ( entry != null && entry.thread != thread )
-	    entry = entry.next;
+        entry = _table[ hash ];
+        while ( entry != null && entry.thread != thread )
+            entry = entry.next;
         
-	if ( entry != null )
-	    return entry.value;
-	else {
-	    // ! Comment the following section if you don't intend to
+        if ( entry != null )
+            return entry.value;
+        else {
+            // ! Comment the following section if you don't intend to
             // support initialValue !
-            
+           
             /*
               // If there is no value, we have two options. We can
               // simply return null, or we can create a default value
@@ -228,64 +228,63 @@ public class FastThreadLocal
               _table[ hash ] = entry;
               }
               return entry.value;
-	    */
+            */
             return null;
-	}
+        }
     }
     
     
     public void set( Object value )
     {
-	Thread thread;
-	int    hash;
-	Entry  entry;
+        Thread thread;
+        int    hash;
+        Entry  entry;
 
-	thread = Thread.currentThread();
-	hash = ( thread.hashCode() & 0x7FFFFFFF ) % _table.length;
+        thread = Thread.currentThread();
+        hash = ( thread.hashCode() & 0x7FFFFFFF ) % _table.length;
 
-	// This portion is idential to lookup, but if we find the entry
-	// we change it's value and return.
-	entry = _table[ hash ];
-	while ( entry != null && entry.thread != thread )
-	    entry = entry.next;
-	if ( entry != null ) {
-	    entry.value = value;
-	    return;
-	}
+        // This portion is idential to lookup, but if we find the entry
+        // we change it's value and return.
+        entry = _table[ hash ];
+        while ( entry != null && entry.thread != thread )
+            entry = entry.next;
+        if ( entry != null ) {
+            entry.value = value;
+            return;
+        }
+       
+        // No such entry found, so we must create it. Create first to
+        // minimize contention period. (Object creation is such a
+        // length operation)
+        entry = new Entry( value, thread );
         
-	// No such entry found, so we must create it. Create first to
-	// minimize contention period. (Object creation is such a
-	// length operation)
-	entry = new Entry( value, thread );
-
-	// This operation must be synchronized, otherwise, two concurrent
-	// set() methods might insert only one entry. (Not even talking
-	// about what remove() would cause).
-	synchronized ( _table ) {
-	    entry.next = _table[ hash ];
-	    _table[ hash ] = entry;
-	}
+        // This operation must be synchronized, otherwise, two concurrent
+        // set() methods might insert only one entry. (Not even talking
+        // about what remove() would cause).
+        synchronized ( _table ) {
+            entry.next = _table[ hash ];
+            _table[ hash ] = entry;
+        }
     }
 
 
     public Object get( Thread thread )
     {
-	int    hash;
-	Entry  entry;
+        int    hash;
+        Entry  entry;
 
-	hash = ( thread.hashCode() & 0x7FFFFFFF ) % _table.length;
+        hash = ( thread.hashCode() & 0x7FFFFFFF ) % _table.length;
 
-	// Lookup the first entry that maps to the has code and
+        // Lookup the first entry that maps to the has code and
         // continue iterating to the last entry until a matching entry
         // is found. Even if the current entry is removed, we expect
         // entry.next to point to the next entry.
-	entry = _table[ hash ];
-	while ( entry != null && entry.thread != thread )
-	    entry = entry.next;
-
-	if ( entry != null )
-	    return entry.value;
-	else
+        entry = _table[ hash ];
+        while ( entry != null && entry.thread != thread )
+            entry = entry.next;
+        if ( entry != null )
+            return entry.value;
+        else
             return null;
     }
 
@@ -298,118 +297,118 @@ public class FastThreadLocal
      */
     public void remove( Thread thread )
     {
-	int   hash;
-	Entry entry;
+        int   hash;
+        Entry entry;
 
-	// We synchronize on the thread here, in case remove is called
-	// on behalf of the same thread from two separate threads.
-	synchronized ( thread ) {
-	    hash = ( thread.hashCode() & 0x7FFFFFFF ) % _table.length;
-            
-	    // This operation must be synchronized because it messes
-	    // with the entry in the table, and set() likes to mess
-	    // with the same entry.
-	    synchronized ( _table ) {
-		entry = _table[ hash ];
-		// No such entry, quit. This is the entry, remove
-		// it and quit.
-		if ( entry == null )
-		    return;
-		if ( entry.thread == thread ) {
-		    _table[ hash ] = entry.next;
-		    return;
-		}
-	    }
-            
-	    // Not the first entry. We can only remove the next
-	    // entry by changing the next reference on this entry,
-	    // so we have to iterate on this entry to remove the
-	    // next entry and so our last entry is the one before
-	    // last. Sigh.
-	    while ( entry.next != null && entry.next.thread != thread )
-		entry = entry.next;
-	    // No need to synchronized, but keep in mind that get()
-	    // expect next to be current, even if the entry has been
-	    // removed, so don't reset next!
-	    if ( entry.next != null )
-		entry.next = entry.next.next;
-	}
+        // We synchronize on the thread here, in case remove is called
+        // on behalf of the same thread from two separate threads.
+        synchronized ( thread ) {
+            hash = ( thread.hashCode() & 0x7FFFFFFF ) % _table.length;
+           
+            // This operation must be synchronized because it messes
+            // with the entry in the table, and set() likes to mess
+            // with the same entry.
+            synchronized ( _table ) {
+                entry = _table[ hash ];
+                // No such entry, quit. This is the entry, remove
+                // it and quit.
+                if ( entry == null )
+                    return;
+                if ( entry.thread == thread ) {
+                    _table[ hash ] = entry.next;
+                    return;
+                }
+            }
+           
+            // Not the first entry. We can only remove the next
+            // entry by changing the next reference on this entry,
+            // so we have to iterate on this entry to remove the
+            // next entry and so our last entry is the one before
+            // last. Sigh.
+            while ( entry.next != null && entry.next.thread != thread )
+                entry = entry.next;
+            // No need to synchronized, but keep in mind that get()
+            // expect next to be current, even if the entry has been
+            // removed, so don't reset next!
+            if ( entry.next != null )
+                entry.next = entry.next.next;
+        }
     }
 
 
     public Thread[] listThreads( Object value )
     {
-	Entry    entry;
-	int      i;
-	Thread[] threads;
-	Thread[] newThreads;
-
-	threads = null;
-	for ( i = 0 ; i < _table.length ; ++i ) {
-	    entry = _table[ i ];
-	    while ( entry != null ) {
-		if ( value == null || entry.value == value ) {
-		    if ( threads == null ) {
-			threads = new Thread[ 1 ];
-			threads[ 0 ] = entry.thread;
-		    } else {
-			newThreads = new Thread[ threads.length + 1 ];
-			System.arraycopy( newThreads, 0, threads, 0, threads.length );
-			newThreads[ threads.length ] = entry.thread;
-			threads = newThreads;
-		    }
-		}
-		entry = entry.next;
-	    }
-	}
-	return threads;
+        Entry    entry;
+        int      i;
+        Thread[] threads;
+        Thread[] newThreads;
+        
+        threads = null;
+        for ( i = 0 ; i < _table.length ; ++i ) {
+            entry = _table[ i ];
+            while ( entry != null ) {
+                if ( value == null || entry.value == value ) {
+                    if ( threads == null ) {
+                        threads = new Thread[ 1 ];
+                        threads[ 0 ] = entry.thread;
+                    } else {
+                        newThreads = new Thread[ threads.length + 1 ];
+                        System.arraycopy( newThreads, 0, threads, 0, threads.length );
+                        newThreads[ threads.length ] = entry.thread;
+                        threads = newThreads;
+                    }
+                }
+                entry = entry.next;
+            }
+        }
+        return threads;
     }
 
 
     public void run()
     {
-	Entry entry;
-	int   i;
-        
-	while ( true ) {
-	    // Go to sleep for a while, nothing will happen. This
-	    // process can be speeded up by interrupting the thread.
-	    // Timeout is in seconds.
-	    try {
-		Thread.sleep( _staleTimeout );
-	    } catch ( InterruptedException e ) {  }
+        Entry entry;
+        int   i;
+       
+        while ( true ) {
+            // Go to sleep for a while, nothing will happen. This
+            // process can be speeded up by interrupting the thread.
+            // Timeout is in seconds.
+            try {
+                Thread.sleep( _staleTimeout );
+            } catch ( InterruptedException e ) {  }
             
-	    // Iterate through all the records in the table and see
-	    // which one is stale (the thread is dead) and remove it.
-	    for ( i = 0 ; i < _table.length ; ++i ) {
+            // Iterate through all the records in the table and see
+            // which one is stale (the thread is dead) and remove it.
+            for ( i = 0 ; i < _table.length ; ++i ) {
                 
-		// This operation must be synchronized because it
-		// messes with the entry in the table, and set() likes
-		// to mess with the same entry.
-		synchronized ( _table ) {
-		    entry = _table[ i ];
-		    while ( entry != null && ! entry.thread.isAlive() ) {
-			_table[ i ] = entry.next;
-			entry = entry.next;
-		    }
-		}
+                // This operation must be synchronized because it
+                // messes with the entry in the table, and set() likes
+                // to mess with the same entry.
+                synchronized ( _table ) {
+                    entry = _table[ i ];
+                    while ( entry != null && ! entry.thread.isAlive() ) {
+                        _table[ i ] = entry.next;
+                        entry = entry.next;
+                    }
+                }
                 
-		// More than one entry in the table - keep going.
-		// No need to synchronized, but keep in mind that
-		// get() expect next to be current, even if the entry
-		// has been removed, so don't reset next!
-		if ( entry != null ) {
-		    while ( entry.next != null ) {
-			if ( ! entry.next.thread.isAlive() )
-			    entry.next = entry.next.next;
-			else
-			    entry = entry.next;
-		    }
-		}
+                // More than one entry in the table - keep going.
+                // No need to synchronized, but keep in mind that
+                // get() expect next to be current, even if the entry
+                // has been removed, so don't reset next!
+                if ( entry != null ) {
+                    while ( entry.next != null ) {
+                        if ( ! entry.next.thread.isAlive() )
+                            entry.next = entry.next.next;
+                        else
+                            entry = entry.next;
+                    }
+                }
                 
-	    }
+            }
             
-	}
+        }
     }
 
 
@@ -423,9 +422,9 @@ public class FastThreadLocal
 
         final Thread  thread;
         
-	Object        value;
+        Object        value;
         
-	Entry         next;
+        Entry         next;
         
         Entry( Object value, Thread thread )
         {

@@ -38,9 +38,9 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
+ * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: EnabledDataSource.java,v 1.2 2001/03/05 18:25:09 arkin Exp $
+ * $Id: EnabledDataSource.java,v 1.3 2001/03/12 19:20:18 arkin Exp $
  */
 
 
@@ -220,40 +220,40 @@ public class EnabledDataSource
                 throw new SQLException ( "The driver name is not set." );
             }
             try {
-		if ( _driverClassName != null ) {
+                if ( _driverClassName != null ) {
                     loader = Thread.currentThread().getContextClassLoader();
                     if ( loader == null )
                         _driver = (Driver) Class.forName( _driverClassName ).newInstance();
                     else
                         _driver = (Driver) loader.loadClass( _driverClassName ).newInstance();
                 }
-	    } catch ( Exception except ) {
-		if ( _logWriter != null )
-		    _logWriter.println( "DataSource: Failed to load JDBC driver: " + except.toString() );
+            } catch ( Exception except ) {
+                if ( _logWriter != null )
+                    _logWriter.println( "DataSource: Failed to load JDBC driver: " + except.toString() );
                 throw new SQLException( except.toString() );
-	    }
+            }
             /*
-	    try {
-		_driver = DriverManager.getDriver( _driverName );
-	    } catch ( SQLException except ) {
-		if ( _logWriter != null )
-		    _logWriter.println( "DataSource: Failed to initialize JDBC driver: " + except );
-		throw except;
-	    }
+              try {
+              _driver = DriverManager.getDriver( _driverName );
+              } catch ( SQLException except ) {
+              if ( _logWriter != null )
+              _logWriter.println( "DataSource: Failed to initialize JDBC driver: " + except );
+              throw except;
+              }
             */
-	}
+        }
         
-	// Use info to supply properties that are not in the URL.
-	info = new Properties();
-	info.put( "loginTimeout", Integer.toString( _loginTimeout ) );
+        // Use info to supply properties that are not in the URL.
+        info = new Properties();
+        info.put( "loginTimeout", Integer.toString( _loginTimeout ) );
         
-	// DriverManager will do that and not rely on the URL alone.
-	if ( user == null ) {
-	    user = _user;
-	    password = _password;
-	}
-	//if ( user == null || password == null )
-	//    throw new SQLException( "User name specified but password is missing" );
+        // DriverManager will do that and not rely on the URL alone.
+        if ( user == null ) {
+            user = _user;
+            password = _password;
+        }
+        //if ( user == null || password == null )
+        //    throw new SQLException( "User name specified but password is missing" );
         if (null != user) {
             info.put( "user", user );
         }
@@ -262,17 +262,17 @@ public class EnabledDataSource
         }
         
         // Attempt to establish a connection. Report a successful
-	// attempt or a failure.
-	try {
+        // attempt or a failure.
+        try {
             conn = _driver.connect( _driverName, info );
-	} catch ( SQLException except ) {
-	    if ( _logWriter != null )
-		_logWriter.println( "DataSource: getConnection failed " + except );
-	    throw except;
-	}
-	//if ( conn != null && _logWriter != null )
-	//    _logWriter.println( "DataSource: getConnection returning " + conn );
-	return conn;
+        } catch ( SQLException except ) {
+            if ( _logWriter != null )
+                _logWriter.println( "DataSource: getConnection failed " + except );
+            throw except;
+        }
+        //if ( conn != null && _logWriter != null )
+        //    _logWriter.println( "DataSource: getConnection returning " + conn );
+        return conn;
     }
     
     
@@ -300,17 +300,17 @@ public class EnabledDataSource
     
     public PrintWriter getLogWriter()
     {
-	return _logWriter;
+        return _logWriter;
     }
     
     
     public synchronized void setLogWriter( PrintWriter writer )
     {
-	// Once a log writer has been set, we cannot set it since some
-	// thread might be conditionally accessing it right now without
-	// synchronizing.
-	if ( writer != null )
-	    _logWriter = writer;
+        // Once a log writer has been set, we cannot set it since some
+        // thread might be conditionally accessing it right now without
+        // synchronizing.
+        if ( writer != null )
+            _logWriter = writer;
     }
 
 
@@ -325,11 +325,11 @@ public class EnabledDataSource
      */
     public synchronized void setDriverName( String driverName )
     {
-	// This is only effective if we did not attempt to open
-	// a connection yet.
-	if ( _driver != null )
-	    throw new IllegalStateException( "Cannot change driver name after a connection has been opened" );
-	_driverName = null == driverName ? driverName : driverName.trim();
+        // This is only effective if we did not attempt to open
+        // a connection yet.
+        if ( _driver != null )
+            throw new IllegalStateException( "Cannot change driver name after a connection has been opened" );
+        _driverName = null == driverName ? driverName : driverName.trim();
     }
 
 
@@ -343,7 +343,7 @@ public class EnabledDataSource
      */
     public String getDriverName()
     {
-	return _driverName;
+        return _driverName;
     }
 
 
@@ -355,11 +355,11 @@ public class EnabledDataSource
      */
     public void setDriverClassName( String className )
     {
-	// This is only effective if we did not attempt to open
-	// a connection yet.
-	if ( _driver != null )
-	    throw new IllegalStateException( "Cannot change driver name after a connection has been opened" );
-	_driverClassName = className;
+        // This is only effective if we did not attempt to open
+        // a connection yet.
+        if ( _driver != null )
+            throw new IllegalStateException( "Cannot change driver name after a connection has been opened" );
+        _driverClassName = className;
     }
 
 
@@ -371,19 +371,19 @@ public class EnabledDataSource
      */
     public String getDriverClassName()
     {
-	return _driverClassName;
+        return _driverClassName;
     }
 
 
     public void setLoginTimeout( int seconds )
     {
-	_loginTimeout = seconds;
+        _loginTimeout = seconds;
     }
 
 
     public synchronized int getLoginTimeout()
     {
-	return _loginTimeout;
+        return _loginTimeout;
     }
 
 
@@ -395,9 +395,9 @@ public class EnabledDataSource
      */
     public synchronized void setDescription( String description )
     {
-	if ( description == null )
-	    throw new NullPointerException( "DataSource: Argument 'description' is null" );
-	_description = description;
+        if ( description == null )
+            throw new NullPointerException( "DataSource: Argument 'description' is null" );
+        _description = description;
     }
 
 
@@ -409,7 +409,7 @@ public class EnabledDataSource
      */
     public String getDescription()
     {
-	return _description;
+        return _description;
     }
 
 
@@ -421,7 +421,7 @@ public class EnabledDataSource
      */
     public synchronized void setPassword( String password )
     {
-	_password = password;
+        _password = password;
     }
 
 
@@ -433,7 +433,7 @@ public class EnabledDataSource
      */
     public String getPassword()
     {
-	return _password;
+        return _password;
     }
 
 
@@ -445,7 +445,7 @@ public class EnabledDataSource
      */
     public synchronized void setUser( String user )
     {
-	_user = user;
+        _user = user;
     }
 
 
@@ -457,7 +457,7 @@ public class EnabledDataSource
      */
     public String getUser()
     {
-	return _user;
+        return _user;
     }
 
 
@@ -471,19 +471,19 @@ public class EnabledDataSource
      */
     public String getIsolationLevelAsString()
     {
-	switch ( getIsolationLevel() ) {
-	case Connection.TRANSACTION_READ_UNCOMMITTED:
-	    return "ReadUncommitted";
-	case Connection.TRANSACTION_READ_COMMITTED:
-	    return "ReadCommitted";
-	case Connection.TRANSACTION_REPEATABLE_READ:
-	    return "RepeatableRead";
-	case Connection.TRANSACTION_SERIALIZABLE:
-	    return "Serializable";
-	case Connection.TRANSACTION_NONE:
-	default:
-	    return null;
-	}
+        switch ( getIsolationLevel() ) {
+        case Connection.TRANSACTION_READ_UNCOMMITTED:
+            return "ReadUncommitted";
+        case Connection.TRANSACTION_READ_COMMITTED:
+            return "ReadCommitted";
+        case Connection.TRANSACTION_REPEATABLE_READ:
+            return "RepeatableRead";
+        case Connection.TRANSACTION_SERIALIZABLE:
+            return "Serializable";
+        case Connection.TRANSACTION_NONE:
+        default:
+            return null;
+        }
     }
 
 
@@ -503,18 +503,18 @@ public class EnabledDataSource
      */
     public void setIsolationLevel( String level )
     {
-	if ( level == null )
-	    setIsolationLevel(Connection.TRANSACTION_READ_COMMITTED);
-	else if ( level.equals( "ReadUncommitted" ) )
-	    setIsolationLevel(Connection.TRANSACTION_READ_UNCOMMITTED);
-	else if ( level.equals( "ReadCommitted" ) )
-	    setIsolationLevel(Connection.TRANSACTION_READ_COMMITTED);
-	else if ( level.equals( "RepeatableRead" ) )
-	    setIsolationLevel(Connection.TRANSACTION_REPEATABLE_READ);
-	else if ( level.equals( "Serializable" ) )
-	    setIsolationLevel(Connection.TRANSACTION_SERIALIZABLE);
-	else
-	    setIsolationLevel(Connection.TRANSACTION_READ_COMMITTED);
+        if ( level == null )
+            setIsolationLevel(Connection.TRANSACTION_READ_COMMITTED);
+        else if ( level.equals( "ReadUncommitted" ) )
+            setIsolationLevel(Connection.TRANSACTION_READ_UNCOMMITTED);
+        else if ( level.equals( "ReadCommitted" ) )
+            setIsolationLevel(Connection.TRANSACTION_READ_COMMITTED);
+        else if ( level.equals( "RepeatableRead" ) )
+            setIsolationLevel(Connection.TRANSACTION_REPEATABLE_READ);
+        else if ( level.equals( "Serializable" ) )
+            setIsolationLevel(Connection.TRANSACTION_SERIALIZABLE);
+        else
+            setIsolationLevel(Connection.TRANSACTION_READ_COMMITTED);
     }
 
 
@@ -527,19 +527,15 @@ public class EnabledDataSource
      */
     public synchronized boolean equals( Object other )
     {
-	if ( other == this )
-	    return true;
-	if ( other == null || ! ( other.getClass() != getClass() ) )
-	    return false;
+        EnabledDataSource with;
 
-	EnabledDataSource with;
-
-	with = (EnabledDataSource) other;
-        
-        if ( _driverName == null ) {
+        if ( other == this )
+            return true;
+        if ( other == null || ! ( other.getClass() != getClass() ) )
+            return false;
+        with = (EnabledDataSource) other;
+        if ( _driverName == null )
             return null == with._driverName;    
-        }
-        
         return _driverName.equals(with._driverName);
     }
     
@@ -552,79 +548,77 @@ public class EnabledDataSource
     
     public synchronized Reference getReference()
     {
-	Reference ref;
+        Reference ref;
         
-	// We use same object as factory.
-	ref = new Reference( getClass().getName(), getClass().getName(), null );
-	// Mandatory properties
-	ref.add( new StringRefAddr( "description", _description ) );
-	ref.add( new StringRefAddr( "loginTimeout", Integer.toString( _loginTimeout ) ) );
-	if ( _driverName == null )
-	    ref.add( new StringRefAddr( "driverName", "no driver" ) );
-	else
-	    ref.add( new StringRefAddr( "driverName", _driverName ) );
+        // We use same object as factory.
+        ref = new Reference( getClass().getName(), getClass().getName(), null );
+        // Mandatory properties
+        ref.add( new StringRefAddr( "description", _description ) );
+        ref.add( new StringRefAddr( "loginTimeout", Integer.toString( _loginTimeout ) ) );
+        if ( _driverName == null )
+            ref.add( new StringRefAddr( "driverName", "no driver" ) );
+        else
+            ref.add( new StringRefAddr( "driverName", _driverName ) );
         // Optional properties
-	if ( _driverClassName != null )
-	    ref.add( new StringRefAddr( "driverClassName", _driverClassName ) );
-	if ( _user != null )
-	    ref.add( new StringRefAddr( "user", _user ) );
-	if ( _password != null )
-	    ref.add( new StringRefAddr( "password", _password ) );
-	if ( getIsolationLevelAsString() != null )
-	    ref.add( new StringRefAddr( "isolationLevel", getIsolationLevelAsString() ) );
-	ref.add( new StringRefAddr( "transactionTimeout", Integer.toString( getTransactionTimeout() ) ) );
- 	return ref;
+        if ( _driverClassName != null )
+            ref.add( new StringRefAddr( "driverClassName", _driverClassName ) );
+        if ( _user != null )
+            ref.add( new StringRefAddr( "user", _user ) );
+        if ( _password != null )
+            ref.add( new StringRefAddr( "password", _password ) );
+        if ( getIsolationLevelAsString() != null )
+            ref.add( new StringRefAddr( "isolationLevel", getIsolationLevelAsString() ) );
+        ref.add( new StringRefAddr( "transactionTimeout", Integer.toString( getTransactionTimeout() ) ) );
+        return ref;
     }
 
 
     public Object getObjectInstance( Object refObj, Name name, Context nameCtx, Hashtable env )
         throws NamingException
     {
-	Reference ref;
-
-	// Can only reconstruct from a reference.
-	if ( refObj instanceof Reference ) {
-	    ref = (Reference) refObj;
-	    // Make sure reference is of datasource class.
-	    if ( ref.getClassName().equals( getClass().getName() ) ) {
-
-		EnabledDataSource ds;
-		RefAddr           addr;
-
-		try {
-		    ds = (EnabledDataSource) Class.forName( ref.getClassName() ).newInstance();
-		} catch ( Exception except ) {
-		    throw new NamingException( except.toString() );
-		}
-		// Mandatory properties
-		ds._driverName = (String) ref.get( "driverName" ).getContent();
+        Reference ref;
+        
+        // Can only reconstruct from a reference.
+        if ( refObj instanceof Reference ) {
+            ref = (Reference) refObj;
+            // Make sure reference is of datasource class.
+            if ( ref.getClassName().equals( getClass().getName() ) ) {
+                EnabledDataSource ds;
+                RefAddr           addr;
+                
+                try {
+                    ds = (EnabledDataSource) Class.forName( ref.getClassName() ).newInstance();
+                } catch ( Exception except ) {
+                    throw new NamingException( except.toString() );
+                }
+                // Mandatory properties
+                ds._driverName = (String) ref.get( "driverName" ).getContent();
                 ds._description = (String) ref.get( "description" ).getContent();
-		ds._loginTimeout = Integer.parseInt( (String) ref.get( "loginTimeout" ).getContent() );
-		// Optional properties
-		addr = ref.get( "driverClassName" );
-		if ( addr != null )
-		    ds._driverClassName = (String) addr.getContent();
-		addr = ref.get( "user" );
-		if ( addr != null )
-		    ds._user = (String) addr.getContent();
-		addr = ref.get( "password" );
-		if ( addr != null )
-		    ds._password = (String) addr.getContent();
-		addr = ref.get( "transactionTimeout" );
-		if ( addr != null )
-		    ds.setTransactionTimeout( Integer.parseInt( (String) addr.getContent() ) );
-		addr = ref.get( "isolationLevel" );
-		if ( addr != null ) {
+                ds._loginTimeout = Integer.parseInt( (String) ref.get( "loginTimeout" ).getContent() );
+                // Optional properties
+                addr = ref.get( "driverClassName" );
+                if ( addr != null )
+                    ds._driverClassName = (String) addr.getContent();
+                addr = ref.get( "user" );
+                if ( addr != null )
+                    ds._user = (String) addr.getContent();
+                addr = ref.get( "password" );
+                if ( addr != null )
+                    ds._password = (String) addr.getContent();
+                addr = ref.get( "transactionTimeout" );
+                if ( addr != null )
+                    ds.setTransactionTimeout( Integer.parseInt( (String) addr.getContent() ) );
+                addr = ref.get( "isolationLevel" );
+                if ( addr != null ) {
                     ds.setIsolationLevel( (String) addr.getContent() );
                 }
-		return ds;
-
-	    } else
-		throw new NamingException( "DataSource: Reference not constructed from class " + getClass().getName() );
-	} else if ( refObj instanceof Remote )
-	    return refObj;
-	else
-	    return null;
+                return ds;
+            } else
+                throw new NamingException( "DataSource: Reference not constructed from class " + getClass().getName() );
+        } else if ( refObj instanceof Remote )
+            return refObj;
+        else
+            return null;
     }
 
 

@@ -38,9 +38,9 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
+ * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: UserTransactionImpl.java,v 1.1 2001/02/27 00:37:52 arkin Exp $
+ * $Id: UserTransactionImpl.java,v 1.2 2001/03/12 19:20:20 arkin Exp $
  */
 
 
@@ -71,7 +71,7 @@ import javax.transaction.HeuristicRollbackException;
  * it up through JNDI (<tt>java:/comp/UserTransaction</tt>).
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2001/02/27 00:37:52 $
+ * @version $Revision: 1.2 $ $Date: 2001/03/12 19:20:20 $
  */
 public final class UserTransactionImpl
     implements UserTransaction
@@ -89,93 +89,92 @@ public final class UserTransactionImpl
      */
     public UserTransactionImpl( TransactionManagerImpl txManager )
     {
-	if ( txManager == null )
-	    throw new IllegalArgumentException( "Argument 'txManager' is null" );
-	_txManager = txManager;
+        if ( txManager == null )
+            throw new IllegalArgumentException( "Argument 'txManager' is null" );
+        _txManager = txManager;
     }
 
 
     public void begin()
-	throws NotSupportedException, SystemException
+        throws NotSupportedException, SystemException
     {
-	_txManager.begin();
+        _txManager.begin();
     }
 
 
     public void commit()
-	throws RollbackException, HeuristicMixedException, HeuristicRollbackException,
-	       SecurityException, IllegalStateException, SystemException
+        throws RollbackException, HeuristicMixedException, HeuristicRollbackException,
+               SecurityException, IllegalStateException, SystemException
     {
-	_txManager.commit();
+        _txManager.commit();
     }
 
 
     public void rollback()
-	throws IllegalStateException, SecurityException, SystemException
+        throws IllegalStateException, SecurityException, SystemException
     {
-	_txManager.rollback();
+        _txManager.rollback();
     }
 
 
     public int getStatus()
-	throws SystemException
+        throws SystemException
     {
-	return _txManager.getStatus();
+        return _txManager.getStatus();
     }
 
 
     public void setRollbackOnly()
-	throws IllegalStateException, SystemException
+        throws IllegalStateException, SystemException
     {
-	_txManager.setRollbackOnly();
+        _txManager.setRollbackOnly();
     }
 
 
     public void setTransactionTimeout( int timeout )
-	throws SystemException
+        throws SystemException
     {
-	_txManager.setTransactionTimeout( timeout );
+        _txManager.setTransactionTimeout( timeout );
     }
 
 
     /*
-    public Reference getReference()
-    {
-	Reference ref;
-	Package   pkg;
-
-	// We use same object as factory.
-	ref = new Reference( getClass().getName(), getClass().getName(), null );
-	// No properties, the entire transaction manager is static.
-	pkg = UserTransactionImpl.class.getPackage();
-	if ( pkg != null ) {
-	    ref.add( new StringRefAddr( "title", pkg.getImplementationTitle() ) );
-	    ref.add( new StringRefAddr( "vendor", pkg.getImplementationVendor() ) );
-	    ref.add( new StringRefAddr( "version", pkg.getImplementationVersion() ) );
-	}
- 	return ref;
-    }
-
-
-    public Object getObjectInstance( Object refObj, Name name, Context nameCtx, Hashtable env )
-    {
-	Reference ref;
-
-	// Can only reconstruct from a reference.
-	if ( refObj instanceof Reference ) {
-	    return this;
-	} else if ( refObj instanceof Remote )
-	    return refObj;
-	else
-	    return null;
-    }
-
-
-    public static UserTransaction getInstance()
-    {
-	return new UserTransactionImpl();
-    }
-
+      public Reference getReference()
+      {
+      Reference ref;
+      Package   pkg;
+      
+      // We use same object as factory.
+      ref = new Reference( getClass().getName(), getClass().getName(), null );
+      // No properties, the entire transaction manager is static.
+      pkg = UserTransactionImpl.class.getPackage();
+      if ( pkg != null ) {
+      ref.add( new StringRefAddr( "title", pkg.getImplementationTitle() ) );
+      ref.add( new StringRefAddr( "vendor", pkg.getImplementationVendor() ) );
+      ref.add( new StringRefAddr( "version", pkg.getImplementationVersion() ) );
+      }
+      return ref;
+      }
+      
+      
+      public Object getObjectInstance( Object refObj, Name name, Context nameCtx, Hashtable env )
+      {
+      Reference ref;
+      
+      // Can only reconstruct from a reference.
+      if ( refObj instanceof Reference ) {
+      return this;
+      } else if ( refObj instanceof Remote )
+      return refObj;
+      else
+      return null;
+      }
+      
+      
+      public static UserTransaction getInstance()
+      {
+      return new UserTransactionImpl();
+      }
     */
 
 

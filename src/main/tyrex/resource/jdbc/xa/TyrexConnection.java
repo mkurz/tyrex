@@ -38,7 +38,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 2000 (C) Intalio Technologies Inc. All Rights Reserved.
+ * Copyright 1999-2001 (C) Intalio Technologies Inc. All Rights Reserved.
  *
  */
 
@@ -340,7 +340,7 @@ public abstract class TyrexConnection
     public synchronized void setReadOnly(boolean readOnly)
         throws SQLException
     {
-	try {
+        try {
             getUnderlyingConnection().setReadOnly(readOnly);
         }
         catch(SQLException e) {
@@ -354,7 +354,7 @@ public abstract class TyrexConnection
     public synchronized boolean isReadOnly()
         throws SQLException
     {
-	try {
+        try {
             return getUnderlyingConnection().isReadOnly();
         }
         catch(SQLException e) {
@@ -368,7 +368,7 @@ public abstract class TyrexConnection
     public synchronized void setTransactionIsolation(int level)
         throws SQLException
     {
-	try {
+        try {
             getUnderlyingConnection().setTransactionIsolation(level);
         }
         catch(SQLException e) {
@@ -382,7 +382,7 @@ public abstract class TyrexConnection
     public synchronized int getTransactionIsolation()
         throws SQLException
     {
-	try {
+        try {
             return getUnderlyingConnection().getTransactionIsolation();
         }
         catch(SQLException e) {
@@ -416,7 +416,7 @@ public abstract class TyrexConnection
      * @see #internalClose
      */
     public synchronized void close()
-	throws SQLException
+        throws SQLException
     {
         try {
             internalClose();
@@ -450,11 +450,10 @@ public abstract class TyrexConnection
      * Close the connection when it is being garbage collected.
      */
     protected void finalize()
-	throws Throwable
+        throws Throwable
     {
-	if (!isClosed()) {
+        if (!isClosed())
             close();
-        }
     }
     
 

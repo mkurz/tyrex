@@ -38,9 +38,9 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
+ * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: InvalidXidException.java,v 1.1 2001/02/27 00:37:53 arkin Exp $
+ * $Id: InvalidXidException.java,v 1.2 2001/03/12 19:20:20 arkin Exp $
  */
 
 
@@ -52,7 +52,7 @@ package tyrex.tm.xid;
  * converted into an array of bytes.
  * 
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 public class InvalidXidException
     extends Exception

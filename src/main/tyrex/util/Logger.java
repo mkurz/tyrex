@@ -38,9 +38,9 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
+ * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Logger.java,v 1.11 2001/03/02 23:06:55 arkin Exp $
+ * $Id: Logger.java,v 1.12 2001/03/12 19:20:21 arkin Exp $
  */
 
 
@@ -59,7 +59,7 @@ import org.apache.log4j.FileAppender;
 /**
  *
  * @author <a href="jdaniel@intalio.com">Jerome DANIEL</a>
- * @version $Revision: 1.11 $ $Date: 2001/03/02 23:06:55 $
+ * @version $Revision: 1.12 $ $Date: 2001/03/12 19:20:21 $
  */
 public class Logger
 {

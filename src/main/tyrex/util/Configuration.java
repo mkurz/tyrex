@@ -38,9 +38,9 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
+ * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Configuration.java,v 1.3 2001/03/03 00:35:51 arkin Exp $
+ * $Id: Configuration.java,v 1.4 2001/03/12 19:20:21 arkin Exp $
  */
 
 
@@ -69,7 +69,7 @@ import java.security.SecureRandom;
  * <tt>tyrex.config</tt>.
  *
  * @author <a href="mailto:arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.3 $ $Date: 2001/03/03 00:35:51 $
+ * @version $Revision: 1.4 $ $Date: 2001/03/12 19:20:21 $
  */
 public final class Configuration
 {

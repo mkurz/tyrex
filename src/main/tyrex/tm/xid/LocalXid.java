@@ -38,9 +38,9 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
+ * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: LocalXid.java,v 1.1 2001/02/27 00:37:53 arkin Exp $
+ * $Id: LocalXid.java,v 1.2 2001/03/12 19:20:20 arkin Exp $
  */
 
 
@@ -58,7 +58,7 @@ import tyrex.util.Messages;
  * transaction identifier and unique branch qualifier.
  * 
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 public final class LocalXid
     extends BaseXid
@@ -91,7 +91,7 @@ public final class LocalXid
         StringBuffer buffer;
         byte[]       branch;
 
-	branch = UUID.createBinary();
+        branch = UUID.createBinary();
         buffer = new StringBuffer( 46 );
         buffer.append( XID_PREFIX_ARRAY ).append( '-' );
         for ( int i = branch.length ; i-- > 0 ; ) {
@@ -120,29 +120,29 @@ public final class LocalXid
 
     public int getFormatId()
     {
-	return LOCAL_FORMAT_ID;
+        return LOCAL_FORMAT_ID;
     }
 
 
     public byte[] getGlobalTransactionId()
     {
-	return EMPTY_ARRAY;
+        return EMPTY_ARRAY;
     }
 
 
     public byte[] getBranchQualifier()
     {
-	return _branch;
+        return _branch;
     }
 
 
     public boolean equals( Object other )
     {
-	Xid     xid;
+        Xid     xid;
         byte[]  bytes;
 
-	if ( other == this )
-	    return true;
+        if ( other == this )
+            return true;
         if ( other instanceof LocalXid )
             return _string.equals( ( (LocalXid) other )._string );
         if ( other instanceof Xid ) {

@@ -38,9 +38,9 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
+ * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: GlobalXid.java,v 1.1 2001/02/27 00:37:53 arkin Exp $
+ * $Id: GlobalXid.java,v 1.2 2001/03/12 19:20:20 arkin Exp $
  */
 
 
@@ -58,7 +58,7 @@ import tyrex.util.Messages;
  * qualifier is always empty.
  * 
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 public final class GlobalXid
     extends BaseXid
@@ -92,7 +92,7 @@ public final class GlobalXid
         StringBuffer buffer;
         byte[]       global;
 
-	global = UUID.createBinary();
+        global = UUID.createBinary();
         buffer = new StringBuffer( 45 );
         buffer.append( XID_PREFIX_ARRAY );
         for ( int i = global.length ; i-- > 0 ; ) {
@@ -121,29 +121,29 @@ public final class GlobalXid
 
     public int getFormatId()
     {
-	return GLOBAL_FORMAT_ID;
+        return GLOBAL_FORMAT_ID;
     }
 
 
     public byte[] getGlobalTransactionId()
     {
-	return _global;
+        return _global;
     }
 
 
     public byte[] getBranchQualifier()
     {
-	return EMPTY_ARRAY;
+        return EMPTY_ARRAY;
     }
 
 
     public boolean equals( Object other )
     {
-	Xid     xid;
+        Xid     xid;
         byte[]  bytes;
 
-	if ( other == this )
-	    return true;
+        if ( other == this )
+            return true;
         if ( other instanceof GlobalXid )
             return _string.equals( ( (GlobalXid) other )._string );
         if ( other instanceof Xid ) {

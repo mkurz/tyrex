@@ -38,9 +38,9 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
+ * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: JournalFactory.java,v 1.2 2001/03/03 03:00:55 arkin Exp $
+ * $Id: JournalFactory.java,v 1.3 2001/03/12 19:20:19 arkin Exp $
  */
 
 
@@ -54,7 +54,7 @@ package tyrex.tm;
  * domain using the domain configuration file.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  */
 public interface JournalFactory
 {

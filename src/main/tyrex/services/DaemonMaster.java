@@ -38,9 +38,9 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
+ * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: DaemonMaster.java,v 1.2 2001/03/05 18:25:10 arkin Exp $
+ * $Id: DaemonMaster.java,v 1.3 2001/03/12 19:20:19 arkin Exp $
  */
 
 
@@ -76,7 +76,7 @@ import tyrex.util.Logger;
  * server. The daemon master is thread-safe and consumes a single thread.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  */
 public class DaemonMaster
     extends ThreadGroup

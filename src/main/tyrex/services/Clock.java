@@ -38,9 +38,9 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
+ * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Clock.java,v 1.1 2001/02/27 00:37:52 arkin Exp $
+ * $Id: Clock.java,v 1.2 2001/03/12 19:20:19 arkin Exp $
  */
 
 
@@ -61,7 +61,7 @@ import tyrex.util.Logger;
  * for testing purposes.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 public final class Clock
     extends Thread
@@ -77,7 +77,7 @@ public final class Clock
 
     /**
      * The number of {@link #SLEEP_TICKS} clock ticks to skip before
-     * synchronizing with the system clock. Default size is 10 (or 2000
+     * synchronizing with the system clock. Default value is 10 (or 2000
      * milliseconds).
      */
     public static final int SYNCH_EVERY = 10;

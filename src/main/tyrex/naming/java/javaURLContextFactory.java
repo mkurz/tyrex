@@ -38,9 +38,9 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
+ * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: javaURLContextFactory.java,v 1.5 2000/09/08 23:05:20 mohammed Exp $
+ * $Id: javaURLContextFactory.java,v 1.6 2001/03/12 19:20:17 arkin Exp $
  */
 
 
@@ -68,7 +68,7 @@ import javax.naming.spi.ObjectFactory;
  *
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.5 $ $Date: 2000/09/08 23:05:20 $
+ * @version $Revision: 1.6 $ $Date: 2001/03/12 19:20:17 $
  * @see JavaContext
  */
 public class javaURLContextFactory
@@ -77,9 +77,9 @@ public class javaURLContextFactory
 
 
     public Object getObjectInstance( Object obj, Name name, Context nameCtx, Hashtable env )
-	throws NamingException
+        throws NamingException
     {
-	return new JavaContext( env );
+        return new JavaContext( env );
     }
 
 

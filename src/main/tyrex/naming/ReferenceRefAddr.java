@@ -14,22 +14,22 @@
  *
  * 3. The name "Exolab" must not be used to endorse or promote
  *    products derived from this Software without prior written
- *    permission of Exoffice Technologies.  For written permission,
+ *    permission of Intalio.  For written permission,
  *    please contact info@exolab.org.
  *
  * 4. Products derived from this Software may not be called "Exolab"
  *    nor may "Exolab" appear in their names without prior written
- *    permission of Exoffice Technologies. Exolab is a registered
- *    trademark of Exoffice Technologies.
+ *    permission of Intalio. Exolab is a registered
+ *    trademark of Intalio.
  *
  * 5. Due credit should be given to the Exolab Project
  *    (http://www.exolab.org/).
  *
- * THIS SOFTWARE IS PROVIDED BY EXOFFICE TECHNOLOGIES AND CONTRIBUTORS
+ * THIS SOFTWARE IS PROVIDED BY INTALIO AND CONTRIBUTORS
  * ``AS IS'' AND ANY EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT
  * NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
  * FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL
- * EXOFFICE TECHNOLOGIES OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ * INTALIO OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
  * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
@@ -38,8 +38,9 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
+ * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
+ * $Id: ReferenceRefAddr.java,v 1.2 2001/03/12 19:20:16 arkin Exp $
  */
 
 
@@ -63,14 +64,16 @@ import javax.naming.spi.NamingManager;
  *
  * @author <a href="mohammed@intalio.com">Riad Mohammed</a>
  */
-public final class ReferenceRefAddr 
+final class ReferenceRefAddr 
     extends RefAddr
 {
+
 
     /**
      * The reference
      */
     private final Reference _reference;
+
 
     /**
      * The environment used to recreate the referenceable
@@ -78,15 +81,18 @@ public final class ReferenceRefAddr
      */
     private final Hashtable _environment;
 
+
     /**
      * The object
      */
     private transient Object _object;
 
+
     /**
      * The hash code
      */
     private transient int _hashCode;
+
 
     /**
      * Create the ReferenceRefAddr with the specified arguments.
@@ -102,11 +108,12 @@ public final class ReferenceRefAddr
      * @throw NamingException if there is a problem get the reference
      *      from the referenceable object.
      */
-    public ReferenceRefAddr (String addressType, Referenceable referenceable)
+    ReferenceRefAddr (String addressType, Referenceable referenceable)
         throws NamingException
     {
         this(addressType, referenceable, null);
     }
+
 
     /**
      * Create the ReferenceRefAddr with the specified arguments.
@@ -121,9 +128,9 @@ public final class ReferenceRefAddr
      * @throw NamingException if there is a problem get the reference
      *      from the referenceable object.
      */
-    public ReferenceRefAddr (String addressType, 
-                             Referenceable referenceable,
-                             Hashtable environment)
+    ReferenceRefAddr (String addressType, 
+                      Referenceable referenceable,
+                      Hashtable environment)
         throws NamingException
     {
         super(addressType);
@@ -147,7 +154,7 @@ public final class ReferenceRefAddr
      * @param addressType the address type of the ref addr
      * @param reference the reference
      */
-    public ReferenceRefAddr (String addressType, Reference reference)
+    ReferenceRefAddr( String addressType, Reference reference )
     {
         this(addressType, reference, null);
     }
@@ -160,16 +167,14 @@ public final class ReferenceRefAddr
      * @param environment used in the recreation of the
      * referenceable object from the underlying reference. Can be null.
      */
-    public ReferenceRefAddr (String addressType, 
-                             Reference reference,
-                             Hashtable environment)
+    ReferenceRefAddr( String addressType, 
+                      Reference reference,
+                      Hashtable environment )
     {
-        super(addressType);
+        super( addressType );
 
-        if (null == reference) {
+        if (null == reference)
             throw new IllegalArgumentException("The argument 'reference' is null.");
-        }
-
         _reference = reference;
         _environment = environment;
 
@@ -220,10 +225,7 @@ public final class ReferenceRefAddr
         if (null == _object) {
             try {
                 _object = NamingManager.getObjectInstance(_reference, null, null, _environment);        
-            }
-            catch (Exception e) {
-
-            }
+            } catch (Exception e) { }
         }
 
         return _object;

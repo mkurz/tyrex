@@ -38,9 +38,9 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
+ * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: CoordinatorImpl.java,v 1.1 2001/03/05 18:25:39 arkin Exp $
+ * $Id: CoordinatorImpl.java,v 1.2 2001/03/12 19:20:20 arkin Exp $
  */
 
 
@@ -74,7 +74,7 @@ import javax.transaction.xa.Xid;
  * Implements a {@link Coordinator} interface into a transaction.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2001/03/05 18:25:39 $
+ * @version $Revision: 1.2 $ $Date: 2001/03/12 19:20:20 $
  */
 final class CoordinatorImpl
     extends _CoordinatorImplBase
@@ -115,37 +115,37 @@ final class CoordinatorImpl
 
     public Status get_parent_status()
     {
-	if ( _parents == null )
-	    return fromJTAStatus( _tx.getStatus() );
-	else
-	    return _parents[ 0 ].coord.get_status();
+        if ( _parents == null )
+            return fromJTAStatus( _tx.getStatus() );
+        else
+            return _parents[ 0 ].coord.get_status();
     }
 
 
     public Status get_status()
     {
-	return fromJTAStatus( _tx.getStatus() );
+        return fromJTAStatus( _tx.getStatus() );
     }
 
 
     public Status get_top_level_status()
     {
-	if ( _parents == null )
-	    return fromJTAStatus( _tx.getStatus() );
-	else
-	    return _parents[ _parents.length - 1 ].coord.get_status();
+        if ( _parents == null )
+            return fromJTAStatus( _tx.getStatus() );
+        else
+            return _parents[ _parents.length - 1 ].coord.get_status();
     }
 
 
     public boolean is_top_level_transaction()
     {
-	return ( _parents == null );
+        return ( _parents == null );
     }
 
 
     public boolean is_same_transaction( Coordinator coord )
     {
-	if ( hash_transaction() == coord.hash_transaction() )
+        if ( hash_transaction() == coord.hash_transaction() )
             return true;
         return false;
     }
@@ -153,12 +153,12 @@ final class CoordinatorImpl
 
     public boolean is_related_transaction( Coordinator coord )
     {
-	if ( _parents == null )
-	    return is_same_transaction( coord );
-	for ( int i = _parents.length ; i-- > 0 ; ++i )
-	    if ( _parents[ i ].coord.is_ancestor_transaction( coord ) )
-		return true;
-	return false;
+        if ( _parents == null )
+            return is_same_transaction( coord );
+        for ( int i = _parents.length ; i-- > 0 ; ++i )
+            if ( _parents[ i ].coord.is_ancestor_transaction( coord ) )
+                return true;
+        return false;
     }
 
 
@@ -181,111 +181,111 @@ final class CoordinatorImpl
 
     public boolean is_top_level_transaction( Coordinator coord )
     {
-	return ( _parents == null );
+        return ( _parents == null );
     }
 
 
     public int hash_transaction()
     {
-	return _tx._hashCode;
+        return _tx._hashCode;
     }
 
 
     public int hash_top_level_tran()
     {
-	if ( _parents == null )
-	    return _tx._hashCode;
-	else
-	    return _parents[ _parents.length - 1 ].coord.hash_transaction();
+        if ( _parents == null )
+            return _tx._hashCode;
+        else
+            return _parents[ _parents.length - 1 ].coord.hash_transaction();
     }
 
 
     public RecoveryCoordinator register_resource( Resource resource )
-	throws Inactive
+        throws Inactive
     {
-	try {
-	    _tx.registerResource( resource );
-	    if ( resource instanceof SubtransactionAwareResource )
-		_tx.registerSynchronization( new SubtransactionAwareWrapper( (SubtransactionAwareResource) resource, this ) ); 
-	} catch ( RollbackException except ) {
-	    throw new TRANSACTION_ROLLEDBACK( except.getMessage() );
-	} catch ( IllegalStateException except ) {
-	    throw new Inactive();
-	} catch ( SystemException except ) {
-	    throw new Inactive();
-	}
+        try {
+            _tx.registerResource( resource );
+            if ( resource instanceof SubtransactionAwareResource )
+                _tx.registerSynchronization( new SubtransactionAwareWrapper( (SubtransactionAwareResource) resource, this ) ); 
+        } catch ( RollbackException except ) {
+            throw new TRANSACTION_ROLLEDBACK( except.getMessage() );
+        } catch ( IllegalStateException except ) {
+            throw new Inactive();
+        } catch ( SystemException except ) {
+            throw new Inactive();
+        }
         // !!! Should this create a new recovery object?
-	return _control;
+        return _control;
     }
 
 
     public void register_subtran_aware( SubtransactionAwareResource resource )
-	throws Inactive, NotSubtransaction
+        throws Inactive, NotSubtransaction
     {
-	if ( _parents == null )
-	    throw new NotSubtransaction();
-	try {
-	    _tx.registerSynchronization( new SubtransactionAwareWrapper( resource, this ) ); 
-	} catch ( RollbackException except ) {
-	    throw new TRANSACTION_ROLLEDBACK( except.getMessage() );
-	} catch ( IllegalStateException except ) {
-	    throw new Inactive();
-	} catch ( SystemException except ) {
-	    throw new Inactive();
-	}
+        if ( _parents == null )
+            throw new NotSubtransaction();
+        try {
+            _tx.registerSynchronization( new SubtransactionAwareWrapper( resource, this ) ); 
+        } catch ( RollbackException except ) {
+            throw new TRANSACTION_ROLLEDBACK( except.getMessage() );
+        } catch ( IllegalStateException except ) {
+            throw new Inactive();
+        } catch ( SystemException except ) {
+            throw new Inactive();
+        }
     }
     
 
     public void register_synchronization( Synchronization sync )
-	throws Inactive, SynchronizationUnavailable
+        throws Inactive, SynchronizationUnavailable
     {
-	try {
-	    _tx.registerSynchronization( new SynhronizationWrapper( sync ) );
-	} catch ( RollbackException except ) {
-	    throw new TRANSACTION_ROLLEDBACK( except.getMessage() );
-	} catch ( IllegalStateException except ) {
-	    throw new Inactive();
-	} catch ( SystemException except ) {
-	    throw new Inactive();
-	}
+        try {
+            _tx.registerSynchronization( new SynhronizationWrapper( sync ) );
+        } catch ( RollbackException except ) {
+            throw new TRANSACTION_ROLLEDBACK( except.getMessage() );
+        } catch ( IllegalStateException except ) {
+            throw new Inactive();
+        } catch ( SystemException except ) {
+            throw new Inactive();
+        }
     }
 
 
     public void rollback_only()
-	throws Inactive
+        throws Inactive
     {
-	try {
-	    _tx.setRollbackOnly();
-	} catch ( IllegalStateException except ) {
-	    throw new Inactive();
-	} catch ( SystemException except ) {
-	    throw new Inactive();
-	}
+        try {
+            _tx.setRollbackOnly();
+        } catch ( IllegalStateException except ) {
+            throw new Inactive();
+        } catch ( SystemException except ) {
+            throw new Inactive();
+        }
     }
 
 
     public String get_transaction_name()
     {
-	return _tx.toString();
+        return _tx.toString();
     }
 
 
     public Control create_subtransaction()
-	throws SubtransactionsUnavailable, Inactive
+        throws SubtransactionsUnavailable, Inactive
     {
-	TransactionImpl tx;
-	TransIdentity[] parents;
-
-	if ( _tx.getStatus() != javax.transaction.Status.STATUS_ACTIVE &&
-	     _tx.getStatus() != javax.transaction.Status.STATUS_MARKED_ROLLBACK )
-	    throw new Inactive();
-
-	try {
-	    tx = _tx._txDomain.createTransaction( _tx, null, 0 );
-	    return tx.getControl();
-	} catch ( SystemException except ) {
-	    throw new Inactive();
-	}
+        TransactionImpl tx;
+        TransIdentity[] parents;
+        
+        if ( _tx.getStatus() != javax.transaction.Status.STATUS_ACTIVE &&
+             _tx.getStatus() != javax.transaction.Status.STATUS_MARKED_ROLLBACK )
+            throw new Inactive();
+        
+        try {
+            tx = _tx._txDomain.createTransaction( _tx, null, 0 );
+            return tx.getControl();
+        } catch ( SystemException except ) {
+            throw new Inactive();
+        }
     }
 
 
@@ -297,7 +297,7 @@ final class CoordinatorImpl
 
     public Status replay_completion( Resource resource )
     {
-	return get_status();
+        return get_status();
     }
 
 
@@ -306,29 +306,29 @@ final class CoordinatorImpl
      */
     static Status fromJTAStatus( int status )
     {
-	switch ( status ) {
-	case javax.transaction.Status.STATUS_ACTIVE:
-	    return Status.StatusActive;
-	case javax.transaction.Status.STATUS_MARKED_ROLLBACK:
-	    return Status.StatusMarkedRollback;
-	case javax.transaction.Status.STATUS_COMMITTING:
-	    return Status.StatusCommitting;
-	case javax.transaction.Status.STATUS_COMMITTED:
-	    return Status.StatusCommitted;
-	case javax.transaction.Status.STATUS_ROLLING_BACK:
-	    return Status.StatusRollingBack;
-	case javax.transaction.Status.STATUS_ROLLEDBACK:
-	    return Status.StatusRolledBack;
-	case javax.transaction.Status.STATUS_PREPARED:
-	    return Status.StatusPrepared;
-	case javax.transaction.Status.STATUS_PREPARING:
-	    return Status.StatusPreparing;
-	case javax.transaction.Status.STATUS_NO_TRANSACTION:
-	    return Status.StatusNoTransaction;
-	case javax.transaction.Status.STATUS_UNKNOWN:
-	default:
-	    return Status.StatusUnknown;
-	}
+        switch ( status ) {
+        case javax.transaction.Status.STATUS_ACTIVE:
+            return Status.StatusActive;
+        case javax.transaction.Status.STATUS_MARKED_ROLLBACK:
+            return Status.StatusMarkedRollback;
+        case javax.transaction.Status.STATUS_COMMITTING:
+            return Status.StatusCommitting;
+        case javax.transaction.Status.STATUS_COMMITTED:
+            return Status.StatusCommitted;
+        case javax.transaction.Status.STATUS_ROLLING_BACK:
+            return Status.StatusRollingBack;
+        case javax.transaction.Status.STATUS_ROLLEDBACK:
+            return Status.StatusRolledBack;
+        case javax.transaction.Status.STATUS_PREPARED:
+            return Status.StatusPrepared;
+        case javax.transaction.Status.STATUS_PREPARING:
+            return Status.StatusPreparing;
+        case javax.transaction.Status.STATUS_NO_TRANSACTION:
+            return Status.StatusNoTransaction;
+        case javax.transaction.Status.STATUS_UNKNOWN:
+        default:
+            return Status.StatusUnknown;
+        }
     }
  
 

@@ -38,9 +38,9 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
+ * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionStatusImpl.java,v 1.2 2001/03/03 03:00:56 arkin Exp $
+ * $Id: TransactionStatusImpl.java,v 1.3 2001/03/12 19:20:20 arkin Exp $
  */
 
 
@@ -60,7 +60,7 @@ import tyrex.tm.TransactionStatus;
  * the time it was obtained from {@link Tyrex}.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $ $Date: 2001/03/03 03:00:56 $
+ * @version $Revision: 1.3 $ $Date: 2001/03/12 19:20:20 $
  * @see Tyrex
  */
 final class TransactionStatusImpl
@@ -79,61 +79,61 @@ final class TransactionStatusImpl
     {
         if ( tx == null )
             throw new IllegalArgumentException( "Argument tx is null" );
-	_tx = tx;
+        _tx = tx;
     }
 
 
     public Transaction getTransaction()
     {
-	return _tx;
+        return _tx;
     }
 
 
     public Control getControl()
     {
-	return _tx.getControl();
+        return _tx.getControl();
     }
 
 
     public long getTimeout()
     {
-	return _tx._timeout;
+        return _tx._timeout;
     }
 
 
     public long getStarted()
     {
-	return _tx._started;
+        return _tx._started;
     }
 
 
     public int getStatus()
     {
-	return _tx._status;
+        return _tx._status;
     }
 
 
     public Xid getXid()
     {
-	return _tx._xid;
+        return _tx._xid;
     }
 
 
     public String[] getResources()
     {
-	return _tx.listResources();
+        return _tx.listResources();
     }
 
 
     public Thread[] getThreads()
     {
-	return (Thread[]) _tx._threads.clone();
+        return (Thread[]) _tx._threads.clone();
     }
 
 
     public String toString()
     {
-	return _tx.toString();
+        return _tx.toString();
     }
 
 
