@@ -81,7 +81,7 @@ public class ClientInterceptor
 			fatal("TransactionalClientInterceptor", "invalid slot : " + t_slot);
 		}
 		
-		if ( any.type().kind().value() == org.omg.CORBA.TCKind._tk_void )
+		if ( any.type().kind().value() == org.omg.CORBA.TCKind._tk_null )
 			return;
 		
 		org.omg.CosTransactions.PropagationContext pctx = org.omg.CosTransactions.PropagationContextHelper.extract( any );
