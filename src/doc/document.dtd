@@ -52,9 +52,9 @@
      be included to obtain more information about the author. For
      example:
 
-       <author email="arkin@intalio.com"
-               ldap="ldap.intalio.com/uid=arkin,o=people,dc=intalio,dc=com">
-         Assaf Arkin</author>
+       <author email="jsmith@company.com"
+               ldap="ldap.company.com/uid=jsmith,o=people,dc=company,dc=com">
+         John Smith</author>
 
  -->
 <!ELEMENT author (#PCDATA)>

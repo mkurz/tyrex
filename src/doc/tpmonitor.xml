@@ -4,8 +4,6 @@
   <properties>
     <abstract>Explains the role that TP monitoring plays in the enterprise environment,
               in particular with regards to EJB and Servlet containers</abstract>
-    <author email="arkin@intalio.com"
-            ldap="ldap.intalio.com/uid=arkin,ou=people,dc=intalio,dc=com">Assaf Arkin</author>
     <status>Preliminary Draft</status>
   </properties>
   <body>

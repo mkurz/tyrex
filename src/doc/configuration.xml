@@ -1,9 +1,8 @@
 <?xml version="1.0"?>
-<!-- $Id: configuration.xml,v 1.8 2002/05/28 17:31:20 mohammed Exp $ -->
+<!-- $Id: configuration.xml,v 1.9 2002/05/31 11:26:30 mohammed Exp $ -->
 <document>
   <properties>
     <title>Tyrex Configuration</title>
-    <author email="arkin@intalio.com">Assaf Arkin</author>
   </properties>
 
   <body>

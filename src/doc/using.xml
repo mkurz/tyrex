@@ -1,9 +1,8 @@
 <?xml version="1.0"?>
-<!-- $Id: using.xml,v 1.5 2001/03/21 20:02:40 arkin Exp $ -->
+<!-- $Id: using.xml,v 1.6 2002/05/31 11:26:30 mohammed Exp $ -->
 <document>
   <properties>
     <title>Using Tyrex</title>
-    <author email="arkin@intalio.com">Assaf Arkin</author>
   </properties>
 
   <body>

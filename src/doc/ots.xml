@@ -1,9 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <!DOCTYPE document SYSTEM "document.dtd">
 <document url="http://tyrex.sourceforge.net/ots.xml">
-  <properties>
-    <author email="jdaniel@intalio.com">Jerome DANIEL</author>
-  </properties>
   <body>
     
     <section title="Introduction">
@@ -68,7 +65,7 @@
 
     <section title="Problems">
       <p>If you encounter problems with the OTS server send a detailed email to 
-        <a href="mailto:tyrex-dev@exolab.org">Tyrex Developer's Mailing List</a>.
+        <a href="mailto:tyrex-users@lists.sourceforge.net">Tyrex Users' Mailing List</a>.
       </p>
       <p>
         The email should contain:

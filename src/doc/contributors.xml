@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!-- This file contains a list of OpenORB contributors -->
-<document url="http://openorb.exolab.org/contributors.xml">
+<document>
   <body>
     <title>Contributors</title>
     <header>
@@ -9,7 +9,6 @@
 
   <contributor type="Committer">
     <name surname="Arkin" given="Assaf"/>
-    <company id="intalio"/>
     <description>
       Most of the code released in Tyrex has been developed by Assaf.
     </description>
@@ -19,7 +18,6 @@
   <contributor type="Committer">
     <name surname="Mohammed" given="Riad"/>
     <email>mohammed@intalio.com</email>
-    <company id="intalio"/>
     <description>
      The rest of the code	released in Tyrex has been developed by Riad.
      Any feedback, money etc should be directed to Riad :-).
@@ -39,10 +37,7 @@
       Company Information, so we don't have to duplicate it for
       mulitple contributors of the same company
   -->
-  <company id="intalio">
-    <name>Intalio, Inc.</name>
-    <url>www.intalio.com</url>
-  </company>
+  
   
   <!-- description of contributor types -->
 

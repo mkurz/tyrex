@@ -92,12 +92,10 @@
                   src="{$project/logo}" vspace="0" width="209" /><br/><img border="0" height="10" hspace="0"
                   src="images/dotTrans.gif"/>
               </td>
-	      <td width="77" height="5" valign="top"
-		align="right"><a href="http://www.exolab.org"><img
-		src="images/logo_exolab.gif" hspace="10" vspace="10" width="77" height="20" border="0"/></a></td>
+	        <!-- 
           <td width="210" height="62" valign="top" align="center">
               <A href="http://sourceforge.net"> <IMG src="http://sourceforge.net/sflogo.php?group_id=54149&amp;type=5" width="210" height="62" border="0" alt="SourceForge Logo"/></A>
-            </td>
+            </td> -->
             </tr>
           </table><p/><p/><br/>
 
