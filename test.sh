@@ -1,6 +1,6 @@
 #! /bin/sh
 
-# $Id: test.sh,v 1.9 2001/02/27 00:39:11 arkin Exp $
+# $Id: test.sh,v 1.10 2001/04/24 16:39:07 jdaniel Exp $
 
 if [ -z "$JAVA_HOME" ] ; then
   JAVA=`which java`
@@ -17,6 +17,6 @@ JAVA=$JAVA_HOME/bin/java
 CLASSPATH=./build/classes:./build/tests:$CLASSPATH
 CLASSPATH=`echo lib/*.jar | tr ' ' ':'`:$CLASSPATH
 
-$JAVA -cp $CLASSPATH $1 $2 $3 $4 $5 $6
+$JAVA -cp $CLASSPATH tests.TestHarness $1 $2 $3 $4 $5 $6
 
 
