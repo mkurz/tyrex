@@ -57,6 +57,31 @@
     </field>
   </class>
 
+<!--
+  <class name="tyrex.resource.jca.Connector">
+    <map-to xml="connector" />
+    <field name="name" type="string" required="true">
+      <bind-xml name="name" node="element" />
+    </field>
+    <field name="JAR" type="string" required="true">
+      <bind-xml name="jar" node="element" />
+    </field>
+    <field name="paths" type="string">
+      <bind-xml name="paths" node="element" />
+    </field>
+    <field name="twoPhase" type="boolean">
+      <bind-xml name="twoPhase" node="element" />
+    </field>
+    <field name="config" create-method="createFactory"
+           set-method="setFactory" type="java.io.Serializable">
+      <bind-xml name="config" node="element" />
+    </field>
+    <field name="limits" type="tyrex.resource.ResourceLimits">
+      <bind-xml name="limits" node="element" />
+    </field>
+  </class>
+-->
+
   <class name="tyrex.resource.ResourceLimits">
     <map-to xml="limits" />
     <field name="maximum" type="integer">

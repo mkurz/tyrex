@@ -46,7 +46,6 @@
 package tyrex.resource;
 
 
-import java.io.Serializable;
 import javax.transaction.SystemException;
 import tyrex.tm.TransactionDomain;
 
@@ -54,10 +53,9 @@ import tyrex.tm.TransactionDomain;
 /**
  * 
  * @author <a href="jdaniel@intalio.com">Jerome Daniel</a>
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  */
 public abstract class BaseConfiguration
-    implements Serializable
 {
 
 
