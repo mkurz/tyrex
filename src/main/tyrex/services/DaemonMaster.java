@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: DaemonMaster.java,v 1.4 2001/03/21 20:02:47 arkin Exp $
+ * $Id: DaemonMaster.java,v 1.5 2001/08/22 21:03:57 jdaniel Exp $
  */
 
 
@@ -73,7 +73,7 @@ import tyrex.util.Logger;
  * The daemon master is thread-safe and consumes a single thread.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  */
 public class DaemonMaster
     extends ThreadGroup
@@ -186,6 +186,7 @@ public class DaemonMaster
             if ( Configuration.verbose )
                 Logger.tyrex.info( "Starting daemon: " + name );
             thread.setPriority( priority );
+            thread.setDaemon(true);
             thread.start();
         }
     }
