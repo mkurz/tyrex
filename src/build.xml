@@ -213,7 +213,7 @@
     <mkdir    dir="${build}/doc" />
     <mkdir    dir="${build}/doc/javadoc" />
     <property name="copyright"
-              value="Intalio, Inc. (C) 2000. All rights reserved  http://tyrex.exolab.org" />
+              value="Intalio, Inc. (C) 199-2001. All rights reserved  http://tyrex.exolab.org" />
     <javadoc  sourcepath="${main}" destdir="${build}/doc/javadoc"
               doctitle="Tyrex JavaDoc" windowtitle="Tyrex JavaDoc" bottom="${copyright}"
               package="true" author="true" version="true" noindex="true"
@@ -225,8 +225,8 @@
     <mkdir    dir="${build}/doc" />
     <mkdir    dir="${build}/doc/api" />
     <property name="copyright"
-              value="Intalio, Inc. (C) 2000. All rights reserved  http://tyrex.exolab.org" />
-    <javadoc  sourcepath="${main}" destdir="${build}/doc/api" dir="."
+              value="Intalio, Inc. (C) 199-2001. All rights reserved  http://tyrex.exolab.org" />
+    <javadoc  sourcepath="${main}" destdir="${build}/doc/api"
               doctitle="Tyrex API" windowtitle="Tyrex API" bottom="${copyright}"
               public="true" author="true"
               packagenames="tyrex.*" />
