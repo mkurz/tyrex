@@ -1,26 +1,38 @@
-<project name="Tyrex" default="main" basedir=".">
+<project name="Castor" default="main" basedir=".">
+  <property name="project" value="castor" />
 
   <property name="source" value="src" />
+  <property name="etc" value="src/etc" />
   <property name="build" value="build" />
   <property name="classes" value="${build}/classes" />
   <property name="dist" value="dist" />
   <property name="lib" value="lib" />
-  <property name="doc" value="doc" />
-  <property name="tomcat" value="tomcat" />
+  <property name="doc" value="src/doc" />
 
-  <property name="classpath" value="${classes}" />
+  <property name="classpath" value="${classpath}:${classes}" />
   <property name="build.compiler" file="classic" />
-  <property file="${source}/VERSION" />
+  <property name="deprecation" value="true" />
+  <property file="${etc}/VERSION" />
+  <property name="archive" value="${project}-${version}" />
 
-  <property name="jar.name" value="tyrex-${version}"/>
-
-
-  <target name="list">
-    <echo message="ANT build for Tyrex ${version}\n
-The following targets are available\n
-  all       Build all Java packages\n
-  jar       Build ${jar.name}.jar\n
-  javadoc   Builds the API docs\n" />
+ 
+  <target name="targets">
+    <echo message="ANT build for ${project} ${version}\n
+\nThe following targets are available:\n
+\n  targets  Lists the build targets
+\n  clean    Cleans the build and distribution directories
+\n  all      Cleans and builds all the packages and examples
+\n  release  Cleans and builds all the release packages
+\n           (JAR, source, doc, tarball) in the dist directory
+\n  main     Builds the main packages (including debugging info)
+\n  examples Builds the example packages (including debugging info)
+\n  tests    Builds the test packages (including debugging info)
+\n  jar      Builds the binary JAR in the dist directory
+\n  doc      Builds the documentation
+\n  javadoc  Builds the API JavaDocs
+\n  source   Builds the source tarball in the dist directory
+\n  tarball  Builds the binary distribution in the dist directory
+\n  cvs      Update the sources from the CVS\n" />
   </target>
 
 
@@ -31,18 +43,10 @@ The following targets are available\n
     <mkdir dir="${dist}"/>
   </target>
 
-
   <!-- Kill all the directories created in prepare -->
   <target name="clean">
     <deltree dir="${build}"/>
     <deltree dir="${dist}"/>
-  </target>
-
-
-  <!-- Same as core, but also cleans -->
-  <target name="all" depends="clean,main"/>
-
-  <target name="release" depends="clean,all.release,jar">
   </target>
 
 
@@ -52,35 +56,24 @@ The following targets are available\n
            classpath="${classpath}" debug="on" deprecation="${deprecation}" />
   </target>
 
+  <!-- Same as main, but also cleans and additional targets -->
+  <target name="all" depends="clean,main,examples,tests"/>
 
   <!-- Same as main, but no debug and no deprecation -->
-  <target name="all.release" depends="prepare">
+  <target name="no-debug" depends="prepare">
     <javac srcdir="${source}/main" destdir="${classes}"
-           classpath="${classpath}" debug="off" deprecation="off"/>
-  </target>
-
-  
-  <target name="jar" depends="clean,all.release">
-    <deltree dir="${dist}/${jar.name}.jar" />
-
-    <copyfile src="${source}/etc/MANIFEST.MF" dest="${classes}/MANIFEST.MF" />
-    <replace file="${classes}/MANIFEST.MF" token="$$VERSION$$" value="${version}"/>
-    <copyfile src="${source}/etc/LICENSE" dest="${classes}/LICENSE" />
-    <copyfile src="${source}/etc/README" dest="${classes}/README" />
-    <copyfile src="${source}/etc/CHANGELOG" dest="${classes}/CHANGELOG" />
-
-    <copyfile src="${source}/etc/tyrex.xml" dest="${classes}/tyrex.xml" />
-    <copyfile src="${source}/etc/resources.xml" dest="${classes}/resources.xml" />
-    <copyfile src="${source}/etc/jndi.properties" dest="${classes}/jndi.properties" />
-
-    <jar jarfile="${dist}/${jar.name}.jar" basedir="${classes}"
-         manifest="${classes}/MANIFEST.MF" items="LICENSE,README,CHANGELOG,
-         tyrex.xml,resources.xml,jndi.properties,tyrex,org,com" />
-
-    <java class="Install" args="${dist}/${jar.name}.jar -n" />
+           classpath="${classpath}" debug="off" deprecation="off" optimize="on"/>
   </target>
 
 
+  <!-- Build the example packages -->
+  <target name="examples" depends="prepare">
+    <mkdir dir="${build}/examples" />
+    <javac srcdir="${source}/examples" destdir="${build}/examples"
+           classpath="${classpath}" debug="on" deprecation="${deprecation}"/>
+  </target>
+
+  <!-- Build the test packages -->
   <target name="tests" depends="prepare">
     <mkdir dir="${build}/tests" />
     <javac srcdir="${source}/tests" destdir="${build}/tests"
@@ -88,54 +81,111 @@ The following targets are available\n
   </target>
 
 
-
-  <target name="install">
-    <java class="Install" args="${dist}/${jar.name}.jar -i -v" />
+  <!-- Build a full release including JAR, tarball, source and documentation -->
+  <target name="release" depends="clean,jar,tarball,source,doc,javadoc">
+    <jar jarfile="${dist}/${archive}-doc.jar" basedir="${build}" includes="doc/**" />
   </target>
 
 
+  <!-- Build the JAR file using no-debug -->
+  <target name="jar" depends="no-debug">
+    <deltree dir="${dist}/${archive}.jar" />
+
+    <copyfile src="${source}/etc/MANIFEST.MF" dest="${classes}/MANIFEST.MF" />
+    <replace file="${classes}/MANIFEST.MF" token="$$VERSION$$" value="${version}"/>
+    <copyfile src="${source}/etc/LICENSE" dest="${classes}/LICENSE" />
+    <copyfile src="${source}/etc/README" dest="${classes}/README" />
+    <copyfile src="${source}/etc/CHANGELOG" dest="${classes}/CHANGELOG" />
+
+    <jar jarfile="${dist}/${archive}.jar" basedir="${classes}"
+         manifest="${classes}/MANIFEST.MF" includes="LICENSE,README,CHANGELOG,org/**" />
+  </target>
+
+
+  <!-- Build the documentation -->
+  <target name="doc" depends="prepare">
+    <mkdir dir="${build}/doc" />
+    <style basedir="${doc}" destdir="${build}/doc" style="style/exolab.xsl"
+           includes="**.xml" excludes="style/**,project.xml"/>
+    <copydir  src="${doc}/images" dest="${build}/doc/images"/>
+    <copydir  src="${doc}/style/images" dest="${build}/doc/style/images"/>
+    <copyfile src="${doc}/license.txt" dest="${build}/doc/license.txt"/>
+    <mkdir dir="${build}/doc/print" />
+    <style basedir="${doc}" destdir="${build}/doc/print" style="style/print.xsl"
+           includes="**.xml" excludes="style/**,project.xml"/>
+    <copydir src="${doc}/images" dest="${build}/doc/print/images"/>
+    <copyfile src="${doc}/license.txt" dest="${build}/doc/print/license.txt"/>
+  </target>
+
+  <!-- Build the API JavaDoc -->
   <target name="javadoc" depends="prepare">
-    <mkdir dir="${build}/javadoc" />
-    <exec command="javadoc -sourcepath ${source}/main -d ${build}/javadoc
-                           -doctitle Tyrex -public -noindex -author
-                           tyrex.server tyrex.conf tyrex.naming" />
-
-    <jar jarfile="${dist}/${jar.name}-doc.jar" basedir="${build}"
-         items="javadoc" />
+    <mkdir dir="${build}/doc" />
+    <deltree dir="${build}/doc/javadoc" />
+    <mkdir   dir="${build}/doc/javadoc" />
+    <javadoc sourcepath="${source}/main" destdir="${build}/doc/javadoc" dir="."
+             doctitle="Tyrex" public="true" noindex="true" author="true"
+	     packagenames="tyrex.*" />
   </target>
 
 
-  <!-- Targets for individual packages -->
-  <target name="tyrex.server" depends="prepare">
-    <javac srcdir="${source}/main/tyrex/server"
-           destdir="${tyrex.class}/tyrex/server"
-           classpath="${classpath}" debug="on"/>
+  <!-- Build the source distribution -->
+  <target name="source" depends="prepare">
+    <delete file="${dist}/${archive}-src.tgz" />
+    <delete file="${dist}/${archive}-src.zip" />
+    <tar includes="*.sh, *.bat ${source}/** ${lib}/**"
+         output="${dist}/${archive}-src.tar" defaultexcludes="true" />	  
+    <gzip src="${dist}/${archive}-src.tar" zipfile="${dist}/${archive}-src.tgz"/>
+    <delete file="${dist}/${archive}-src.tar" />
+    <zip zipfile="${dist}/${archive}-src.zip" basedir="." includes="*.sh *.bat ${source}/** ${lib}/**"
+         defaultexcludes="true" />         
   </target>
 
 
-  <target name="tar" depends="prepare">
-    <deltree  dir="${dist}/tyrex-${version}.tar.Z" />
-    <exec command="tar --create --exclude-from ${source}/etc/exclude
-                       --dereference
-                       build.sh ${source} ${lib} ${doc}"
-          output="${dist}/tyrex-${version}-src.tar" />
-    <exec command="compress ${dist}/tyrex-${version}-src.tar" />
+  <!-- Build the tarball including JAR and all dependent packages -->
+  <target name="tarball" depends="prepare,jar,examples">
+    <property name="bin" value="${build}/${archive}" />
+    <delete   file="${dist}/${archive}.tgz" />
+    <delete   file="${dist}/${archive}.zip" />
+    <mkdir dir="${bin}" />
+    <copyfile src="${etc}/README"
+              dest="${bin}/README" />
+    <copyfile src="${etc}/LICENSE"
+              dest="${bin}/LICENSE" />
+    <copyfile src="${etc}/CHANGELOG"
+              dest="${bin}/CHANGELOG" />
+    <copyfile src="${dist}/${archive}.jar"
+              dest="${bin}/${archive}.jar" />
+    <copyfile src="${lib}/jdbc-se2.0.jar"
+              dest="${bin}/jdbc-se2.0.jar" />
+    <copyfile src="${lib}/jndi.jar"
+              dest="${bin}/jndi.jar" />
+    <copyfile src="${lib}/ldapjdk.jar"
+              dest="${bin}/ldapjdk.jar" />
+    <copyfile src="${lib}/ldapsp.jar"
+              dest="${bin}/ldapsp.jar" />
+    <copyfile src="${lib}/odmg-3.0.jar"
+              dest="${bin}/odmg-3.0.jar" />
+    <copyfile src="${lib}/xerces.jar"
+              dest="${bin}/xerces.jar" />
+    <copyfile src="${lib}/jta1.0.1.jar"
+              dest="${bin}/jta1.0.1.jar" />
+    <copydir  src="${source}/schema" dest="${bin}/schema" />
+
+    <tar includes="${archive}/**" chdir="${build}"
+         output="${dist}/${archive}.tar" defaultexcludes="true" />	  
+    <gzip src="${dist}/${archive}.tar" zipfile="${dist}/${archive}.tgz"/>
+    <delete file="${dist}/${archive}.tar" />
+
+    <zip zipfile="${dist}/${archive}.zip" basedir="${build}" includes="${archive}/**" />
   </target>
 
 
-  <target name="tomcat" depends="prepare">
-    <deltree  dir="${dist}/tomcat-tyrex-${version}.tar.Z" />
-    <copyfile src="${source}/etc/tyrex.xml"
-              dest="${tomcat}/tyrex.xml" />
-    <copyfile src="${source}/etc/jndi.properties"
-              dest="${tomcat}/jndi.properties" />
-    <copyfile src="${dist}/tyrex-${version}.jar"
-              dest="${tomcat}/lib/tyrex-${version}.jar" />
-    <exec command="tar --create --compress
-                       --exclude-from ${source}/etc/exclude
-                       ${tomcat}"
-          output="${dist}/tomcat-tyrex-${version}.tar.Z" />
+  <!-- Update the sources from the CVS -->
+  <target name="cvs" depends="clean">
+    <cvs cvsRoot=":pserver:arkin@virtuals.exoffice.com:/cvs/${project}"
+         dest="." package="${project}" />
   </target>
 
 
 </project>
+
