@@ -143,12 +143,12 @@ public final class OTSServer
         try
         {
         	
-        	//txDomain = tyrex.tm.TransactionDomain.getDomain( config_file );
+        	txDomain = tyrex.tm.TransactionDomain.getDomain( "default" );
         	//System.out.println(txDomain);
-        	//if( txDomain == null ) {
-        	  txDomain = tyrex.tm.TransactionDomain.createDomain( config_file );
-          
-         //} 
+        	if( txDomain == null ) 
+        	{
+        	  txDomain = tyrex.tm.TransactionDomain.createDomain( config_file );        	          	          	          	            
+         } 
         }
         catch ( tyrex.tm.DomainConfigurationException ex )
         {

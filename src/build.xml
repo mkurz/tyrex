@@ -96,6 +96,8 @@
   <target name="all" depends="clean,jar,jar-tests"
           description="Cleans and builds all the packages and tests" />
 
+  <target name="all-iiop" depends="all, iiop-jar, jar-tests-iiop" />
+  
   <target name="tests" depends="prepare"
           description="Builds the tests packages (including debugging info)">
     
@@ -140,7 +142,7 @@
          excludes="ots/*" />
   </target>
   
-  <target name="jar-tests-iiop" depends="tests">    
+  <target name="jar-tests-iiop" depends="tests-iiop">    
     <property name="archive" value="${project}-${version}" />
     <jar jarfile="${dist.dir}/${archive}-iiop-tests.jar"
          basedir="${build.tests}"
