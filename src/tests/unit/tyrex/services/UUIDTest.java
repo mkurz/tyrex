@@ -59,7 +59,7 @@ import junit.extensions.*;
 /**
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.7 $
+ * @version $Revision: 1.8 $
  */
 
 
@@ -147,7 +147,7 @@ public class UUIDTest extends TestCase
                      UUID.trim(id));
         String anID = "a8f1da0a48767f8404103eb2ff74084f";
         byte[] bytes = UUID.toBytes(anID);
-        assertEquals("Coverted ID", anID, UUID.fromBytes(bytes));
+        assertEquals("Converted ID", anID, UUID.fromBytes(bytes));
         anID = "prefixa8f1da0a48767f8404103eb2ff74084f";
         bytes = UUID.toBytes("prefix", anID);
         assertEquals("Coverted ID", anID, UUID.fromBytes("prefix", bytes));
@@ -171,18 +171,25 @@ public class UUIDTest extends TestCase
      * neighbors.
      */
 
-    public void testUniqueness()
+    public void uniquenessOfCreateTimeUUIDBytes(int variant)
         throws Exception
     {
         byte[] bytes;
         final int numIds = 700000;
         byte[][] ids1 = new byte[2 * numIds][8];
         byte[][] ids2 = new byte[numIds][8];
-        IdThread idThread = new IdThread(ids2);
+        IdThread idThread = new IdThread(ids2, variant);
         idThread.start();
         for (int i = 0; i < numIds; i++)
         {
-            bytes = UUID.createTimeUUIDBytes();
+            if (variant == 1)
+            {
+                bytes = UUID.createTimeUUIDBytes();
+            }
+            else
+            {
+                bytes = UUID.createBinary();
+            }
             for (int j = 0; j < 8; j++)
             {
                 if (j < 6)
@@ -206,6 +213,24 @@ public class UUIDTest extends TestCase
         {
             assert("Unique", comp.compare(ids1[i], ids1[i - 1]) != 0);
         }
+    }
+
+
+    /**
+     * <p>Generate a large number of IDs and ensure that all are
+     * unique.</p>
+     *
+     * @result Create a large String array.  Fill the array by
+     * generating a large number of individual ids.  Sort the array
+     * and then traverse it ensuring that no entry is the same as its
+     * neighbors.
+     */
+
+    public void testUniquenessOfCreateTimeUUIDBytes()
+        throws Exception
+    {
+        uniquenessOfCreateTimeUUIDBytes(1);
+        uniquenessOfCreateTimeUUIDBytes(2);
     }
 
 
@@ -255,17 +280,27 @@ public class UUIDTest extends TestCase
     private class IdThread extends Thread
     {
         private byte[][] _ids = null;
+        private int _variant;
 
-        public IdThread(byte[][] ids)
+        public IdThread(byte[][] ids, int variant)
         {
             _ids = ids;
+            _variant = variant;
         }
 
         public void run()
         {
+            byte[] bytes;
             for (int i = 0; i < _ids.length; i++)
             {
-                byte[] bytes = UUID.createTimeUUIDBytes();
+                if (_variant == 1)
+                {
+                    bytes = UUID.createTimeUUIDBytes();
+                }
+                else
+                {
+                    bytes = UUID.createBinary();
+                }
                 for (int j = 0; j < 8; j++)
                 {
                     if (j < 6)
