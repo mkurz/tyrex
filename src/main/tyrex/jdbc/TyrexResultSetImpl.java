@@ -253,6 +253,8 @@ public final class TyrexResultSetImpl
                 resultSet.close();
             }
         }
+        catch ( NullPointerException e )
+        { }
         finally {
             // statement can be non-null only for the
             // thread that closed the underlying result set
