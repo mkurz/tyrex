@@ -43,7 +43,7 @@
 
 package tyrex.util;
 
-
+import java.util.Random;
 import java.util.Properties;
 import java.util.Random;
 import java.util.Date;
@@ -726,6 +726,67 @@ public final class UUID
         return bytes;
     }
 
+    /**
+     * Read the UUID state and set the node identifier and clock sequence.
+     * This method is called exactly once, the first time a UUID is requested.
+     * <p>
+     * If attempts to load the UUID state from the UUID state file. If the
+     * file is not found, or does not contain a node identifier, a random node
+     * identifier is created.
+     * <p>
+     * This method sets {@link #_uuidsPerTick} to the number of UUIDs allowed
+     * per clock tick.
+     */
+    private static void loadState()
+    {
+        long             nodeIdLong;
+        int              seqInt;      
+        
+        Random rd = new Random( System.currentTimeMillis() + Runtime.getRuntime().freeMemory() );
+        
+        // If the node identifier could not be determined, or the state file could
+        // not be updated, obtain the node identifier and clock sequence from
+        // a random number.
+        // If node identifier is not IEEE 802 address, it must have the bit 48 set.
+        nodeIdLong = rd.nextLong();
+        nodeIdLong = nodeIdLong | ( 1 << 47 );
+        seqInt = rd.nextInt( 1 << 12 );
+        seqInt = seqInt & 0x1FFF;
+        _clockSeqOctet = new char[ 4 ];
+        _clockSeqOctet[ 1 ] = HEX_DIGITS[ (int) ( ( seqInt >> 8 ) & 0x0F ) ];
+        _clockSeqOctet[ 2 ] = HEX_DIGITS[ (int) ( ( seqInt >> 4 ) & 0x0F ) ];
+        _clockSeqOctet[ 3 ] = HEX_DIGITS[ (int) ( seqInt & 0x0F ) ];
+        _clockSeqByte = new byte[ 2 ];
+        _clockSeqByte[ 0 ] = (byte) ( ( seqInt >> 8 ) & 0xFF );
+        _clockSeqByte[ 1 ] = (byte) ( seqInt & 0xFF );        
+
+        // Convert node identifier to 12 hexadecimal digits, and sequence number
+        // to 4 hexadecimal digits.
+        _nodeIdentifierOctet = new char[ 12 ];
+        for ( int i = 0 ; i < 12 ; ++i )
+            _nodeIdentifierOctet[ i ] = HEX_DIGITS[ (int) ( ( nodeIdLong >> ( ( 11 - i ) * 4 ) ) & 0x0F ) ];
+        _nodeIdentifierByte = new byte[ 6 ];
+        for ( int i = 0 ; i < 6 ; ++i )
+            _nodeIdentifierByte[ i ] = (byte) ( ( nodeIdLong >> ( ( 5 - i ) * 8 ) ) & 0xFF );
+
+        // The number of UUIDs allowed per tick depends on the number of ticks between
+        // each advance of the clock, adjusted for 100 nanosecond precision.
+        _uuidsPerTick = Clock.getSleepTicks() * 100;
+       
+        // Need to mask UUID variant on clock sequence, but only after clock sequence
+        // has been stored.
+        _clockSeqOctet[ 0 ] = HEX_DIGITS[ (int) ( ( seqInt >> 12 ) & 0x0F ) | UUID_VARIANT_OCTET ];
+        _clockSeqByte[ 0 ] = (byte) ( ( ( seqInt >> 8 ) & 0xFF ) | UUID_VARIANT_BYTE );
+    }
+
+
+    static {
+        loadState();
+        // This makes sure we miss at least one clock tick, just to be safe.
+        _uuidsThisTick = _uuidsPerTick;
+        _lastClock = Clock.clock();
+    }
+    
     /**
      * An exception indicating the identifier is invalid and cannot be
      * converted into an array of bytes.
