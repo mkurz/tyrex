@@ -40,11 +40,11 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: PoolManager.java,v 1.1 2000/04/10 20:52:34 arkin Exp $
+ * $Id: PoolManager.java,v 1.2 2000/04/11 20:26:09 arkin Exp $
  */
 
 
-package tyrex.resource.manager;
+package tyrex.connector.manager;
 
 
 /**
@@ -57,7 +57,7 @@ package tyrex.resource.manager;
  *
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2000/04/10 20:52:34 $
+ * @version $Revision: 1.2 $ $Date: 2000/04/11 20:26:09 $
  * @see PoolManaged
  */
 public interface PoolManager

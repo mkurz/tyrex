@@ -70,7 +70,7 @@
   <target name="main" depends="prepare">
     <javac srcdir="${main}" destdir="${classes}" excludes="**/package.html"
            classpath="${classpath}" debug="on" deprecation="${deprecation}"
-           includes="tyrex/concurrency/**,tyrex/resource/**" />
+           includes="tyrex/concurrency/**,tyrex/connector/**,tyrex/interceptor/**,tyrex/naming/**" />
   </target>
 
   <!-- Same as main, but also cleans and additional targets -->
@@ -100,6 +100,8 @@
 
     <jar      jarfile="${dist}/${archive}.jar" basedir="${classes}"
               manifest="${classes}/MANIFEST.MF" includes="LICENSE,README,CHANGELOG,tyrex/**" />
+    <jar      jarfile="${dist}/connector.jar" basedir="${classes}"
+              manifest="${classes}/MANIFEST.MF" includes="tyrex/connector/*.java" />
   </target>
 
 
