@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionDomainImpl.java,v 1.27 2001/04/24 20:13:50 psq Exp $
+ * $Id: TransactionDomainImpl.java,v 1.28 2001/08/21 19:28:02 mohammed Exp $
  */
 
 
@@ -97,7 +97,7 @@ import tyrex.util.Logger;
  * Implementation of a transaction domain.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.27 $ $Date: 2001/04/24 20:13:50 $
+ * @version $Revision: 1.28 $ $Date: 2001/08/21 19:28:02 $
  */
 public class TransactionDomainImpl
     extends TransactionDomain
@@ -1421,7 +1421,7 @@ public class TransactionDomainImpl
 
         for ( int i = resources.length ; i-- > 0 ; ) {
             try {
-                xids = resources[ i ].recover( XAResource.TMNOFLAGS );
+                xids = resources[ i ].recover( XAResource.TMSTARTRSCAN );
             } catch ( XAException except ) {
                 recoveryError( new RecoveryException( "Resource manager " + resources[ i ] +
                                                       " failed to recover: " + Util.getXAException( except ) ) );
