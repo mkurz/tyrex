@@ -3209,11 +3209,6 @@ class TransactionTestSuite
         // get the transaction manager
         transactionManager = _txDomain.getTransactionManager();
         
-        if (null != transactionManager.getTransaction()) {
-            //stream.writeVerbose( "Rolling back current transaction" );
-            //transactionManager.rollback();    
-        }
-
         transactionManager.begin();
 
         // enlist the xa resource
