@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: XAConnectionImpl.java,v 1.1 2000/01/11 00:33:46 roro Exp $
+ * $Id: XAConnectionImpl.java,v 1.2 2000/01/17 22:18:25 arkin Exp $
  */
 
 
@@ -704,8 +704,8 @@ public final class XAConnectionImpl
 		    txConn.conn = null;
 		    if ( _resManager.getLogWriter() != null )
 			_resManager.getLogWriter().println( "XAConnection: failed to commit a transaction: " + except );
-		    // If we cannot commit the transaction, a heuristic tollback.
-		    throw new XAException( XAException.XA_HEURRB );
+		    // If we cannot commit the transaction, a heuristic hazard.
+		    throw new XAException( XAException.XA_HEURHAZ );
 		}
 	    } else {
 		// 2pc we should have prepared before.
