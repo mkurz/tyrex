@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: EnvContextTest.java,v 1.7 2001/08/24 14:01:22 mills Exp $
+ * $Id: EnvContextTest.java,v 1.8 2001/11/12 02:50:43 mills Exp $
  */
 
 
@@ -55,6 +55,7 @@ import javax.naming.*;
 import javax.naming.spi.ObjectFactory;
 import tyrex.tm.RuntimeContext;
 import tyrex.naming.EnvContext;
+import VerboseStream;
 
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -65,7 +66,7 @@ import java.io.PrintWriter;
 /**
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.7 $
+ * @version $Revision: 1.8 $
  */
 
 public class EnvContextTest extends TestCase
@@ -313,7 +314,7 @@ public class EnvContextTest extends TestCase
     {
         for( int i = 0 ; i < args.length ; i++ )
             if ( args[ i ].equals( "-verbose" ) )
-                tests.VerboseStream.verbose = true;
+                VerboseStream.verbose = true;
         tyrex.Unit.runTests(args, suite());
     }
 }

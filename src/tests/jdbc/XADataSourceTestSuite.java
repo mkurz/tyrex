@@ -40,13 +40,13 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: XADataSourceTestSuite.java,v 1.5 2001/07/24 02:13:07 mohammed Exp $
+ * $Id: XADataSourceTestSuite.java,v 1.6 2001/11/12 02:50:41 mills Exp $
  */
 
 
 package jdbc;
 
-import tests.*;
+import VerboseStream;
 
 import java.io.IOException;
 import java.sql.Connection;

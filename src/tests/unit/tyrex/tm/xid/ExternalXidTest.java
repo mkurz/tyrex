@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: ExternalXidTest.java,v 1.3 2001/09/13 23:51:14 mills Exp $
+ * $Id: ExternalXidTest.java,v 1.4 2001/11/12 02:50:45 mills Exp $
  */
 
 package tyrex.tm.xid;
@@ -56,7 +56,7 @@ import junit.extensions.*;
 /**
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  */
 
 public class ExternalXidTest extends TestCase
@@ -95,7 +95,7 @@ public class ExternalXidTest extends TestCase
      * be equal.  Ensure that the value returned by getFormatId() is
      * equal to BaseXid.FORMAT_ID and that the values returned by
      * getGlobalTransactionId() and getBranchQualifier() are equal to
-     * the values used in the constructor.
+     * the values used in the constructor.</p>
      *
      * <p>Create an Xid using XidUtils.parse().  Ensure that the id
      * returned is equal to the one used as argument in the call.</p>
@@ -169,7 +169,7 @@ public class ExternalXidTest extends TestCase
      *
      * @result Call the constructor with a -1 format id or a null or
      * empty byte array global value.  It should throw an
-     * IllegalArgumentException:
+     * IllegalArgumentException.
      */
 
     public void testBounds()

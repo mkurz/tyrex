@@ -40,13 +40,13 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Naming.java,v 1.7 2001/03/21 20:02:50 arkin Exp $
+ * $Id: Naming.java,v 1.8 2001/11/12 02:50:42 mills Exp $
  */
 
 
 package naming;
 
-import tests.*;
+import VerboseStream;
 
 import java.io.*;
 import java.util.Hashtable;

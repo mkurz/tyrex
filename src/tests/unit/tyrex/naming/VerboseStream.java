@@ -52,7 +52,7 @@ package tyrex.naming;
  * This class is a simple class to replace the CWVerboseStream from JTF. The argument "-verbose"
  * specifies verbose messages should be printed.
  *
- * @author <a href="omodica@intalio.com">Olivier Modica</a>
+ * @author <a href="mailto:omodica@intalio.com">Olivier Modica</a>
  */
 public final class VerboseStream
 {

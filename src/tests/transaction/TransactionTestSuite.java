@@ -69,7 +69,7 @@ import transaction.configuration.Performance;
 //import tyrex.tm.Tyrex;
 import tyrex.tm.TyrexTransaction;
 
-import tests.VerboseStream;
+import VerboseStream;
 
 
 /**
@@ -271,7 +271,7 @@ class TransactionTestSuite
     /**
      * Verbose stream replacing the one from JTF
      */
-    public static tests.VerboseStream stream;   
+    public static VerboseStream stream;   
 
     public TransactionTestSuite(String name, ArrayList groups, VerboseStream theStream, tyrex.tm.TransactionDomain txDomain )  //The database entry groups
     {

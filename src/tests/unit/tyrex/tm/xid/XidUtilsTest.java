@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: XidUtilsTest.java,v 1.4 2001/09/12 11:17:52 mills Exp $
+ * $Id: XidUtilsTest.java,v 1.5 2001/11/12 02:50:45 mills Exp $
  */
 
 
@@ -56,7 +56,7 @@ import junit.framework.TestSuite;
 /**
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  */
 
 
@@ -85,10 +85,10 @@ public class XidUtilsTest extends TestCase
      * XidUtils is not required.</p>
      *
      * @result Create instances of each of branch, external, local and
-     * global Xid-s.  Use each in the is<Type>() calls.  Only the
+     * global Xid-s.  Use each in the is&gt;Type&gt;() calls.  Only the
      * relevent ones should return true.
      *
-     * <p>Call each of the new<Type>() methods.  Ensure that the Xid-s
+     * <p>Call each of the new&lt;Type&gt;() methods.  Ensure that the Xid-s
      * returned are unique.</p>
      */
 

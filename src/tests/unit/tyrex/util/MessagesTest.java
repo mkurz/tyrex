@@ -57,7 +57,7 @@ import junit.extensions.*;
 /**
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  */
 
 
@@ -91,7 +91,7 @@ public class MessagesTest extends TestCase
      * that all the messages are formatted correctly.
      *
      * <p>Call it with a message name that does not exist.  The
-     * message name itself should be returned.
+     * message name itself should be returned.</p>
      */
 
     public void testBasicFunctionality()

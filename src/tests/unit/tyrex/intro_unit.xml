@@ -89,6 +89,31 @@ Unmatched tags will result in errors in the generation phase.</p>
                             <author>David Mills</author>
                             <comment><i>Created.</i></comment>
                         </line>
+                        <line>
+                            <date>25 Aug 2001</date>
+                            <author>David Mills</author>
+                            <comment><i>Added tests for tyrex.naming.</i></comment>
+                        </line>
+                        <line>
+                            <date>31 Aug 2001</date>
+                            <author>David Mills</author>
+                            <comment><i>Added tests for tyrex.util.</i></comment>
+                        </line>
+                        <line>
+                            <date>4 Sept 2001</date>
+                            <author>David Mills</author>
+                            <comment><i>Added tests for tyrex.serivces.</i></comment>
+                        </line>
+                        <line>
+                            <date>14 Sept 2001</date>
+                            <author>David Mills</author>
+                            <comment><i>Added tests for tyrex.tm.xid.</i></comment>
+                        </line>
+                        <line>
+                            <date>30 Oct 2001</date>
+                            <author>David Mills</author>
+                            <comment><i>Adding tests for tyrex.resource.jdbc.xa.</i></comment>
+                        </line>
                     </history>
                 </body>
         </paragraph>

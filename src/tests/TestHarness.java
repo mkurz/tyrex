@@ -40,10 +40,9 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TestHarness.java,v 1.16 2001/09/22 00:04:57 jdaniel Exp $
+ * $Id: TestHarness.java,v 1.17 2001/11/12 02:50:40 mills Exp $
  */
 
-package tests;
 
 import java.util.Vector;
 import java.util.Enumeration;

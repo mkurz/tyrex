@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Transaction.java,v 1.12 2001/07/20 23:01:08 mohammed Exp $
+ * $Id: Transaction.java,v 1.13 2001/11/12 02:50:42 mills Exp $
  */
 
 
@@ -85,6 +85,8 @@ import transaction.configuration.types.Type;
 import tyrex.resource.jdbc.xa.EnabledDataSource;
 //import tyrex.tm.Tyrex;
 import tyrex.tm.TyrexTransaction;
+
+import VerboseStream;
 
 /**
  * Performs various tests with transactions using databases.
@@ -230,7 +232,7 @@ public class Transaction
          
          _groups = getDataSourceGroups();
          
-         TransactionTestSuite trans = new TransactionTestSuite("Transaction Test Suite", _groups, new tests.VerboseStream(), _txDomain ); 
+         TransactionTestSuite trans = new TransactionTestSuite("Transaction Test Suite", _groups, new VerboseStream(), _txDomain ); 
          
          // add the initializer test
          addTest( new TestInitializer(this) );
@@ -876,7 +878,7 @@ public class Transaction
         }*/
 		org.apache.log4j.BasicConfigurator.configure();
 		org.apache.log4j.BasicConfigurator.disableAll();
-		tests.VerboseStream.verbose = true;
+		VerboseStream.verbose = true;
         TestSuite main = new Transaction( "Transaction Test", args[0]);
         
         junit.textui.TestRunner.run(main);
