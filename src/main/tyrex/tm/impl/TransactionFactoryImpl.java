@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionFactoryImpl.java,v 1.9 2001/09/21 20:52:17 mohammed Exp $
+ * $Id: TransactionFactoryImpl.java,v 1.10 2001/09/21 22:37:19 mohammed Exp $
  */
 
 
@@ -75,7 +75,7 @@ import org.omg.CosTSPortability.Receiver;
  * of remote transactions.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.9 $ $Date: 2001/09/21 20:52:17 $
+ * @version $Revision: 1.10 $ $Date: 2001/09/21 22:37:19 $
  * @see TransactionImpl
  *
  * Changes 
@@ -120,7 +120,7 @@ public final class TransactionFactoryImpl
             entry._txManager.resume(entry._tx);
         }
         else {
-            System.out.println("TransactionFactoryImpl: Failed to find entry for " + ior);
+            //System.out.println("TransactionFactoryImpl: Failed to find entry for " + ior);
         }
 
     }
