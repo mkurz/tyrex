@@ -84,7 +84,7 @@ import tyrex.util.LoggerPrintWriter;
 /**
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.15 $
+ * @version $Revision: 1.16 $
  */
 final class ConnectionPool
     extends PoolMetrics
@@ -221,7 +221,7 @@ final class ConnectionPool
         _poolDataSource = poolDataSource;
         _category = category;
         _txManager= txManager;
-		_reuse = ReuseOptions.REUSE_TRANSACTION;
+		_reuse = ReuseOptions.REUSE_NO_TRANSACTION_OFF;
 
         try {
             // Clone object to prevent changes by caller from affecting the
@@ -415,7 +415,7 @@ final class ConnectionPool
         // the connection is unuseable.
         if ( entry._xaResource != null ) {
             try {
-				_txManager.enlistResource( entry._xaResource );
+				_txManager.enlistResource( entry._xaResource, entry );
             } catch ( Exception except ) {
                 release( entry._pooled, false );
                 throw new SQLException( "Error occured using connection " + entry._pooled + ": " + except );
