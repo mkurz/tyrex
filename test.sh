@@ -1,6 +1,6 @@
 #! /bin/sh
 
-# $Id: test.sh,v 1.2 2000/01/17 22:10:08 arkin Exp $
+# $Id: test.sh,v 1.3 2000/01/18 04:56:13 arkin Exp $
 
 if [ -z "$JAVA_HOME" ] ; then
   JAVAC=`which java`
@@ -15,15 +15,15 @@ fi
 JAVAC=$JAVA_HOME/bin/java
 
 CLASSPATH=`echo lib/*.jar | tr ' ' ':'`:$CLASSPATH
-CLASSPATH=build/classes/:$CLASSPATH
+CLASSPATH=build/classes/:build/tests/:src/etc/:$CLASSPATH
 
 if [ -z $1 ] ; then
   echo "Usage: test.sh [Demo|<pkg> [<params>]]";
   exit 1;
 fi
 if [ $1 = "Demo" ] ; then
-  $JAVAC -cp $CLASSPATH tyrex.server.Demo $2 $3 $4
+  $JAVAC -cp $CLASSPATH tyrex.tools.Demo $2 $3 $4
 else
-  $JAVAC -cp $CLASSPATH tyrex.$1.Test $2 $3 $4
+  $JAVAC -cp $CLASSPATH tests.$1 $2 $3 $4
 fi
 

@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: Server.java,v 1.2 2000/01/17 22:16:40 arkin Exp $
+ * $Id: Server.java,v 1.3 2000/01/18 04:55:34 arkin Exp $
  */
 
 
@@ -57,6 +57,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.FileWriter;
 import java.io.File;
+import java.net.URL;
 import java.util.Vector;
 import java.util.Enumeration;
 import org.xml.sax.EntityResolver;
@@ -73,7 +74,7 @@ import tyrex.util.Logger;
  *
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $ $Date: 2000/01/17 22:16:40 $
+ * @version $Revision: 1.3 $ $Date: 2000/01/18 04:55:34 $
  * @see Configure
  * @see LogOption
  * @see PoolManager
@@ -253,13 +254,17 @@ public class Server
     public static Server load()
 	throws IOException
     {
-	File        file;
+	File file;
+	URL  url;      
 
-	file = new File( System.getProperty( "user.dir" ), FileName );
 	try {
-	    if ( file.exists() ) {
-		Logger.getSystemLogger().println( Messages.format( "tyrex.conf.loadingServer", file ) );
-		return load( file );
+	    url = Server.class.getResource( FileName );
+	    if ( url != null ) {
+		file = new File( url.toString() );
+		if ( file.exists() ) {
+		    Logger.getSystemLogger().println( Messages.format( "tyrex.conf.loadingServer", file ) );
+		    return load( file );
+		}
 	    }
 	    file = new File( System.getProperty( "java.home" ), "lib" );
 	    file = new File( file, FileName );

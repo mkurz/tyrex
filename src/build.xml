@@ -1,17 +1,16 @@
 <project name="Tyrex" default="main" basedir=".">
 
-  <property name="tyrex.source" value="src" />
-  <property name="tyrex.etc" value="src/etc" />
-  <property name="tyrex.build" value="build" />
-  <property name="tyrex.classes" value="${tyrex.build}/classes" />
-  <property name="tyrex.dist" value="dist" />
-  <property name="tyrex.lib" value="lib" />
-  <property name="tyrex.doc" value="doc" />
-  <property name="tyrex.tomcat" value="tomcat" />
+  <property name="source" value="src" />
+  <property name="build" value="build" />
+  <property name="classes" value="${build}/classes" />
+  <property name="dist" value="dist" />
+  <property name="lib" value="lib" />
+  <property name="doc" value="doc" />
+  <property name="tomcat" value="tomcat" />
 
-  <property name="classpath" value="${tyrex.classes}" />
+  <property name="classpath" value="${classes}" />
   <property name="build.compiler" file="classic" />
-  <property file="${tyrex.source}/VERSION" />
+  <property file="${source}/VERSION" />
 
   <property name="jar.name" value="tyrex-${version}"/>
 
@@ -27,16 +26,16 @@ The following targets are available\n
 
   <!-- Prepare target directories -->
   <target name="prepare">
-    <mkdir dir="${tyrex.build}"/>
-    <mkdir dir="${tyrex.classes}"/>
-    <mkdir dir="${tyrex.dist}"/>
+    <mkdir dir="${build}"/>
+    <mkdir dir="${classes}"/>
+    <mkdir dir="${dist}"/>
   </target>
 
 
   <!-- Kill all the directories created in prepare -->
   <target name="clean">
-    <deltree dir="${tyrex.build}"/>
-    <deltree dir="${tyrex.dist}"/>
+    <deltree dir="${build}"/>
+    <deltree dir="${dist}"/>
   </target>
 
 
@@ -49,85 +48,93 @@ The following targets are available\n
 
   <!-- Build all the sources with debug and deprecation -->
   <target name="main" depends="prepare">
-    <javac srcdir="${tyrex.source}/main" destdir="${tyrex.classes}"
+    <javac srcdir="${source}/main" destdir="${classes}"
            classpath="${classpath}" debug="on" deprecation="${deprecation}" />
   </target>
 
 
   <!-- Same as main, but no debug and no deprecation -->
   <target name="all.release" depends="prepare">
-    <javac srcdir="${tyrex.source}/main" destdir="${tyrex.classes}"
+    <javac srcdir="${source}/main" destdir="${classes}"
            classpath="${classpath}" debug="off" deprecation="off"/>
   </target>
 
   
   <target name="jar" depends="clean,all.release">
-    <deltree dir="${tyrex.dist}/${jar.name}.jar" />
+    <deltree dir="${dist}/${jar.name}.jar" />
 
-    <copyfile src="${tyrex.source}/etc/MANIFEST.MF" dest="${tyrex.classes}/MANIFEST.MF" />
-    <replace file="${tyrex.classes}/MANIFEST.MF" token="$$VERSION$$" value="${version}"/>
-    <copyfile src="${tyrex.source}/etc/LICENSE" dest="${tyrex.classes}/LICENSE" />
-    <copyfile src="${tyrex.source}/etc/README" dest="${tyrex.classes}/README" />
-    <copyfile src="${tyrex.source}/etc/CHANGELOG" dest="${tyrex.classes}/CHANGELOG" />
+    <copyfile src="${source}/etc/MANIFEST.MF" dest="${classes}/MANIFEST.MF" />
+    <replace file="${classes}/MANIFEST.MF" token="$$VERSION$$" value="${version}"/>
+    <copyfile src="${source}/etc/LICENSE" dest="${classes}/LICENSE" />
+    <copyfile src="${source}/etc/README" dest="${classes}/README" />
+    <copyfile src="${source}/etc/CHANGELOG" dest="${classes}/CHANGELOG" />
 
-    <copyfile src="${tyrex.source}/etc/tyrex.xml" dest="${tyrex.classes}/tyrex.xml" />
-    <copyfile src="${tyrex.source}/etc/resources.xml" dest="${tyrex.classes}/resources.xml" />
-    <copyfile src="${tyrex.source}/etc/jndi.properties" dest="${tyrex.classes}/jndi.properties" />
+    <copyfile src="${source}/etc/tyrex.xml" dest="${classes}/tyrex.xml" />
+    <copyfile src="${source}/etc/resources.xml" dest="${classes}/resources.xml" />
+    <copyfile src="${source}/etc/jndi.properties" dest="${classes}/jndi.properties" />
 
-    <jar jarfile="${tyrex.dist}/${jar.name}.jar" basedir="${tyrex.classes}"
-         manifest="${tyrex.classes}/MANIFEST.MF" items="LICENSE,README,CHANGELOG,
+    <jar jarfile="${dist}/${jar.name}.jar" basedir="${classes}"
+         manifest="${classes}/MANIFEST.MF" items="LICENSE,README,CHANGELOG,
          tyrex.xml,resources.xml,jndi.properties,tyrex,org,com" />
 
-    <java class="Install" args="${tyrex.dist}/${jar.name}.jar -n" />
+    <java class="Install" args="${dist}/${jar.name}.jar -n" />
   </target>
 
 
+  <target name="tests" depends="prepare">
+    <mkdir dir="${build}/tests" />
+    <javac srcdir="${source}/tests" destdir="${build}/tests"
+           classpath="${classpath}" debug="on" deprecation="${deprecation}"/>
+  </target>
+
+
+
   <target name="install">
-    <java class="Install" args="${tyrex.dist}/${jar.name}.jar -i -v" />
+    <java class="Install" args="${dist}/${jar.name}.jar -i -v" />
   </target>
 
 
   <target name="javadoc" depends="prepare">
-    <mkdir dir="${tyrex.build}/javadoc" />
-    <exec command="javadoc -sourcepath ${tyrex.source}/main -d ${tyrex.build}/javadoc
+    <mkdir dir="${build}/javadoc" />
+    <exec command="javadoc -sourcepath ${source}/main -d ${build}/javadoc
                            -doctitle Tyrex -public -noindex -author
                            tyrex.server tyrex.conf tyrex.naming" />
 
-    <jar jarfile="${tyrex.dist}/${jar.name}-doc.jar" basedir="${tyrex.build}"
+    <jar jarfile="${dist}/${jar.name}-doc.jar" basedir="${build}"
          items="javadoc" />
   </target>
 
 
   <!-- Targets for individual packages -->
   <target name="tyrex.server" depends="prepare">
-    <javac srcdir="${tyrex.source}/main/tyrex/server"
+    <javac srcdir="${source}/main/tyrex/server"
            destdir="${tyrex.class}/tyrex/server"
            classpath="${classpath}" debug="on"/>
   </target>
 
 
   <target name="tar" depends="prepare">
-    <deltree  dir="${tyrex.dist}/tyrex-${version}.tar.Z" />
-    <exec command="tar --create --exclude-from ${tyrex.source}/etc/exclude
+    <deltree  dir="${dist}/tyrex-${version}.tar.Z" />
+    <exec command="tar --create --exclude-from ${source}/etc/exclude
                        --dereference
-                       build.sh ${tyrex.source} ${tyrex.lib} ${tyrex.doc}"
-          output="${tyrex.dist}/tyrex-${version}-src.tar" />
-    <exec command="compress ${tyrex.dist}/tyrex-${version}-src.tar" />
+                       build.sh ${source} ${lib} ${doc}"
+          output="${dist}/tyrex-${version}-src.tar" />
+    <exec command="compress ${dist}/tyrex-${version}-src.tar" />
   </target>
 
 
   <target name="tomcat" depends="prepare">
-    <deltree  dir="${tyrex.dist}/tomcat-tyrex-${version}.tar.Z" />
-    <copyfile src="${tyrex.source}/etc/tyrex.xml"
-              dest="${tyrex.tomcat}/tyrex.xml" />
-    <copyfile src="${tyrex.source}/etc/jndi.properties"
-              dest="${tyrex.tomcat}/jndi.properties" />
-    <copyfile src="${tyrex.dist}/tyrex-${version}.jar"
-              dest="${tyrex.tomcat}/lib/tyrex-${version}.jar" />
+    <deltree  dir="${dist}/tomcat-tyrex-${version}.tar.Z" />
+    <copyfile src="${source}/etc/tyrex.xml"
+              dest="${tomcat}/tyrex.xml" />
+    <copyfile src="${source}/etc/jndi.properties"
+              dest="${tomcat}/jndi.properties" />
+    <copyfile src="${dist}/tyrex-${version}.jar"
+              dest="${tomcat}/lib/tyrex-${version}.jar" />
     <exec command="tar --create --compress
-                       --exclude-from ${tyrex.source}/etc/exclude
-                       ${tyrex.tomcat}"
-          output="${tyrex.dist}/tomcat-tyrex-${version}.tar.Z" />
+                       --exclude-from ${source}/etc/exclude
+                       ${tomcat}"
+          output="${dist}/tomcat-tyrex-${version}.tar.Z" />
   </target>
 
 
