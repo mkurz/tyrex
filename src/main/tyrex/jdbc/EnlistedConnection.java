@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: EnlistedConnection.java,v 1.7 2000/10/06 01:10:08 mohammed Exp $
+ * $Id: EnlistedConnection.java,v 1.8 2000/10/10 00:57:08 mohammed Exp $
  */
 
 
@@ -81,6 +81,7 @@ import tyrex.tm.EnlistedResource;
  *                              being transactional.
  */
 public class EnlistedConnection
+    extends AbstractTyrexConnectionImpl
     implements Connection, EnlistedResource
 {
 
@@ -132,42 +133,46 @@ public class EnlistedConnection
     public Statement createStatement()
         throws SQLException
     {
-	return getUnderlying().createStatement();
+	return new TyrexStatementImpl(getUnderlying().createStatement(), this);
     }
 
 
     public Statement createStatement( int resultSetType, int resultSetConcurrency )
         throws SQLException
     {
-	return getUnderlying().createStatement( resultSetType, resultSetConcurrency );
+	return new TyrexStatementImpl( getUnderlying().createStatement( resultSetType, resultSetConcurrency ),
+                                  this );
     }
 
 
     public PreparedStatement prepareStatement( String sql )
         throws SQLException
     {
-	return getUnderlying().prepareStatement( sql );
+	return new TyrexPreparedStatementImpl( getUnderlying().prepareStatement( sql ), this );
     }
 
 
     public PreparedStatement prepareStatement( String sql, int resultSetType, int resultSetConcurrency )
         throws SQLException
     {
-	return getUnderlying().prepareStatement( sql, resultSetType, resultSetConcurrency );
+	return new TyrexPreparedStatementImpl( getUnderlying().prepareStatement( sql, resultSetType, resultSetConcurrency ),
+                                           this );
     }
 
 
     public CallableStatement prepareCall( String sql )
         throws SQLException
     {
-	return getUnderlying().prepareCall( sql );
+	return new TyrexCallableStatementImpl( getUnderlying().prepareCall( sql ),
+                                           this );
     }
 
 
     public CallableStatement prepareCall( String sql, int resultSetType, int resultSetConcurrency )
         throws SQLException
     {
-	return getUnderlying().prepareCall( sql, resultSetType, resultSetConcurrency );
+	return new TyrexCallableStatementImpl( getUnderlying().prepareCall( sql, resultSetType, resultSetConcurrency ),
+                                           this );
     }
 
 
@@ -299,6 +304,7 @@ public class EnlistedConnection
             _underlying.close();
         	_underlying = null;
         	_xaRes = null;        
+            notifyConnectionClosed();
         }
     }
 
