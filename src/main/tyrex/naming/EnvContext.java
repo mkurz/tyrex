@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: EnvContext.java,v 1.6 2000/09/08 23:05:19 mohammed Exp $
+ * $Id: EnvContext.java,v 1.7 2000/12/05 23:30:57 mohammed Exp $
  */
 
 
@@ -127,7 +127,7 @@ import tyrex.util.FastThreadLocal;
  * </pre>
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.6 $ $Date: 2000/09/08 23:05:19 $
+ * @version $Revision: 1.7 $ $Date: 2000/12/05 23:30:57 $
  */
 public final class EnvContext
     implements Context, Serializable
@@ -655,7 +655,7 @@ public final class EnvContext
     public Name composeName( Name name, Name prefix )
 	throws NamingException
     {
-	prefix = (Name) name.clone();
+	prefix = (Name) prefix.clone();
 	return prefix.addAll( name );
     }
 

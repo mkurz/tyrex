@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: MemoryContext.java,v 1.7 2000/09/25 06:41:56 mohammed Exp $
+ * $Id: MemoryContext.java,v 1.8 2000/12/05 23:30:57 mohammed Exp $
  */
 
 
@@ -92,7 +92,7 @@ import javax.naming.spi.NamingManager;
  *
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.7 $ $Date: 2000/09/25 06:41:56 $
+ * @version $Revision: 1.8 $ $Date: 2000/12/05 23:30:57 $
  * @see MemoryContextFactory
  */
 public class MemoryContext
@@ -968,7 +968,7 @@ public class MemoryContext
     public Name composeName( Name name, Name prefix )
 	throws NamingException
     {
-	prefix = (Name) name.clone();
+	prefix = (Name) prefix.clone();
 	return prefix.addAll( name );
     }
 
