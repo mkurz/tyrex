@@ -122,6 +122,10 @@ public final class TestDriverImpl
     public Connection connect(String url, Properties info)
         throws SQLException
     {
+        if (!acceptsURL(url)) {
+            return null;    
+        }
+
         TestConnectionImpl connection = new TestConnectionImpl(url, info);
         ++_numberOfCreatedConnections;
         _lastConnection = connection;
