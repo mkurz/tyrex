@@ -40,18 +40,21 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Logger.java,v 1.16 2001/09/21 18:15:04 mohammed Exp $
+ * $Id: Logger.java,v 1.17 2001/10/18 00:45:28 mohammed Exp $
  */
 
 
 package tyrex.util;
 
+import java.io.OutputStream;
+import org.apache.log4j.PatternLayout;
 import org.apache.log4j.Category;
+import org.apache.log4j.FileAppender;
 
 /**
  *
  * @author <a href="jdaniel@intalio.com">Jerome DANIEL</a>
- * @version $Revision: 1.16 $ $Date: 2001/09/21 18:15:04 $
+ * @version $Revision: 1.17 $ $Date: 2001/10/18 00:45:28 $
  */
 public class Logger
 {
@@ -74,10 +77,46 @@ public class Logger
 
     static {
         tyrex = Category.getInstance( "tyrex" );
+
+        // add an appender to tyrex if necessary
+        /*if ( ! tyrex.getDefaultHierarchy().getRoot().getAllAppenders().hasMoreElements() ) {
+            tyrex.addAppender( new FileAppender( new PatternLayout( "%d{dd MMM yyyy HH:mm:ss}:%c:%p %m%n" ), 
+                                                   System.out ) );
+        }*/
+
         resource = Category.getInstance( "tyrex.resource" );
         ots = Category.getInstance( "tyrex.ots" );
         security = Category.getInstance( "tyrex.security" );
         castor = Category.getInstance( "tyrex.resource.castor" );
+
+        tyrex.getDefaultHierarchy().getRoot().removeAllAppenders();
+        tyrex.addAppender( new FileAppender( new PatternLayout( "" ), new DevNull() ) );
+    }
+
+    static private class DevNull
+        extends OutputStream
+    {
+
+        public void close()
+        {
+        }
+
+        public void flush()
+        {
+        }
+
+        public void write( int value )
+        {
+        }
+
+        public void write( byte[] bytes )
+        {
+        }
+
+        public void write( byte[] bytes, int start, int length )
+        {
+        }
+
     }
 }
 
