@@ -58,7 +58,7 @@ public final class TestDriverImpl
     /**
      * The start of a valid test url (header + subprotocol)
      */
-    private static final String TEST_URL_START = "jdbc:test";
+    public static final String TEST_URL_START = "jdbc:tyrex_test";
 
     
     /**

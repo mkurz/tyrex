@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: XADataSourceTestSuite.java,v 1.4 2001/06/21 18:02:15 mohammed Exp $
+ * $Id: XADataSourceTestSuite.java,v 1.5 2001/07/24 02:13:07 mohammed Exp $
  */
 
 
@@ -152,7 +152,7 @@ public class XADataSourceTestSuite
             }
     
             try {
-                _driver = (TestDriverImpl)DriverManager.getDriver("jdbc:test");
+                _driver = (TestDriverImpl)DriverManager.getDriver(TestDriverImpl.TEST_URL_START);
             }
             catch (SQLException e)
             {
@@ -173,7 +173,7 @@ public class XADataSourceTestSuite
     {
         EnabledDataSource ds = new EnabledDataSource();
         ds.setDriverClassName("jdbc.db.TestDriverImpl");
-        ds.setDriverName("jdbc:test");
+        ds.setDriverName(TestDriverImpl.TEST_URL_START);
         ds.setPruneFactor(0);
 
         return ds;
