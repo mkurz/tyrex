@@ -1,4 +1,4 @@
-<project name="Tyrex" default="main" basedir=".">
+<project name="Tyrex" default="all" basedir=".">
 
   <target name="init">
     <property name="project" value="tyrex" />
