@@ -46,6 +46,8 @@
 package tyrex.resource;
 
 import java.io.File;
+import java.io.IOException;
+import java.net.URL;
 import tyrex.tm.TransactionDomain;
 
 
@@ -55,7 +57,7 @@ import tyrex.tm.TransactionDomain;
  * for configuring and creating a resource.
  * 
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  */
 public abstract class ResourceConfig
 {
@@ -275,7 +277,7 @@ public abstract class ResourceConfig
      * @param path the path (required)
      * @return the file constructed from the path.
      */
-    protected final File createFile(String path) {
+    private File createFile(String path) {
         File file;
 
         file = new File( path );
@@ -286,5 +288,47 @@ public abstract class ResourceConfig
         }
 
         return file;
+    }
+
+    /**
+     * Return the url for the url string.
+     * <P>
+     * This code contains a workaround for a bug in
+     * java.net.URLClassLoader involving relative paths
+     * to directories.
+     *
+     * @param urlString the url string (required)
+     * @return the url for the url string
+     * @throws IOException if the url is malformed or
+     *      an io problem occurred.
+     */
+    protected final URL getURL(String urlString) 
+        throws IOException {
+        File file;
+        URL url;
+
+        file = createFile( urlString );
+        if ( file.exists() && file.canRead() ) {
+            // workaround for a bug in URLClassLoader
+            // actually in sun.misc.URLClassPath
+            if ( file.isDirectory() ) {
+                file = file.getCanonicalFile();    
+            }
+            return file.toURL();
+        }
+        else {
+            url = new URL( urlString );
+
+            if (url.getProtocol().equals( "file" ) ) {
+                file = createFile( url.getFile() );
+                // workaround for a bug in URLClassLoader
+                // actually in sun.misc.URLClassPath
+                if ( file.exists() && file.canRead() && file.isDirectory() ) {
+                    return file.getCanonicalFile().toURL();
+                }    
+            }
+
+            return url;
+        }
     }
 }
