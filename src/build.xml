@@ -5,12 +5,14 @@
   <property name="source.etc" value="${source.dir}/etc" />
   <property name="source.schema" value="${source.dir}/schema" />
   <property name="source.tests" value="${source.dir}/tests" />
+  <property name="source.tests.unit" value="${source.tests}/unit" />
   <property name="source.doc" value="${source.dir}/doc" />
   
   <property name="build.dir" value="build" />
   <property name="build.classes" value="${build.dir}/classes" />
   <property name="build.schema" value="${build.dir}/schema" />
   <property name="build.tests" value="${build.dir}/tests" />
+  <property name="build.tests.unit" value="${build.tests}/unit" />
   <property name="build.doc" value="${build.dir}/doc" />
   <property name="build.javadoc" value="${build.doc}/javadoc" />
   <property name="build.api" value="${build.doc}/api" />
@@ -103,9 +105,17 @@
     
     <!-- create the builded tests directory -->
     <mkdir dir="${build.tests}" />
-        
+    <mkdir dir="${build.tests.unit}" />
+
     <javac srcdir="${source.tests};${build.tests}"
            destdir="${build.tests}"           
+           debug="on"
+           excludes="ots/**,unit/**"           
+           deprecation="${deprecation}">
+    </javac>
+
+    <javac srcdir="${source.tests.unit};${build.tests.unit}"
+           destdir="${build.tests.unit}"           
            debug="on"
            excludes="ots/**"           
            deprecation="${deprecation}">
