@@ -48,9 +48,9 @@ import java.sql.*;
 import java.util.*;
 
 /**
- * The tyrex connection
+ * The test implementation of java.sql.Connection
  */
-public final class TyrexConnection 
+public final class TestConnectionImpl 
     implements Connection 
 {
     /**
@@ -102,17 +102,24 @@ public final class TyrexConnection
      * before trying to get lock2.
      */
     private int _commitWaitTime = 0;
+
+
+    /**
+     * Counter to ensure synchronized blocks in commit
+     * and rollback do not get optimized.
+     */
+    private int _counter = 0;
     
 
     /**
-     * Create the TyrexConnection.
+     * Create the TestConnectionImpl.
      * <p>
      * The specified arguments are ignored.
      *
      * @param url the jdbc url.
      * @param info the properties
      */
-    TyrexConnection(String url, Properties info)
+    TestConnectionImpl(String url, Properties info)
     {
 
     }
@@ -126,7 +133,7 @@ public final class TyrexConnection
     public Statement createStatement() 
         throws SQLException
     {
-        return new TyrexStatement(this);
+        return new TestStatementImpl(this);
     }
 
     /**
@@ -158,7 +165,7 @@ public final class TyrexConnection
     public CallableStatement prepareCall(String sql) 
         throws SQLException
     {
-        throw new SQLException("prepareStatement method is not supported.");
+        throw new SQLException("prepareCall method is not supported.");
     }
 
 						
@@ -243,9 +250,9 @@ public final class TyrexConnection
     public void commit() 
         throws SQLException
     {
-        if (_commitWaitTime > 0) {
+        /*if (_commitWaitTime > 0) {
             //System.out.println(this + " commit: getting lock1");
-        }
+        }*/
         synchronized (_lock1)
         {
             if (_commitWaitTime > 0) {
@@ -261,11 +268,14 @@ public final class TyrexConnection
 
                 //System.out.println(this + " commit: getting lock2");
             }
+
             synchronized (_lock2)
             {
-                if (_commitWaitTime > 0) {
+                /*if (_commitWaitTime > 0) {
                     //System.out.println(this + " commit: got lock2");
-                }
+                }*/
+
+                ++_counter;
             }
         }
     }
@@ -280,23 +290,37 @@ public final class TyrexConnection
     public void rollback() 
         throws SQLException
     {
-        if (_commitWaitTime > 0) {
+        /*if (_commitWaitTime > 0) {
             //System.out.println(this + " rollback: getting lock2");
-        }
+        }*/
         synchronized (_lock2)
         {
-            if (_commitWaitTime > 0) {
+            /*if (_commitWaitTime > 0) {
                 //System.out.println(this + " rollback: got lock2");
 
                 //System.out.println(this + " rollback: getting lock1");
-            }
+            }*/
             synchronized (_lock1)
             {
-                if (_commitWaitTime > 0) {
+                /*if (_commitWaitTime > 0) {
                     //System.out.println(this + " rollback: got lock1");
-                }
+                }*/
+
+                ++_counter;
             }
         }
+    }
+
+
+    /**
+     * Return the value of the counter. [To ensure the synchronized blocks
+     * in commit and rollback do not get optimized]
+     *
+     * @return the value of the counter.
+     */
+    public int getCounter()
+    {
+        return _counter;
     }
 
     /**

@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: DataSource.java,v 1.3 2000/09/30 02:25:38 mohammed Exp $
+ * $Id: XADataSourceTestCategory.java,v 1.1 2000/11/09 23:57:44 mohammed Exp $
  */
 
 
@@ -56,8 +56,8 @@ import java.sql.Statement;
 import javax.sql.XAConnection;
 import javax.sql.XADataSource;
 import javax.transaction.TransactionManager;
-import jdbc.db.TyrexConnection;
-import jdbc.db.TyrexDriver;
+import jdbc.db.TestConnectionImpl;
+import jdbc.db.TestDriverImpl;
 import org.exolab.jtf.CWTestCategory;
 import org.exolab.jtf.CWTestCase;
 import org.exolab.jtf.CWVerboseStream;
@@ -67,21 +67,28 @@ import tyrex.jdbc.xa.EnabledDataSource;
 import tyrex.tm.Tyrex;
 
 
-
-public class DataSource
+/**
+ * Tests for tyrex.jdbc xa data source implementations
+ */
+public class XADataSourceTestCategory
     extends CWTestCategory
 {
+    /**
+     * The test driver
+     */
+    private TestDriverImpl _driver = null;
 
-    public DataSource()
+
+    public XADataSourceTestCategory()
         throws CWClassConstructorException
     {
-        super( "DataSource", "DataSource");
+        super( "XADataSourceTestCategory", "XADataSourceTestCategory");
         
         CWTestCase tc;
         
         tc = new EnabledDataSourceTest();
         add( tc.name(), tc, true );
-
+        
         tc = new ServerDataSourceTest();
         add( tc.name(), tc, true );
 
@@ -92,8 +99,9 @@ public class DataSource
         tc = new PruneTest();
         add( tc.name(), tc, true );
         
-        tc = new DeadlockTest();
+        tc = new TransactionTimeoutTest();
         add( tc.name(), tc, true );
+        
     }
 
 
@@ -103,28 +111,34 @@ public class DataSource
      *
      * @param stream the stream
      * @return the Tyrex driver registered with the
-     * java.sql.DriverManager. Return null if there is a problem
+     * java.sql.DriverManager.
+     * @throws IOException if there is an error writing to the stream
+     * @throws ClassNotFoundException if the test driver class is not found
+     * @throws SQLException if there is a problem geting the test driver
      */
-    private TyrexDriver getTyrexDriver(CWVerboseStream stream)
-        throws IOException
+    private TestDriverImpl getTestDriver(CWVerboseStream stream)
+        throws IOException, ClassNotFoundException, SQLException
     {
-        try {
-            Class.forName("jdbc.db.TyrexDriver");
-        }
-        catch (ClassNotFoundException e) {
-            stream.writeVerbose("Tyrex driver class not found");
-            return null;
+        if (null == _driver) {
+            try {
+                Class.forName("jdbc.db.TestDriverImpl");
+            }
+            catch (ClassNotFoundException e) {
+                stream.writeVerbose("Test driver class not found");
+                throw e;
+            }
+    
+            try {
+                _driver = (TestDriverImpl)DriverManager.getDriver("jdbc:test");
+            }
+            catch (SQLException e)
+            {
+                stream.writeVerbose("Failed to get test driver");
+                throw e;
+            }
         }
 
-        try {
-            return (TyrexDriver)DriverManager.getDriver("jdbc:tyrex");
-        }
-        catch (SQLException e)
-        {
-            stream.writeVerbose("Failed to get tyrex driver");
-            stream.writeVerbose(e.toString());
-        }
-        return null;
+        return _driver;
     }
 
     /**
@@ -135,8 +149,8 @@ public class DataSource
     private EnabledDataSource getEnabledDataSource()
     {
         EnabledDataSource ds = new EnabledDataSource();
-        ds.setDriverClassName("jdbc.db.TyrexDriver");
-        ds.setDriverName("jdbc:tyrex:");
+        ds.setDriverClassName("jdbc.db.TestDriverImpl");
+        ds.setDriverName("jdbc:test");
         ds.setPruneFactor(0);
 
         return ds;
@@ -154,7 +168,7 @@ public class DataSource
         public boolean run( CWVerboseStream stream )
         {
             TransactionManager transactionManager;
-            TyrexDriver tyrexDriver;
+            TestDriverImpl testDriver;
             Connection connection;
             Statement stmt;
             XAConnection xaConnection;
@@ -162,16 +176,13 @@ public class DataSource
             int i;
             
             try {
-                tyrexDriver = getTyrexDriver(stream);
+                testDriver = getTestDriver(stream);
 
-                if (null == tyrexDriver) {
-                    return false;    
-                }
-                
                 transactionManager = Tyrex.getTransactionManager();
-                tyrexDriver.clearNumberOfCreatedConnections();
+                testDriver.clearNumberOfCreatedConnections();
                 ds = getEnabledDataSource();
                 i = 0;
+                //System.out.println("ds connection " + ds.getConnection());
     
                 try {
                     xaConnection = ds.getXAConnection();
@@ -181,7 +192,10 @@ public class DataSource
         
                         connection = xaConnection.getConnection();
     
-                        transactionManager.getTransaction().enlistResource(xaConnection.getXAResource());
+                        if (!transactionManager.getTransaction().enlistResource(xaConnection.getXAResource())) {
+                            System.out.println("failed to enlist");
+                            return false;
+                        }
         
                         stmt = connection.createStatement();
         
@@ -202,9 +216,9 @@ public class DataSource
                     return false;
                 }
     
-                if (tyrexDriver.getNumberOfCreatedConnections() != 1) {
+                if (testDriver.getNumberOfCreatedConnections() != 1) {
                     stream.writeVerbose("Driver created " + 
-                                        tyrexDriver.getNumberOfCreatedConnections() +
+                                        testDriver.getNumberOfCreatedConnections() +
                                         " drivers. Expected 1.");
                     return false;
                 }
@@ -212,7 +226,7 @@ public class DataSource
                 return true;
                 
             }
-            catch (IOException e) {
+            catch (Exception e) {
                 e.printStackTrace();
             }
             return false;
@@ -232,21 +246,17 @@ public class DataSource
         public boolean run( CWVerboseStream stream )
         {
             TransactionManager transactionManager;
-            TyrexDriver tyrexDriver;
+            TestDriverImpl testDriver;
             Connection connection;
             Statement stmt;
             XAConnection xaConnection;
             EnabledDataSource ds;
             
             try {
-                tyrexDriver = getTyrexDriver(stream);
+                testDriver = getTestDriver(stream);
 
-                if (null == tyrexDriver) {
-                    return false;    
-                }
-                
                 transactionManager = Tyrex.getTransactionManager();
-                tyrexDriver.clearNumberOfCreatedConnections();
+                testDriver.clearNumberOfCreatedConnections();
                 ds = getEnabledDataSource();
                 ds.setTransactionTimeout(1);
                 ds.setPruneFactor((float)0.75);
@@ -260,9 +270,9 @@ public class DataSource
                     stmt.close();
                     connection.close();
 
-                    if (tyrexDriver.getNumberOfCreatedConnections() != 1) {
+                    if (testDriver.getNumberOfCreatedConnections() != 1) {
                         stream.writeVerbose("Driver created " + 
-                                            tyrexDriver.getNumberOfCreatedConnections() +
+                                            testDriver.getNumberOfCreatedConnections() +
                                             " drivers. Expected 1.");
                         return false;
                     }
@@ -276,9 +286,9 @@ public class DataSource
                     stmt.close();
                     connection.close();
 
-                    if (tyrexDriver.getNumberOfCreatedConnections() != 2) {
+                    if (testDriver.getNumberOfCreatedConnections() != 2) {
                         stream.writeVerbose("Driver created " + 
-                                            tyrexDriver.getNumberOfCreatedConnections() +
+                                            testDriver.getNumberOfCreatedConnections() +
                                             " drivers. Expected 2.");
                         return false;
                     }
@@ -294,7 +304,7 @@ public class DataSource
                 return true;
                 
             }
-            catch (IOException e) {
+            catch (Exception e) {
                 e.printStackTrace();
             }
             return false;
@@ -314,7 +324,7 @@ public class DataSource
         public boolean run( CWVerboseStream stream )
         {
             TransactionManager transactionManager;
-            TyrexDriver tyrexDriver;
+            TestDriverImpl testDriver;
             Connection connection;
             Statement stmt;
             EnabledDataSource ds;
@@ -322,15 +332,11 @@ public class DataSource
             int i;
             
             try {
-                tyrexDriver = getTyrexDriver(stream);
-
-                if (null == tyrexDriver) {
-                    return false;    
-                }
+                testDriver = getTestDriver(stream);
 
                 transactionManager = Tyrex.getTransactionManager();
 
-                tyrexDriver.clearNumberOfCreatedConnections();
+                testDriver.clearNumberOfCreatedConnections();
                 
                 ds = getEnabledDataSource();
                 pool = new ServerDataSource();
@@ -363,56 +369,55 @@ public class DataSource
                     return false;
                 }
     
-                if (tyrexDriver.getNumberOfCreatedConnections() != 1) {
+                if (testDriver.getNumberOfCreatedConnections() != 1) {
                     stream.writeVerbose("Driver created " + 
-                                        tyrexDriver.getNumberOfCreatedConnections() +
+                                        testDriver.getNumberOfCreatedConnections() +
                                         " drivers. Expected 1.");
                     return false;
                 }
     
                 return true;
             }
-            catch (IOException e) {
+            catch (Exception e) {
                 e.printStackTrace();
             }
             return false;
         }
     }
 
-    private class DeadlockTest
+    private class TransactionTimeoutTest
         extends CWTestCase
     {
-        private DeadlockTest()
+        private TransactionTimeoutTest()
             throws CWClassConstructorException
         {
-            super( "TC05", "Deadlock" );
+            super( "TC05", "Transaction Timeout" );
         }
     
         public boolean run( CWVerboseStream stream )
         {
-            int i;
+            //int i;
             try {
-                final TyrexDriver tyrexDriver = getTyrexDriver(stream);
+                final TestDriverImpl testDriver = getTestDriver(stream);
                 Thread thread;
-                final Object lock = new Object();
-                final Object[] result = new Object[1];
+                final boolean[] result = new boolean[]{false};
                 final TransactionManager transactionManager = Tyrex.getTransactionManager();
                 EnabledDataSource ds = getEnabledDataSource();
                 ds.setTransactionTimeout(3);
                 
-                i = 0;
+                //i = 0;
 
                 try {
                     final XAConnection xaConnection = ds.getXAConnection();
 
-                    for (; i < 5; i++) {
-                        result[0] = Boolean.FALSE;
+                    //for (; i < 5; i++) {
                         thread = new Thread(new Runnable()
                             {
                                 public void run() 
                                 {
+                                    Connection connection = null;
+                                    
                                     try {
-                                        Connection connection;
                                         Statement stmt;
 
                                         transactionManager.begin();
@@ -426,23 +431,19 @@ public class DataSource
                                         stmt.executeUpdate("update enabled_test set text = '55' where id = 1");
                         
                                         stmt.close();
-                                        tyrexDriver.getLastConnection().setCommitWaitTime(7000);
+                                        
+                                        Thread.currentThread().sleep(7000);
                                         
                                         transactionManager.commit();
                         
-                                        connection.close();
-
-                                        result[0] = Boolean.TRUE;
-
-                                        synchronized (lock)
-                                        {
-                                            lock.notify();
-                                        }
-
-                                        
                                     }
                                     catch (Exception e) {
-                                        result[0] = e;
+                                        result[0] = true;
+                                    }
+                                    finally {
+                                        if (null != connection) {
+                                            try{connection.close();}catch(SQLException e){}
+                                        }
                                     }
                                 }
                             });
@@ -450,23 +451,17 @@ public class DataSource
 
                             thread.start();
 
-                            synchronized (lock)
-                            {
-                                lock.wait(10000);
-                            }
+                            thread.join();
                             
-                            if ((result[0] instanceof Boolean) && !((Boolean)result[0]).booleanValue()) {
-                                stream.writeVerbose("failed at iteration " + i);
+                            if (!result[0]) {
+                                //stream.writeVerbose("failed at iteration " + i);
                                 return false;    
                             }
-                            else if (result[0] instanceof Exception) {
-                                throw (Exception)result[0];    
-                            }
-                    }
+                    //}
                 }
                 catch (Exception e)
                 {
-                    stream.writeVerbose("failed at iteration " + i);
+                    //stream.writeVerbose("failed at iteration " + i);
                     stream.writeVerbose(e.toString());
                     e.printStackTrace();
                     return false;
@@ -474,7 +469,7 @@ public class DataSource
     
                 return true;
             }
-            catch (IOException e) {
+            catch (Exception e) {
                 e.printStackTrace();
             }
             return false;
@@ -495,7 +490,7 @@ public class DataSource
         public boolean run( CWVerboseStream stream )
         {
             TransactionManager transactionManager;
-            TyrexDriver tyrexDriver;
+            TestDriverImpl testDriver;
             Connection connection;
             Statement stmt;
             EnabledDataSource ds;
@@ -503,15 +498,11 @@ public class DataSource
             int i;
             
             try {
-                tyrexDriver = getTyrexDriver(stream);
-
-                if (null == tyrexDriver) {
-                    return false;    
-                }
+                testDriver = getTestDriver(stream);
 
                 transactionManager = Tyrex.getTransactionManager();
 
-                tyrexDriver.clearNumberOfCreatedConnections();
+                testDriver.clearNumberOfCreatedConnections();
                 
                 ds = getEnabledDataSource();
                 pool = new ServerDataSource();
@@ -555,16 +546,16 @@ public class DataSource
                     return false;
                 }
     
-                if (tyrexDriver.getNumberOfCreatedConnections() != 3) {
+                if (testDriver.getNumberOfCreatedConnections() != 3) {
                     stream.writeVerbose("Driver created " + 
-                                        tyrexDriver.getNumberOfCreatedConnections() +
+                                        testDriver.getNumberOfCreatedConnections() +
                                         " drivers. Expected 3.");
                     return false;
                 }
     
                 return true;
             }
-            catch (IOException e) {
+            catch (Exception e) {
                 e.printStackTrace();
             }
             return false;
@@ -583,7 +574,7 @@ public class DataSource
                 super(s);
 
                 categories = new java.util.Vector();
-                categories.addElement("jdbc.DataSource");
+                categories.addElement("jdbc.XADataSourceTestCategory");
             }
         
             protected String getApplicationName()

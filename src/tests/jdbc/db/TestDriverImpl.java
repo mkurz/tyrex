@@ -48,15 +48,15 @@ import java.sql.*;
 import java.util.*;
 
 /**
- * The Tyrex jdbc driver
+ * The test jdbc driver
  */
-public final class TyrexDriver 
+public final class TestDriverImpl 
     implements Driver
 {
     /**
-     * The start of a valid tyrex url (header + subprotocol)
+     * The start of a valid test url (header + subprotocol)
      */
-    private static final String TYREX_URL_START = "jdbc:tyrex";
+    private static final String TEST_URL_START = "jdbc:test";
 
     
     /**
@@ -66,9 +66,9 @@ public final class TyrexDriver
 
 
     /**
-     * The Tyrex driver major version
+     * The Test driver major version
      */
-    private static final int TYREX_MAJOR_VERSION = 1;
+    private static final int TEST_MAJOR_VERSION = 1;
 
 
     /**
@@ -78,22 +78,22 @@ public final class TyrexDriver
 
 
     /**
-     * The Tyrex driver minor version
+     * The Test driver minor version
      */
-    private static final int TYREX_MINOR_VERSION = 0;
+    private static final int TEST_MINOR_VERSION = 0;
 
     /**
      * The last connection returned
      */
-    private TyrexConnection _lastConnection;
+    private TestConnectionImpl _lastConnection;
 
 
     static {
         try {
-            DriverManager.registerDriver(new TyrexDriver());
+            DriverManager.registerDriver(new TestDriverImpl());
         }
         catch(Exception e) {
-            System.out.println("Failed to register TyrexDriver.");
+            System.out.println("Failed to register TestDriverImpl.");
             e.printStackTrace();
         }
     }
@@ -102,7 +102,7 @@ public final class TyrexDriver
     /**
      * The default constructor
      */
-    public TyrexDriver()
+    public TestDriverImpl()
     {
 
     }
@@ -121,7 +121,7 @@ public final class TyrexDriver
     public Connection connect(String url, Properties info)
         throws SQLException
     {
-        TyrexConnection connection = new TyrexConnection(url, info);
+        TestConnectionImpl connection = new TestConnectionImpl(url, info);
         ++_numberOfCreatedConnections;
         _lastConnection = connection;
         return connection;
@@ -134,7 +134,7 @@ public final class TyrexDriver
      *
      * @return the last connection that was created.
      */
-    public TyrexConnection getLastConnection()
+    public TestConnectionImpl getLastConnection()
     {
         return _lastConnection;
     }
@@ -173,7 +173,7 @@ public final class TyrexDriver
     public boolean acceptsURL(String url) 
         throws SQLException
     {
-        return null == url ? false : url.startsWith(TYREX_URL_START);
+        return null == url ? false : url.startsWith(TEST_URL_START);
     }
 
 
@@ -200,7 +200,7 @@ public final class TyrexDriver
      */
     public int getMajorVersion()
     {
-        return TYREX_MAJOR_VERSION;
+        return TEST_MAJOR_VERSION;
     }
 
     /**
@@ -210,12 +210,12 @@ public final class TyrexDriver
      */
     public int getMinorVersion()
     {
-        return TYREX_MINOR_VERSION;
+        return TEST_MINOR_VERSION;
     }
 
 
     /**
-     * Tyrex driver is not jdbc compliant (not yet at least :-)).
+     * Test driver is not jdbc compliant (not yet at least :-)).
      *
      * @return false;
      */

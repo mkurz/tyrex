@@ -47,15 +47,15 @@ package jdbc.db;
 import java.sql.*;
 
 /**
- * Tyrex connection
+ * Test implementation of java.sql.Statement
  */
-final class TyrexStatement 
+final class TestStatementImpl 
     implements Statement
 {
     /**
      * The tyrex connection that created this statement
      */
-    private final TyrexConnection _connection;
+    private final TestConnectionImpl _connection;
 
 
     /**
@@ -63,7 +63,7 @@ final class TyrexStatement
      *
      * @param connection the connection that created the statement
      */
-    TyrexStatement(TyrexConnection connection)
+    TestStatementImpl(TestConnectionImpl connection)
     {
         if (null == connection) {
             throw new IllegalArgumentException("The argument 'connection' is null.");
@@ -87,21 +87,23 @@ final class TyrexStatement
     }
 
     /**
-     * Return 0.
+     * Return 0;
      *
      * @param sql an SQL <code>INSERT</code>, <code>UPDATE</code> or
-	 * <code>DELETE</code> statement or an SQL statement that returns nothing
+     * <code>DELETE</code> statement or an SQL statement that returns nothing
      * @return 0
      * @exception SQLException if a database access error occurs
      */
     public int executeUpdate(String sql) 
         throws SQLException
     {
+        //throw new SQLException("executeUpdate method not supported.");
+        // do nothing
         return 0;
     }
 
     /**
-	 * Does nothing
+     * Does nothing
      *
      * @exception SQLException if a database access error occurs
      */
@@ -114,19 +116,18 @@ final class TyrexStatement
     //----------------------------------------------------------------------
 
     /**
-     * Returns 0 - unlimited.
+     * Not supported. Throws SQLException.
      *
-     * @return 0 - unlimited
      * @exception SQLException if a database access error occurs
      */
     public int getMaxFieldSize() 
         throws SQLException
     {
-        return 0;
+        throw new SQLException("getMaxFieldSize method not supported.");
     }
     
     /**
-	 * Does nothing
+     * Not supported. Throws SQLException.
      *
      * @param max the new max column size limit; zero means unlimited 
      * @exception SQLException if a database access error occurs
@@ -134,23 +135,22 @@ final class TyrexStatement
     public void setMaxFieldSize(int max) 
         throws SQLException
     {
-
+        throw new SQLException("setMaxFieldSize method not supported.");
     }
 
     /**
-     * Returns 0 - unlimited.
+     * Not supported. Throws SQLException.
      *
-     * @return 0 - unlimited.
      * @exception SQLException if a database access error occurs
      */
     public int getMaxRows() 
         throws SQLException
     {
-        return 0;
+        throw new SQLException("getMaxRows method not supported.");
     }
 
     /**
-     * Does nothing.
+     * Not supported. Throws SQLException.
      *
      * @param max the new max rows limit; zero means unlimited 
      * @exception SQLException if a database access error occurs
@@ -158,11 +158,11 @@ final class TyrexStatement
     public void setMaxRows(int max) 
         throws SQLException
     {
-
+        throw new SQLException("setMaxRows method not supported.");
     }
 
     /**
-	 * Does nothing
+     * Not supported. Throws SQLException.
      *
      * @param enable <code>true</code> to enable; <code>false</code> to disable
      * @exception SQLException if a database access error occurs
@@ -170,36 +170,35 @@ final class TyrexStatement
     public void setEscapeProcessing(boolean enable) 
         throws SQLException
     {
-
+        throw new SQLException("setEscapeProcessing method not supported.");
     }
 
     /**
-	 * Returns 0 - unlimited.
+     * Not supported. Throws SQLException.
      *
-     * @return zero - unlimited 
      * @exception SQLException if a database access error occurs
      */
     public int getQueryTimeout() 
         throws SQLException
     {
-        return 0;
+        throw new SQLException("getQueryTimeout method not supported.");
     }
 
     /**
-     * Does nothing
+     * Not supported. Throws SQLException.
      *
      * @param seconds the new query timeout limit in seconds; zero means 
      * unlimited 
-     * @exception SQLException if a database access error occurs
+     * @exception SQLException 
      */
     public void setQueryTimeout(int seconds) 
         throws SQLException
     {
-
+        throw new SQLException("setQueryTimeout method not supported.");
     }
 
     /**
-	 * Does nothing.
+     * Does nothing.
      *
      * @exception SQLException if a database access error occurs
      */
@@ -210,26 +209,25 @@ final class TyrexStatement
     }
 
     /**
-     * Returns null.
+     * Not supported. Throws SQLException.
      *
-     * @return null
      * @exception SQLException if a database access error occurs
      */
     public SQLWarning getWarnings() 
         throws SQLException
     {
-        return null;
+        throw new SQLException("getWarnings method not supported.");
     }
 
     /**
-	 * Does nothing
+     * Not supported. Throws SQLException.
      *
      * @exception SQLException if a database access error occurs
      */
     public void clearWarnings() 
         throws SQLException
     {
-
+        throw new SQLException("clearWarnings method not supported.");
     }
 
     /**
@@ -248,15 +246,14 @@ final class TyrexStatement
     //----------------------- Multiple Results --------------------------
 
     /**
-     * Always returns false.
+     * Not supported. Throws SQLException.
      *
      * @param sql any SQL statement
-     * @return false
      */
     public boolean execute(String sql) 
         throws SQLException
     {
-        return false;
+        throw new SQLException("execute method not supported.");
     }
 	
     /**
@@ -274,7 +271,7 @@ final class TyrexStatement
     }
 
     /**
-     *  Returns -1.
+     *  Not supported. Throws SQLException.
      * 
      * @return -1
      * @exception SQLException if a database access error occurs
@@ -283,7 +280,7 @@ final class TyrexStatement
     public int getUpdateCount() 
         throws SQLException
     {
-        return -1;
+        throw new SQLException("getUpdateCount method not supported.");
     }
 
     /**
@@ -315,8 +312,6 @@ final class TyrexStatement
     /**
      * Not supported. Throws SQLException.
      *
-     * @return the default fetch direction for result sets generated
-	 *          from this <code>TyrexStatement</code> object
      * @exception SQLException if a database access error occurs
      */
     public int getFetchDirection() 
@@ -419,7 +414,7 @@ final class TyrexStatement
 
     /**
      * Returns the <code>Connection</code> object
-	 * that produced this <code>TyrexStatement</code> object.
+	 * that produced this <code>TestStatementImpl</code> object.
      *
 	 * @return the connection that produced this statement
      * @exception SQLException if a database access error occurs
