@@ -132,6 +132,11 @@
     <field name="trace" type="boolean">
       <bind-xml name="trace" node="element" />
     </field>
+    <!--
+    <field name="reuseOptionAsString" type="string">
+      <bind-xml name="reuse" node="element" />
+    </field>
+    -->
   </class>
 
 
