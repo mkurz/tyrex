@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<document url="http://tyrex.exolab.org/cvs.xml">
+<document url="http://tyrex.sourceforge.net/cvs.xml">
   <body>
     <title>CVS Access</title>
 
-    <section title="WebCVS, Snapshots, Bugzilla">
+    <section title="WebCVS, Snapshots, Bugs">
 
-      <p><a href="http://tyrex.exolab.org/cgi-bin/cvsweb.cgi/tyrex/?cvsroot=tyrex">WebCVS access to the repository.</a></p>
+      <p><a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/tyrex">WebCVS access to the repository.</a></p>
 
       <p>Or, <a href="download.xml">download the full source distribution</a>
          containing the latest snapshot of the CVS.</p>
 
-      <p><a href="http://bugzilla.exolab.org">Use Bugzilla for bug tracking.</a></p>
+      <p><a href="http://sourceforge.net/tracker/?group_id=54149&#38;atid=472819">Use SourceForge for bug tracking.</a></p>
 
     </section>
 
@@ -23,24 +23,21 @@
          check it out. We commit working code to the CVS immediately prior to putting
          out a release.</p>
 
-      <p>The CVS root is <tt>:pserver:anoncvs@tyrex.exolab.org:/cvs/tyrex</tt>
-         and the password <tt>anoncvs</tt>.</p>
+      <p>The CVS root is <tt>:pserver:anonymous@cvs.tyrex.sourceforge.net:/cvsroot/tyrex</tt>
+         and hit enter when prompted for a password.</p>
 
       <p>To login to CVS from the command line and checkout a version of Tyrex
          use the following commands:</p>
 
       <pre>
   $ cvs -d 
-     :pserver:anoncvs@tyrex.exolab.org:/cvs/tyrex 
+     :pserver:anonymous@cvs.tyrex.sourceforge.net:/cvsroot/tyrex
      login
-  password: anoncvs
+  password: &lt;hit enter&gt;
   $ cvs -d 
-     :pserver:anoncvs@tyrex.exolab.org:/cvs/tyrex 
+     :pserver:anonymous@cvs.tyrex.sourceforge.net:/cvsroot/tyrex
      checkout tyrex
       </pre>
-
-      <p><b>Note:</b> There have been reports of problems using jCVS with ours CVS servers.
-         Please use an alternative CVS client until this problem is resolved.</p>
 
     </section>
 

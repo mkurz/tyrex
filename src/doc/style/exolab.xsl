@@ -86,15 +86,18 @@
         <td width="7" bgcolor="#a9a5de" valign="top" align="left">&#160;</td>
         <td width="70" valign="top" align="left">&#160;</td>
         <td rowspan="1" width="400" valign="top">
-          <table cols="2" rows="2" border="0" cellpadding="0" cellspacing="0" width="400">
+          <table cols="3" rows="2" border="0" cellpadding="0" cellspacing="0" width="400">
             <tr>
               <td valign="top" align="left"><br/><img border="0" height="64" hspace="0"
                   src="{$project/logo}" vspace="0" width="209" /><br/><img border="0" height="10" hspace="0"
                   src="images/dotTrans.gif"/>
               </td>
-	      <td width="120" height="5" valign="top"
+	      <td width="77" height="5" valign="top"
 		align="right"><a href="http://www.exolab.org"><img
-		src="images/logo_exolab.gif" hspace="0" vspace="10" width="77" height="20" border="0"/></a></td>
+		src="images/logo_exolab.gif" hspace="10" vspace="10" width="77" height="20" border="0"/></a></td>
+          <td width="210" height="62" valign="top" align="center">
+              <A href="http://sourceforge.net"> <IMG src="http://sourceforge.net/sflogo.php?group_id=54149&amp;type=5" width="210" height="62" border="0" alt="SourceForge Logo"/></A>
+            </td>
             </tr>
           </table><p/><p/><br/>
 
@@ -393,9 +396,8 @@
   <xsl:template match="mailing-list">
     <div>
       [
-      <a href="mailto:{@manager}@{@server}?subject=subscribe {@name}">Subscribe</a> |
-      <a href="mailto:{@manager}@{@server}?subject=unsubscribe {@name}">Unsubscribe</a> |
-      <a href="mailto:{@name}@{@server}">Post Message</a>
+      <a href="{@info}">List Info</a> |
+      <a href="mailto:{@post}">Post Message</a>
       <xsl:if test="@archive">
          | <a href="{@archive}">Archive</a>
 	</xsl:if>

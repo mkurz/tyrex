@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <!DOCTYPE document SYSTEM "document.dtd">
-<document url="http://tyrex.exolab.org/security.xml">
+<document url="http://tyrex.sourceforge.net/security.xml">
   <properties>
     <abstract>Explains the J2EE security and authentication model, how security is
               implemented in Servlet and EJB servers, the role of JAAS, and details

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <!DOCTYPE document SYSTEM "document.dtd">
-<document url="http://tyrex.exolab.org/tpmonitor.xml">
+<document url="http://tyrex.sourceforge.net/tpmonitor.xml">
   <properties>
     <abstract>Explains the role that TP monitoring plays in the enterprise environment,
               in particular with regards to EJB and Servlet containers</abstract>

@@ -4,7 +4,7 @@
   <title>Tyrex</title>
   <logo>images/logo_tyrex.gif</logo>
   <repository>tyrex</repository>
-  <href>http://tyrex.exolab.org</href>
+  <href>http://tyrex.sourceforge.net</href>
 
   <topNav>
     <navLink>
@@ -32,7 +32,7 @@
     </navLink>
 
     <navLink>
-      <url>http://tyrex.exolab.org</url>
+      <url>http://tyrex.sourceforge.net</url>
       <display>Tyrex</display>
     </navLink>
   </topNav>
@@ -98,8 +98,8 @@
         <display>License</display>
       </navLink>
       <navLink>
-        <url>bugzilla.xml</url>
-        <display>Bugzilla</display>
+        <url>bugs.xml</url>
+        <display>Bugs</display>
       </navLink>
       <navLink>
         <url>changelog.xml</url>

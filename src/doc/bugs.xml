@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<document url="http://tyrex.sourceforge.net/bugs.xml">
+  <body>
+    <title>Bugs</title>
+    
+    <section title="About">
+      
+      <p><a href="http://sourceforge.net/tracker/?group_id=54149&#38;atid=472819">Use SourceForge for bug tracking.</a></p>
+    
+    </section>
+
+    <section title="Submitting a Bug">
+      
+      <p>To submit a bug click <a href="http://sourceforge.net/tracker/?func=add&#38;group_id=54149&#38;atid=472819">here</a>.
+        Once the page is displayed enter the appropriate details and then press <b>submit</b>.
+        When the bug has been submitted it is committed to the database and the assigned person is notified, through
+        email, of the new bug</p>
+      
+    </section>
+
+  </body>
+</document>
