@@ -37,8 +37,34 @@
            set-method="addConfiguration" collection="enumerate">
       <bind-xml name="connector" node="element" />
     </field>
+    <field name="javamail" type="tyrex.resource.javamail.JavaMailConfig"
+           set-method="addConfiguration" collection="enumerate">
+      <bind-xml name="javamail" node="element" />
+    </field>
   </class>
 
+  <class name="tyrex.resource.javamail.JavaMailConfig"> 
+	<map-to xml="javamail"/>
+      <field name="name" type="string" required="true">
+       <bind-xml name="name" node="element" />
+      </field>
+
+	<field name="property" type="tyrex.resource.javamail.Property" 
+             set-method="addProperty" collection="enumerate">
+       	<bind-xml name="property" node="element" />
+      </field>
+
+
+  </class>
+
+  <class name="tyrex.resource.javamail.Property">
+      <field name="key" type="string" required="true">
+       <bind-xml name="key" node="element" />
+      </field>
+      <field name="value" type="string" required="true">
+       <bind-xml name="value" node="element" />
+      </field>
+  </class>
 
   <class name="tyrex.resource.jdbc.DataSourceConfig">
     <map-to xml="dataSource" />
