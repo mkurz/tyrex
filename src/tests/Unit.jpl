@@ -177,6 +177,31 @@
 				methodmask="*"
 				enabled="true"
 				classmask="tyrex.*"/>
+			<coverage.filter
+				visibility="invisible"
+				methodmask="*"
+				enabled="true"
+				classmask="*.*Test*"/>
+			<coverage.filter
+				visibility="invisible"
+				methodmask="*"
+				enabled="true"
+				classmask="*.*JU*"/>
+			<coverage.filter
+				visibility="invisible"
+				methodmask="*"
+				enabled="true"
+				classmask="*.*_*Impl*"/>
+			<coverage.filter
+				visibility="invisible"
+				methodmask="*"
+				enabled="true"
+				classmask="*.*Suite*"/>
+			<coverage.filter
+				visibility="invisible"
+				methodmask="*"
+				enabled="true"
+				classmask="*.*Unit*"/>
 		</coverage>
 	</analysis>
 </jpl>
