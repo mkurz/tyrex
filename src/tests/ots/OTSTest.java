@@ -1,6 +1,6 @@
 package ots;
 
-import tests.*;
+import VerboseStream;
 import org.omg.CosTransactions.*;
 import junit.framework.*;
 import org.omg.CORBA.Policy;
