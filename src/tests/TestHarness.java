@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TestHarness.java,v 1.13 2001/04/19 17:32:43 jdaniel Exp $
+ * $Id: TestHarness.java,v 1.14 2001/04/24 20:14:07 psq Exp $
  */
 
 package tests;
@@ -52,10 +52,10 @@ import junit.framework.*;
 
 //import lock.Lock;
 import naming.Naming;
-/*
+
 import jdbc.XADataSourceTestSuite;
 import transaction.Transaction;
-*/
+
 
 /**
  * Test harness.
@@ -69,15 +69,13 @@ public class TestHarness
             // define all the test suites
             TestSuite main = new TestSuite("Tyrex Test Harness");            
             TestSuite naming = new Naming( "JNDI service provider" );
-            /*
-            if ( args.length == 0 )
+            if ( args.length != 1 )
             {
                System.out.println("Specify the tyrex configuration file name and path as argument to start the tests...");
                System.exit(0);
             }
             TestSuite jdbc = new XADataSourceTestSuite( "XADataSource test", args[0] );
             TestSuite transaction = new Transaction( "Transaction tests", args[0] );
-            */
            
             // set up the lock test suite
             //for( java.util.Enumeration e = lock.tests(); e.hasMoreElements(); )
@@ -87,7 +85,7 @@ public class TestHarness
             for( java.util.Enumeration e = naming.tests(); e.hasMoreElements(); )
              main.addTest( (Test)e.nextElement());
             
-            /*
+           
             // set up the jdbc test suite
             for( java.util.Enumeration e = jdbc.tests(); e.hasMoreElements(); )
             main.addTest( (Test)e.nextElement());
@@ -95,7 +93,7 @@ public class TestHarness
             // set up the transaction test suite
             for( java.util.Enumeration e = transaction.tests(); e.hasMoreElements(); )
             main.addTest( (Test)e.nextElement());
-            */
+           
             
             // Set up the verbose mode
             for(int i=0;i<args.length;i++) if(args[i].equals("-verbose")) VerboseStream.verbose=true;
@@ -106,6 +104,7 @@ public class TestHarness
         } catch (Exception exception) {
             exception.printStackTrace();
         }
+    System.exit(0);
     }
 
 
