@@ -54,7 +54,7 @@ import javax.resource.spi.ManagedConnection;
 import javax.resource.spi.ManagedConnectionFactory;
 import javax.resource.spi.ConnectionManager;
 import javax.resource.spi.ConnectionRequestInfo;
-
+import tyrex.resource.jca.dd.DDConfigProperty;
 
 /**
  * Provides a means to create managed connections and connection factories
@@ -72,7 +72,7 @@ import javax.resource.spi.ConnectionRequestInfo;
  * match the classes specified in the deployment descriptor.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 final class ConnectorLoader
 {
@@ -118,6 +118,9 @@ final class ConnectorLoader
      * @param connCN The class name of the client connection
      * @param xaSupported True if XA transactions supported
      * @param localSupported True if local transactions supported
+     * @param configProperties Vector of 
+     * {@link tyrex.resource.jca.dd.DDConfigProperty} objects. The 
+     * vector may be null.
      * @throws Exception An error occured attempting to resolve any
      * of the specified class names
      */
@@ -241,6 +244,4 @@ final class ConnectorLoader
     {
         return _managedFactory;
     }
-
-    
 }

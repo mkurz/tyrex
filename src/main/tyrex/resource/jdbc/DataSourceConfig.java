@@ -48,6 +48,7 @@ package tyrex.resource.jdbc;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.StringTokenizer;
@@ -69,7 +70,7 @@ import tyrex.util.Logger;
 /**
  * 
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.9 $
+ * @version $Revision: 1.10 $
  */
 public class DataSourceConfig
     extends ResourceConfig
@@ -156,6 +157,7 @@ public class DataSourceConfig
 
         // Obtain the JAR file and use the paths to create
         // a list of URLs for the class loader.
+        file = null;
         try {
             file = new File( jarName );
             if ( file.exists() && file.canRead() )
@@ -164,7 +166,7 @@ public class DataSourceConfig
                 url = new URL( jarName );
             paths = _paths;
             if ( paths != null && paths.length() > 0 ) {
-                tokenizer = new StringTokenizer( paths, ":; " );
+                tokenizer = new StringTokenizer( paths, ",; " );
                 urls = new URL[ tokenizer.countTokens() + 1 ];
                 urls[ 0 ] = url;
                 for ( int i = 1 ; i < urls.length ; ++i ) {
@@ -177,7 +179,11 @@ public class DataSourceConfig
                 }
             } else
                 urls = new URL[] { url };
-        } catch ( IOException except ) {
+        } catch ( MalformedURLException except ) {
+            if ( null != file ) {
+                Logger.resource.error("Could not create url for datasource file: '" + file + "'. File may not exist.");
+            }
+
             throw new ResourceException( except );
         }
             
