@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: ConnectionManagerImpl.java,v 1.1 2000/04/10 20:52:34 arkin Exp $
+ * $Id: ConnectionManagerImpl.java,v 1.2 2000/04/13 22:04:25 arkin Exp $
  */
 
 
@@ -50,6 +50,8 @@ package tyrex.connector.manager;
 import java.io.PrintWriter;
 import java.util.Vector;
 import java.util.Hashtable;
+import javax.transaction.Transaction;
+import javax.transaction.TransactionManager;
 import javax.transaction.Synchronization;
 import javax.transaction.xa.XAResource;
 import tyrex.connector.ManagedConnection;
@@ -74,10 +76,11 @@ import tyrex.util.Messages;
  *
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2000/04/10 20:52:34 $
+ * @version $Revision: 1.2 $ $Date: 2000/04/13 22:04:25 $
  */
 public class ConnectionManagerImpl
-    implements ConnectionManager, PoolManaged
+    implements ConnectionManager, ConnectionEventListener,
+               PoolManaged
 {
 
 
@@ -116,6 +119,12 @@ public class ConnectionManagerImpl
     private final PrintWriter               _logWriter;
 
 
+    private final ConnectorInfo             _connectorInfo;
+
+
+    private final TransactionManager        _manager;
+
+
     public ConnectionManagerImpl( ManagedConnectionFactory factory,
                                   PoolManager poolManager, PrintWriter logWriter )
     {
@@ -130,11 +139,60 @@ public class ConnectionManagerImpl
     }
 
 
-    public synchronized Object getConnection()
+    public synchronized Object getConnection( Object info )
         throws ConnectionException
     {
-        ManagedEntry entry;
-        boolean      retry;
+        ManagedConnection managed;
+        Object            connection;
+        ManagedEntry      entry;
+        boolean           retry;
+        Transaction       tx = null;
+
+        managed = null;
+
+        if ( _txManager != null )
+            tx = _txManager.getTransaction();
+
+        if ( _connectorInfo.getShareConnections() ) {
+            // Connection sharing is enabled for this connector. If two components
+            // request a connection from the same factory, it is acceptable to
+            // return the same managed connection to both.
+            ConnectionContext ctx;
+
+            ctx = ConnectionContext.getCurrent();
+            if ( ctx != null ) {
+                managed = _factory.getManagedConnection( ctx.listConnections( this, tx ), info );
+                if ( managed != null ) {
+                    // A similar managed connection has been opened before,
+                    // perfectly OK if we return it (it's listed in the transaction
+                    // context, registered for synchronization, etc).
+                    entry = (ManagedEntry) _active.get( managed );
+                    if ( entry != null ) {
+                        connection = managed.getConnection();
+                        return connection;
+                    } else {
+                        // This is clearly an error. Might be due to improper error handling.
+                        if ( _logWriter != null )
+                            _logWriter.println( "Internal error: a managed connection appears in ConnectionContext and not in active list" );
+                    }
+                }
+            }
+        }
+
+
+        // 
+        entry.managed.addConnectionEventListener( this );
+        entry.transaction = _txManager.getTransaction();
+        if ( entry.transaction != null ) {
+            entry.transaction.enlistResource( entry.xaResource );
+            // Register for synchronization so we know when the transaction
+            // completes and we can return it to the pool.
+            entry.transaction.registerSynchronization( new ConnectionSynchronization( this, entry ) );
+        }
+        connection = entry.managed.getConnection( info );
+        return connection;
+
+        /*
 
         // Ask the pool manager whether we can activate the
         // given connection. If not, this will throw an exception.
@@ -173,10 +231,12 @@ public class ConnectionManagerImpl
             else
                 throw except;
         }
+        */
     }
 
 
 
+    /*
     private ManagedEntry createManagedConnection()
         throws ConnectionException
     {
@@ -200,18 +260,41 @@ public class ConnectionManagerImpl
         }
         return entry;
     }
+    */
 
 
     public synchronized void connectionClosed( ManagedConnection managed )
     {
         ManagedEntry entry;
 
-        // Remove it from the list of active connections and
-        // possibly add it to the list of pooled connections.
+        // Remove it from the list of active connections and possibly add
+        // it to the list of pooled connections.
+        entry = (ManagedEntry) _active.get( managed );
+        if ( entry != null ) {
+            -- entry.refCount;
+            if ( entry.refCount == null ) {
+                if ( entry.transaction == null )
+                    releaseToPool( entry );
+                else
+                    // Enlisted with a transaction. Delist it from the transaction
+                    // with a success flag, this will cause the transaction to
+                    // commit/rollback but call XAResource.end().
+                    entry.transaction.delistResource( entry.xaResource, XAResource.TMSUCCESS );
+            }
+        }
+    }
+
+
+    void releaseToPool( ManagedConnection managed )
+    { 
+        ManagedEntry entry;
+
+        // Remove it from the list of active connections and possibly add
+        // it to the list of pooled connections.
         entry = (ManagedEntry) _active.remove( managed );
         if ( entry != null ) {
+            // Return the managed connection to the pool immediately.
             _pool.addElement( entry );
-
             // Notify all waiting threads that a new resource
             // is available to the pool and they might use it.
             _poolManager.released();
@@ -219,6 +302,7 @@ public class ConnectionManagerImpl
                 _logWriter.println( Messages.format( "tyrex.resource.returned", toString(), managed ) );
         }
     }
+
 
 
     public synchronized void connectionErrorOccurred( ManagedConnection managed, Exception except )
@@ -232,20 +316,18 @@ public class ConnectionManagerImpl
         // do not add it to the pool.
         entry = (ManagedEntry) _active.remove( managed );
         if ( entry != null ) {
-            // If this is an X/A resource dessociate it from any
-            // active transaction. If there is a problem, the TM
-            // will throw an exception at this point.
-            if ( entry.xaResource != null ) {
+            if ( entry.transaction != null ) {
                 try {
-                    // XXX Need to figure out how to manage this
-                    // ResourceManager.discardResource( entry.xaResource );
+                    // Enlisted with a transaction. Delist it from the transaction
+                    // with a fail flag, this will cause the transaction to discard
+                    // this resource from the commit/rollback list.
+                    entry.transaction.delistResource( entry.xaResource, XAResource.TMFAIL );
                 } catch ( Exception except2 ) {
                     if ( _logWriter != null )
                         _logWriter.println( Messages.format( "tyrex.resource.fault", toString(), managed, except2 ) );
                 }
-            } else if ( entry.synchronization != null ) {
-                // XXX Need to do this
             }
+
             // Notify all waiting threads that a new resource can be created.
             _poolManager.released();
 	}
@@ -323,6 +405,38 @@ public class ConnectionManagerImpl
             this.xaResource = null;
             this.synchronization = synchronization;
         }
+
+    }
+
+
+    static class ConnectionSynchronization
+        implements Synchronization
+    {
+
+        private ConnectionManager _manager;
+
+        private ManagedConnection _managed;
+
+
+        ConnectionSynchronization( ConnectionManager manager, ManagedConnection managed )
+        {
+            _manager = manager;
+            _managed = managed;
+        }
+
+
+        public synchronized void beforeCompletion()
+        {
+            // Do nothing.
+        }
+
+
+        public synchronized void afterCompletion( int status )
+        {
+            // Notify manager to release managed connection back to pool.
+            _manager.releaseToPool( _managed );
+        }
+
 
     }
 
