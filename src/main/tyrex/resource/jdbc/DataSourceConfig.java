@@ -44,7 +44,7 @@
  *
  * Contributions by MetaBoss team are Copyright (c) 2003-2004, Softaris Pty. Ltd. All Rights Reserved.
  *
- * $Id: DataSourceConfig.java,v 1.15 2004/04/21 04:15:34 metaboss Exp $
+ * $Id: DataSourceConfig.java,v 1.16 2005/02/10 01:58:03 metaboss Exp $
  */
 
 
@@ -76,7 +76,7 @@ import tyrex.util.logging.Logger;
 /**
  * 
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.15 $
+ * @version $Revision: 1.16 $
  */
 public class DataSourceConfig
     extends ResourceConfig
@@ -183,7 +183,9 @@ public class DataSourceConfig
         // Create a new data source using the class names
         // specified in the configuration file.
         try {
-            cls = _classLoader.loadClass( className );
+        	// _classLoader may be null in some implementations (which is allowed for bootstrap class loaders)
+        	// so it is safer to use Class.forName() then to use _classLoader.loadClass();
+            cls = Class.forName(className, true, _classLoader);
             object = cls.newInstance();
         } catch ( Exception except ) {
             throw new ResourceException( except );
