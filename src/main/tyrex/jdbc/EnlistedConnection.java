@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: EnlistedConnection.java,v 1.6 2000/09/27 23:06:52 mohammed Exp $
+ * $Id: EnlistedConnection.java,v 1.7 2000/10/06 01:10:08 mohammed Exp $
  */
 
 
@@ -230,7 +230,8 @@ public class EnlistedConnection
     public void setAutoCommit( boolean autoCommit )
         throws SQLException
     {
-    throw new SQLException("SetAutoCommit not supported in enlisted connections");
+    throw new SQLException("SetAutoCommit not supported in enlisted connections.");
+    
 	//getUnderlying().setAutoCommit( autoCommit );
     }
 
@@ -238,16 +239,18 @@ public class EnlistedConnection
     public boolean getAutoCommit()
         throws SQLException
     {
-	//return getUnderlying().getAutoCommit();
     return false;
+    
+    //return getUnderlying().getAutoCommit();
     }
 
 
     public void commit()
         throws SQLException
     {
-    throw new SQLException("Commit not supported in enlisted connections");
-	//getUnderlying().commit();
+    throw new SQLException("Commit not supported in enlisted connections.");
+    
+    //getUnderlying().commit();
     }
 
 
@@ -255,8 +258,9 @@ public class EnlistedConnection
     public void rollback()
         throws SQLException
     {
-    throw new SQLException("Rollback not supported in enlisted connections");
-	//getUnderlying().rollback();
+    throw new SQLException("Rollback not supported in enlisted connections.");
+    
+    //getUnderlying().rollback();
     }
 
 
@@ -362,7 +366,11 @@ public class EnlistedConnection
     {
         if ( ! _enlisted  ) {
 	    try {
-		ResourceManager.enlistResource( _xaRes, this );
+        // when enlisting in a transaction any work outside of the
+        // transaction is lost
+        _underlying.rollback();
+        
+        ResourceManager.enlistResource( _xaRes, this );
 		_enlisted = true;
 	    } catch ( RollbackException except ) {
 		throw new SQLException( except.getMessage() );
@@ -375,7 +383,8 @@ public class EnlistedConnection
     /**
      * Called to retrieve the underlying JDBC connection. Actual JDBC
      * operations are performed against it. Throws an SQLException if
-     * this connection has been closed.
+     * this connection has been closed or there is a problem enlisting the
+     * the underlying connection with the resource manager.
      */
     Connection getUnderlying()
         throws SQLException

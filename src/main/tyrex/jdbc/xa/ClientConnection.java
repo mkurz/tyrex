@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: ClientConnection.java,v 1.6 2000/09/27 22:02:53 mohammed Exp $
+ * $Id: ClientConnection.java,v 1.7 2000/10/06 01:10:09 mohammed Exp $
  */
 
 
@@ -117,7 +117,9 @@ final class ClientConnection
         throws SQLException
     {
 	try {
-	    return getUnderlying().createStatement();
+	    return new ClientStatement(this, 
+                                   getUnderlying().createStatement(), 
+                                   _xaConn);
 	} catch ( SQLException except ) {
 	    notifyError( except );
 	    throw except;
@@ -129,7 +131,9 @@ final class ClientConnection
         throws SQLException
     {
 	try {
-	    return getUnderlying().createStatement( resultSetType, resultSetConcurrency );
+	    return new ClientStatement(this, 
+                                   getUnderlying().createStatement( resultSetType, resultSetConcurrency ),
+                                   _xaConn);
 	} catch ( SQLException except ) {
 	    notifyError( except );
 	    throw except;

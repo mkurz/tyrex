@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: XAConnectionImpl.java,v 1.12 2000/09/30 02:19:59 mohammed Exp $
+ * $Id: XAConnectionImpl.java,v 1.13 2000/10/06 01:10:09 mohammed Exp $
  */
 
 
@@ -488,7 +488,7 @@ public final class XAConnectionImpl
 		    _txConn.conn.setAutoCommit( false );
 		    try {
             // NOTE: Some JDBC drivers do not cache isolation levels so the method #getTransactionIsolation
-            // is expensive and can use up resources. The Cloudspace 3.5 driver suffers from this.
+            // is expensive and can use up resources. The Cloudspace 3.5, Sybase 5.2 drivers suffers from this.
 
             //if ( _resManager.getIsolationLevel() != _txConn.conn.getTransactionIsolation() )
 			    _txConn.conn.setTransactionIsolation( _resManager.getIsolationLevel() );

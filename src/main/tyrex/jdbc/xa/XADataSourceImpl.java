@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: XADataSourceImpl.java,v 1.13 2000/09/30 02:19:59 mohammed Exp $
+ * $Id: XADataSourceImpl.java,v 1.14 2000/10/06 01:10:09 mohammed Exp $
  */
 
 
@@ -297,9 +297,23 @@ public abstract class XADataSourceImpl
     void releaseConnection( Connection conn, String userName, String password )
     {
     if (null != conn) {
-        synchronized ( _pool ) {
-        _pool.add( new ConnectionEntry( conn,
-                                        getAccount( userName, password ) ) );
+        // make sure the connection has no work
+        try {
+            conn.rollback();
+            
+            synchronized ( _pool ) {
+            _pool.add( new ConnectionEntry( conn,
+                                            getAccount( userName, password ) ) );
+            }
+        }
+        catch (SQLException e) {
+            // shouldn't use the connection
+            try {
+                conn.close();
+            }
+            catch (SQLException e) {
+                // ignore
+            }
         }
     }
     }
