@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: EnabledDataSource.java,v 1.7 2000/09/18 22:12:56 mohammed Exp $
+ * $Id: EnabledDataSource.java,v 1.8 2000/09/25 23:32:50 mohammed Exp $
  */
 
 
@@ -262,8 +262,8 @@ public class EnabledDataSource
 		_logWriter.println( "DataSource: getConnection failed " + except );
 	    throw except;
 	}
-	if ( conn != null && _logWriter != null )
-	    _logWriter.println( "DataSource: getConnection returning " + conn );
+	//if ( conn != null && _logWriter != null )
+	//    _logWriter.println( "DataSource: getConnection returning " + conn );
 	return conn;
     }
 

@@ -40,14 +40,12 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: ServerDataSource.java,v 1.7 2000/09/25 06:41:56 mohammed Exp $
+ * $Id: ServerDataSource.java,v 1.8 2000/09/25 23:32:50 mohammed Exp $
  */
 
 
 package tyrex.jdbc;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -101,7 +99,7 @@ import tyrex.util.Messages;
  * {@link tyrex.resource.ResourcePool}.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.7 $ $Date: 2000/09/25 06:41:56 $
+ * @version $Revision: 1.8 $ $Date: 2000/09/25 23:32:50 $
  *
  * Date         Author          Changes
  * ?            Assaf Arkin     Created  
@@ -733,13 +731,19 @@ public class ServerDataSource
         throws IOException
     {
         ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
-        ObjectOutputStream output = new ObjectOutputStream(new BufferedOutputStream(byteStream));
+        ObjectOutputStream output = null;
+        
+        try {
+            output = new ObjectOutputStream(byteStream);
 
-        output.writeObject(_dataSource);
-        output.flush();
-        output.close();
-
-        return byteStream.toByteArray();
+            output.writeObject(_dataSource);
+            output.flush();
+            
+            return byteStream.toByteArray();
+        }
+        finally {
+            try{output.close();}catch(IOException e){}
+        }
     }
 
 
@@ -756,12 +760,18 @@ public class ServerDataSource
     private Object getDataSourceFromBytes(byte[] bytes)
         throws ClassNotFoundException, IOException
     {
-        ObjectInputStream input = new ObjectInputStream(new BufferedInputStream(new ByteArrayInputStream(bytes)));
+        ObjectInputStream input = null; 
+        
+        try {
+            input = new ObjectInputStream(new ByteArrayInputStream(bytes));
 
-        Object object = input.readObject();
-        input.close();
-
-        return object;
+            return input.readObject();
+        }
+        finally {
+            if (null != input) {
+                try {input.close();}catch (IOException e){}
+            }
+        }
     }
 
 
