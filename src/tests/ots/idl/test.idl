@@ -1,0 +1,11 @@
+module otstests
+{
+	interface bank
+	{
+		readonly attribute float balance;
+		
+		void credit( in float amount );
+		
+		void debit( in float amount );
+	};
+};
