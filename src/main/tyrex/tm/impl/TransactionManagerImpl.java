@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionManagerImpl.java,v 1.11 2001/04/25 21:53:03 jdaniel Exp $
+ * $Id: TransactionManagerImpl.java,v 1.12 2001/08/31 21:38:29 jdaniel Exp $
  */
 
 
@@ -76,7 +76,7 @@ import tyrex.util.Messages;
  * transaction server.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.11 $ $Date: 2001/04/25 21:53:03 $
+ * @version $Revision: 1.12 $ $Date: 2001/08/31 21:38:29 $
  * @see Tyrex#recycleThread
  * @see TransactionDomain
  * @see TransactionImpl
@@ -426,9 +426,9 @@ final class TransactionManagerImpl
         if ( context._tx != null )
             throw new IllegalStateException( Messages.message( "tyrex.tx.resumeOverload" ) );
         synchronized ( tx ) {
-            try {
+            /*try {
                 ( (TransactionImpl) tx.getTopLevel() ).resumeAndEnlistResources( context.getResources() );
-            } catch ( RollbackException except ) { }
+            } catch ( RollbackException except ) { }*/
             _txDomain.enlistThread( tx, context, thread );
         }
     }
