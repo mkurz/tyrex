@@ -38,17 +38,21 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
+ * Original code is Copyright (c) 1999-2001, Intalio, Inc. All Rights Reserved.
  *
- * $Id: ClientConnection.java,v 1.3 2001/03/12 19:20:18 arkin Exp $
+ * Contributions by MetaBoss team are Copyright (c) 2003-2004, Softaris Pty. Ltd. All Rights Reserved.
+ *
+ * $Id: ClientConnection.java,v 1.4 2004/12/13 22:49:40 metaboss Exp $
  */
 
 
 package tyrex.resource.jdbc.xa;
 
 
-import java.util.*;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.SQLException;
+
+import javax.sql.XAConnection;
 
 
 /**

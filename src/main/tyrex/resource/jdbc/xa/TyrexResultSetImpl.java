@@ -38,7 +38,11 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 1999-2001 (C) Intalio Technologies Inc. All Rights Reserved.
+ * Original code is Copyright (c) 1999-2001, Intalio, Inc. All Rights Reserved.
+ *
+ * Contributions by MetaBoss team are Copyright (c) 2003-2004, Softaris Pty. Ltd. All Rights Reserved.
+ *
+ * $Id: TyrexResultSetImpl.java,v 1.4 2004/12/13 22:49:40 metaboss Exp $
  *
  */
 
@@ -49,9 +53,11 @@ package tyrex.resource.jdbc.xa;
 import java.io.InputStream;
 import java.io.Reader;
 import java.math.BigDecimal;
+import java.net.URL;
 import java.sql.Array;
 import java.sql.Blob;
 import java.sql.Clob;
+import java.sql.DatabaseMetaData;
 import java.sql.Date;
 import java.sql.Ref;
 import java.sql.ResultSet;
@@ -3166,5 +3172,101 @@ public final class TyrexResultSetImpl
         close();
     }
 
+	/* (non-Javadoc)
+	 * @see java.sql.ResultSet#getURL(int)
+	 */
+	public URL getURL(int columnIndex) throws SQLException {
+		validateOpen();
 
+		return _resultSet.getURL(columnIndex);
+	}
+
+	/* (non-Javadoc)
+	 * @see java.sql.ResultSet#getURL(java.lang.String)
+	 */
+	public URL getURL(String columnName) throws SQLException {
+		validateOpen();
+
+		return _resultSet.getURL(columnName);
+	}
+
+	/* (non-Javadoc)
+	 * @see java.sql.ResultSet#updateArray(int, java.sql.Array)
+	 */
+	public void updateArray(int columnIndex, Array x) throws SQLException {
+		validateOpen();
+
+		_resultSet.updateArray(columnIndex, x);
+
+	}
+
+	/* (non-Javadoc)
+	 * @see java.sql.ResultSet#updateArray(java.lang.String, java.sql.Array)
+	 */
+	public void updateArray(String columnName, Array x) throws SQLException {
+		validateOpen();
+
+		_resultSet.updateArray(columnName, x);
+
+	}
+
+	/* (non-Javadoc)
+	 * @see java.sql.ResultSet#updateBlob(int, java.sql.Blob)
+	 */
+	public void updateBlob(int columnIndex, Blob x) throws SQLException {
+		validateOpen();
+
+		_resultSet.updateBlob(columnIndex, x);
+
+	}
+
+	/* (non-Javadoc)
+	 * @see java.sql.ResultSet#updateBlob(java.lang.String, java.sql.Blob)
+	 */
+	public void updateBlob(String columnName, Blob x) throws SQLException {
+		validateOpen();
+
+		_resultSet.updateBlob(columnName, x);
+
+	}
+
+	/* (non-Javadoc)
+	 * @see java.sql.ResultSet#updateClob(int, java.sql.Clob)
+	 */
+	public void updateClob(int columnIndex, Clob x) throws SQLException {
+		validateOpen();
+
+		_resultSet.updateClob(columnIndex, x);
+
+	}
+
+	/* (non-Javadoc)
+	 * @see java.sql.ResultSet#updateClob(java.lang.String, java.sql.Clob)
+	 */
+	public void updateClob(String columnName, Clob x) throws SQLException {
+		validateOpen();
+
+		_resultSet.updateClob(columnName, x);
+
+	}
+
+	/* (non-Javadoc)
+	 * @see java.sql.ResultSet#updateRef(int, java.sql.Ref)
+	 */
+	public void updateRef(int columnIndex, Ref x) throws SQLException {
+		validateOpen();
+
+		_resultSet.updateRef(columnIndex, x);
+
+	}
+
+	/* (non-Javadoc)
+	 * @see java.sql.ResultSet#updateRef(java.lang.String, java.sql.Ref)
+	 */
+	public void updateRef(String columnName, Ref x) throws SQLException {
+		validateOpen();
+
+		_resultSet.updateRef(columnName, x);
+
+	}
 }

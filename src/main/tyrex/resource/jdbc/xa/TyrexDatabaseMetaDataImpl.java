@@ -38,8 +38,11 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 1999-2001 (C) Intalio Technologies Inc. All Rights Reserved.
+ * Original code is Copyright (c) 1999-2001, Intalio, Inc. All Rights Reserved.
  *
+ * Contributions by MetaBoss team are Copyright (c) 2003-2004, Softaris Pty. Ltd. All Rights Reserved.
+ *
+ * $Id: TyrexDatabaseMetaDataImpl.java,v 1.4 2004/12/13 22:49:40 metaboss Exp $
  */
 
 
@@ -3039,4 +3042,148 @@ final class TyrexDatabaseMetaDataImpl
             throw new SQLException("The connection has been closed.");        
         }
     }
+    
+    /* (non-Javadoc)
+	 * @see java.sql.DatabaseMetaData#getAttributes(java.lang.String, java.lang.String, java.lang.String, java.lang.String)
+	 */
+	public synchronized ResultSet getAttributes(String catalog, String schemaPattern, String typeNamePattern, String attributeNamePattern) throws SQLException {
+		validate();
+
+		return _databaseMetaData.getAttributes(catalog, schemaPattern, typeNamePattern, attributeNamePattern);
+	}
+
+	/* (non-Javadoc)
+	 * @see java.sql.DatabaseMetaData#getDatabaseMajorVersion()
+	 */
+	public synchronized int getDatabaseMajorVersion() throws SQLException {
+		validate();
+
+		return _databaseMetaData.getDatabaseMajorVersion();
+	}
+
+	/* (non-Javadoc)
+	 * @see java.sql.DatabaseMetaData#getDatabaseMinorVersion()
+	 */
+	public synchronized int getDatabaseMinorVersion() throws SQLException {
+		validate();
+
+		return _databaseMetaData.getDatabaseMinorVersion();
+	}
+
+	/* (non-Javadoc)
+	 * @see java.sql.DatabaseMetaData#getJDBCMajorVersion()
+	 */
+	public synchronized int getJDBCMajorVersion() throws SQLException {
+		validate();
+
+		return _databaseMetaData.getJDBCMajorVersion();
+	}
+
+	/* (non-Javadoc)
+	 * @see java.sql.DatabaseMetaData#getJDBCMinorVersion()
+	 */
+	public synchronized int getJDBCMinorVersion() throws SQLException {
+		validate();
+
+		return _databaseMetaData.getJDBCMinorVersion();
+	}
+
+	/* (non-Javadoc)
+	 * @see java.sql.DatabaseMetaData#getResultSetHoldability()
+	 */
+	public synchronized int getResultSetHoldability() throws SQLException {
+		validate();
+
+		return _databaseMetaData.getResultSetHoldability();
+	}
+
+	/* (non-Javadoc)
+	 * @see java.sql.DatabaseMetaData#getSQLStateType()
+	 */
+	public synchronized int getSQLStateType() throws SQLException {
+		validate();
+
+		return _databaseMetaData.getSQLStateType();
+	}
+
+	/* (non-Javadoc)
+	 * @see java.sql.DatabaseMetaData#getSuperTables(java.lang.String, java.lang.String, java.lang.String)
+	 */
+	public synchronized ResultSet getSuperTables(String catalog, String schemaPattern, String tableNamePattern) throws SQLException {
+		validate();
+
+		return _databaseMetaData.getSuperTypes(catalog, schemaPattern, tableNamePattern);
+	}
+
+	/* (non-Javadoc)
+	 * @see java.sql.DatabaseMetaData#getSuperTypes(java.lang.String, java.lang.String, java.lang.String)
+	 */
+	public synchronized ResultSet getSuperTypes(String catalog, String schemaPattern, String typeNamePattern) throws SQLException {
+		validate();
+
+		return _databaseMetaData.getSuperTypes(catalog, schemaPattern, typeNamePattern);
+	}
+
+	/* (non-Javadoc)
+	 * @see java.sql.DatabaseMetaData#locatorsUpdateCopy()
+	 */
+	public synchronized boolean locatorsUpdateCopy() throws SQLException {
+		validate();
+
+		return _databaseMetaData.locatorsUpdateCopy();
+	}
+
+	/* (non-Javadoc)
+	 * @see java.sql.DatabaseMetaData#supportsGetGeneratedKeys()
+	 */
+	public synchronized boolean supportsGetGeneratedKeys() throws SQLException {
+		validate();
+
+		return _databaseMetaData.supportsGetGeneratedKeys();
+	}
+
+	/* (non-Javadoc)
+	 * @see java.sql.DatabaseMetaData#supportsMultipleOpenResults()
+	 */
+	public synchronized boolean supportsMultipleOpenResults() throws SQLException {
+		validate();
+
+		return _databaseMetaData.supportsMultipleOpenResults();
+	}
+
+	/* (non-Javadoc)
+	 * @see java.sql.DatabaseMetaData#supportsNamedParameters()
+	 */
+	public synchronized boolean supportsNamedParameters() throws SQLException {
+		validate();
+
+		return _databaseMetaData.supportsNamedParameters();
+	}
+
+	/* (non-Javadoc)
+	 * @see java.sql.DatabaseMetaData#supportsResultSetHoldability(int)
+	 */
+	public synchronized boolean supportsResultSetHoldability(int holdability) throws SQLException {
+		validate();
+
+		return _databaseMetaData.supportsResultSetHoldability(holdability);
+	}
+
+	/* (non-Javadoc)
+	 * @see java.sql.DatabaseMetaData#supportsSavepoints()
+	 */
+	public synchronized boolean supportsSavepoints() throws SQLException {
+		validate();
+
+		return _databaseMetaData.supportsSavepoints();
+	}
+
+	/* (non-Javadoc)
+	 * @see java.sql.DatabaseMetaData#supportsStatementPooling()
+	 */
+	public synchronized boolean supportsStatementPooling() throws SQLException {
+		validate();
+
+		return _databaseMetaData.supportsStatementPooling();
+	}
 }

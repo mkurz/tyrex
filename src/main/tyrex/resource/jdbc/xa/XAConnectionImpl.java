@@ -38,9 +38,11 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
+ * Original code is Copyright (c) 1999-2001, Intalio, Inc. All Rights Reserved.
  *
- * $Id: XAConnectionImpl.java,v 1.8 2001/12/13 21:27:36 mohammed Exp $
+ * Contributions by MetaBoss team are Copyright (c) 2003-2004, Softaris Pty. Ltd. All Rights Reserved.
+ *
+ * $Id: XAConnectionImpl.java,v 1.9 2004/12/13 22:49:40 metaboss Exp $
  */
 
 
@@ -49,15 +51,13 @@ package tyrex.resource.jdbc.xa;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.Vector;
-import javax.sql.XAConnection;
-import javax.sql.PooledConnection;
+
 import javax.sql.ConnectionEvent;
 import javax.sql.ConnectionEventListener;
-import javax.transaction.RollbackException;
+import javax.sql.XAConnection;
+import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
-import javax.transaction.xa.XAException;
 
 
 /**

@@ -38,8 +38,11 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 1999-2001 (C) Intalio Technologies Inc. All Rights Reserved.
+ * Original code is Copyright (c) 1999-2001, Intalio, Inc. All Rights Reserved.
  *
+ * Contributions by MetaBoss team are Copyright (c) 2003-2004, Softaris Pty. Ltd. All Rights Reserved.
+ *
+ * $Id: TyrexPreparedStatementImpl.java,v 1.6 2004/12/13 22:49:40 metaboss Exp $
  */
 
 
@@ -49,19 +52,21 @@ package tyrex.resource.jdbc.xa;
 import java.io.InputStream;
 import java.io.Reader;
 import java.math.BigDecimal;
+import java.net.URL;
 import java.sql.Array;
 import java.sql.Blob;
 import java.sql.Clob;
-import java.sql.Connection;
 import java.sql.Date;
+import java.sql.ParameterMetaData;
 import java.sql.PreparedStatement;
 import java.sql.Ref;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Time;
 import java.sql.Timestamp;
-import java.sql.SQLException;
+import java.sql.Types;
 import java.util.Calendar;
 
 
@@ -836,4 +841,18 @@ class TyrexPreparedStatementImpl
         return (PreparedStatement)getStatement();
     }
 
+    /* (non-Javadoc)
+	 * @see java.sql.PreparedStatement#getParameterMetaData()
+	 */
+	public final synchronized ParameterMetaData getParameterMetaData() throws SQLException {
+		return getPreparedStatement().getParameterMetaData();
+	}
+
+	/* (non-Javadoc)
+	 * @see java.sql.PreparedStatement#setURL(int, java.net.URL)
+	 */
+	public final synchronized void setURL(int parameterIndex, URL x) throws SQLException {
+		getPreparedStatement().setURL(parameterIndex, x);
+
+	}
 }
