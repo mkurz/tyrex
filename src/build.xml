@@ -191,10 +191,12 @@
          excludes="MANIFEST.MF,tyrex/corba/*" />
 
     <!-- create the IIOP JAR -->
+    <!-- Removed until we can build the classes
     <jar jarfile="${dist.dir}/${archive}-iiop.jar"
          basedir="${build.classes}"
          manifest="${build.classes}/MANIFEST.MF"
          includes="tyrex/corba/*" />
+    -->
   </target>
 
 
@@ -215,6 +217,7 @@
              author="true"
              version="true"
              noindex="true"
+             excludes="tyrex/corba/*,tyrex/connector/**"
              packagenames="${all.packages}">
     </javadoc>
   </target>
