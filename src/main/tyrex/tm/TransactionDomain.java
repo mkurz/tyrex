@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionDomain.java,v 1.3 2001/01/11 23:26:33 jdaniel Exp $
+ * $Id: TransactionDomain.java,v 1.4 2001/02/09 20:46:49 jdaniel Exp $
  */
 
 
@@ -73,7 +73,11 @@ import tyrex.util.Messages;
 /**
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.3 $ $Date: 2001/01/11 23:26:33 $
+ * @version $Revision: 1.4 $ $Date: 2001/02/09 20:46:49 $
+ *
+ * Changes :
+ *
+ * 2/8/01   J.Daniel    Added timeout management for transaction
  */
 public class TransactionDomain
     implements ResourcePool, RemoteTransactionServer
@@ -155,6 +159,9 @@ public class TransactionDomain
 
 
     private UserTransaction      _userTx;
+    
+    
+    private TransactionTimer _txTimer;
 
     public TransactionDomain( String domainName, ResourceLimits limits )
     {
@@ -165,6 +172,11 @@ public class TransactionDomain
 	_interceptors = new TransactionInterceptor[ 0 ];
 	_txManager = new TransactionManagerImpl( this );
 	_userTx = new UserTransactionImpl( _txManager );        
+        _txTimer = new TransactionTimer();
+        
+        // starts the transaction timer monitor
+        _txTimer.setDaemon(true);
+        _txTimer.start();
     }
 
     /**
@@ -222,7 +234,11 @@ public class TransactionDomain
     {
 	return _threadTerminate;
     }
-
+    
+    public void stopTxTimer( TransactionImpl tx )
+    {
+        _txTimer.unregister( tx );
+    }
 
     public void setTransactionTimeout( int timeout )
     {
@@ -342,7 +358,7 @@ public class TransactionDomain
         
         // <---------------------- LOG --------------------->                
         tyrex.recovery.LogWriter.out.begin_transaction( xid );
-        // </--------------------- LOG --------------------->
+        // </--------------------- LOG --------------------->                
         
     	// Nested transactions are not registered directly
     	// with the transaction server. They are not considered
@@ -402,6 +418,10 @@ public class TransactionDomain
     	    // with the transaction server.
     	    _txTable.put( xid.getGlobalTransactionId(), txh );
     	}
+        
+        // Register the new transaction to the transaction timer
+        _txTimer.register( txh.tx, txh.timeout );
+        
     	return txh.tx;
     }
 
@@ -461,6 +481,10 @@ public class TransactionDomain
 	    // synchronize the table.
 	    _txTable.put( xid.getGlobalTransactionId(), txh );
 	}
+        
+        // Register the new transaction to the transaction timer
+        _txTimer.register( txh.tx, txh.timeout );
+        
 	return txh.tx;
     }
 

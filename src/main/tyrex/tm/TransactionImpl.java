@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionImpl.java,v 1.7 2001/02/09 00:06:02 jdaniel Exp $
+ * $Id: TransactionImpl.java,v 1.8 2001/02/09 20:46:49 jdaniel Exp $
  */
 
 
@@ -79,7 +79,7 @@ import tyrex.util.Messages;
  * they are added.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.7 $ $Date: 2001/02/09 00:06:02 $
+ * @version $Revision: 1.8 $ $Date: 2001/02/09 20:46:49 $
  * @see XAResourceHolder
  * @see TransactionManagerImpl
  * @see TransactionDomain
@@ -338,8 +338,8 @@ final class TransactionImpl
         throws SystemException, SecurityException, RollbackException
     {
         Thread thread;
-         
-        // Proper notification for transactions that timed out.
+
+       // Proper notification for transactions that timed out.
     	if ( _timedOut )
     	    throw new RollbackException( Messages.message( "tyrex.tx.timedOut" ) );
         
@@ -605,6 +605,10 @@ final class TransactionImpl
                 IllegalStateException,
                 SystemException
     {
+        
+        // Stops the transaction timer for the current transaction
+        _txDomain.stopTxTimer( this );
+        
         // --------------------------------
     	// General state checks
     	// --------------------------------
@@ -662,6 +666,9 @@ final class TransactionImpl
     {
         //RM
         //System.out.println("TransactionImpl:using 1PC " + canUseOnePhaseCommit);
+        
+        // Stops the transaction timer for the current transaction
+        _txDomain.stopTxTimer( this );
         
         //<------------ LOG ----------->
         tyrex.recovery.LogWriter.out.commit_begin( _xid, !canUseOnePhaseCommit );
@@ -790,6 +797,9 @@ final class TransactionImpl
     {
 	int                i;
 	XAResourceHolder xaRes;
+        
+        // Stops the transaction timer for the current transaction
+        _txDomain.stopTxTimer(this);
         
         //<------------ LOG ----------->
         tyrex.recovery.LogWriter.out.rollback_begin( _xid );
