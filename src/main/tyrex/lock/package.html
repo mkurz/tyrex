@@ -1,0 +1,68 @@
+<!-- $Id: package.html,v 1.1 2001/03/12 19:39:15 arkin Exp $ -->
+<html>
+  <body>
+    <h1><b>Lock Service</b></h1>
+    
+    <dl>
+      <dt><b>Version: </b></dt><dd>$Revision: 1.1 $ $Date: 2001/03/12 19:39:15 $</dd>
+      <dt><b>Author: </b></dt><dd><a href="mailto:arkin@intalio.com">Assaf Arkin</a></dd>
+    </dl>
+    
+    <p>The lock service enables applications to assure concurrent access to
+       resources such that the resources are not compromised when accessed by
+       concurrently executing transactions.</p>
+
+    <p>The concurrency service consists of multiple interfaces that support both
+       transactional and non-transactional modes of operation. The user of the concurrency
+       service can choose to acquire locks in one of two ways:</p>
+       <ul>
+         <li>On behalf of a transaction (transactional mode) - the transaction service is
+             responsible for the release of locks as the transaction commits or aborts.</li>
+         <li>By acquiring locks on behalf of the current thread. The responsibility for
+             dropping locks becomes the responsibility of the user.</li>
+       </ul>
+       
+
+    <p>The concurrency service ensures that transactional and non-transactional
+       access is serialized, as long as the caller can be uniquely identified through
+       transaction or thread.</p>
+
+    <p>The concurrency service supports seven lock modes (read intent, read,
+       upgrade, write intent and write), multiple non-conflicting modes, and multiple locking
+       by the same transaction (and its subtransaction) or conflicting modes. Deadlock
+       detection is tracked through upgrade locks, and granularity is enabled through
+       intent locks.</p>
+
+    <p>The concurrency service is based on the OMG Concurrency Control Service
+       specification. This package provides pure Java APIs. The package <tt>engine</tt>
+       provides an implementation and the package <tt>corba</tt> provides the CORBA
+       interfaces.</p>
+
+    <p>The Tyrex <a href="LockSetFactory.html">LockSetFactory</a> is listed in the JNDI
+       namespace under <tt>java:services/LockSetFactory</tt>.</p>
+
+    <p>The following sample creates a lock set, acquires a read lock and upgrade to a
+       write lock:</p>
+
+<pre>
+  LockSet        lockSet;
+  LodkSetFactory factory;
+
+  lockSet = factory.create();
+  <font color="ref">// Acquire a read lock</font>
+  lockSet.lock( LockSet.READ );
+  <font color="ref">// Do something</font>
+  . . .
+  <font color="ref">// Need to update resource, upgrade to write lock</font>
+  if ( ! lockSet.trylock( LockSet.UPGRADE ) )
+    throw new Exception( "Possible deadlock detected" );
+  lockSet.changeMode( LockSet.READ, LockSet.WRITE );
+  lockSet.unlock( LockSet.UPGRADE );
+  . . .
+  <font color="ref">// Lock will be released at end of transaction</font>
+  <font color="ref">// If not transactional, release it explicitly</font>
+  lockSet.getCoordinator().dropLocks();
+</pre>
+
+  </body>
+</html>
