@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: MemoryBinding.java,v 1.10 2001/05/03 17:39:17 mohammed Exp $
+ * $Id: MemoryBinding.java,v 1.11 2001/09/17 16:45:09 psq Exp $
  */
 
 
@@ -74,7 +74,7 @@ import javax.naming.spi.NamingManager;
  * This object is thread-safe.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.10 $ $Date: 2001/05/03 17:39:17 $
+ * @version $Revision: 1.11 $ $Date: 2001/09/17 16:45:09 $
  */
 public final class MemoryBinding
 {
@@ -351,6 +351,7 @@ public final class MemoryBinding
                         ( (MemoryBinding) value ).debug( writer, level + 1 );
                     else
                         writer.println( "  " + entry._name + " = " + value );
+                entry = entry._next;
                 }
             }
         }
@@ -441,7 +442,7 @@ public final class MemoryBinding
      * created based of a {@link MemoryBinding}.
      *
      * @author <a href="arkin@intalio.com">Assaf Arkin</a>
-     * @version $Revision: 1.10 $ $Date: 2001/05/03 17:39:17 $
+     * @version $Revision: 1.11 $ $Date: 2001/09/17 16:45:09 $
      * @see MemoryBinding
      */
     private final class MemoryBindingEnumeration
