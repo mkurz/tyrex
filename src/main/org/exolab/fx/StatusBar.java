@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: StatusBar.java,v 1.1 2000/01/11 00:33:46 roro Exp $
+ * $Id: StatusBar.java,v 1.2 2000/01/17 22:16:03 arkin Exp $
  */
 
 package org.exolab.fx;

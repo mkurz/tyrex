@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: ServerDataSource.java,v 1.1 2000/01/11 00:33:46 roro Exp $
+ * $Id: ServerDataSource.java,v 1.2 2000/01/17 22:18:36 arkin Exp $
  */
 
 
@@ -84,7 +84,7 @@ import tyrex.util.Messages;
  *
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2000/01/11 00:33:46 $
+ * @version $Revision: 1.2 $ $Date: 2000/01/17 22:18:36 $
  */
 public class ServerDataSource
     implements DataSource, ConnectionEventListener,
@@ -569,7 +569,6 @@ public class ServerDataSource
     {
 	Reference ref;
 
-System.out.println( refObj + " " + name + " " + nameCtx );
 	// Can only reconstruct from a reference.
 	if ( refObj instanceof Reference ) {
 	    ref = (Reference) refObj;

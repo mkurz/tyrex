@@ -16,7 +16,7 @@
  * lost profits even if the Copyright owner has been advised of the
  * possibility of their occurrence.
  *
- * $Id: Panel3D.java,v 1.1 2000/01/11 00:33:46 roro Exp $
+ * $Id: Panel3D.java,v 1.2 2000/01/17 22:15:59 arkin Exp $
  */
 
 package com.kvisco.gui;
@@ -25,7 +25,7 @@ import java.awt.*;
 
 /**
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.1 $ $Date: 2000/01/11 00:33:46 $
+ * @version $Revision: 1.2 $ $Date: 2000/01/17 22:15:59 $
 **/
 public class Panel3D extends Panel {
 

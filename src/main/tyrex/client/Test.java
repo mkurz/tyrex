@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: Test.java,v 1.1 2000/01/11 00:33:46 roro Exp $
+ * $Id: Test.java,v 1.2 2000/01/17 22:16:14 arkin Exp $
  */
 
 
@@ -63,7 +63,7 @@ import org.exolab.testing.Timing;
  *
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2000/01/11 00:33:46 $
+ * @version $Revision: 1.2 $ $Date: 2000/01/17 22:16:14 $
  */
 public class Test
 {
@@ -73,7 +73,7 @@ public class Test
     {
 	PrintWriter                writer;
 
-	writer = Logger.getLogger();
+	writer = Logger.getSystemLogger();
 
 	//System.setProperty( "java.rmi.server.logCalls", "true" );
 
@@ -88,7 +88,7 @@ public class Test
 	    // it in the RMI registry. (For simplicity, I don't
 	    // use JNDI in this test)
 	    System.out.println( "Creating RemoteUserTransaction" );
-	    remoteTxImpl = new RemoteUserTransactionImpl();
+	    remoteTxImpl = new RemoteUserTransactionImpl( TransactionServer.getTransactionDomain( TransactionServer.DefaultDomain, true ) );
 	    System.out.println( "Registering RemoteUserTransaction" );
 	    Naming.rebind( RemoteUserTransaction.LOOKUP_NAME, remoteTxImpl );
 	    

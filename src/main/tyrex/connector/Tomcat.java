@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: Tomcat.java,v 1.1 2000/01/11 00:33:46 roro Exp $
+ * $Id: Tomcat.java,v 1.2 2000/01/17 22:16:56 arkin Exp $
  */
 
 
@@ -72,7 +72,7 @@ import tyrex.naming.ENCHelper;
  *
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2000/01/11 00:33:46 $
+ * @version $Revision: 1.2 $ $Date: 2000/01/17 22:16:56 $
  */
 public class Tomcat
     implements ServiceInterceptor
@@ -80,6 +80,9 @@ public class Tomcat
 
 
     private Hashtable  _encs = new Hashtable();
+
+
+    private boolean   _started;
 
 
     public Tomcat()
@@ -97,7 +100,10 @@ public class Tomcat
 	// We don't do it in the constructor since in this
 	// version of Tomcat the constructor will be called
 	// both at startup and shutdown
-	Tyrex.getTransactionManager();
+	if ( ! _started ) {
+	    Tyrex.getTransactionManager();
+	    _started = true;
+	}
 
 	try {
 	    enc = getENCHelper( context );

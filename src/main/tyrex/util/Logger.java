@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: Logger.java,v 1.1 2000/01/11 00:33:46 roro Exp $
+ * $Id: Logger.java,v 1.2 2000/01/17 22:21:39 arkin Exp $
  */
 
 
@@ -58,7 +58,7 @@ import java.util.Date;
 /**
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2000/01/11 00:33:46 $
+ * @version $Revision: 1.2 $ $Date: 2000/01/17 22:21:39 $
  */
 public class Logger
     extends PrintWriter
@@ -102,7 +102,7 @@ public class Logger
      * Returns the default logger. This logger is used to produce
      * system messages.
      */
-    public static PrintWriter getLogger()
+    public static PrintWriter getSystemLogger()
     {
 	return _logger;
     }
@@ -112,7 +112,7 @@ public class Logger
      * Sets the default logger. This logger is used to produce
      * system messages.
      */
-    public static void setLogger( PrintWriter logger )
+    public static void setSystemLogger( PrintWriter logger )
     {
 	if ( logger == null )
 	    throw new NullPointerException( "Argument 'logger' is null" );

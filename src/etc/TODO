@@ -1,0 +1,20 @@
+-- Migrate implementation to use TransactionDomain instead of TransactionServer.
+
+-- New configuration file supporting multiple transaction domains and ResourceLimits.
+
+-- Finish interfaces in connector package.
+
+-- Merge server and connector Heuristic interfaces.
+
+-- Configuration for logger.
+
+-- Reimplement Meter as an Interceptor.
+
+-- Reimplement GUI demo as an Interceptor and add Tomcat Interceptor.
+
+-- Revised ServerDataSource and EnabledDataSource.
+
+-- Add asynchronous transaction adaptor to perform asynchronous commit/rollback,
+   but synchronous prepare. Must support mixed synchronous/asynchronous
+   transactions in same domain.
+

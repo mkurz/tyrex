@@ -1,5 +1,26 @@
-Version 0.9.1 December 25 1999
-------------------------------
+Version 0.9.3 January 21 2000
+-----------------------------
+
+- Added TransactionDomain. Multiple transaction monitors are now
+  supported each running within its own transaction domain, where all
+  Xid are unique. Each domain has its own set of resource limits and
+  interceptors. Most of the functionality of TransactionServer has now
+  been placed in TransactionDomain.
+
+- Added package for resource factories and pool management, defining
+  the interfaces for resource limits, resource pool and resouce pool
+  manager to be used across Tyrex.
+
+
+Version 0.9.2 January 10 2000
+-----------------------------
+
+- Upgraded to uses new MarshalInfo in Castor 0.7 for configuration
+  files. Now ships with Castor 0.7.
+
+
+Version 0.9.1 January 3 2000
+-----------------------------
 
 - Added support for a general resource manager architecture based
   on the JDBC/JMS XA data source implementation. This allows the
@@ -7,6 +28,9 @@ Version 0.9.1 December 25 1999
 
 - Tomcat now includes build-in Interceptor support, eliminating
   the need to include webserver.jar in Tomcat-Tyrex distribution.
+
+- Fixed bug in permission checks and changed permission class name
+  to TyrexPermission.
 
 
 Version 0.9  December 21, 1999

@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: TxConnection.java,v 1.1 2000/01/11 00:33:46 roro Exp $
+ * $Id: TxConnection.java,v 1.2 2000/01/17 22:18:28 arkin Exp $
  */
 
 

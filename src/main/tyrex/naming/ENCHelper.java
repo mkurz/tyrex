@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: ENCHelper.java,v 1.1 2000/01/11 00:33:46 roro Exp $
+ * $Id: ENCHelper.java,v 1.2 2000/01/17 22:18:50 arkin Exp $
  */
 
 
@@ -70,7 +70,7 @@ import tyrex.util.Messages;
  *
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2000/01/11 00:33:46 $
+ * @version $Revision: 1.2 $ $Date: 2000/01/17 22:18:50 $
  */
 public final class ENCHelper
 {
@@ -162,7 +162,7 @@ public final class ENCHelper
 		    addEnvEntry( entry.getEnvEntryName(), entry.getEnvEntryType(),
 				 entry.getEnvEntryValue() );
 		} catch ( NamingException except ) {
-		    Logger.getLogger().println( except );
+		    Logger.getSystemLogger().println( except );
 		}
 	    }
 	}
@@ -199,7 +199,7 @@ public final class ENCHelper
 
 			factory = resource.createResourceFactory();
 			if ( factory == null || ! ( factory instanceof DataSource ) ) {
-			    Logger.getLogger().println(
+			    Logger.getSystemLogger().println(
 			        Messages.format( "tyrex.enc.resourceNotSameType",
 						 resType, resource.getResType() ) );
 			} else {
@@ -211,14 +211,14 @@ public final class ENCHelper
 				// previously bound to the same name. Ignore.
 			    } catch ( NamingException except ) {
 				// This typically happens if name is invalid
-				Logger.getLogger().println(
+				Logger.getSystemLogger().println(
 				    Messages.format( "tyrex.enc.errorBindingResource",
 						     resource.getResName(), except ) );
 			    }
 			}
 
 		    } else {
-			Logger.getLogger().println( 
+			Logger.getSystemLogger().println( 
 			    Messages.format( "tyrex.enc.resourceNotSupported",
 		            resource.getResName(), resource.getResType() ) );
 		    }

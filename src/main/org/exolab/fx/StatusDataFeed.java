@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: StatusDataFeed.java,v 1.1 2000/01/11 00:33:46 roro Exp $
+ * $Id: StatusDataFeed.java,v 1.2 2000/01/17 22:16:03 arkin Exp $
  */
 
 package org.exolab.fx;
@@ -49,7 +49,7 @@ package org.exolab.fx;
 /**
  * The abstract class used by the StatusPanel for retrieving data
  * @author <a href="mailto:kvisco@exoffice.com">Keith Visco</a>
- * @version $Revision: 1.1 $ $Date: 2000/01/11 00:33:46 $
+ * @version $Revision: 1.2 $ $Date: 2000/01/17 22:16:03 $
 **/
 public abstract class StatusDataFeed {
     

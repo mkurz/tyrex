@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: JavaContext.java,v 1.1 2000/01/11 00:33:46 roro Exp $
+ * $Id: JavaContext.java,v 1.2 2000/01/17 22:18:50 arkin Exp $
  */
 
 
@@ -55,13 +55,14 @@ import java.util.Enumeration;
 import java.util.Dictionary;
 import java.security.AccessController;
 import javax.naming.*;
+import tyrex.server.TyrexPermission;
 
 
 /**
  *
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2000/01/11 00:33:46 $
+ * @version $Revision: 1.2 $ $Date: 2000/01/17 22:18:50 $
  */
 public final class JavaContext
     extends Constants
@@ -109,7 +110,7 @@ public final class JavaContext
 	TyrexContext old;
 
 	try {
-	    AccessController.checkPermission( Permission.JavaContext );
+	    AccessController.checkPermission( TyrexPermission.Naming.ENC );
 	} catch ( SecurityException except ) {
 	    throw new NoPermissionException( "Caller has no permission to reset context" );
 	}
@@ -127,7 +128,7 @@ public final class JavaContext
 	TyrexContext    old;
 
 	try {
-	    AccessController.checkPermission( Permission.JavaContext );
+	    AccessController.checkPermission( TyrexPermission.Naming.ENC );
 	} catch ( SecurityException except ) {
 	    throw new NoPermissionException( "Caller has no permission to set context" );
 	}
@@ -150,7 +151,7 @@ public final class JavaContext
 	TyrexContext    ctx;
 
 	try {
-	    AccessController.checkPermission( Permission.JavaContext );
+	    AccessController.checkPermission( TyrexPermission.Naming.ENC );
 	} catch ( SecurityException except ) {
 	    throw new NoPermissionException( "Caller has no permission to get context" );
 	}

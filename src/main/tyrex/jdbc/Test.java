@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: Test.java,v 1.1 2000/01/11 00:33:46 roro Exp $
+ * $Id: Test.java,v 1.2 2000/01/17 22:18:36 arkin Exp $
  */
 
 
@@ -64,7 +64,7 @@ import org.exolab.testing.Timing;
  *
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2000/01/11 00:33:46 $
+ * @version $Revision: 1.2 $ $Date: 2000/01/17 22:18:36 $
  */
 public class Test
 {
@@ -98,7 +98,7 @@ public class Test
 	    System.out.println( "  db          Database (resource manager) timeout" );
 	    System.exit ( 1 );
 	}
-	writer = Logger.getLogger();
+	writer = Logger.getSystemLogger();
 	memory = new Memory( "Memory consumption" );
 	debug = ( args.length >= 2 && "debug".startsWith( args[ 1 ] ) );
 
