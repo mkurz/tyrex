@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: UtilSuite.java,v 1.3 2001/08/25 06:33:14 mills Exp $
+ * $Id: UtilSuite.java,v 1.4 2001/08/25 07:27:26 mills Exp $
  */
 
 
@@ -52,7 +52,7 @@ import junit.framework.TestSuite;
 /**
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  */
 
 public class UtilSuite
@@ -70,6 +70,7 @@ public class UtilSuite
         suite.addTest(new TestSuite(ConfigurationTest.class));
         suite.addTest(new TestSuite(HashIntTableTest.class));
         suite.addTest(new TestSuite(VersionTest.class));
+        suite.addTest(new TestSuite(WeakListTest.class));
         return suite;
     }
 
