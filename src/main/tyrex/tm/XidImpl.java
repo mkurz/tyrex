@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: XidImpl.java,v 1.3 2001/01/11 23:26:33 jdaniel Exp $
+ * $Id: XidImpl.java,v 1.4 2001/02/23 17:30:23 jdaniel Exp $
  */
 
 
@@ -83,7 +83,7 @@ import tyrex.util.Logger;
  * 
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.3 $ $Date: 2001/01/11 23:26:33 $
+ * @version $Revision: 1.4 $ $Date: 2001/02/23 17:30:23 $
  *
  * Date     Author      Change
  * 1/8/1    J.Daniel    Added a new constructor to be able to restore an
@@ -163,7 +163,7 @@ public final class XidImpl
     /**
      * Defines the size of the global identifier in bytes.
      */
-    public static final int    GLOBAL_XID_LENGTH = 12;
+    public static final int    GLOBAL_XID_LENGTH = 36;
 
 
     /**
@@ -184,7 +184,7 @@ public final class XidImpl
 	int   i;
 	byte[] bytes;
 
-	_branch = getUniqueId();
+	_branch = tyrex.util.UUID.createBinary();
 	_global = _branch;
     }
 
@@ -214,7 +214,7 @@ public final class XidImpl
 
 	branch = new XidImpl();
 	branch._global = _global;
-	branch._branch = getUniqueId();
+	branch._branch = tyrex.util.UUID.createBinary();
 	return branch;
     }
 
@@ -240,8 +240,8 @@ public final class XidImpl
     /**
      * Produces a textual presentation of the transaction identifier.
      * The returned string contains the hexadecimal presentation of
-     * the format (8 characters), global identifier (24 characters)
-     * and branch identifier (16 characters), separated with a colon.
+     * the format (8 characters), global identifier (36 characters)
+     * and branch identifier (36 characters), separated with a colon.
      * Foe example:
      * <pre>
      * E0FC:000DB98D87A5B001CC9C9235:000DB98D87A5B001CC9C9235
@@ -252,7 +252,7 @@ public final class XidImpl
 	StringBuffer buffer;
 	int          i;
 
-	buffer = new StringBuffer( 58 );
+	buffer = new StringBuffer( 80 );
 	for ( i = 8 ; i-- > 0 ; )
 	    buffer.append( toHex( XID_FORMAT >> ( 4 * i ) ) );
 	buffer.append( ':' );
@@ -347,35 +347,6 @@ public final class XidImpl
 	clone._global = _global;
 	return clone;
     }
-
-
-    /**
-     * Constructs a new unique identifier for the transactions.
-     * No two global transcations or branches will have the same
-     * unique identifier on the same server. Global uniqueness
-     * is assured by adding a machine identifier to each identifer
-     * in the first four bytes;
-     */
-    private byte[] getUniqueId()
-    {
-	long   uid;
-	byte[] bytes;
-	int    i;
-
-	// The internal counter is required to assure that no two
-	// identical Xids can be created in the same millisecond.
-	++_xidCounter;
-	uid = ( System.currentTimeMillis() << 12 ) + ( _xidCounter % 0xFFF );
-	bytes = new byte[ GLOBAL_XID_LENGTH ];
-	for ( i = 0 ; i < ( GLOBAL_XID_LENGTH - MACHINE_ID_LENGTH ) ; ++i ) {
-	    bytes[ i ] = (byte) uid;
-	    uid = uid >> 8;
-	}
-	for ( i = 0 ; i < MACHINE_ID_LENGTH ; ++i )
-	    bytes[ ( GLOBAL_XID_LENGTH - MACHINE_ID_LENGTH ) + i ] = _machineId[ i ];
-	return bytes;
-    }
-
 
     /**
      * Used internally to convert the binary value into a viewable
