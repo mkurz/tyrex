@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Logger.java,v 1.12 2001/03/12 19:20:21 arkin Exp $
+ * $Id: Logger.java,v 1.13 2001/03/14 22:36:57 jdaniel Exp $
  */
 
 
@@ -59,7 +59,7 @@ import org.apache.log4j.FileAppender;
 /**
  *
  * @author <a href="jdaniel@intalio.com">Jerome DANIEL</a>
- * @version $Revision: 1.12 $ $Date: 2001/03/12 19:20:21 $
+ * @version $Revision: 1.13 $ $Date: 2001/03/14 22:36:57 $
  */
 public class Logger
 {
@@ -68,7 +68,7 @@ public class Logger
     public static final Category conf;
 
     
-    public static final Category ots;
+    
 
     
     public static final Category jdbc;
@@ -93,6 +93,8 @@ public class Logger
 
     public static final Category resource;
     
+    
+    public static final Category ots;
 
 
     static {
@@ -109,11 +111,12 @@ public class Logger
 
         tyrex = Category.getInstance( "tyrex" );
         resource = Category.getInstance( "tyrex.resource" );
+        ots = Category.getInstance( "tyrex.ots" );
         
         appender = new FileAppender( layout, System.out );
 
         /*
-        ots.addAppender( appender );
+        
         conf.addAppender( appender );
         jdbc.addAppender( appender );
         recovery.addAppender( appender );
@@ -121,6 +124,7 @@ public class Logger
         */
         tyrex.addAppender( appender );
         resource.addAppender( appender );
+        ots.addAppender( appender );
     }
 
 

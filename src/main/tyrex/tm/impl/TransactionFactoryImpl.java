@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionFactoryImpl.java,v 1.4 2001/03/12 19:20:20 arkin Exp $
+ * $Id: TransactionFactoryImpl.java,v 1.5 2001/03/14 22:36:35 jdaniel Exp $
  */
 
 
@@ -72,7 +72,7 @@ import org.omg.CosTSPortability.Receiver;
  * of remote transactions.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.4 $ $Date: 2001/03/12 19:20:20 $
+ * @version $Revision: 1.5 $ $Date: 2001/03/14 22:36:35 $
  * @see TransactionImpl
  *
  * Changes 
@@ -107,7 +107,10 @@ final class TransactionFactoryImpl
         // interface of that transaction.
         try {
             tx = _txDomain.createTransaction( null, null, timeout );
-            return tx.getControl();
+            Control ctrl = tx.getControl();
+            if ( _txDomain._orb != null )
+            	_txDomain._orb.connect( ctrl );
+            return ctrl;
         } catch ( Exception except ) {
             throw new INVALID_TRANSACTION();
         }
@@ -120,7 +123,10 @@ final class TransactionFactoryImpl
         
         try {
             tx = _txDomain.recreateTransaction( pgContext );
-            return tx.getControl();
+            Control ctrl = tx.getControl();
+            if ( _txDomain._orb != null )
+            	_txDomain._orb.connect( ctrl );
+            return ctrl;
         } catch ( Exception except ) {
             throw new INVALID_TRANSACTION();
         }

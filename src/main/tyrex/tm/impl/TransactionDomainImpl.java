@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionDomainImpl.java,v 1.13 2001/03/14 21:51:05 jdaniel Exp $
+ * $Id: TransactionDomainImpl.java,v 1.14 2001/03/14 22:36:48 jdaniel Exp $
  */
 
 
@@ -96,7 +96,7 @@ import tyrex.util.Configuration;
  * Implementation of a transaction domain.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.13 $ $Date: 2001/03/14 21:51:05 $
+ * @version $Revision: 1.14 $ $Date: 2001/03/14 22:36:48 $
  */
 public class TransactionDomainImpl
     extends TransactionDomain
@@ -1488,8 +1488,11 @@ public class TransactionDomainImpl
     {
         try {
             _orb = orb;
-            tsi.identify_sender( _txFactory );
-            tsi.identify_receiver( _txFactory );
+            if ( tsi != null )
+            {
+            	tsi.identify_sender( _txFactory );
+            	tsi.identify_receiver( _txFactory );
+            }
         } catch ( Exception except ) {
             // The ORB might tell us it's already using some sender/reciever,
             // or any other error we are not interested in reporting back
