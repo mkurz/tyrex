@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: Logger.java,v 1.2 2000/01/17 22:21:39 arkin Exp $
+ * $Id: Logger.java,v 1.3 2000/04/13 22:03:52 arkin Exp $
  */
 
 
@@ -56,32 +56,61 @@ import java.util.Date;
 
 
 /**
+ * Simple logging facility. This logger extends <tt>PrintWriter</tt>
+ * which is used to trace SQL statements, Castor operations and
+ * mapping resolutions.
+ * <p>
+ * This logger augments <tt>PrintWriter</tt> by adding a prefix to
+ * each printed line and optionally a time stamp, enabling easy
+ * post-mortem analysis.
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $ $Date: 2000/01/17 22:21:39 $
+ * @version $Revision: 1.3 $ $Date: 2000/04/13 22:03:52 $
  */
 public class Logger
     extends PrintWriter
 {
 
+
+    /**
+     * The default prefix to show at the beginning of each line.
+     */
     public static final String Prefix = "Tyrex";
 
 
+    /**
+     * True if the time should be printed on each line.
+     */
     public static final boolean LogTime = true;
 
 
-    private static PrintWriter  _logger = new Logger( System.out );
+    /**
+     * The default system logger.
+     */
+    private static PrintWriter  _system = new Logger( System.out ).setPrefix( Prefix );
 
 
+    /**
+     * True if the time should be printed on each line.
+     */
     private boolean  _logTime = LogTime;
 
 
+    /**
+     * The prefix to use for this logger, null if lines should not be prefixed.
+     */
     private String  _prefix;
 
 
+    /**
+     * True if at the beginning of a line.
+     */
     private boolean _newLine;
 
 
+    /**
+     * Constructs a new logger to use the specified output stream.
+     */
     public Logger( OutputStream output )
     {
 	super( output, true );
@@ -90,6 +119,9 @@ public class Logger
     }
 
 
+    /**
+     * Constructs a new logger to use the specified writer.
+     */
     public Logger( Writer output )
     {
 	super( output, true );
@@ -104,7 +136,7 @@ public class Logger
      */
     public static PrintWriter getSystemLogger()
     {
-	return _logger;
+	return _system;
     }
 
 
@@ -112,11 +144,11 @@ public class Logger
      * Sets the default logger. This logger is used to produce
      * system messages.
      */
-    public static void setSystemLogger( PrintWriter logger )
+    public static void setSystemLogger( PrintWriter system )
     {
-	if ( logger == null )
-	    throw new NullPointerException( "Argument 'logger' is null" );
-	_logger = logger;
+	if ( system == null )
+	    throw new NullPointerException( "Argument 'system' is null" );
+	_system = system;
     }
 
 

@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: FastThreadLocal.java,v 1.2 2000/01/17 22:21:39 arkin Exp $
+ * $Id: FastThreadLocal.java,v 1.3 2000/04/13 22:03:52 arkin Exp $
  */
 
 
@@ -127,7 +127,7 @@ package tyrex.util;
  * 
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $ $Date: 2000/01/17 22:21:39 $
+ * @version $Revision: 1.3 $ $Date: 2000/04/13 22:03:52 $
  */
 public class FastThreadLocal
     //extends java.lang.ThreadLocal
@@ -140,14 +140,14 @@ public class FastThreadLocal
      * holds a linked list of entries, all of which happen to have
      * the exact same hashcode (or a modulo of it)
      */
-    private Entry[] _table;
+    private final Entry[] _table;
 
 
     /**
      * This is how often we run over the table and remove entries for
      * dead threads. The time element is specified in milliseconds.
      */
-    private int    _staleTimeout = 600 * 1000; // Ten minutes
+    private final int      _staleTimeout = 600 * 1000; // Ten minutes
 
 
     /**
@@ -249,16 +249,14 @@ public class FastThreadLocal
 	while ( entry != null && entry.thread != thread )
 	    entry = entry.next;
 	if ( entry != null ) {
-	    entry.value = value;
+	    entry = new Entry( value );
 	    return;
 	}
 
 	// No such entry found, so we must create it. Create first to
 	// minimize contention period. (Object creation is such a
 	// length operation)
-	entry = new Entry();
-	entry.value = value;
-	entry.thread = thread;
+	entry = new Entry( value, thread );
 
 	// This operation must be synchronized, otherwise, two concurrent
 	// set() methods might insert only one entry. (Not even talking
@@ -416,76 +414,30 @@ public class FastThreadLocal
 
 
     /**
-     * Test case. Runs 1000 iterations in 1000 threads over a table
-     * of 5 entries to see how well it fares.
-     */
-    /*
-    public static void main( String[] args )
-    {
-	try {
-	    FastThreadLocal local;
-	    int             i;
-	    Test            thread;
-
-	    local = new FastThreadLocal( 5 );
-	    thread = null;
-	    for ( i = 0 ; i < 1000 ; ++i ) {
-		thread = new Test();
-		thread.local = local;
-		thread.start();
-	    }
-	    thread.join();
-	    System.out.println( "Number of entries in table: " + local.listThreads( null ).length );
-
-	} catch ( Exception except ) {
-	    System.out.println( except );
-	    except.printStackTrace();
-	}
-    }
-
-
-    static class Test
-	extends Thread
-    {
-
-
-	ThreadLocal local;
-
-
-	public void run()
-	{
-	    int i;
-	    
-	    for ( i = 0 ; i < 1000 ; ++i ) {
-		String value;
-		
-		value = (String) local.get();
-		if ( value == null )
-		    local.set( Thread.currentThread().getName() );
-		else {
-		    if ( ! value.equals( Thread.currentThread().getName() ) )
-			System.out.println( "Error: not the value we expected!" );
-		    local.set( null );
-		}
-	    }
-	}
-    }
-    */
-
-
-    /**
      * Each entry in the table has a key (thread), a value or null
      * (we don't remove on null) and a reference to the next entry in
      * the same table position.
      */
-    class Entry
+    static class Entry
     {
 
-	Object  value;
+	final Object  value;
 
-	Entry   next;
+	final Thread  thread;
 
-	Thread  thread;
+	Entry         next;
+
+        Entry( Object value, Thread thread )
+        {
+            this.value = value;
+            this.thread = thread;
+        }
+
+        Entry( Object value )
+        {
+            this.value = value;
+            this.thread = null;
+        }
 
     }
 

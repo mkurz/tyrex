@@ -3,35 +3,38 @@
     <p><b>Connector API</b></p>
 
     <dl>
-      <dt><b>Version: </b></dt><dd>$Revision: 1.1 $ $Date: 2000/04/10 20:52:34 $</dd>
+      <dt><b>Version: </b></dt><dd>$Revision: 1.2 $ $Date: 2000/04/13 22:04:41 $</dd>
       <dt><b>Author: </b></dt><dd><a href="mailto:arkin@exoffice.com">Assaf Arkin</a></dd>
       <dt><b>Note: </b></dt><dd>Temporary API subject to change</dd>
     </dl>
 
-    <p>This package defines an API for developing connectors. Connectors similar design
-       patters to that of JDBC 2.0 DataSource. They are listed in the JNDI environment
-       naming context, are pooled, and are enlisted in any running transaction.</p>
+    <p>This package defines an API for developing connectors. Connectors are based on the
+       JDBC 2.0 DataSource design patterns but are supported by a generic connection
+       manager. They are listed in the JNDI environment naming context, and are pooled and
+       transaction demarcated by the connection manager.</p>
 
     <h3>ManagedConnection</h3>
 
     <p>A connection that is managed by the connection manager is encapsulated in an
        object of type {@link tyrex.ManagedConnection}. This object allows the connection
-       manager to determine which transaction type to enlist it in, close a connection
-       when it leaves the pool, and obtain the actual connection to be handed to the
-       application.</p>
+       manager to pool connections, share connections in the same thread, manage the
+       connections' transaction enlistment, etc.</p>
 
     <p>The application connection is obtained from {@link tyrex.ManagedConnection#getConnection}
-       and is a proxy object. Once it has been created it is associated with some open
-       connection, however, when the application closes it, the proxy connection is closed,
-       while the actual connection goes back to the pool through recycling of the managed
-       connection. If the application does not close the proxy connection at the end of a
-       method call, the proxy connection will be closed for it.</p>
+       and is a handle to the underlying connection (represented by the managed connection).
+       The connection manager may dissociate the application handle from the underlying
+       connection across method invocations. When the application closes the handle, the handle
+       is returned to the connection pool and can be reused by future requests.</p>
 
     <h3>ConnectionAdapter</h3>
 
-    <p>The application requires a connection to an ERP system of type <tt>ERPConnection</tt>.
-       The connector adapter for obtaining such a connection is of type <tt>ERPConnector</tt>.
-       The application will use the JNDI ENC to lookup the connector and open a connection
+    <p>Since the semantics of acquiring a connection for the application are different than
+       acquiring a managed connection for the connection pool (compared DataSource with
+       XADataSource), adaptors are used that present the connection manager to the application.</p>
+
+    <p>For example, the application requires a connection to an ERP system of type <tt>ERPConnection</tt>.
+       The factory for obtaining such a connection is of type <tt>ERPConnector</tt>.
+       The application will use the JNDI ENC to lookup the factory and open a connection
        as follows:
 
        <pre>
@@ -50,18 +53,16 @@ connection = connector.getConnection();
 connection.close();
        </pre></p>
 
-    <p>The connector manager will enlist a connector adapter of type <tt>ERPConnector</tt>
-       in the JNDI ENC. The connector is associated with a connection manager that manages
-       pooling an resource enlistment on the connection. When the connection is asked by
-       the application to return a new connection, it calls the <tt>getConnection</tt>
-       method on the connection manager and indirectly hands that connection to the
-       application.</p>
+    <p>The connector manager will enlist a factory of type <tt>ERPConnector</tt> in the JNDI ENC.
+       The factory is associated with a connection manager that manages pooling and transaction
+       enlistment on the connection. When the factory is asked by the application to return a new
+       connection, it calls the <tt>getConnection</tt> method on the connection manager and
+       hands that connection to the application.</p>
 
     <p>The following configuration will be used to enable the above example:
        <pre>
 <font color="red">&lt;!-- Definition of the connector type --&gt;</font>
-&lt;connector type="ERPConnector"
-           adapter-class="ERPConnectorAdapter"
+&lt;connector res-type="ERPConnector"
            factory-class="ERPConnectorFactory"/&gt;
 
 <font color="red">&lt;!-- Configuration of a resource for this connector --&gt;</font>
