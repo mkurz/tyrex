@@ -40,13 +40,14 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: ManagedConnection.java,v 1.1 2000/04/10 20:52:34 arkin Exp $
+ * $Id: ManagedConnection.java,v 1.2 2000/04/13 22:11:30 arkin Exp $
  */
 
 
 package tyrex.connector;
 
 
+import java.io.PrintWriter;
 import javax.transaction.xa.XAResource;
 
 
@@ -63,7 +64,7 @@ import javax.transaction.xa.XAResource;
  * Further changes to these API are expected in the future.
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2000/04/10 20:52:34 $
+ * @version $Revision: 1.2 $ $Date: 2000/04/13 22:11:30 $
  */
 public interface ManagedConnection
 {
@@ -94,13 +95,33 @@ public interface ManagedConnection
 
 
     /**
-     * Returns the type of transactions supported by this connection.
-     * Valid values are {@link #TRANSACTION_NONE}, {@link
-     * #TRANSACTION_XA} and {@link #TRANSACTION_SYNCHRONIZATION}.
+     * Registers a connection event listener for recieving closure and
+     * error events on the connection.
      *
-     * @return The type of transactions supported by this connection
+     * @param listener The connection event listener
      */
-    public short getTransactionType();
+    public void addConnectionEventListener( ConnectionEventListener listener );
+
+
+    /**
+     * Deregisters a connection event listener.
+     *
+     *
+     * @param listener The connection event listener
+     */
+    public void removeConnectionEventListener( ConnectionEventListener listener );
+
+
+    /**
+     * Notifies the connection when it returns to the pool. If the
+     * managed connection has any application proxies, it may disconnect
+     * them at his point.
+     *
+     * @throws ConnectionException Reports an error that occured when
+     *  attempting to pool the connection
+     */
+    public void pool()
+        throws ConnectionException;
 
 
     /**
@@ -112,6 +133,20 @@ public interface ManagedConnection
      *  attempting to close the connection
      */
     public void close()
+        throws ConnectionException;
+
+
+    /**
+     * Obtains an application connection. This connection is handed to
+     * the application through the connector adaptor, but remains subject
+     * to the connection manager who can control it through this interface.
+     *
+     * @param info Any optional information for creating the connection
+     * @return A connection
+     * @throws ConnectionException An error occured while taking to the
+     *  connection, this connection should be discarded
+     */
+    public Object getConnection( Object info )
         throws ConnectionException;
 
 
@@ -145,34 +180,32 @@ public interface ManagedConnection
 
 
     /**
-     * Obtains an application connection. This connection is handed to
-     * the application through the connector adaptor, but remains subject
-     * to the connection manager who can control it through this interface.
-     *
-     * @return A connection
-     * @throws ConnectionException An error occured while taking to the
-     *  connection, this connection should be discarded
+     * Plugs an existing application connection into a managed connection.
+     * This method is required to allow a connection to be used across
+     * method invocations, by associating/dissociating the connection held
+     * by the application with an actual managed connection.
      */
-    public Object getConnection()
+    public void connect( Object connection )
         throws ConnectionException;
 
 
     /**
-     * Associates with a connection manager. This method will be called
-     * once before this object is used by any connection manager.
-     * This object must record the connection manager for future reference.
+     * Returns the log writer for this managed connection.
      *
-     * @param manager The connection manager
+     * @return The log writer
      */
-    public void setConnectionManager( ConnectionManager manager );
+    public PrintWriter getLogWriter();
 
 
     /**
-     * Disssociates from a connection manager.
+     * Sets the log writer for this managed connection.
+     *
+     * @param logWriter The log writer
      */
-    public void unsetConnectionManager();
+    public void setLogWriter( PrintWriter logWriter );
 
 
 }
+
 
 
