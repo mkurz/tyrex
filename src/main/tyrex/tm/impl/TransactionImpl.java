@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionImpl.java,v 1.14 2001/03/21 00:47:41 arkin Exp $
+ * $Id: TransactionImpl.java,v 1.15 2001/03/21 03:27:27 arkin Exp $
  */
 
 
@@ -88,7 +88,7 @@ import tyrex.util.Messages;
  * they are added.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.14 $ $Date: 2001/03/21 00:47:41 $
+ * @version $Revision: 1.15 $ $Date: 2001/03/21 03:27:27 $
  * @see XAResourceHolder
  * @see TransactionManagerImpl
  * @see TransactionDomain
@@ -1545,32 +1545,6 @@ final class TransactionImpl
         XAResourceHolder resHolder;
         XAResource       xaResource;
 
-        // Proper notification for transactions that timed out.
-        if ( _timedOut )
-            throw new RollbackException( Messages.message( "tyrex.tx.timedOut" ) );
-    
-        // Check the status of the transaction and act accordingly.
-        switch ( _status ) {
-        case STATUS_ACTIVE:
-            // Transaction is active, we can enlist the resource.
-            break;
-        case STATUS_MARKED_ROLLBACK:
-            // Transaction marked for rollback, we cannot possibly enlist.
-            throw new RollbackException( Messages.message( "tyrex.tx.markedRollback" ) );
-        case STATUS_PREPARED:
-        case STATUS_PREPARING:
-        case STATUS_COMMITTING:
-            // Transaction is preparing, cannot enlist resource.
-            throw new IllegalStateException( Messages.message( "tyrex.tx.inCommit" ) );
-        case STATUS_ROLLEDBACK:
-        case STATUS_ROLLING_BACK:
-        case STATUS_COMMITTED:
-        case STATUS_NO_TRANSACTION:
-        case STATUS_UNKNOWN:
-        default:
-            throw new IllegalStateException( Messages.message( "tyrex.tx.inactive" ) );
-        }
-
         if ( _enlisted != null ) {
         
             // Look if we alredy got the resource enlisted. If the
@@ -2278,7 +2252,7 @@ final class TransactionImpl
         Transaction result = null;
 
         try {
-            if ( _txDomain._txManager.getTransaction() !=  this ) {
+            if ( _txDomain._txManager.getTransaction() != this ) {
                 result = _txDomain._txManager.suspend();
                 // could move this out of priviledged block
                 // to make priviledged block smaller. not

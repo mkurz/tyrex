@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionStatus.java,v 1.6 2001/03/17 03:04:45 arkin Exp $
+ * $Id: TransactionStatus.java,v 1.7 2001/03/21 03:27:27 arkin Exp $
  */
 
 
@@ -61,8 +61,9 @@ import javax.transaction.xa.Xid;
  * resources and thread association.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.6 $ $Date: 2001/03/17 03:04:45 $
+ * @version $Revision: 1.7 $ $Date: 2001/03/21 03:27:27 $
  * @see Tyrex
+ * @deprecated This interface will be folded into TyrexTransaction in version 0.9.8
  */
 public abstract class TransactionStatus
 {
@@ -72,6 +73,7 @@ public abstract class TransactionStatus
      * Returns the underlying transaction.
      *
      * @return The underlying transaction
+     * @deprecated This method will not be supported in version 0.9.8
      */
     public abstract Transaction getTransaction();
 
@@ -106,6 +108,7 @@ public abstract class TransactionStatus
      *
      * @return The status of the transaction
      * @see javax.transaction.Status
+     * @deprecated This method will not be supported in version 0.9.8
      */
     public abstract int getStatus();
 
@@ -123,6 +126,7 @@ public abstract class TransactionStatus
      * with this transaction.
      *
      * @return A textual description of all the enlisted resources
+     * @deprecated This method will not be supported in version 0.9.8
      */
     public abstract String[] getResources();
 
@@ -131,7 +135,7 @@ public abstract class TransactionStatus
      * Returns a list of all threads associated with this transaction.
      *
      * @return A list of all threads associated with this transaction
-     * @deprecated This method will not be supported in 0.9.9
+     * @deprecated This method will not be supported in version 0.9.8
      */
     public abstract Thread[] getThreads();
 
