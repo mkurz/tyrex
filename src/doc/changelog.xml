@@ -11,7 +11,7 @@
   java.io.Serializable, javax.naming.Referenceable or 
   javax.naming.Reference.
 - Fixed a bug with user transaction.
-- Fixed connection pooling problem with tyrex.jdbc.XADataSourceImpl
+- Fixed connection pooling problems with tyrex.jdbc.XADataSourceImpl
 - XAConnections from tyrex.jdbc.XADataSourceImpl can now be retrieved 
   with a user name and password.
 - Tomcat and Tyrex integration fixed and tested with Tomcat 3.1
