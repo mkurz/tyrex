@@ -32,17 +32,17 @@
     
     <table border="0" cellpadding="0" cellspacing="0" width="712" height="400">
 
-      <tr><td width="20" valign="top" align="left" bgcolor="#7270c2"><img
+      <tr><td width="20" valign="top" align="left" bgcolor="#7270c2" height="7"><img
         src="images/dotTrans.gif" width="1" height="1" border="0"/></td>
-        <td width="95" valign="top" align="left" bgcolor="#7270c2"><img
+        <td width="95" valign="top" align="left" bgcolor="#7270c2" height="7"><img
           src="images/dotTrans.gif" width="1" height="1" border="0"/></td>
-        <td width="7" valign="top" align="left"><img src="images/dotTrans.gif" border="0" 
+        <td width="7" valign="top" align="left" height="7"><img src="images/dotTrans.gif" border="0" 
           width="1" height="1"/></td>
-        <td width="70" valign="top" align="left"><img 
+        <td width="70" valign="top" align="left" height="7"><img 
           src="images/dotTrans.gif" width="70" height="6" border="0"/></td>
-        <td width="400" valign="top" align="left"><img 
+        <td width="400" valign="top" align="left" height="7"><img 
           src="images/top_2.gif"  width="400" height="6" border="0"/></td>
-        <td width="120" valign="top" align="left"><xsl:element
+        <td width="120" valign="top" align="left" height="7"><xsl:element
           name="img"><xsl:attribute name="src">images/line_blue.gif</xsl:attribute>
         <xsl:attribute name="width">120</xsl:attribute>  
         <xsl:attribute name="height">6</xsl:attribute>  
@@ -62,17 +62,17 @@
         <td width="120" height="20" valign="top" align="left">&#160;</td>
       </tr>
       <tr>
-        <td width="20" bgcolor="#7270c2" valign="top" align="left"><img 
+        <td width="20" bgcolor="#7270c2" valign="top" align="left" height="8"><img 
           src="images/dotTrans.gif" width="20" height="3" border="0"/></td>
-        <td width="95" bgcolor="#7270c2" valign="top" align="left"><img 
+        <td width="95" bgcolor="#7270c2" valign="top" align="left" height="8"><img 
           src="images/line_sm.gif" width="105" height="3" border="0"/></td>
-        <td width="7" bgcolor="#a9a5de" valign="top" align="left"><img 
+        <td width="7" bgcolor="#a9a5de" valign="top" align="left" height="8"><img 
           src="images/line_sm.gif" width="7" height="3" border="0"/></td>
-        <td width="70" valign="top" align="left"><img 
+        <td width="70" valign="top" align="left" height="8"><img 
           src="images/line_light.gif" width="70" height="3" border="0"/></td>
-        <td width="400" valign="top" align="left"><img 
+        <td width="400" valign="top" align="left" height="8"><img 
           src="images/line_light.gif" width="400" height="3" border="0"/></td>
-        <td width="120" valign="top" align="left"><img 
+        <td width="120" valign="top" align="left" height="8"><img 
           src="images/dotTrans.gif" border="0" width="1" height="1"/></td>
       </tr>
 

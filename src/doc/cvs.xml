@@ -30,9 +30,13 @@
          use the following commands:</p>
 
       <pre>
-  $ cvs -d :pserver:anoncvs@tyrex.exolab.org:/cvs/tyrex login
+  $ cvs -d 
+     :pserver:anoncvs@tyrex.exolab.org:/cvs/tyrex 
+     login
   password: anoncvs
-  $ cvs -d :pserver:anoncvs@tyrex.exolab.org:/cvs/tyrex checkout tyrex
+  $ cvs -d 
+     :pserver:anoncvs@tyrex.exolab.org:/cvs/tyrex 
+     checkout tyrex
       </pre>
 
       <p><b>Note:</b> There have been reports of problems using jCVS with ours CVS servers.
