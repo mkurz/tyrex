@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: UtilSuite.java,v 1.5 2001/08/28 01:12:33 mills Exp $
+ * $Id: UtilSuite.java,v 1.6 2001/08/28 04:53:15 mills Exp $
  */
 
 
@@ -52,7 +52,7 @@ import junit.framework.TestSuite;
 /**
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  */
 
 public class UtilSuite
@@ -67,6 +67,7 @@ public class UtilSuite
         TestSuite suite = new TestSuite("UtilSuite test harness");
         suite.addTest(ArrayEnumerationTest.suite());
         suite.addTest(ArraySetTest.suite());
+        suite.addTest(new TestSuite(BackgroundThreadTest.class));
         suite.addTest(new TestSuite(ConfigurationTest.class));
         suite.addTest(new TestSuite(HashIntTableTest.class));
         suite.addTest(new TestSuite(MessagesTest.class));
