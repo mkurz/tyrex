@@ -40,9 +40,10 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: XADataSourceImpl.java,v 1.5 2001/07/05 22:29:03 mohammed Exp $
+ * Contributions by MetaBoss team are Copyright (c) 2003-2004, Softaris Pty. Ltd. All Rights Reserved.
+ *
+ * $Id: XADataSourceImpl.java,v 1.6 2004/04/21 04:03:29 metaboss Exp $
  */
-
 
 package tyrex.resource.jdbc.xa;
 
@@ -65,7 +66,7 @@ import javax.sql.XADataSource;
 import javax.transaction.xa.Xid;
 import tyrex.services.Clock;
 import tyrex.util.BackgroundThread;
-import tyrex.util.Logger;
+import tyrex.util.logging.Logger;
 
 /**
  * Implements a JDBC 2.0 {@link XADataSource} for any JDBC driver
