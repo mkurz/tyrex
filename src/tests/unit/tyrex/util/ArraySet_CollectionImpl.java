@@ -40,41 +40,64 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: UtilSuite.java,v 1.2 2001/08/24 12:49:10 mills Exp $
+ * $Id: ArraySet_CollectionImpl.java,v 1.1 2001/08/24 12:49:10 mills Exp $
  */
-
 
 package tyrex.util;
 
+import java.util.Collection;
+
+import junit.framework.TestCase;
 import junit.framework.TestSuite;
+
+import java.io.PrintWriter;
 
 
 /**
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.1 $
  */
 
-public class UtilSuite
+public class ArraySet_CollectionImpl extends CollectionTest
 {
-    public UtilSuite()
+    public ArraySet_CollectionImpl(String name)
     {
-        // Empty.
+        super(name);
     }
 
-    public static TestSuite suite()
+    /**
+     * The method for creating an instance of Set.
+     */
+
+    public Collection newCollection()
+        throws Exception
     {
-        TestSuite suite = new TestSuite("UtilSuite test harness");
-        suite.addTest(ArrayEnumerationTest.suite());
-        suite.addTest(ArraySetTest.suite());
-        suite.addTest(new TestSuite(ConfigurationTest.class));
-        suite.addTest(new TestSuite(HashIntTableTest.class));
-        return suite;
+        ArraySet set = new ArraySet();
+        set.add(new Integer(1));
+        set.add(new Integer(2));
+        set.add(new Integer(3));
+        return (Collection) set;
     }
 
 
-    public static void main(String args[])
+    /**
+     * The method for creating an empty instance of Set.
+     */
+
+    public Collection newEmptyCollection()
+        throws Exception
     {
-        tyrex.Unit.runTests(args, suite());
+        return (Collection) new ArraySet();
+    }
+
+
+    /**
+     * Get the specified value.
+     */
+
+    public Object getValue(int index)
+    {
+        return new Integer(index + 1);
     }
 }

@@ -38,43 +38,82 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
+ * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: UtilSuite.java,v 1.2 2001/08/24 12:49:10 mills Exp $
  */
 
 
 package tyrex.util;
 
-import junit.framework.TestSuite;
+import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.io.FileInputStream;
+import java.io.File;
 
+import junit.framework.*;
+import junit.extensions.*;
 
 /**
+ * <p>Bounds testing the interface can be done as part of the basic
+ * functionality since when inputs are invalid, default values are
+ * returned.  Bounds testing the configuration file itself is useful
+ * to ensure sensible behavior when the file is corrupted or
+ * incorrectly written.</p>
+ *
+ * <p>This class is expected to change and so tests will not be
+ * implemented until after the changes have been made and these
+ * documented tests updated accordingly.</p>
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.1 $
  */
 
-public class UtilSuite
+
+public class HashIntTableTest extends TestCase
 {
-    public UtilSuite()
+    private PrintWriter _logger = null;
+
+    public HashIntTableTest(String name)
     {
-        // Empty.
+        super(name);
     }
 
-    public static TestSuite suite()
+    public void setUp()
     {
-        TestSuite suite = new TestSuite("UtilSuite test harness");
-        suite.addTest(ArrayEnumerationTest.suite());
-        suite.addTest(ArraySetTest.suite());
-        suite.addTest(new TestSuite(ConfigurationTest.class));
-        suite.addTest(new TestSuite(HashIntTableTest.class));
-        return suite;
+        _logger= new PrintWriter(System.out);
+    }
+
+    public void tearDown()
+    {
+        _logger.flush();
     }
 
 
+    /**
+     * <p></p>
+     *
+     * @result 
+     */
+
+    public void testBasicFunctionality()
+        throws Exception
+    {
+    }
+
+
+    /** Adds a message in the log (except if the log is null)*/
+    private void logMessage(String message)
+    {
+        if (_logger != null)
+        {
+            _logger.println(message);
+        }
+    }
+
+
+    // Allow this test to be run on its own.
     public static void main(String args[])
     {
-        tyrex.Unit.runTests(args, suite());
+        junit.textui.TestRunner.run(new TestSuite(HashIntTableTest.class));
     }
 }

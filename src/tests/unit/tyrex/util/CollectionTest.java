@@ -40,41 +40,97 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: UtilSuite.java,v 1.2 2001/08/24 12:49:10 mills Exp $
+ * $Id: CollectionTest.java,v 1.1 2001/08/24 12:49:10 mills Exp $
  */
-
 
 package tyrex.util;
 
+import java.util.Collection;
+import java.util.Iterator;
+
+import junit.framework.TestCase;
 import junit.framework.TestSuite;
+
+import java.io.PrintWriter;
 
 
 /**
- *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.1 $
  */
 
-public class UtilSuite
+public abstract class CollectionTest extends TestCase
 {
-    public UtilSuite()
+    private PrintWriter _logger = null;
+
+    public CollectionTest(String name)
     {
-        // Empty.
+        super(name);
     }
 
-    public static TestSuite suite()
+    public void setUp()
     {
-        TestSuite suite = new TestSuite("UtilSuite test harness");
-        suite.addTest(ArrayEnumerationTest.suite());
-        suite.addTest(ArraySetTest.suite());
-        suite.addTest(new TestSuite(ConfigurationTest.class));
-        suite.addTest(new TestSuite(HashIntTableTest.class));
-        return suite;
+        _logger= new PrintWriter(System.out);
+    }
+
+    public void tearDown()
+    {
+        _logger.flush();
     }
 
 
-    public static void main(String args[])
+    /**
+     * <p>The abstract method for creating an instance of Collection.
+     * The method must populate the collection with three
+     * elements.</p>
+     */
+
+    public abstract Collection newCollection()
+        throws Exception;
+
+    public abstract Collection newEmptyCollection()
+        throws Exception;
+
+    public abstract Object getValue(int idx);
+
+
+    /**
+     * <p>Create an instance.</p>
+     *
+     * @result Ensure that hasMoreElements() returns true.  Call
+     * next() three times ensuring that the correct values are
+     * returned each time.  hasMoreElements() should now return false.
+     */
+
+    public void testBasicFunctionality()
+        throws Exception
     {
-        tyrex.Unit.runTests(args, suite());
+        Collection coll = newCollection();
+        assert(!coll.isEmpty());
+        assertEquals("Size", 3, coll.size());
+        assert(coll.contains(getValue(0)));
+        assert(coll.contains(getValue(1)));
+        assert(coll.contains(getValue(2)));
+        coll.remove(getValue(1));
+        assertEquals("Size", 2, coll.size());
+        assert(coll.contains(getValue(0)));
+        assert(!coll.contains(getValue(1)));
+        assert(coll.contains(getValue(2)));
+        Iterator iter = coll.iterator();
+        assert(iter.hasNext());
+        assertEquals(getValue(0), iter.next());
+        assert(iter.hasNext());
+        assertEquals(getValue(2), iter.next());
+        assert(!iter.hasNext());
+    }
+
+
+    /** Adds a message in the log (except if the log is null)*/
+    private void logMessage(String message)
+    {
+        if (_logger != null)
+        {
+            _logger.println(message);
+        }
     }
 }

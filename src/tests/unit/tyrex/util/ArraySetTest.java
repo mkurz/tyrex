@@ -40,41 +40,78 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: UtilSuite.java,v 1.2 2001/08/24 12:49:10 mills Exp $
+ * $Id: ArraySetTest.java,v 1.1 2001/08/24 12:49:10 mills Exp $
  */
-
 
 package tyrex.util;
 
-import junit.framework.TestSuite;
+import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.io.FileInputStream;
+import java.io.File;
+
+import junit.framework.*;
+import junit.extensions.*;
 
 
 /**
+ * <p>This is a simple container class that holds the array provided
+ * and maintains an index into that array for the implementation of
+ * next().  It requires only a small amount of memory even for very
+ * large arrays.  Any attempt to load test this class would be simply
+ * load testing arrays and therefore won't be attempted.</p>
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.1 $
  */
 
-public class UtilSuite
+public class ArraySetTest extends TestCase
 {
-    public UtilSuite()
+    private PrintWriter _logger = null;
+
+    public ArraySetTest(String name)
     {
-        // Empty.
+        super(name);
     }
 
+    public void setUp()
+    {
+        _logger= new PrintWriter(System.out);
+    }
+
+    public void tearDown()
+    {
+        _logger.flush();
+    }
+
+    public void testNone()
+        throws Exception
+    {
+    }
+
+
+    /** Adds a message in the log (except if the log is null)*/
+    private void logMessage(String message)
+    {
+        if (_logger != null)
+        {
+            _logger.println(message);
+        }
+    }
+
+
+    // Compile the test suite.
     public static TestSuite suite()
     {
-        TestSuite suite = new TestSuite("UtilSuite test harness");
-        suite.addTest(ArrayEnumerationTest.suite());
-        suite.addTest(ArraySetTest.suite());
-        suite.addTest(new TestSuite(ConfigurationTest.class));
-        suite.addTest(new TestSuite(HashIntTableTest.class));
+        TestSuite suite = new TestSuite(ArraySetTest.class);
+        suite.addTest(new TestSuite(ArraySet_CollectionImpl.class));
         return suite;
     }
 
 
+    // Allow this test to be run on its own.
     public static void main(String args[])
     {
-        tyrex.Unit.runTests(args, suite());
+        junit.textui.TestRunner.run(suite());
     }
 }
