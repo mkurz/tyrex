@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: EnvContext.java,v 1.3 2000/04/12 02:37:16 arkin Exp $
+ * $Id: EnvContext.java,v 1.4 2000/04/14 21:40:26 arkin Exp $
  */
 
 
@@ -55,17 +55,19 @@ import java.util.Enumeration;
 import java.util.Dictionary;
 import java.util.StringTokenizer;
 import java.security.AccessController;
-import javax.naming.Context;
+import javax.naming.Reference;
 import javax.naming.NamingException;
 import javax.naming.LinkRef;
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import javax.naming.NamingEnumeration;
+import javax.naming.Name;
+import javax.naming.NameParser;
 import javax.naming.CompositeName;
 import javax.naming.NotContextException;
 import javax.naming.NameNotFoundException;
-import javax.naming.InitialContext;
 import javax.naming.OperationNotSupportedException;
-import javax.naming.NamingEnumeration;
-import javax.naming.NameParser;
-import javax.naming.Name;
+import javax.naming.spi.NamingManager;
 import tyrex.util.FastThreadLocal;
 
 
@@ -125,7 +127,7 @@ import tyrex.util.FastThreadLocal;
  * </pre>
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.3 $ $Date: 2000/04/12 02:37:16 $
+ * @version $Revision: 1.4 $ $Date: 2000/04/14 21:40:26 $
  */
 public final class EnvContext
     implements Context, Serializable
@@ -177,7 +179,7 @@ public final class EnvContext
 	    }
 	} else
 	    env = new Hashtable();
-        _path = "";
+        _path = null;
     }
 
 
@@ -193,6 +195,8 @@ public final class EnvContext
 
 	_bindings = bindings;
         _path = _bindings.getName();
+        if ( _path.length() == 0 )
+            _path = null;
 
 	// Use addToEnvironment to duplicate the environment variables.
 	// This takes care of setting certain flags appropriately.
@@ -211,53 +215,77 @@ public final class EnvContext
     // Lookup //
     //--------//
 
+
     public Object lookup( String name )
 	throws NamingException
     {
-	MemoryBinding bindings;
-	Object        obj;
-
-        // In case this context was just activated.
-	bindings = getBindings();
+	Object object;
 
 	// This is a simple case optimization of the composite name lookup.
 	// It only applies if we're looking for a simple name that is
 	// directly reachable in this context, otherwise, we default to the
 	// composite name lookup.
-	obj = bindings.get( name );
-	if ( obj != null ) {
-	    if ( obj instanceof LinkRef ) {
-                // Found a link reference that we must follow. If the link
-                // starts with a '.' we use it's name to do a look underneath
-                // this context. Otherwise, we continue looking from some
-                // initial context.
-                String link;
-                
-                link = ( (LinkRef) obj ).getLinkName();
-                if ( link.startsWith( "." ) )
-                    return lookup( link.substring( 1 ) );
-                else
-                    return lookupInitialContext( link );
-	    } else if ( obj instanceof MemoryBinding ) {
+	object = getBindings().get( name );
+	if ( object != null ) {
+	    if ( object instanceof LinkRef ) {
+		    // Found a link reference that we must follow. If the link
+		    // starts with a '.' we use it's name to do a look underneath
+		    // this context. Otherwise, we continue looking from some
+		    // initial context.
+		    String link;
+		    
+		    link = ( (LinkRef) object ).getLinkName();
+		    if ( link.startsWith( "." ) )
+			return lookup( link.substring( 1 ) );
+		    else
+                        return NamingManager.getInitialContext( _env ).lookup( link );
+	    } else if ( object instanceof MemoryBinding ) {
 		// If we found a subcontext, we must return a new context
 		// to represent it and keep the environment set for this
 		// context (e.g. read-only).
-		return new EnvContext( (MemoryBinding) obj, _env );
+		return new EnvContext( (MemoryBinding) object, _env );
+            } else if ( object instanceof Reference ) {
+                // Reconstruct a reference.
+                try {
+                    return NamingManager.getObjectInstance( object, new CompositeName( name ), this, _env );
+                } catch ( Exception except ) {
+                    throw new NamingException( except.toString() );
+                }
 	    } else {
 		// Simplest case, just return the bound object.
-		return obj;
+		return object;
 	    }
-	} else {
-	    return lookup( new CompositeName( name ) );
-	}
+	} else
+            return internalLookup( new CompositeName( name ), true );
     }
 
 
     public Object lookup( Name name )
 	throws NamingException
     {
+        return internalLookup( name, true );
+    }
+
+
+    public Object lookupLink( String name )
+	throws NamingException
+    {
+        return internalLookup( new CompositeName( name ), false );
+    }
+
+
+    public Object lookupLink( Name name )
+	throws NamingException
+    {
+        return internalLookup( name, false );
+    }
+
+
+    private Object internalLookup( Name name, boolean resolveLinkRef )
+	throws NamingException
+    {
 	String        simple;
-	Object        obj;
+	Object        object;
 	MemoryBinding bindings;
 
 	// Start this this context's direct binding. As we iterate through
@@ -277,7 +305,7 @@ public final class EnvContext
 	    while ( ! name.isEmpty() && name.get( 0 ).length() == 0 )
 		name = name.getSuffix( 1 );
 	    if ( name.isEmpty() )
-		return new EnvContext( getBindings(), _env );
+		return new EnvContext( bindings, _env );
 
 	    // Simple is the first part of the name for a composite name,
 	    // for looking up the subcontext, or the last part of the
@@ -287,13 +315,13 @@ public final class EnvContext
 	    if ( name.size() > 1 ) {
 		// Composite name, keep looking in subcontext until we
 		// find the binding.
-		obj = bindings.get( simple );
-		if ( obj instanceof Context ) {
+		object = bindings.get( simple );
+		if ( object instanceof Context ) {
 		    // Found an external context, keep looking in that context.
-		    return ( (Context) obj ).lookup( name.getSuffix( 1 ) );
-		} else if ( obj instanceof MemoryBinding ) {
+		    return ( (Context) object ).lookup( name.getSuffix( 1 ) );
+		} else if ( object instanceof MemoryBinding ) {
 		    // Found another binding level, keep looking in that one.
-		    bindings = (MemoryBinding) obj;
+		    bindings = (MemoryBinding) object;
 		} else {
 		    // Could not find another level for this name part,
 		    // must report that name part is not a subcontext.
@@ -302,116 +330,41 @@ public final class EnvContext
 		name = name.getSuffix( 1 );
 	    } else {
 		// At this point name.size() == 1 and simple == name.get( 0 ).
-		obj = bindings.get( simple );
-		if ( obj == null )
+		object = bindings.get( simple );
+		if ( object == null )
 		    throw new NameNotFoundException( simple + " not found" );
-		else if ( obj instanceof LinkRef ) {
+		else if ( object instanceof LinkRef && resolveLinkRef ) {
 		    // Found a link reference that we must follow. If the link
 		    // starts with a '.' we use it's name to do a look underneath
 		    // this context. Otherwise, we continue looking from some
 		    // initial context.
 		    String link;
 		    
-		    link = ( (LinkRef) obj ).getLinkName();
+		    link = ( (LinkRef) object ).getLinkName();
 		    if ( link.startsWith( "." ) ) {
 			name = new CompositeName( link.substring( 1 ) );
 			continue; // Reiterate
 		    } else
-			return lookupInitialContext( link );
-		} else if ( obj instanceof MemoryBinding ) {
+                        return NamingManager.getInitialContext( _env ).lookup( link );
+		} else if ( object instanceof MemoryBinding ) {
 		    // If we found a subcontext, we must return a new context
 		    // to represent it and keep the environment set for this
 		    // context (e.g. read-only).
-		    return new EnvContext( (MemoryBinding) obj, _env );
+		    return new EnvContext( (MemoryBinding) object, _env );
+                } else if ( object instanceof Reference ) {
+                    // Reconstruct a reference
+                    try {
+                        return NamingManager.getObjectInstance( object, name,
+                                                                new EnvContext( bindings, _env ), _env );
+                    } catch ( Exception except ) {
+                        throw new NamingException( except.getMessage() );
+                    }
 		} else {
 		    // Simplest case, just return the bound object.
-		    return obj;
+		    return object;
 		}
 	    }
-
 	}
-    }
-
-
-    public Object lookupLink( String name )
-	throws NamingException
-    {
-	return lookupLink( new CompositeName( name ) );
-    }
-
-
-    public Object lookupLink( Name name )
-	throws NamingException
-    {
-	String        simple;
-	Object        obj;
-	MemoryBinding bindings;
-
-	// Start this this context's direct binding. As we iterate through
-	// composite names and links, we will change bindings all the time.
-	bindings = getBindings();
-
-	// This loop is executed for as long as name has more the on part.
-	// At each iteration, the first part of the name is used to lookup
-	// a subcontext and the second part passes on to the iteration.
-	while ( true ) {
-
-	    // If the first part of the name contains empty parts, we discard
-	    // them and keep on looking in this context. If the name is empty,
-	    // we create a new context similar to this one.
-	    while ( ! name.isEmpty() && name.get( 0 ).length() == 0 )
-		name = name.getSuffix( 1 );
-	    if ( name.isEmpty() )
-		return new EnvContext( getBindings(), _env );
-
-	    // Simple is the first part of the name for a composite name,
-	    // for looking up the subcontext, or the last part of the
-	    // name for looking up the binding.
-	    simple = name.get( 0 );
-
-	    if ( name.size() > 1 ) {
-		// Composite name, keep looking in subcontext until we
-		// find the binding.
-		obj = bindings.get( simple );
-		if ( obj instanceof Context ) {
-		    // Found an external context, keep looking in that context.
-		    return ( (Context) obj ).lookup( name.getSuffix( 1 ) );
-		} else if ( obj instanceof MemoryBinding ) {
-		    // Found another binding level, keep looking in that one.
-		    bindings = (MemoryBinding) obj;
-		} else {
-		    // Could not find another level for this name part,
-		    // must report that name part is not a subcontext.
-		    throw new NotContextException( simple + " is not a subcontext" );
-		}
-		name = name.getSuffix( 1 );
-	    } else {
-		// At this point name.size() == 1 and simple == name.get( 0 ).
-		obj = bindings.get( simple );
-		if ( obj == null )
-		    throw new NameNotFoundException( simple + " not found" );
-		if ( obj instanceof MemoryBinding ) {
-		    // If we found a subcontext, we must return a new context
-		    // to represent it and keep the environment set for this
-		    // context (e.g. read-only).
-		    return new EnvContext( (MemoryBinding) obj, _env );
-		} else {
-		    // Simplest case, just return the bound object.
-		    return obj;
-		}
-	    }
-
-	}
-    }
-
-
-    protected Object lookupInitialContext( String name )
-	throws NamingException
-    {
-	InitialContext ctx;
-
-	ctx = new InitialContext( _env );
-	return ctx.lookup( name );
     }
 
 
@@ -494,7 +447,7 @@ public final class EnvContext
     public NamingEnumeration list( Name name )
 	throws NamingException
     {
-	Object        obj;
+	Object        object;
 	String        simple;
 	MemoryBinding bindings;
 
@@ -514,13 +467,13 @@ public final class EnvContext
 	while ( name.size() > 1 ) {
 	    // Composite name, keep looking in subcontext until we
 	    // find the binding.
-	    obj = bindings.get( simple );
-	    if ( obj instanceof Context ) {
+	    object = bindings.get( simple );
+	    if ( object instanceof Context ) {
 		// Found an external context, keep looking in that context.
-		return ( (Context) obj ).list( name.getSuffix( 1 ) );
-	    } else if ( obj instanceof MemoryBinding ) {
+		return ( (Context) object ).list( name.getSuffix( 1 ) );
+	    } else if ( object instanceof MemoryBinding ) {
 		// Found another binding level, keep looking in that one.
-		bindings = (MemoryBinding) obj;
+		bindings = (MemoryBinding) object;
 	    } else {
 		// Could not find another level for this name part,
 		// must report that name part is not a subcontext.
@@ -535,14 +488,13 @@ public final class EnvContext
 	// lookup that binding and list it.
 	if ( simple.length() == 0 )
 	    return new MemoryBindingEnumeration( bindings, true, this );
-	obj = bindings.get( simple );
-	if ( obj instanceof Context ) {
-	    return ( (Context) obj ).list( "" );
-	} else if ( obj instanceof MemoryBinding ) {
-	    return new MemoryBindingEnumeration( (MemoryBinding) obj, true, this );
-	} else {
+	object = bindings.get( simple );
+	if ( object instanceof Context )
+	    return ( (Context) object ).list( "" );
+	else if ( object instanceof MemoryBinding )
+	    return new MemoryBindingEnumeration( (MemoryBinding) object, true, this );
+	else
 	    throw new NotContextException( simple + " is not a subcontext" );	    
-	}
     }
     
 
@@ -559,7 +511,7 @@ public final class EnvContext
     public NamingEnumeration listBindings( Name name )
 	throws NamingException
     {
-	Object        obj;
+	Object        object;
 	String        simple;
 	MemoryBinding bindings;
 
@@ -579,13 +531,13 @@ public final class EnvContext
 	while ( name.size() > 1 ) {
 	    // Composite name, keep looking in subcontext until we
 	    // find the binding.
-	    obj = bindings.get( simple );
-	    if ( obj instanceof Context ) {
+	    object = bindings.get( simple );
+	    if ( object instanceof Context ) {
 		// Found an external context, keep looking in that context.
-		return ( (Context) obj ).listBindings( name.getSuffix( 1 ) );
-	    } else if ( obj instanceof MemoryBinding ) {
+		return ( (Context) object ).listBindings( name.getSuffix( 1 ) );
+	    } else if ( object instanceof MemoryBinding ) {
 		// Found another binding level, keep looking in that one.
-		bindings = (MemoryBinding) obj;
+		bindings = (MemoryBinding) object;
 	    } else {
 		// Could not find another level for this name part,
 		// must report that name part is not a subcontext.
@@ -600,14 +552,13 @@ public final class EnvContext
 	// lookup that binding and list it.
 	if ( simple.length() == 0 )
 	    return new MemoryBindingEnumeration( bindings, false, this );
-	obj = bindings.get( simple );
-	if ( obj instanceof Context ) {
-	    return ( (Context) obj ).listBindings( "" );
-	} else if ( obj instanceof MemoryBinding ) {
-	    return new MemoryBindingEnumeration( (MemoryBinding) obj, false, this );
-	} else {
+	object = bindings.get( simple );
+	if ( object instanceof Context )
+	    return ( (Context) object ).listBindings( "" );
+	else if ( object instanceof MemoryBinding )
+	    return new MemoryBindingEnumeration( (MemoryBinding) object, false, this );
+	else
 	    throw new NotContextException( simple + " is not a subcontext" );	    
-	}
     }
     
 
@@ -663,7 +614,7 @@ public final class EnvContext
     {
 	String        simple;
 	MemoryBinding bindings;
-	Object        obj;
+	Object        object;
 
 	// If the first part of the name contains empty parts, we discard
 	// them and keep on looking in this context.
@@ -681,13 +632,13 @@ public final class EnvContext
 	while ( name.size() > 1 ) {
 	    // Composite name, keep looking in subcontext until we
 	    // find the binding.
-	    obj = bindings.get( simple );
-	    if ( obj instanceof Context ) {
+	    object = bindings.get( simple );
+	    if ( object instanceof Context ) {
 		// Found an external context, keep looking in that context.
-		return ( (Context) obj ).getNameParser( name.getSuffix( 1 ) );
-	    } else if ( obj instanceof MemoryBinding ) {
+		return ( (Context) object ).getNameParser( name.getSuffix( 1 ) );
+	    } else if ( object instanceof MemoryBinding ) {
 		// Found another binding level, keep looking in that one.
-		bindings = (MemoryBinding) obj;
+		bindings = (MemoryBinding) object;
 	    } else {
 		// Could not find another level for this name part,
 		// must report that name part is not a subcontext.
@@ -718,7 +669,7 @@ public final class EnvContext
     public String getNameInNamespace()
 	throws NamingException
     {
-	return _path;
+	return ( _path == null ? "" : _path );
     }
     
 
@@ -754,7 +705,7 @@ public final class EnvContext
 
     public String toString()
     {
-        return _path;
+	return ( _path == null ? "" : _path );
     }
 
 
@@ -837,6 +788,7 @@ public final class EnvContext
         if ( _bindings != null )
             return _bindings;
         
+        MemoryBinding       bindings;
         ThreadMemoryBinding thread;
         StringTokenizer     tokenizer;
         String              token;
@@ -845,19 +797,22 @@ public final class EnvContext
         thread = (ThreadMemoryBinding) _local.get();
         if ( thread == null )
 	    throw new NamingException( "Error: Environment naming context (java:comp) not bound to this thread" );
-        _bindings = thread.bindings;
-        tokenizer = new StringTokenizer( _path, MemoryContext.NameSeparator );
-        while ( tokenizer.hasMoreTokens() ) {
-            token = tokenizer.nextToken();
-            if ( token.length() > 0 ) {
-                value = (MemoryBinding) _bindings.get( token );
-                if ( value == null || ! ( value instanceof MemoryBinding ) )
-                    throw new NamingException( "Error: Environment naming context path java:" + _path +
-                                               " no longer bound to this thread" );
-                _bindings = (MemoryBinding) value;
+        bindings = thread.bindings;
+        if ( _path != null ) {
+            tokenizer = new StringTokenizer( _path, MemoryContext.NameSeparator );
+            while ( tokenizer.hasMoreTokens() ) {
+                token = tokenizer.nextToken();
+                if ( token.length() > 0 ) {
+                    value = (MemoryBinding) bindings.get( token );
+                    if ( value == null || ! ( value instanceof MemoryBinding ) )
+                        throw new NamingException( "Error: Environment naming context path java:" + _path +
+                                                   " no longer bound to this thread" );
+                    bindings = (MemoryBinding) value;
+                }
             }
         }
-        return _bindings;
+        _bindings = bindings;
+        return bindings;
     }
 
 

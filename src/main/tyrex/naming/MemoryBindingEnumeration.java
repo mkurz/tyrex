@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: MemoryBindingEnumeration.java,v 1.1 2000/04/11 20:25:13 arkin Exp $
+ * $Id: MemoryBindingEnumeration.java,v 1.2 2000/04/14 21:40:26 arkin Exp $
  */
 
 
@@ -50,12 +50,15 @@ package tyrex.naming;
 import java.util.Vector;
 import java.util.Enumeration;
 import java.util.Dictionary;
+import javax.naming.Reference;
 import javax.naming.NamingEnumeration;
 import javax.naming.NameClassPair;
 import javax.naming.Binding;
-import javax.naming.NamingException;
 import javax.naming.Context;
 import javax.naming.LinkRef;
+import javax.naming.CompositeName;
+import javax.naming.NamingException;
+import javax.naming.spi.NamingManager;
 
 
 /**
@@ -63,7 +66,7 @@ import javax.naming.LinkRef;
  * created based of a {@link MemoryBinding}.
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2000/04/11 20:25:13 $
+ * @version $Revision: 1.2 $ $Date: 2000/04/14 21:40:26 $
  * @see MemoryBinding
  */
 final class MemoryBindingEnumeration
@@ -90,7 +93,7 @@ final class MemoryBindingEnumeration
     {
         Vector      noContexts;
         Enumeration enum;
-        Object      obj;
+        Object      object;
         String      key;
         
         synchronized ( bindings ) {
@@ -98,22 +101,31 @@ final class MemoryBindingEnumeration
             enum = bindings.keys();
             while ( enum.hasMoreElements() ) {
                 key = (String) enum.nextElement();
-                obj = bindings.get( key );
-                if ( obj instanceof MemoryBinding ) {
-                        if ( names )
-                            noContexts.addElement( new NameClassPair( key, MemoryContext.class.getName(), true ) );
-                        else {
-                            try {
-                                // If another context, must use lookup to create a duplicate.
-                                obj = parent.lookup( key );
-                                noContexts.addElement( new Binding( key, obj.getClass().getName(), obj, true ) );
-                            } catch ( NamingException except ) { }
-                        }
-                } else if ( ! ( obj instanceof LinkRef )  ) {
+                object = bindings.get( key );
+                if ( object instanceof MemoryBinding ) {
                     if ( names )
-                        noContexts.addElement( new NameClassPair( key, obj.getClass().getName(), true ) );
+                        noContexts.addElement( new NameClassPair( key, MemoryContext.class.getName(), true ) );
+                    else {
+                        try {
+                            // If another context, must use lookup to create a duplicate.
+                            object = parent.lookup( key );
+                            noContexts.addElement( new Binding( key, object.getClass().getName(), object, true ) );
+                        } catch ( NamingException except ) { }
+                    }
+                } else if ( object instanceof Reference ) {
+                    if ( names )
+                        noContexts.addElement( new NameClassPair( key, ( (Reference) object ).getClassName(), true ) );
+                    else {
+                        try {
+                            object = NamingManager.getObjectInstance( object, new CompositeName( key ), parent, null );
+                            noContexts.addElement( new Binding( key, object.getClass().getName(), object, true ) );
+                        } catch ( Exception except ) { }
+                    }
+                } else if ( ! ( object instanceof LinkRef )  ) {
+                    if ( names )
+                        noContexts.addElement( new NameClassPair( key, object.getClass().getName(), true ) );
                     else
-                        noContexts.addElement( new Binding( key, obj.getClass().getName(), obj, true ) );
+                        noContexts.addElement( new Binding( key, object.getClass().getName(), object, true ) );
                 }
             }
             _enum = noContexts.elements();
