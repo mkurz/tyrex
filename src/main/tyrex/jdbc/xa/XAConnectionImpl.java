@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: XAConnectionImpl.java,v 1.13 2000/10/06 01:10:09 mohammed Exp $
+ * $Id: XAConnectionImpl.java,v 1.14 2000/10/07 01:53:37 mohammed Exp $
  */
 
 
@@ -302,7 +302,7 @@ public final class XAConnectionImpl
 	_clientConn = new ClientConnection( this );
 	return _clientConn;
 	*/
-	return new ClientConnection( this, ++_clientId );
+	return new ClientConnection( this, _resManager, ++_clientId );
     }
 
 

@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: XADataSourceImpl.java,v 1.14 2000/10/06 01:10:09 mohammed Exp $
+ * $Id: XADataSourceImpl.java,v 1.15 2000/10/07 01:53:37 mohammed Exp $
  */
 
 
@@ -172,7 +172,7 @@ public abstract class XADataSourceImpl
 	_background = new Thread( this, "XADataSource Timeout Daemon"  );
 	_background.setPriority( Thread.MIN_PRIORITY );
 	_background.setDaemon( true );
-	_background.start();
+	//_background.start();
     }
 
 
@@ -299,21 +299,21 @@ public abstract class XADataSourceImpl
     if (null != conn) {
         // make sure the connection has no work
         try {
-            conn.rollback();
-            
-            synchronized ( _pool ) {
+            //conn.rollback();
+            conn.close();
+            /*synchronized ( _pool ) {
             _pool.add( new ConnectionEntry( conn,
                                             getAccount( userName, password ) ) );
-            }
+            }*/
         }
         catch (SQLException e) {
             // shouldn't use the connection
-            try {
+            /*try {
                 conn.close();
             }
-            catch (SQLException e) {
+            catch (SQLException e2) {
                 // ignore
-            }
+            }*/
         }
     }
     }
@@ -358,7 +358,7 @@ public abstract class XADataSourceImpl
     Connection newConnection( String userName, String password )
 	throws SQLException
     {
-    synchronized ( _pool ) {
+    /*synchronized ( _pool ) {
         // Check in the pool first.
         if ( ! _pool.isEmpty() ) {
             String account = getAccount( userName, password );
@@ -372,7 +372,7 @@ public abstract class XADataSourceImpl
                 }
             }
     	}
-    }
+    }*/
     return getConnection( userName, password );
     }
 

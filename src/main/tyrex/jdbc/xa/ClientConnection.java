@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: ClientConnection.java,v 1.7 2000/10/06 01:10:09 mohammed Exp $
+ * $Id: ClientConnection.java,v 1.8 2000/10/07 01:53:37 mohammed Exp $
  */
 
 
@@ -80,6 +80,16 @@ final class ClientConnection
 
 
     /**
+     * The XA data source that created the {@link _xaConn}.
+     * <p>
+     * This used in the statements created by this connection
+     * to synchronize so that queries and commits/rollbacks 
+     * cannot occur simultaneously for the same XA data source.
+     */
+    private XADataSourceImpl _xaDataSource;
+
+
+    /**
      * This identifier was handed on to use when we were created by
      * {@link XAConnection}. If since then the XA connection was asked
      * to create another connection or was closed, our identifier will
@@ -102,13 +112,15 @@ final class ClientConnection
      *
      * @param xaConn The XA/pooled connection that created this
      *   client connection
+     * @param xaDataSource the data source that created the xaConn
      * @param clientId A unique identifier handed to us by
      *   {@link XAConnection}
      * @param underlying The underlying JDBC connection
      */
-    ClientConnection( XAConnectionImpl xaConn, int clientId )
+    ClientConnection( XAConnectionImpl xaConn, XADataSourceImpl xaDataSource, int clientId )
     {
 	_xaConn = xaConn;
+    _xaDataSource = xaDataSource;
 	_clientId = clientId;
     }
 
@@ -117,9 +129,9 @@ final class ClientConnection
         throws SQLException
     {
 	try {
-	    return new ClientStatement(this, 
-                                   getUnderlying().createStatement(), 
-                                   _xaConn);
+	    return new ClientStatementImpl(getUnderlying().createStatement(), 
+                                       this, 
+                                       _xaDataSource);
 	} catch ( SQLException except ) {
 	    notifyError( except );
 	    throw except;
@@ -131,9 +143,9 @@ final class ClientConnection
         throws SQLException
     {
 	try {
-	    return new ClientStatement(this, 
-                                   getUnderlying().createStatement( resultSetType, resultSetConcurrency ),
-                                   _xaConn);
+	    return new ClientStatementImpl(getUnderlying().createStatement( resultSetType, resultSetConcurrency ),
+                                       this, 
+                                       _xaDataSource);
 	} catch ( SQLException except ) {
 	    notifyError( except );
 	    throw except;
@@ -145,7 +157,9 @@ final class ClientConnection
         throws SQLException
     {
 	try {
-	    return getUnderlying().prepareStatement( sql );
+	    return new ClientPreparedStatementImpl(getUnderlying().prepareStatement( sql ),
+                                               this,
+                                               _xaDataSource);
 	} catch ( SQLException except ) {
 	    notifyError( except );
 	    throw except;
@@ -157,7 +171,9 @@ final class ClientConnection
         throws SQLException
     {
 	try {
-	    return getUnderlying().prepareStatement( sql, resultSetType, resultSetConcurrency );
+	    return new ClientPreparedStatementImpl(getUnderlying().prepareStatement( sql, resultSetType, resultSetConcurrency ),
+                                               this,
+                                               _xaDataSource);
 	} catch ( SQLException except ) {
 	    notifyError( except );
 	    throw except;
@@ -169,7 +185,9 @@ final class ClientConnection
         throws SQLException
     {
 	try {
-	    return getUnderlying().prepareCall( sql );
+	    return new ClientCallableStatementImpl(getUnderlying().prepareCall( sql ),
+                                               this,
+                                               _xaDataSource);
 	} catch ( SQLException except ) {
 	    notifyError( except );
 	    throw except;
@@ -181,7 +199,9 @@ final class ClientConnection
         throws SQLException
     {
 	try {
-	    return getUnderlying().prepareCall( sql, resultSetType, resultSetConcurrency );
+	    return new ClientCallableStatementImpl(getUnderlying().prepareCall( sql, resultSetType, resultSetConcurrency ),
+                                           this,
+                                           _xaDataSource);
 	} catch ( SQLException except ) {
 	    notifyError( except );
 	    throw except;
@@ -410,6 +430,7 @@ final class ClientConnection
 	// a concern of us.
 	_xaConn.notifyClose( _clientId );
 	_xaConn = null;
+    _xaDataSource = null;
     }
 
 
@@ -488,6 +509,7 @@ final class ClientConnection
 	    return _xaConn.getUnderlying( _clientId );
 	} catch ( SQLException except ) {
 	    _xaConn = null;
+        _xaDataSource = null;
 	    throw except;
 	}
     }

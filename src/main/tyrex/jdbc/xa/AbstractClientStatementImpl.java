@@ -52,7 +52,7 @@ import java.sql.SQLWarning;
 import java.sql.Statement;
 
 /////////////////////////////////////////////////////////////////////
-// ClientStatement
+// AbstractClientStatementImpl
 /////////////////////////////////////////////////////////////////////
 
 /**
@@ -60,62 +60,53 @@ import java.sql.Statement;
  * when createStatement is called on {@link ClientConnection}.
  * <p>
  * The reason for this class is to synchronize on the underlying
- * {@link XAConnectionImpl} so that a commit/rollback cannot occur
- * in {@link XAConnectionImpl} at the same time as a sql execute
- * in this Statement. It's been noticed that deadlocks occur
- * when a commit/rollback and query execute at the same time on certain
- * databases.
+ * {@link XADataSourceImpl} so that a commit/rollback cannot occur
+ * in {@link XAConnectionImpl} or in {@link XADataSourceImpl} at 
+ * the same time as a sql execute in this Statement. 
+ * It's been noticed that deadlocks occur
+ * when a commit/rollback and query execute at the same time on
+ * certain databases.
  * <p>
  * This class is thread safe.
  *
  * @author <a href="mohammed@intalio.com">Riad Mohammed</a>
  */
-final class ClientStatement 
+abstract class AbstractClientStatementImpl 
     implements Statement
 {
     /**
-     * The underlying XAConnectionImpl
+     * The data source from where the {@link ClientConnection} 
+     * came from.
      */
-    private XAConnectionImpl _xaConn;
+    private XADataSourceImpl            _dataSource;
 
 
     /**
      * The client connection that created the statement.
      */
-    private ClientConnection _clientConn;
-
-    /**
-     * The underlying statement that does the work.
-     */
-    private Statement _statement;
+    private ClientConnection            _clientConn;
 
 
     /**
-     * Create the ClientStatement with the specified arguments.
+     * Create the AbstractClientStatementImpl with the specified arguments.
      *
      * @param clientConn the client connection that created
      *      the client statement.
-     * @param statement the underlying statement
-     * @param xaConn the xa connection that created the 
-     *      {@link ClientConnection}.
+     * @param dataSource the data source from where the 
+     *      {@link ClientConnection} came from.
      */
-    ClientStatement(ClientConnection clientConn, 
-                    Statement statement,
-                    XAConnectionImpl xaConn)
+    AbstractClientStatementImpl(ClientConnection clientConn,
+                                XADataSourceImpl dataSource)
     {
         if (null == clientConn) {
             throw new IllegalArgumentException("The argument 'clientConn' is null.");
         }
-        if (null == statement) {
-            throw new IllegalArgumentException("The argument 'statement' is null.");
-        }
-        if (null == xaConn) {
-            throw new IllegalArgumentException("The argument 'xaConn' is null.");
+        if (null == dataSource) {
+            throw new IllegalArgumentException("The argument 'dataSource' is null.");
         }
 
         _clientConn = clientConn;
-        _statement = statement;
-        _xaConn = xaConn;
+        _dataSource = dataSource;
     }
 
     /**
@@ -126,7 +117,7 @@ final class ClientStatement
      * given query; never <code>null</code> 
      * @exception SQLException if a database access error occurs
      */
-    public ResultSet executeQuery(String sql) 
+    public final ResultSet executeQuery(String sql) 
         throws SQLException
     {
         // this method is not synchronized so that
@@ -135,12 +126,10 @@ final class ClientStatement
         Statement statement;
 
         synchronized (this) {
-            validateOpen();
-
-            statement = _statement;
+            statement = getStatement();
         }
         
-        synchronized (_xaConn) {
+        synchronized (_dataSource) {
             // check again
             validateOpen();
 
@@ -160,7 +149,7 @@ final class ClientStatement
 	 * or <code>DELETE</code> statements, or 0 for SQL statements that return nothing
      * @exception SQLException if a database access error occurs
      */
-    public int executeUpdate(String sql) 
+    public final int executeUpdate(String sql) 
         throws SQLException
     {
         // this method is not synchronized so that
@@ -169,14 +158,10 @@ final class ClientStatement
         Statement statement;
 
         synchronized (this) {
-            validateOpen();
-
-            statement = _statement;
+            statement = getStatement();
         }
         
-        validateOpen();
-
-        synchronized (_xaConn) {
+        synchronized (_dataSource) {
             // check again
             validateOpen();
 
@@ -197,17 +182,17 @@ final class ClientStatement
      *
      * @exception SQLException if a database access error occurs
      */
-    public synchronized void close() 
+    public final synchronized void close() 
         throws SQLException
     {
-        if (null != _statement) {
+        if (null != getStatement()) {
             try {
-                _statement.close();    
+                getStatement().close();    
             }
             finally {
-                _statement = null;
+                resetStatement();
                 _clientConn = null;
-                _xaConn = null;
+                _dataSource = null;
             }
         }
     }
@@ -227,12 +212,10 @@ final class ClientStatement
      * @return the current max column size limit; zero means unlimited 
      * @exception SQLException if a database access error occurs
      */
-    public synchronized int getMaxFieldSize() 
+    public final synchronized int getMaxFieldSize() 
         throws SQLException
     {
-        validateOpen();
-
-        return _statement.getMaxFieldSize();
+        return getStatement().getMaxFieldSize();
     }
     
     /**
@@ -248,12 +231,10 @@ final class ClientStatement
      * @param max the new max column size limit; zero means unlimited 
      * @exception SQLException if a database access error occurs
      */
-    public synchronized void setMaxFieldSize(int max) 
+    public final synchronized void setMaxFieldSize(int max) 
         throws SQLException
     {
-        validateOpen();
-
-        _statement.setMaxFieldSize(max);
+        getStatement().setMaxFieldSize(max);
     }
 
     /**
@@ -264,12 +245,10 @@ final class ClientStatement
      * @return the current max row limit; zero means unlimited
      * @exception SQLException if a database access error occurs
      */
-    public synchronized int getMaxRows() 
+    public final synchronized int getMaxRows() 
         throws SQLException
     {
-        validateOpen();
-
-        return _statement.getMaxRows();
+        return getStatement().getMaxRows();
     }
 
     /**
@@ -281,12 +260,10 @@ final class ClientStatement
      * @param max the new max rows limit; zero means unlimited 
      * @exception SQLException if a database access error occurs
      */
-    public synchronized void setMaxRows(int max) 
+    public final synchronized void setMaxRows(int max) 
         throws SQLException
     {
-        validateOpen();
-
-        _statement.setMaxRows(max);
+        getStatement().setMaxRows(max);
     }
 
     /**
@@ -301,12 +278,10 @@ final class ClientStatement
      * @param enable <code>true</code> to enable; <code>false</code> to disable
      * @exception SQLException if a database access error occurs
      */
-    public synchronized void setEscapeProcessing(boolean enable) 
+    public final synchronized void setEscapeProcessing(boolean enable) 
         throws SQLException
     {
-        validateOpen();
-
-        _statement.setEscapeProcessing(enable);
+        getStatement().setEscapeProcessing(enable);
     }
 
     /**
@@ -317,12 +292,10 @@ final class ClientStatement
      * @return the current query timeout limit in seconds; zero means unlimited 
      * @exception SQLException if a database access error occurs
      */
-    public synchronized int getQueryTimeout() 
+    public final synchronized int getQueryTimeout() 
         throws SQLException
     {
-        validateOpen();
-
-        return _statement.getQueryTimeout();
+        return getStatement().getQueryTimeout();
     }
 
     /**
@@ -334,12 +307,10 @@ final class ClientStatement
      * unlimited 
      * @exception SQLException if a database access error occurs
      */
-    public synchronized void setQueryTimeout(int seconds) 
+    public final synchronized void setQueryTimeout(int seconds) 
         throws SQLException
     {
-        validateOpen();
-
-        _statement.setQueryTimeout(seconds);
+        getStatement().setQueryTimeout(seconds);
     }
 
     /**
@@ -350,7 +321,7 @@ final class ClientStatement
      *
      * @exception SQLException if a database access error occurs
      */
-    public void cancel() 
+    public final void cancel() 
         throws SQLException
     {
         // this method is not synchronized so that
@@ -359,12 +330,15 @@ final class ClientStatement
         Statement statement;
 
         synchronized (this) {
-            validateOpen();
-
-            statement = _statement;
+            statement = getStatement();
         }
         
-        statement.cancel();
+        synchronized (_dataSource) {
+            // check again
+            validateOpen();
+
+            statement.cancel();
+        }
     }
 
     /**
@@ -382,12 +356,10 @@ final class ClientStatement
      * @return the first <code>SQLWarning</code> object or <code>null</code> 
      * @exception SQLException if a database access error occurs
      */
-    public synchronized SQLWarning getWarnings() 
+    public final synchronized SQLWarning getWarnings() 
         throws SQLException
     {
-        validateOpen();
-
-        return _statement.getWarnings();
+        return getStatement().getWarnings();
     }
 
     /**
@@ -399,12 +371,10 @@ final class ClientStatement
      *
      * @exception SQLException if a database access error occurs
      */
-    public synchronized void clearWarnings() 
+    public final synchronized void clearWarnings() 
         throws SQLException
     {
-        validateOpen();
-
-        _statement.clearWarnings();
+        getStatement().clearWarnings();
     }
 
     /**
@@ -428,12 +398,10 @@ final class ClientStatement
 	 *             a connection
      * @exception SQLException if a database access error occurs
      */
-    public synchronized void setCursorName(String name) 
+    public final synchronized void setCursorName(String name) 
         throws SQLException
     {
-        validateOpen();
-
-        _statement.setCursorName(name);
+        getStatement().setCursorName(name);
     }
 	
     //----------------------- Multiple Results --------------------------
@@ -462,7 +430,7 @@ final class ClientStatement
      * @see #getUpdateCount
      * @see #getMoreResults 
      */
-    public boolean execute(String sql) 
+    public final boolean execute(String sql) 
         throws SQLException
     {
         // this method is not synchronized so that
@@ -471,12 +439,10 @@ final class ClientStatement
         Statement statement;
 
         synchronized (this) {
-            validateOpen();
-
-            statement = _statement;
+            statement = getStatement();
         }
         
-        synchronized (_xaConn) {
+        synchronized (_dataSource) {
             // check again
             validateOpen();
 
@@ -493,14 +459,10 @@ final class ClientStatement
      * @exception SQLException if a database access error occurs
      * @see #execute 
      */
-    public synchronized ResultSet getResultSet() 
+    public final synchronized ResultSet getResultSet() 
         throws SQLException
     {
-        validateOpen();
-        
-        synchronized (_xaConn) {
-            return _statement.getResultSet();
-        }
+        return getStatement().getResultSet();
     }
 
     /**
@@ -513,12 +475,10 @@ final class ClientStatement
      * @exception SQLException if a database access error occurs
      * @see #execute 
      */
-    public synchronized int getUpdateCount() 
+    public final synchronized int getUpdateCount() 
         throws SQLException
     {
-        validateOpen();
-
-        return _statement.getUpdateCount();
+        return getStatement().getUpdateCount();
     }
 
     /**
@@ -537,12 +497,10 @@ final class ClientStatement
      * @exception SQLException if a database access error occurs
      * @see #execute 
      */
-    public synchronized boolean getMoreResults() 
+    public final synchronized boolean getMoreResults() 
         throws SQLException
     {
-        validateOpen();
-
-        return _statement.getMoreResults();
+        return getStatement().getMoreResults();
     }
 
 
@@ -568,12 +526,10 @@ final class ClientStatement
 	 * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
 	 *      2.0 API</a>
      */
-    public synchronized void setFetchDirection(int direction) 
+    public final synchronized void setFetchDirection(int direction) 
         throws SQLException
     {
-        validateOpen();
-
-        _statement.setFetchDirection(direction);
+        getStatement().setFetchDirection(direction);
     }
 
     /**
@@ -591,12 +547,10 @@ final class ClientStatement
 	 * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
 	 *      2.0 API</a>
      */
-    public synchronized int getFetchDirection() 
+    public final synchronized int getFetchDirection() 
         throws SQLException
     {
-        validateOpen();
-
-        return _statement.getFetchDirection();
+        return getStatement().getFetchDirection();
     }
 
     /**
@@ -613,12 +567,10 @@ final class ClientStatement
 	 * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
 	 *      2.0 API</a>
      */
-    public synchronized void setFetchSize(int rows) 
+    public final synchronized void setFetchSize(int rows) 
         throws SQLException
     {
-        validateOpen();
-
-        _statement.setFetchSize(rows);
+        getStatement().setFetchSize(rows);
     }
   
     /**
@@ -635,12 +587,10 @@ final class ClientStatement
 	 * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
 	 *      2.0 API</a>
      */
-    public synchronized int getFetchSize() 
+    public final synchronized int getFetchSize() 
         throws SQLException
     {
-        validateOpen();
-
-        return _statement.getFetchSize();
+        return getStatement().getFetchSize();
     }
 
     /**
@@ -653,12 +603,10 @@ final class ClientStatement
 	 * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
 	 *      2.0 API</a>
      */
-    public synchronized int getResultSetConcurrency() 
+    public final synchronized int getResultSetConcurrency() 
         throws SQLException
     {
-        validateOpen();
-
-        return _statement.getResultSetConcurrency();
+        return getStatement().getResultSetConcurrency();
     }
 
     /**
@@ -672,12 +620,10 @@ final class ClientStatement
 	 * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
 	 *      2.0 API</a>
      */
-    public synchronized int getResultSetType()  
+    public final synchronized int getResultSetType()  
         throws SQLException
     {
-        validateOpen();
-
-        return _statement.getResultSetType();
+        return getStatement().getResultSetType();
     }
 
     /**
@@ -692,12 +638,10 @@ final class ClientStatement
 	 * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
 	 *      2.0 API</a>
      */
-    public synchronized void addBatch( String sql ) 
+    public final synchronized void addBatch( String sql ) 
         throws SQLException
     {
-        validateOpen();
-
-        _statement.addBatch(sql);
+        getStatement().addBatch(sql);
     }
 
     /**
@@ -710,12 +654,10 @@ final class ClientStatement
 	 * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
 	 *      2.0 API</a>
      */
-    public synchronized void clearBatch() 
+    public final synchronized void clearBatch() 
         throws SQLException
     {
-        validateOpen();
-
-        _statement.clearBatch();
+        getStatement().clearBatch();
     }
 
     /**
@@ -768,7 +710,7 @@ final class ClientStatement
 	 * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
 	 *      2.0 API</a>
      */
-    public int[] executeBatch() 
+    public final int[] executeBatch() 
         throws SQLException
     {
         // this method is not synchronized so that
@@ -777,12 +719,10 @@ final class ClientStatement
         Statement statement;
 
         synchronized (this) {
-            validateOpen();
-
-            statement = _statement;
+            statement = getStatement();
         }
         
-        synchronized (_xaConn) {
+        synchronized (_dataSource) {
             // check again
             validateOpen();
 
@@ -799,7 +739,7 @@ final class ClientStatement
 	 * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
 	 *      2.0 API</a>
      */
-    public Connection getConnection()  
+    public final Connection getConnection()  
         throws SQLException
     {
         return _clientConn;
@@ -807,15 +747,44 @@ final class ClientStatement
 
 
     /**
-     * Validate the statement is still open.
+     * Return the {@link XADataSourceImpl} object.
      *
-     * @throws SQLException if the statement is closed.
+     * @return the {@link XADataSourceImpl} object.
      */
-    private void validateOpen()
+    final XADataSourceImpl getDataSource()
+    {
+        return _dataSource;
+    }
+
+    /**
+     * Validate that the connection is open.
+     * <p>
+     * {@link #getStatement} must not call this method.
+     *
+     * @throws SQLException if the statement has been closed.
+     */
+    final void validateOpen()
         throws SQLException
     {
-        if (null == _statement) {
-            throw new SQLException("The statement is closed.");
+        if (null == getStatement()) {
+            throw new SQLException("The statement is closed.");    
         }
     }
+
+    /**
+     * Return the statement.
+     *
+     * @return the statement.
+     * @throws SQLException if the statement has been closed.
+     */
+    abstract Statement getStatement()
+        throws SQLException;
+
+
+    /**
+     * Reset the statement to null as it is not 
+     * being used anymore
+     */
+    abstract void resetStatement();
+    
 }

@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: EnabledDataSource.java,v 1.11 2000/09/29 01:32:42 mohammed Exp $
+ * $Id: EnabledDataSource.java,v 1.12 2000/10/07 01:53:37 mohammed Exp $
  */
 
 
@@ -205,7 +205,7 @@ public class EnabledDataSource
     }
 
 
-    public synchronized Connection getConnection( String user, String password )
+    public /*synchronized*/ Connection getConnection( String user, String password )
         throws SQLException
     {
 	Connection conn;
