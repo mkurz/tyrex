@@ -42,6 +42,7 @@
  *
  * Contributions by MetaBoss team are Copyright (c) 2003-2004, Softaris Pty. Ltd. All Rights Reserved.
  *
+ * $Id: ConnectionPool.java,v 1.21 2004/04/21 04:15:34 metaboss Exp $
  */
 
 
@@ -61,8 +62,6 @@ import javax.sql.XAConnection;
 import javax.sql.XADataSource;
 import javax.transaction.xa.XAResource;
 
-import org.apache.log4j.Category;
-
 import tyrex.resource.PoolLimits;
 import tyrex.resource.PoolMetrics;
 import tyrex.resource.Resource;
@@ -71,14 +70,15 @@ import tyrex.resource.ReuseOptions;
 import tyrex.services.Clock;
 import tyrex.services.DaemonMaster;
 import tyrex.tm.TyrexTransactionManager;
-import tyrex.util.LoggerPrintWriter;
 import tyrex.util.Primes;
+import tyrex.util.logging.Category;
+import tyrex.util.logging.LoggerPrintWriter;
 
 
 /**
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.20 $
+ * @version $Revision: 1.21 $
  */
 final class ConnectionPool
     extends PoolMetrics

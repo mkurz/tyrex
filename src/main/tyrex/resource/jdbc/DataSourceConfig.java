@@ -42,6 +42,9 @@
  *
  * Contributions by MetaBoss team are Copyright (c) 2003-2004, Softaris Pty. Ltd. All Rights Reserved.
  *
+ * Contributions by MetaBoss team are Copyright (c) 2003-2004, Softaris Pty. Ltd. All Rights Reserved.
+ *
+ * $Id: DataSourceConfig.java,v 1.15 2004/04/21 04:15:34 metaboss Exp $
  */
 
 
@@ -59,8 +62,6 @@ import javax.sql.DataSource;
 import javax.sql.XADataSource;
 import javax.transaction.xa.XAResource;
 
-import org.apache.log4j.Category;
-
 import tyrex.resource.PoolLimits;
 import tyrex.resource.PoolMetrics;
 import tyrex.resource.Resource;
@@ -68,13 +69,14 @@ import tyrex.resource.ResourceConfig;
 import tyrex.resource.ResourceException;
 import tyrex.tm.TransactionDomain;
 import tyrex.tm.TyrexTransactionManager;
-import tyrex.util.Logger;
+import tyrex.util.logging.Category;
+import tyrex.util.logging.Logger;
 
 
 /**
  * 
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.14 $
+ * @version $Revision: 1.15 $
  */
 public class DataSourceConfig
     extends ResourceConfig

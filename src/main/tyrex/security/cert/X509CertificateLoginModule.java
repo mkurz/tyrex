@@ -40,34 +40,36 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: X509CertificateLoginModule.java,v 1.5 2001/03/19 17:39:02 arkin Exp $
+ * Contributions by MetaBoss team are Copyright (c) 2003-2004, Softaris Pty. Ltd. All Rights Reserved.
+ *
+ * $Id: X509CertificateLoginModule.java,v 1.6 2004/04/21 04:18:21 metaboss Exp $
  */
 
 
 package tyrex.security.cert;
 
 
-import java.util.Map;
-import java.util.Set;
-import java.util.Iterator;
-import java.util.Vector;
-import java.util.Hashtable;
-import java.util.Enumeration;
-import java.util.StringTokenizer;
-import java.security.KeyStore;
-import java.security.PublicKey;
-import java.security.Principal;
-import java.security.KeyStoreException;
 import java.security.GeneralSecurityException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
 import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
 import java.security.cert.X509CRL;
 import java.security.cert.X509Certificate;
-import java.security.cert.CertificateException;
-import javax.security.auth.login.LoginException;
-import javax.security.auth.callback.CallbackHandler;
+import java.util.Enumeration;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+import java.util.StringTokenizer;
+import java.util.Vector;
+
 import javax.security.auth.Subject;
+import javax.security.auth.callback.CallbackHandler;
+import javax.security.auth.login.LoginException;
 import javax.security.auth.spi.LoginModule;
-import tyrex.util.Logger;
+
+import tyrex.util.logging.Logger;
 
 
 /**
@@ -111,7 +113,7 @@ import tyrex.util.Logger;
  *
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.5 $ $Date: 2001/03/19 17:39:02 $
+ * @version $Revision: 1.6 $ $Date: 2004/04/21 04:18:21 $
  */
 public final class X509CertificateLoginModule
     implements LoginModule

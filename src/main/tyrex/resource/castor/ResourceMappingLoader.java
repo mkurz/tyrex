@@ -40,8 +40,10 @@
  *
  * Copyright 2001 (C) Intalio Technologies Inc. All Rights Reserved.
  *
+ * Contributions by MetaBoss team are Copyright (c) 2003-2004, Softaris Pty. Ltd. All Rights Reserved.
+ *
+ * $Id: ResourceMappingLoader.java,v 1.5 2004/04/21 04:13:52 metaboss Exp $
  */
-
 
 package tyrex.resource.castor;
 
