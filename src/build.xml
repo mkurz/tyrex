@@ -319,6 +319,29 @@
              includes="${archive}/**" />
 
   </target>
+  
+  
+  <target name="javadocdist"  
+          description="Builds the javadoc distribution">
+    <property name="archive" value="${project}-${version}" />
+    <delete  file="${dist.dir}/${archive}-doc.tgz" />
+    <delete  file="${dist.dir}/${archive}-doc.zip" />
+    <deltree dir="${build.dir}/${archive}" />
+
+    <mkdir   dir="${build.dir}/${archive}" />
+    <mkdir   dir="${build.dir}/${archive}/javadoc" />
+    <copydir src="${build.javadoc}" dest="${build.dir}/${archive}/javadoc"
+             defaultexcludes="true" />
+    
+    <tar     includes="${archive}/**" basedir="${build.dir}"
+             tarfile="${dist.dir}/${archive}-doc.tar" />
+    <gzip    src="${dist.dir}/${archive}-doc.tar" zipfile="${dist.dir}/${archive}-doc.tgz"/>
+    <delete  file="${dist.dir}/${archive}-doc.tar" />
+    <zip     zipfile="${dist.dir}/${archive}-doc.zip" basedir="${build.dir}"
+             includes="${archive}/**" /> 
+
+  </target>
+
 
 
   <target name="release" depends="clean,jar,doc,api,javadoc,source,docs,tarball"
