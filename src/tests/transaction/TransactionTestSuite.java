@@ -2254,7 +2254,7 @@ class TransactionTestSuite
         ArrayList entries;
         int i;
         
-        stream.writeVerbose("Test rollback with resource delist (TMFAIL)");
+        stream.writeVerbose("Test rollback with resource delist (TMFAIL). This test may cause the database to hang so it may be preferable to set the timeout for database locks to a small number");
                 
         entries = getEntries(group, false, stream);
 
@@ -2274,9 +2274,16 @@ class TransactionTestSuite
             for (i = 0; i < entries.size(); ++i) {
                 entry = (Entry)entries.get(i);
                 transactionManager.getTransaction().delistResource(entry._xaResource, XAResource.TMFAIL);
+
                 //System.out.println("old xa connection " + entry.xaConnection);
                 //System.out.println("old xa resource " + entry.xaResource);
-                entry._xaConnection.close();
+                try {
+                    entry._xaConnection.close();
+                }
+                catch(SQLException e) {
+                    // ignore
+                    // the xa connection may be closed automatically on fail
+                }
                 entry._xaConnection = entry._dataSourceEntry.getXAConnection(); 
                 entry._xaResource = entry._xaConnection.getXAResource();
                 ///*System.out.println("timeout " + entry.xaResource.getTransactionTimeout());

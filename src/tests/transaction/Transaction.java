@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Transaction.java,v 1.10 2001/07/10 20:26:59 mohammed Exp $
+ * $Id: Transaction.java,v 1.11 2001/07/14 01:58:39 mohammed Exp $
  */
 
 
@@ -474,6 +474,7 @@ public class Transaction
 													   " varchar(255))");
 									}
 									catch(SQLException e){
+										e.printStackTrace();
 										// hack for oracle 8.1.7
 										transactionManager.rollback();
 	
