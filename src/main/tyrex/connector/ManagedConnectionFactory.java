@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: ManagedConnectionFactory.java,v 1.1 2000/04/10 20:52:34 arkin Exp $
+ * $Id: ManagedConnectionFactory.java,v 1.2 2000/04/13 22:10:17 arkin Exp $
  */
 
 
@@ -48,63 +48,118 @@ package tyrex.connector;
 
 
 import java.io.PrintWriter;
+import java.util.Enumeration;
 
 
 /**
  *
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2000/04/10 20:52:34 $
+ * @version $Revision: 1.2 $ $Date: 2000/04/13 22:10:17 $
  */
 public interface ManagedConnectionFactory
 {
 
+    /**
+     * Returns the description of this factory.
+     *
+     * @return The description of this factory
+     */
     public String getDescription();
 
 
+    /**
+     * Sets the description of this factory.
+     *
+     * @param description The description of this factory
+     */
     public void setDescription( String description );
 
 
+    /**
+     * Returns the log writer for this managed connection.
+     *
+     * @return The log writer
+     */
     public PrintWriter getLogWriter();
 
 
+    /**
+     * Sets the log writer for this managed connection.
+     *
+     * @param logWriter The log writer
+     */
     public void setLogWriter( PrintWriter logWriter );
 
-
+ 
+    /**
+     * Returns the login timeout.
+     *
+     * @return Login timeout
+     */
     public int getLoginTimeout();
 
 
-    public void setLoginTimeout( int ms );
+    /**
+     * Sets the login timeout.
+     *
+     * @param timeout Login timeout
+     */
+    public void setLoginTimeout( int timeout );
 
 
-    public int getMaxPool();
+    /**
+     * Returns the maximum number of connections.
+     *
+     * @return Maximum number of connections
+     */
+    public int getMaxConnection();
 
 
-    public void setMaxPool( int max );
+    /**
+     * Sets the maximum number of connections.
+     *
+     * @param max Maximum number of connections
+     */
+    public void setMaxConnection( int max );
 
 
-    public int getMinPool();
+    /**
+     * Creates a new connection factory to be enlisted in JNDI and
+     * used by the application. The connection factory is associated
+     * with a given connection manager on creation.
+     *
+     * @param manager The connection manager
+     * @throws ConnectionException The connection factory cannot be created
+     */
+    public Object createConnectionFactory( ConnectionManager manager )
+        throws ConnectionException;
 
 
-    public void setMinPool( int min );
+    /**
+     * Creates and returns a new managed connection. A managed connection
+     * includes an underlying connection and is managed by the connection
+     * manager for pooling and transaction enlistment.
+     *
+     * @param info Optional connection creation information
+     * @return Open managed connection
+     * @throws ConnectionException The connection cannot be created
+     */
+    public ManagedConnection createManagedConnection( Object info )
+        throws ConnectionException;
 
 
-    public int getWaitTimeout();
-
-    
-    public void setWaitTimeout( int ms );
-
-    
-    public String getUserName();
-
-
-    public void setUserName( String userName );
-
-
-    public void setPassword( byte[] password );
-
-
-    public ManagedConnection getManagedConnection()
+    /**
+     * Returns a suitable managed connection from the pool given the
+     * connection creation properties. If a match is found it is returned,
+     * otherwise, null is returned and a new connection will be created.
+     *
+     * @param enum An enumeration of existing connections
+     * @param info Optional connection creation information
+     * @return Open managed connection
+     * @throws ConnectionException The connection cannot be created
+     */
+    public ManagedConnection getManagedConnection( Enumeration enum, Object info )
         throws ConnectionException;
 
 
