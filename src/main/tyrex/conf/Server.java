@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: Server.java,v 1.3 2000/01/18 04:55:34 arkin Exp $
+ * $Id: Server.java,v 1.4 2000/02/23 21:13:44 arkin Exp $
  */
 
 
@@ -58,14 +58,14 @@ import java.io.OutputStreamWriter;
 import java.io.FileWriter;
 import java.io.File;
 import java.net.URL;
-import java.util.Vector;
+import java.util.Hashtable;
 import java.util.Enumeration;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
-import tyrex.server.Configure;
-import tyrex.util.PoolManager;
 import org.exolab.castor.xml.Marshaller;
 import org.exolab.castor.xml.Unmarshaller;
+import org.exolab.castor.xml.MarshalException;
+import tyrex.server.TransactionDomain;
 import tyrex.util.Messages;
 import tyrex.util.Logger;
 
@@ -74,148 +74,16 @@ import tyrex.util.Logger;
  *
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.3 $ $Date: 2000/01/18 04:55:34 $
+ * @version $Revision: 1.4 $ $Date: 2000/02/23 21:13:44 $
  * @see Configure
  * @see LogOption
  * @see PoolManager
  */
 public class Server
+    extends Constants
     implements Serializable
 {
 
-
-    public static class DTD
-    {
-
-	/**
-	 * The public identifier of the DTD.
-	 * <pre>
-	 * -//EXOLAB/Tyrex Configuration DTD Version 1.0//EN
-	 * </pre>
-	 */
-	public static final String PublicId = 
-	    "-//EXOLAB/Tyrex Configuration DTD Version 1.0//EN";
-
-	/**
-	 * The system identifier of the DTD.
-	 * <pre>
-	 * http://tyrex.exolab.org/tyrex.dtd
-	 * </pre>
-	 */
-	public static final String SystemId =
-	    "http://tyrex.exolab.org/tyrex.dtd";
-
-	/**
-	 * The resource named of the DTD:
-	 * <tt>/tyrex/conf/tyrex.dtd</tt>.
-	 */
-	private static final String Resource =
-	    "/tyrex/conf/tyrex.dtd";
-
-    }
-
-
-    public static class Namespace
-    {
-
-	/**
-	 * The public identifier of the XML schema.
-	 * <pre>
-	 * -//EXOLAB/Tyrex Configuration Schema Version 1.0//EN
-	 * </pre>
-	 */
-	public static final String PublicId =
-	    "-//EXOLAB/Tyrex Configuration Schema Version 1.0//EN";
-
-	/**
-	 * The system identifier of the XML schema.
-	 * <pre>
-	 * http://tyrex.exolab.org/tyrex.xsd
-	 * </pre>
-	 */
-	public static final String SystemId =
-	    "http://tyrex.exolab.org/tyrex.xsd";
-	
-	/**
-	 * The namespace prefix: <tt>tyrex</tt>
-	 */
-	public static final String prefix =
-	    "tyrex";
-
-	/**
-	 * The namespace URI:
-	 * <pre>
-	 * http://tyrex.exolab.org/tyrex
-	 * </pre>
-	 */
-	public static final String URI =
-	    "http://tyrex.exolab.org/tyrex";
-	
-	/**
-	 * The resource named of the server configuration XML schema:
-	 * <tt>/tyrex/conf/tyrex.xsd</tt>.
-	 */
-	private static final String Resource =
-	    "/tyrex/conf/tyrex.xsd";
-	
-    }
-
-
-    public static class Implementation
-    {
-
-
-	/**
-	 * The implementation vendor name, obtained from the manifest file.
-	 */
-	private static final String  Vendor;
-
-
-	/**
-	 * The implementation version number, obtained from the manifest file.
-	 */
-	private static final String  Version;
-
-
-	static
-	{
-	    Package pkg;
-	    
-	    // Determine the implementation vendor name and version number
-	    // from the package information in the manifest file
-	    pkg = Server.class.getPackage();
-	    if ( pkg != null ) {
-		Vendor = pkg.getImplementationVendor();
-		Version = pkg.getImplementationVersion();
-	    } else {
-		Vendor = "Exoffice Technologies. Inc";
-		Version = "";
-	    }
-	}
-	
-
-    }
-
-
-    /**
-     * The name of the default configuration file to be loaded when no
-     * file is specified.
-     */
-    public static final String FileName = "tyrex.xml";
-
-
-    /**
-     * The Tyrex configuration object.
-     */
-    private Configure       _configure;
-
-
-    /**
-     * The pool manager if the pool manager has been specified before
-     * the configure object. Otherwise the pool manager is immediately
-     * associated with the configure object.
-     */
-    private PoolManager     _pool;
 
 
     /**
@@ -226,17 +94,10 @@ public class Server
     private transient File  _source;
 
 
-    /**
-     * List of log options used to construct log writers.
-     */
-    private Vector          _logOptions = new Vector();
+    private Hashtable       _domains = new Hashtable();
 
 
-    /**
-     * If true will emit more information about problems reading/writing
-     * the XML configuration file.
-     */
-    public static boolean debug;
+    private String          _default;
 
 
     /**
@@ -258,9 +119,9 @@ public class Server
 	URL  url;      
 
 	try {
-	    url = Server.class.getResource( FileName );
+	    url = Server.class.getResource( ResourceName );
 	    if ( url != null ) {
-		file = new File( url.toString() );
+		file = new File( url.getFile() );
 		if ( file.exists() ) {
 		    Logger.getSystemLogger().println( Messages.format( "tyrex.conf.loadingServer", file ) );
 		    return load( file );
@@ -314,13 +175,12 @@ public class Server
 
 	try {
 	    unmarshaller = new Unmarshaller( Server.class );
-	    if ( debug )
-		unmarshaller.setLogWriter( Logger.getSystemLogger() );
+	    unmarshaller.setLogWriter( Logger.getSystemLogger() );
 	    unmarshaller.setEntityResolver( new SchemaEntityResolver() );
 	    return (Server) unmarshaller.unmarshal( reader );
-	} catch ( IOException except ) {
+	} catch ( MarshalException except ) {
 	    Logger.getSystemLogger().println( Messages.format( "tyrex.conf.loadingResourcesError", except ) );
-	    throw except;
+	    throw new IOException( except.toString() );
 	} catch ( Exception except ) {
 	    Logger.getSystemLogger().println( Messages.format( "tyrex.conf.loadingResourcesError", except ) );
 	    throw new IOException( "Nested exception: " + except );
@@ -338,12 +198,9 @@ public class Server
 	throws IOException
     {
 	try {
-	    if ( debug )
-		Marshaller.marshal( this, writer, Logger.getSystemLogger() );
-	    else
-		Marshaller.marshal( this, writer );
-	} catch ( IOException except ) {
-	    throw except;
+	    Marshaller.marshal( this, writer, Logger.getSystemLogger() );
+	} catch ( MarshalException except ) {
+	    throw new IOException( except.toString() );
 	} catch ( Exception except ) {
 	    throw new IOException( "Nested exception: " + except.toString() );
 	}
@@ -387,67 +244,31 @@ public class Server
     }
 
 
-    /**
-     * Sets the transaction server configuration object. If limits
-     * were already set, they will be associated with this configuration
-     * object.
-     */
-    public void setConfig( Configure configure )
+    public void addDomain( Domain domain )
     {
-	_configure = configure;
-	if ( _pool != null ) {
-	    _configure.setPoolManager( _pool );
-	    _pool = null;
-	}
+	if ( _domains.put( domain.getName(), domain ) != null )
+	    throw new IllegalArgumentException( "Multiple domains found with the same name " +
+						domain.getName() );
     }
 
 
-    /**
-     * Returns the transaction server configuration object.
-     * Will be null if not specified.
-     */
-    public Configure getConfig()
+    public Enumeration listDomains()
     {
-	return _configure;
+	return _domains.elements();
     }
 
 
-    /**
-     * Sets the transaction server limits. If a configuration
-     * object has been specified, these limits will apply to it,
-     * if not, they will apply to the next configuration object
-     * to be specified.
-     */
-    public void setLimits( PoolManager pool )
+    public String getDefault()
     {
-	if ( _configure != null )
-	    _configure.setPoolManager( pool );
-	else
-	    _pool = pool;
+	if ( _default == null || _default.length() == 0 )
+	    _default = TransactionDomain.DefaultDomain;
+	return _default;
     }
 
 
-    /**
-     * Returnss the transaction server limits.
-     */
-    public PoolManager getLimits()
+    public void setDefault( String defName )
     {
-	if ( _configure != null )
-	    return _configure.getPoolManager();
-	else
-	    return _pool;
-    }
-
-
-    public void setLogOption( LogOption logOption )
-    {
-	_logOptions.addElement( logOption );
-    }
-
-
-    public Enumeration listLogOption()
-    {
-	return _logOptions.elements();
+	_default = defName.trim();
     }
 
 
@@ -467,10 +288,10 @@ public class Server
 		return source;
 	    }
 
-	    if ( publicId.equals( Namespace.PublicId ) ||
-		 systemId.equals( Namespace.SystemId ) ) {
+	    if ( publicId.equals( Schema.PublicId ) ||
+		 systemId.equals( Schema.SystemId ) ) {
 		source = new InputSource();
-		source.setByteStream( Server.class.getResourceAsStream( Namespace.Resource ) );
+		source.setByteStream( Server.class.getResourceAsStream( Schema.Resource ) );
 		return source;
 	    }
 

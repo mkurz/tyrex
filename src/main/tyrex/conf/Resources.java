@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: Resources.java,v 1.2 2000/01/17 22:16:40 arkin Exp $
+ * $Id: Resources.java,v 1.3 2000/02/23 21:13:44 arkin Exp $
  */
 
 
@@ -56,10 +56,12 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.Reader;
 import java.io.Writer;
+import java.net.URL;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
 import org.exolab.castor.xml.Unmarshaller;
 import org.exolab.castor.xml.Marshaller;
+import org.exolab.castor.xml.MarshalException;
 import tyrex.util.Messages;
 import tyrex.util.Logger;
 
@@ -68,7 +70,7 @@ import tyrex.util.Logger;
  *
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $ $Date: 2000/01/17 22:16:40 $
+ * @version $Revision: 1.3 $ $Date: 2000/02/23 21:13:44 $
  */
 public class Resources
     implements Serializable
@@ -249,13 +251,17 @@ public class Resources
     public static Resources load()
 	throws IOException
     {
-	File        file;
+	File file;
+	URL  url;
 
-	file = new File( System.getProperty( "user.dir" ), FileName );
 	try {
-	    if ( file.exists() ) {
-		Logger.getSystemLogger().println( Messages.format( "tyrex.conf.loadingResources", file ) );
-		return load( file );
+	    url = Server.class.getResource( "/" + FileName );
+	    if ( url != null ) {
+		file = new File( url.getFile() );
+		if ( file.exists() ) {
+		    Logger.getSystemLogger().println( Messages.format( "tyrex.conf.loadingResources", file ) );
+		    return load( file );
+		}
 	    }
 	    file = new File( System.getProperty( "java.home" ), "lib" );
 	    file = new File( file, FileName );
@@ -312,9 +318,9 @@ public class Resources
 		unmarshaller.setLogWriter( Logger.getSystemLogger() );
 	    unmarshaller.setEntityResolver( new SchemaEntityResolver() );
 	    return (Resources) unmarshaller.unmarshal( reader );
-	} catch ( IOException except ) {
+	} catch ( MarshalException except ) {
 	    Logger.getSystemLogger().println( Messages.format( "tyrex.conf.loadingResourcesError", except ) );
-	    throw except;
+	    throw new IOException( except.toString() );
 	} catch ( Exception except ) {
 	    Logger.getSystemLogger().println( Messages.format( "tyrex.conf.loadingResourcesError", except ) );
 	    throw new IOException( "Nested exception: " + except.toString() );
@@ -337,8 +343,8 @@ public class Resources
 		Marshaller.marshal( this, writer, Logger.getSystemLogger() );
 	    else
 		Marshaller.marshal( this, writer );
-	} catch ( IOException except ) {
-	    throw except;
+	} catch ( MarshalException except ) {
+	    throw new IOException( except.toString() );
 	} catch ( Exception except ) {
 	    throw new IOException( "Nested exception: " + except );
 	}

@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: ResourceMarshalInfo.java,v 1.2 2000/01/17 22:16:40 arkin Exp $
+ * $Id: ResourceMarshalInfo.java,v 1.3 2000/02/23 21:16:54 arkin Exp $
  */
 
 
@@ -52,6 +52,7 @@ import java.io.IOException;
 import org.exolab.castor.xml.MarshalInfo;
 import org.exolab.castor.xml.MarshalDescriptor;
 import org.exolab.castor.xml.MarshalHelper;
+import org.exolab.castor.xml.MarshalException;
 import org.exolab.castor.xml.SimpleMarshalInfo;
 import org.exolab.castor.xml.SimpleMarshalDescriptor;
 
@@ -60,7 +61,7 @@ import org.exolab.castor.xml.SimpleMarshalDescriptor;
  * Marshalling information for {@link Resource}.
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $ $Date: 2000/01/17 22:16:40 $
+ * @version $Revision: 1.3 $ $Date: 2000/02/23 21:16:54 $
  */
 public class ResourceMarshalInfo
     extends SimpleMarshalInfo
@@ -69,7 +70,7 @@ public class ResourceMarshalInfo
 
 
     public ResourceMarshalInfo()
-	throws IOException
+	throws MarshalException
     {
 	super( Resource.class );
 

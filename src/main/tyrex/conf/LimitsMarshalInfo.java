@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: LimitsMarshalInfo.java,v 1.2 2000/01/17 22:16:40 arkin Exp $
+ * $Id: LimitsMarshalInfo.java,v 1.3 2000/02/23 21:16:54 arkin Exp $
  */
 
 
@@ -52,17 +52,15 @@ import org.exolab.castor.xml.MarshalInfo;
 import org.exolab.castor.xml.MarshalDescriptor;
 import org.exolab.castor.xml.MarshalHelper;
 import org.exolab.castor.xml.SimpleMarshalInfo;
-import tyrex.util.PoolManager;
+import org.exolab.castor.xml.MarshalException;
+import tyrex.resource.ResourceLimits;
 
 
 /**
- * Marshalling information for {@link PoolManager} when it
- * appears as limits in the {@link Server} configuration.
+ * Marshalling information for {@link ResourceLimits}.
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $ $Date: 2000/01/17 22:16:40 $
- * @see PoolManager
- * @see Server#getLimits
+ * @version $Revision: 1.3 $ $Date: 2000/02/23 21:16:54 $
  */
 public class LimitsMarshalInfo
     extends SimpleMarshalInfo
@@ -71,22 +69,23 @@ public class LimitsMarshalInfo
 
 
     public LimitsMarshalInfo()
-	throws IOException
+	throws MarshalException
     {
-	super( PoolManager.class );
+	super( ResourceLimits.class );
 
 	MarshalInfo         info;
 	MarshalDescriptor[] desc;
         int                 i;
 
-	info = MarshalHelper.generateMarshalInfo( PoolManager.class );
+	info = MarshalHelper.generateMarshalInfo( ResourceLimits.class );
 	desc = info.getAttributeDescriptors();
 	// Selected attribute descriptors that apply to limits out of
 	// the many available to PoolManager.
 	for ( i = 0 ; i < desc.length ; ++i ) {
-	    if ( desc[ i ].getXMLName().equals( "active-limit" ) ||
+	    if ( desc[ i ].getXMLName().equals( "prune-factor" ) ||
 		 desc[ i ].getXMLName().equals( "upper-limit" ) ||
 		 desc[ i ].getXMLName().equals( "check-every" ) ||
+		 desc[ i ].getXMLName().equals( "desired-size" ) ||
 		 desc[ i ].getXMLName().equals( "wait-timeout" ) )
 		addAttributeDescriptor( desc[ i ] );
 	}

@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: ServerMarshalInfo.java,v 1.2 2000/01/17 22:16:40 arkin Exp $
+ * $Id: ServerMarshalInfo.java,v 1.3 2000/02/23 21:13:44 arkin Exp $
  */
 
 
@@ -54,14 +54,14 @@ import org.exolab.castor.xml.MarshalDescriptor;
 import org.exolab.castor.xml.MarshalHelper;
 import org.exolab.castor.xml.SimpleMarshalInfo;
 import org.exolab.castor.xml.SimpleMarshalDescriptor;
-import tyrex.util.PoolManager;
+import org.exolab.castor.xml.MarshalException;
 
 
 /**
  * Marshalling information for {@link Server}.
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $ $Date: 2000/01/17 22:16:40 $
+ * @version $Revision: 1.3 $ $Date: 2000/02/23 21:13:44 $
  */
 public class ServerMarshalInfo
     extends SimpleMarshalInfo
@@ -70,7 +70,7 @@ public class ServerMarshalInfo
 
 
     public ServerMarshalInfo()
-	throws IOException
+	throws MarshalException
     {
 	super( Server.class );
 
@@ -83,21 +83,20 @@ public class ServerMarshalInfo
 	// We need a special descriptor for limits since we use
 	// LimitsMarshalInfo and not PoolMarshalInfo.
 	for ( i = 0 ; i < desc.length ; ++i ) {
-	    if ( "limits".equals( desc[ i ].getXMLName() ) ) {
+	    if ( "domain".equals( desc[ i ].getXMLName() ) ) {
 		SimpleMarshalDescriptor smd;
 
-		smd = new SimpleMarshalDescriptor( PoolManager.class,
+		smd = new SimpleMarshalDescriptor( Domain.class,
 						    desc[ i ].getName(), desc[ i ].getXMLName() );
 		try {
-		    smd.setWriteMethod( Server.class.getMethod( "setLimits",
-							    new Class[] { PoolManager.class }  ) );
-		    smd.setReadMethod( Server.class.getMethod( "getLimits",
+		    smd.setWriteMethod( Server.class.getMethod( "addDomain",
+							    new Class[] { Domain.class }  ) );
+		    smd.setReadMethod( Server.class.getMethod( "listDomains",
 							   new Class[ 0 ] ) );
 		} catch ( Exception except ) {
 		    // This should never happen
 		    throw new RuntimeException( "Internal error: " + except.toString() );
 		}
-		smd.setMarshalInfo( new LimitsMarshalInfo() );
 		addElementDescriptor( smd );
 	    } else {
 		addElementDescriptor( desc[ i ] );
