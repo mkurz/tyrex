@@ -2389,9 +2389,7 @@ class TransactionTestCases
                 entry._xaConnection = entry._dataSourceEntry.getXAConnection(); 
                 entry._xaResource = entry._xaConnection.getXAResource();
                 ///*System.out.println("timeout " + entry.xaResource.getTransactionTimeout());
-                if (entry._xaResource.setTransactionTimeout(200)) {
-                    System.out.println(" set timeout");
-                }
+                entry._xaResource.setTransactionTimeout(200);
                 //System.out.println("new xa connection " + entry.xaConnection);
                 //System.out.println("new xa resource " + entry.xaResource);
     

@@ -1,0 +1,38 @@
+<configuration>
+  <performance>
+    <group>test</group>
+    <one_phase_commit iterations="100" value="3000"/>
+    <two_phase_commit iterations="100" value="2500"/>
+    <rollback iterations="100" value="2000"/>
+  </performance>
+    
+  <datasource>
+    <class>oracle.jdbc.xa.client.OracleXADataSource</class>
+    <attribute name="serverName" value="server" type="string"/>
+    <attribute name="portNumber" value="port" type="int"/>
+    <attribute name="databaseName" value="name" type="string"/>
+    <attribute name="driverType" value="thin" type="string"/>
+    <group>test</group>
+    <user_name>user</user_name>
+    <password>password</password>
+    <table_name>test</table_name>
+    <fail_sleep_time>1000</fail_sleep_time>
+    <performance_test>true</performance_test>
+    <reuse_delisted_xaresources>false</reuse_delisted_xaresources>
+    <name>Oracle</name>
+  </datasource>
+
+  <datasource>  
+    <class>com.sybase.jdbc2.jdbc.SybDriver</class>
+    <uri>jdbc:sybase:Tds:server:port/database</uri>
+    <group>test</group>
+    <user_name>user</user_name>
+    <password>password</password>
+    <table_name>test</table_name>
+    <fail_sleep_time>0</fail_sleep_time>
+    <performance_test>true</performance_test>
+    <reuse_delisted_xaresources>false</reuse_delisted_xaresources>
+    <name>Sybase</name>
+  </datasource>
+  
+</configuration>  

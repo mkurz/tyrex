@@ -118,7 +118,7 @@
   
   <target name="tests-transaction" depends="prepare">
     <mkdir dir="${build}/tests" />
-    <javac srcdir="${source}/tests/transaction/configuration" destdir="${build}/tests"
+    <javac srcdir="${source}/tests/transaction" destdir="${build}/tests"
            classpath="${classpath}" debug="on" deprecation="${deprecation}" 
            />
   </target>

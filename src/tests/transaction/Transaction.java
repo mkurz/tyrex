@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Transaction.java,v 1.2 2001/02/16 23:59:52 mohammed Exp $
+ * $Id: Transaction.java,v 1.3 2001/02/17 00:06:07 mohammed Exp $
  */
 
 
@@ -94,11 +94,11 @@ import tyrex.tm.TyrexTransaction;
  * an xml file.
  * Look for the configuration file according to the following criteria:
  * <UL>
- * <LI>First look at the java property {@link #CONFIGURATION_FILE_PROPERTY}
- * <LI>Then look for the configuration file as a resource
- * <LI>Then look for the configuration file in working directory
- * <LI>Then look for the configuration file in the home directory
- * <LI>Then look for the configuration file in the java directory
+ * <LI>First look at the {@link #CONFIGURATION_FILE_PROPERTY java property}
+ * <LI>Then look for the {@link #CONFIGURATION_FILE configuration file} as a resource
+ * <LI>Then look for the {@link #CONFIGURATION_FILE configuration file} in working directory
+ * <LI>Then look for the {@link #CONFIGURATION_FILE configuration file} in the home directory
+ * <LI>Then look for the {@link #CONFIGURATION_FILE configuration file} in the java directory
  * <LI>Then throw exception that the configuration cannot be found
  * </UL>
  * <P>
@@ -360,11 +360,11 @@ public class Transaction
      * <P>
      * Look for the configuration file according to the following criteria:
      * <UL>
-     * <LI>First look at the java property {@link #CONFIGURATION_FILE_PROPERTY}
-     * <LI>Then look for the configuration file as a resource
-     * <LI>Then look for the configuration file in working directory
-     * <LI>Then look for the configuration file in the home directory
-     * <LI>Then look for the configuration file in the java directory
+     * <LI>First look at the {@link #CONFIGURATION_FILE_PROPERTY java property}
+     * <LI>Then look for the {@link #CONFIGURATION_FILE configuration file} as a resource
+     * <LI>Then look for the {@link #CONFIGURATION_FILE configuration file} in working directory
+     * <LI>Then look for the {@link #CONFIGURATION_FILE configuration file} in the home directory
+     * <LI>Then look for the {@link #CONFIGURATION_FILE configuration file} in the java directory
      * <LI>Then throw exception
      * </UL>
      *
