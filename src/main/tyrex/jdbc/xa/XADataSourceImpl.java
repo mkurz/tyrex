@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: XADataSourceImpl.java,v 1.8 2000/09/27 22:02:53 mohammed Exp $
+ * $Id: XADataSourceImpl.java,v 1.9 2000/09/27 22:11:16 mohammed Exp $
  */
 
 
@@ -377,7 +377,7 @@ public abstract class XADataSourceImpl
      * @return the transaction isolation level to use with all newly
      * created transactions
      */
-    public int getIsolationLevel()
+    public final int getIsolationLevel()
     {
 	return _isolationLevel;
     }
@@ -398,7 +398,7 @@ public abstract class XADataSourceImpl
      * java.sql.Connection.TRANSACTION_REPEATABLE_READ,
      * java.sql.Connection.TRANSACTION_SERIALIZABLE
      */
-    public void setIsolationLevel( int isolationLevel )
+    public final void setIsolationLevel( int isolationLevel )
     {
     if ( ( isolationLevel != Connection.TRANSACTION_READ_UNCOMMITTED ) ||
          ( isolationLevel != Connection.TRANSACTION_READ_COMMITTED ) || 
