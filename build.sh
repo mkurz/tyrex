@@ -1,6 +1,6 @@
 #! /bin/sh
 
-# $Id: build.sh,v 1.5 2000/08/28 19:01:46 mohammed Exp $
+# $Id: build.sh,v 1.6 2001/02/23 17:32:17 omodica Exp $
 
 if [ -z "$JAVA_HOME" ] ; then
   JAVA=`which java`
@@ -14,7 +14,7 @@ fi
 
 JAVA=$JAVA_HOME/bin/java
 
-CLASSPATH=`echo lib/*.jar | tr ' ' ':'`:$CLASSPATH
+CLASSPATH=$CLASSPATH:`echo lib/*.jar | tr ' ' ':'`
 CLASSPATH=build/classes/:$CLASSPATH:$JAVA_HOME/lib/tools.jar
 
 

@@ -113,7 +113,7 @@
     <mkdir dir="${build}/tests" />
     <javac srcdir="${source}/tests" destdir="${build}/tests"
            classpath="${classpath}" debug="on" deprecation="${deprecation}" 
-           excludes="hidden/**/*,jdbc/spi/*,ots/**" />
+           excludes="hidden/**/*,jdbc/spi/*,ots/**,tyrex/tests/junit/ots/**" />
   </target>
   
   <target name="tests-transaction" depends="prepare">
@@ -134,7 +134,10 @@
            includes="otstests/**" />
     <javac srcdir="${source}/tests" destdir="${build}/tests"
            classpath="${classpath}" debug="on" deprecation="${deprecation}" 
-           includes="ots/**" />    
+           includes="ots/**" />
+    <javac srcdir="${source}/tests" destdir="${build}/tests"
+           classpath="${classpath}" debug="on" deprecation="${deprecation}" 
+           includes="tyrex/tests/junit/ots/**" />               
   </target>
 
   <!-- Build the JAR file using main-opt -->
