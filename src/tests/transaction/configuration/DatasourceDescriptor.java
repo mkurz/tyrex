@@ -2,7 +2,7 @@
  * This class was automatically generated with 
  * <a href="http://castor.exolab.org">Castor 0.9.2</a>, using an
  * XML Schema.
- * $Id: DatasourceDescriptor.java,v 1.3 2001/07/10 19:16:20 mohammed Exp $
+ * $Id: DatasourceDescriptor.java,v 1.4 2002/05/09 17:44:32 mohammed Exp $
  */
 
 package transaction.configuration;
@@ -24,7 +24,7 @@ import org.exolab.castor.xml.validators.*;
 
 /**
  * 
- * @version $Revision: 1.3 $ $Date: 2001/07/10 19:16:20 $
+ * @version $Revision: 1.4 $ $Date: 2002/05/09 17:44:32 $
 **/
 public class DatasourceDescriptor extends org.exolab.castor.xml.util.XMLClassDescriptorImpl {
 
@@ -511,7 +511,7 @@ public class DatasourceDescriptor extends org.exolab.castor.xml.util.XMLClassDes
         fieldValidator = new FieldValidator();
         { //-- local scope
             IntegerValidator iv = new IntegerValidator();
-            iv.setMinInclusive(0);
+            //iv.setMinInclusive(0);
             //iv.setFixedValue(0);
             fieldValidator.setValidator(iv);
         }
