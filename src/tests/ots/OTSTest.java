@@ -39,7 +39,7 @@ public class OTSTest extends TestCase
         
         {
             Properties props = new Properties();
-            props.put("ImportModule.ForwardAdapter", "${openorb.home}config/OpenORB.xml#ForwardAdapter");
+            props.put("ImportModule.ForwardAdapter", "${openorb.home}config/default.xml#ForwardAdapter");
             _svcORB = org.omg.CORBA.ORB.init(args, props);
             
             MapNamingContext map = new MapNamingContext(_svcORB, null);
