@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: BaseXidTest.java,v 1.3 2001/09/07 01:17:34 mills Exp $
+ * $Id: GlobalXid_BaseXidImpl.java,v 1.1 2001/09/07 01:17:34 mills Exp $
  */
 
 package tyrex.tm.xid;
@@ -52,66 +52,44 @@ import java.io.PrintWriter;
 
 
 /**
+ *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.1 $
  */
 
-public abstract class BaseXidTest extends TestCase
+public class GlobalXid_BaseXidImpl extends BaseXidTest
 {
-    private PrintWriter _logger = null;
-
-    public BaseXidTest(String name)
+    public GlobalXid_BaseXidImpl(String name)
     {
         super(name);
     }
 
-
     /**
-     * <p>The abstract method for creating an instance of BaseXid.</p>
+     * The method for creating an instance of BaseXid.
      */
 
-    public abstract BaseXid newBaseXid()
-        throws Exception;
-
-
-    /**
-     * <p>The abstract method for returning a String representation of
-     * BaseXid.</p>
-     */
-
-    public abstract String getStringXid(BaseXid xid)
-        throws Exception;
-
-    /**
-     * <p>Create an instance.</p>
-     *
-     * @result Ensure that hasMoreElements() returns true.  Call
-     * next() three times ensuring that the correct values are
-     * returned each time.  hasMoreElements() should now return false.
-     */
-
-    public void testBasicFunctionality()
+    public BaseXid newBaseXid()
         throws Exception
     {
-        BaseXid xid = newBaseXid();
-        char[] pref = xid.createPrefix(762817453);
-        String strPref = new String(pref);
-        assertEquals("Prefeix", "xid:2d77abad-", strPref);
-        assertEquals("toString()", getStringXid(xid), xid.toString());
-
-        // The hashCode() function uses String's version.  To test
-        // it's value String's version would have to be used again.
-        // Therefore there is no gain.
-        xid.hashCode();
+        return (BaseXid) new GlobalXid();
     }
 
 
-    /** Adds a message in the log (except if the log is null)*/
-    private void logMessage(String message)
+    /**
+     * <p>The method for returning a String representation of
+     * BaseXid.</p>
+     */
+
+    public String getStringXid(BaseXid xid)
+        throws Exception
     {
-        if (_logger != null)
-        {
-            _logger.println(message);
+        char[] pref = xid.createPrefix(BaseXid.FORMAT_ID);
+        byte[] branch = xid.getGlobalTransactionId();
+        StringBuffer buffer = new StringBuffer( 46 );
+        for ( int i = branch.length ; i-- > 0 ; ) {
+            buffer.append(BaseXid.HEX_DIGITS[(branch[i] & 0xF0) >> 4]);
+            buffer.append(BaseXid.HEX_DIGITS[(branch[i] & 0x0F)]);
         }
+        return new String(pref) + buffer.toString();
     }
 }

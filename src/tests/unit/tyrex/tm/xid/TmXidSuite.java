@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TmXidSuite.java,v 1.2 2001/09/06 10:27:02 mills Exp $
+ * $Id: TmXidSuite.java,v 1.3 2001/09/07 01:17:34 mills Exp $
  */
 
 
@@ -52,7 +52,7 @@ import junit.framework.TestSuite;
 /**
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  */
 
 public class TmXidSuite
@@ -66,8 +66,9 @@ public class TmXidSuite
     {
         TestSuite suite = new TestSuite("TmXidSuite test harness");
         suite.addTest(BranchXidTest.suite());
+        suite.addTest(ExternalXidTest.suite());
+        suite.addTest(GlobalXidTest.suite());
         suite.addTest(LocalXidTest.suite());
-//        suite.addTest(new TestSuite(BackgroundThreadTest.class));
         return suite;
     }
 

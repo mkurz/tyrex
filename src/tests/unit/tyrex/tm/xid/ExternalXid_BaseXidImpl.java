@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: BaseXidTest.java,v 1.3 2001/09/07 01:17:34 mills Exp $
+ * $Id: ExternalXid_BaseXidImpl.java,v 1.1 2001/09/07 01:17:34 mills Exp $
  */
 
 package tyrex.tm.xid;
@@ -52,66 +52,40 @@ import java.io.PrintWriter;
 
 
 /**
+ *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.1 $
  */
 
-public abstract class BaseXidTest extends TestCase
+public class ExternalXid_BaseXidImpl extends BaseXidTest
 {
-    private PrintWriter _logger = null;
-
-    public BaseXidTest(String name)
+    public ExternalXid_BaseXidImpl(String name)
     {
         super(name);
     }
 
-
     /**
-     * <p>The abstract method for creating an instance of BaseXid.</p>
+     * The method for creating an instance of BaseXid.
      */
 
-    public abstract BaseXid newBaseXid()
-        throws Exception;
-
-
-    /**
-     * <p>The abstract method for returning a String representation of
-     * BaseXid.</p>
-     */
-
-    public abstract String getStringXid(BaseXid xid)
-        throws Exception;
-
-    /**
-     * <p>Create an instance.</p>
-     *
-     * @result Ensure that hasMoreElements() returns true.  Call
-     * next() three times ensuring that the correct values are
-     * returned each time.  hasMoreElements() should now return false.
-     */
-
-    public void testBasicFunctionality()
+    public BaseXid newBaseXid()
         throws Exception
     {
-        BaseXid xid = newBaseXid();
-        char[] pref = xid.createPrefix(762817453);
-        String strPref = new String(pref);
-        assertEquals("Prefeix", "xid:2d77abad-", strPref);
-        assertEquals("toString()", getStringXid(xid), xid.toString());
-
-        // The hashCode() function uses String's version.  To test
-        // it's value String's version would have to be used again.
-        // Therefore there is no gain.
-        xid.hashCode();
+        byte[] global = new byte[] { (byte)0xA8, (byte)0xB7, (byte)0xC6, (byte)0xD5, (byte)0xE4, (byte)0xF3};
+        byte[] branch = new byte[] { (byte)0x9F, (byte)0x8E, (byte)0x7D, (byte)0x6C, (byte)0x5B, (byte)0x4A};
+        return (BaseXid) new ExternalXid(BaseXid.FORMAT_ID, global, branch);
     }
 
 
-    /** Adds a message in the log (except if the log is null)*/
-    private void logMessage(String message)
+    /**
+     * <p>The method for returning a String representation of
+     * BaseXid.</p>
+     */
+
+    public String getStringXid(BaseXid xid)
+        throws Exception
     {
-        if (_logger != null)
-        {
-            _logger.println(message);
-        }
+        char[] pref = xid.createPrefix(BaseXid.FORMAT_ID);
+        return new String(pref) + "f3e4d5c6b7a8-4a5b6c7d8e9f";
     }
 }

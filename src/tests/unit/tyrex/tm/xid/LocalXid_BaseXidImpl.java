@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: LocalXid_BaseXidImpl.java,v 1.1 2001/09/06 10:27:02 mills Exp $
+ * $Id: LocalXid_BaseXidImpl.java,v 1.2 2001/09/07 01:17:34 mills Exp $
  */
 
 package tyrex.tm.xid;
@@ -54,7 +54,7 @@ import java.io.PrintWriter;
 /**
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 
 public class LocalXid_BaseXidImpl extends BaseXidTest
@@ -84,6 +84,12 @@ public class LocalXid_BaseXidImpl extends BaseXidTest
         throws Exception
     {
         char[] pref = BaseXid.createPrefix(LocalXid.LOCAL_FORMAT_ID);
-        return new String(pref) + "-" + new String(xid.getBranchQualifier());
+        byte[] branch = xid.getBranchQualifier();
+        StringBuffer buffer = new StringBuffer( 46 );
+        for ( int i = branch.length ; i-- > 0 ; ) {
+            buffer.append(BaseXid.HEX_DIGITS[(branch[i] & 0xF0) >> 4]);
+            buffer.append(BaseXid.HEX_DIGITS[(branch[i] & 0x0F)]);
+        }
+        return new String(pref) + "-" + buffer.toString();
     }
 }

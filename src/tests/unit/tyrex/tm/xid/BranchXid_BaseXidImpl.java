@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: BranchXid_BaseXidImpl.java,v 1.2 2001/09/06 10:27:02 mills Exp $
+ * $Id: BranchXid_BaseXidImpl.java,v 1.3 2001/09/07 01:17:34 mills Exp $
  */
 
 package tyrex.tm.xid;
@@ -54,7 +54,7 @@ import java.io.PrintWriter;
 /**
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  */
 
 public class BranchXid_BaseXidImpl extends BaseXidTest
@@ -87,5 +87,16 @@ public class BranchXid_BaseXidImpl extends BaseXidTest
     {
         char[] pref = xid.createPrefix(BaseXid.FORMAT_ID);
         return new String(pref) + "f3e4d5c6b7a8-4a5b6c7d8e9f";
+    }
+
+
+    /**
+     * <p>The method for returning a hash code value.</p>
+     */
+
+    public int getHashCode()
+        throws Exception
+    {
+        return 142518294;
     }
 }
