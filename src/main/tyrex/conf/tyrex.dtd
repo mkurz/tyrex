@@ -137,9 +137,7 @@
       </tyrex:resources>
  -->
 
-<!ELEMENT resources ( include*, ( resource | env-entry )* )>
-<!ELEMENT include (#PCDATA)>
-
+<!ELEMENT resources ( resource*, env-entry* )>
 
 <!--
     Defines a resource exposed to the application.

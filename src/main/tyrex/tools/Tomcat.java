@@ -40,11 +40,11 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Tomcat.java,v 1.2 2000/09/08 23:06:29 mohammed Exp $
+ * $Id: Tomcat.java,v 1.3 2000/09/22 01:18:38 mohammed Exp $
  */
 
 
-package tyrex.interceptor;
+package tyrex.tools;
 
 import java.util.Enumeration;
 import java.net.URL;
@@ -56,8 +56,11 @@ import javax.servlet.http.HttpServletResponse;
 import javax.naming.NamingException;
 import javax.transaction.RollbackException;
 import org.apache.tomcat.core.ServiceInterceptor;
+import org.apache.tomcat.core.BaseInterceptor;
+import org.apache.tomcat.core.RequestInterceptor;
 import org.apache.tomcat.core.Context;
-import org.apache.tomcat.core.Constants;
+//import org.apache.tomcat.core.Constants;
+import org.apache.tomcat.shell.Constants;
 import org.apache.tomcat.core.InterceptorException;
 import org.apache.tomcat.deployment.WebApplicationDescriptor;
 import org.apache.tomcat.deployment.WebApplicationReader;
@@ -65,21 +68,26 @@ import org.apache.tomcat.deployment.WebDescriptorFactoryImpl;
 import org.apache.tomcat.deployment.ResourceReference;
 import org.apache.tomcat.deployment.EnvironmentEntry;
 import tyrex.tm.Tyrex;
-import tyrex.naming.ENCHelper;
+import tyrex.naming.MemoryContext;
+import tyrex.naming.EnvContext;
+//import tyrex.naming.ENCHelper;
+import org.apache.tomcat.core.Request;
+import org.apache.tomcat.core.Response;
 
 
 /**
  *
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $ $Date: 2000/09/08 23:06:29 $
+ * @version $Revision: 1.3 $ $Date: 2000/09/22 01:18:38 $
  */
-public class Tomcat
-    implements ServiceInterceptor
+public final class Tomcat
+    extends BaseInterceptor
+    implements RequestInterceptor, ServiceInterceptor
 {
 
 
-    private Hashtable  _encs = new Hashtable();
+    private Hashtable  _memoryContexts = new Hashtable();
 
 
     private boolean   _started;
@@ -87,14 +95,25 @@ public class Tomcat
 
     public Tomcat()
     {
+        System.out.println("Riad was here");
     }
 
+    public int preService(Request req, Response resp ) {
+        try {
+	    preInvoke( req.getContext(), null, /*req.getWrapper().getServlet(),*/
+				    null, null /*req.getFacade(),  resp.getFacade()*/);
+	    return 0;
+	} catch( InterceptorException ex ) {
+	    return -1; // map exceptions to error codes
+	}
+    }
 
+    // Warning servlet, req and res may be null
     public void preInvoke( Context context, Servlet servlet,
 			   HttpServletRequest req, HttpServletResponse res )
 	throws InterceptorException
     {
-	ENCHelper enc;
+	MemoryContext memoryContext;
 
 	// Make sure the Tyrex is started at this point.
 	// We don't do it in the constructor since in this
@@ -106,24 +125,31 @@ public class Tomcat
 	}
 
 	try {
-	    enc = getENCHelper( context );
-	    enc.setThreadContext();
+	    memoryContext = getMemoryContext( context );
+	    EnvContext.setEnvContext(memoryContext);
 	} catch ( NamingException except ) {
 	} catch ( Exception except ) {
 	    throw new InterceptorException( except );
 	}
     }
     
+    public int postService(Request req, Response resp ) {
+	try {
+	    postInvoke( req.getContext(), null, /*req.getWrapper().getServlet(),*/
+				    null, null /*req.getFacade(),  resp.getFacade()*/);
+	    return 0;
+	} catch( InterceptorException ex ) {
+	    return -1; // map exceptions to error codes
+	}
+    }
 
+    // Warning servlet, req and res maybe null
     public void postInvoke( Context context, Servlet servlet,
 			    HttpServletRequest req, HttpServletResponse res )
 	throws InterceptorException
     {
-	ENCHelper enc;
-
 	try {
-	    enc = getENCHelper( context );
-	    enc.suspendThreadContext();
+	    EnvContext.unsetEnvContext();
 	    Tyrex.recycleThread();
 	} catch ( RollbackException except ) {
 	} catch ( Exception except ) {
@@ -131,7 +157,73 @@ public class Tomcat
 	}
     }
 
+    protected MemoryContext getMemoryContext( Context context )
+        throws NamingException
+    {
+    MemoryContext   memoryContext;
 
+	memoryContext = (MemoryContext) _memoryContexts.get( context );
+	if ( memoryContext == null ) {
+        javax.naming.Context ctx;
+
+	    memoryContext = TomcatContextHelper.createMemoryContext();
+        _memoryContexts.put( context, memoryContext );
+
+        try {
+		TomcatContextHelper.addUserTransaction( memoryContext, Tyrex.getUserTransaction() );
+	    } catch ( Exception except ) {
+	    }
+
+	    WebApplicationDescriptor appDesc;
+	    URL         url;
+	    String      base;
+	    InputStream is;
+
+	    base = context.getDocumentBase().toString();
+	    if ( context.getDocumentBase().getProtocol().equalsIgnoreCase(
+		     Constants.Protocol.WAR.PACKAGE ) ) {
+		if ( base.endsWith( "/" ) ) {
+		    base = base.substring( 0, base.length() - 1 );
+		}
+		base += "!/";
+	    }
+	    try {
+		url = new URL( base + Constants.Server.ConfigFile );
+		is = url.openConnection().getInputStream();
+		appDesc = new WebApplicationReader().
+		    getDescriptor( is,  new WebDescriptorFactoryImpl(),
+				   context.isWARValidated() );
+
+		Enumeration       enum;
+		EnvironmentEntry  envEntry;
+		ResourceReference resRef;
+
+		enum = appDesc.getEnvironmentEntries();
+		while ( enum.hasMoreElements() ) {
+		    envEntry = (EnvironmentEntry) enum.nextElement();
+		    try {
+			TomcatContextHelper.addEnvEntry( memoryContext, envEntry.getName(), envEntry.getType(), envEntry.getValue() );
+		    } catch ( NamingException except ) { }
+		}
+
+		enum = appDesc.getResourceReferences();
+		while ( enum.hasMoreElements() ) {
+		    resRef = (ResourceReference) enum.nextElement();
+		    TomcatContextHelper.addResource( memoryContext, context.getDocumentBase().toString(), resRef.getName(),
+				     resRef.getType(), 
+				     ResourceReference.APPLICATION_AUTHORIZATION.equals( resRef.getAuthorization() ) );
+		}
+
+	    } catch ( Exception except ) {
+		System.out.println( except );
+		except.printStackTrace();
+	    }
+	    TomcatContextHelper.addEnvEntries( memoryContext, context.getDocumentBase().toString() );
+	}
+	return memoryContext;
+    }
+
+    /*
     protected ENCHelper getENCHelper( Context context )
     {
 	ENCHelper   enc;
@@ -194,6 +286,6 @@ public class Tomcat
       	}
 	return enc;
     }
-
+    */
 
 }

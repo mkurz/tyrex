@@ -1,0 +1,164 @@
+<!--DOCTYPE databases PUBLIC "-//EXOLAB/Castor Mapping DTD Version 1.0//EN"
+                           "http://castor.exolab.org/mapping.dtd"-->
+<mapping>
+
+  <!--  Mapping for AppPath  -->
+  <class name="tyrex.conf.AppPath">
+    <description>Application Path</description>
+    <map-to xml="app-path"/>
+    <field name="content" required="true">
+      <xml type="string" node="text"/>
+    </field>
+  </class>
+  
+  
+  <!--  Mapping for Visible  -->
+  <class name="tyrex.conf.Visible">
+    <description>Visible</description>
+    <map-to xml="visible"/>
+    <field name="appPath" type="tyrex.conf.AppPath" set-method="addAppPath">
+      <xml collection="vector"/>
+    </field>
+  </class>
+  
+  <!--  Mapping for Resource  -->
+  <class name="tyrex.conf.Resource">
+    <description>Resource</description>
+    <map-to xml="resource"/>
+    <field name="resName" type="string" required="true">
+      <xml name="res-name" node="attribute"/>
+    </field>
+    <field name="resType" type="string" required="true">
+      <xml name="res-type" node="attribute"/>
+    </field>
+    <field name="resAuth" type="string" required="false">
+      <xml name="res-auth" node="attribute"/>
+    </field>
+    <field name="visible" type="tyrex.conf.Visible" required="true">
+      <xml node="element"/>
+    </field>
+    <field name="param" required="true" create-method="createParam">
+      <xml node="element"/>
+    </field>
+    <field name="pool" type="tyrex.resource.ResourcePoolManagerImpl">
+      <xml node="element"/>
+    </field>
+  </class>
+
+  <class name="tyrex.resource.ResourcePoolManagerImpl"  >
+    <description>Resource Pool Manager Implementation</description>
+    <map-to xml="pool"/>
+    <field name="resourceLimits" type="tyrex.resource.ResourceLimits" required="true">
+        <xml name="resource-limits" node="element"/>
+    </field>
+  </class>
+  
+  <class name="tyrex.resource.ResourceLimits"  >
+    <description>Resource Limits</description>
+    <map-to xml="resource-limits"/>
+    <field name="upperLimit" type="integer" required="false">
+      <xml name="upper-limit" node="attribute"/>
+    </field>
+    <field name="desiredSize" type="integer" required="false">
+      <xml name="desired-size" node="attribute"/>
+    </field>
+    <field name="pruneFactor" required="false">
+      <xml name="prune-factor" type="real" node="attribute"/>
+    </field>
+    <field name="checkEvery" type="integer" required="false">
+      <xml name="check-every" node="attribute"/>
+    </field>
+    <field name="waitTimeout" type="integer" required="false">
+      <xml name="wait-timeout" node="attribute"/>
+    </field>
+  </class>
+  
+  
+  <!--  Mapping for Resources  -->
+  <class name="tyrex.conf.Resources">
+    <description>Resources</description>
+    <map-to xml="resources"/>
+    <field name="resource" type="tyrex.conf.Resource" set-method="addResource">
+      <xml collection="vector"/>
+    </field>
+    <field name="envEntry" type="tyrex.conf.EnvEntry" set-method="addEnvEntry">
+      <xml collection="vector"/>
+    </field>
+  </class>
+  
+  <!--  Mapping for Environment Entries  -->
+  <class name="tyrex.conf.EnvEntry">
+    <description>Environment Entries</description>
+    <map-to xml="env-entry"/>
+    <field name="envEntryName" type="string" required="true">
+      <xml name="env-entry-name" node="element"/>
+    </field>
+    <field name="envEntryType" type="string" required="true">
+      <xml name="env-entry-type" node="element"/>
+    </field>
+    <field name="envEntryValue" type="string" required="false">
+      <xml name="env-entry-value" node="element"/>
+    </field>
+    <field name="visible" type="tyrex.conf.Visible" required="true">
+      <xml node="element"/>
+    </field>
+  </class>
+  
+  
+  <!--  Mapping for Server  -->
+  <class name="tyrex.conf.Server">
+    <description>Server</description>
+    <map-to xml="server"/>
+    <field name="domain" type="tyrex.conf.Domain" set-method="addDomain">
+      <xml collection="vector"/>
+    </field>
+  </class>
+  
+  
+  <!--  Mapping for Domain  -->
+  <class name="tyrex.conf.Domain">
+    <description>Domain</description>
+    <map-to xml="domain"/>
+    <field name="policy" type="tyrex.conf.Policy" required="false">
+      <xml node="element"/>
+    </field>
+    <field name="limits" type="tyrex.resource.ResourceLimits" required="false">
+      <xml name="resource-limits" node="element"/>
+    </field>
+    <field name="interceptors" type="tyrex.conf.InterceptorHolder" set-method="addInterceptor">
+      <xml collection="vector"/>
+    </field>
+    <field name="name" type="string" required="true">
+      <xml node="attribute"/>
+    </field>
+  </class>
+  
+  <!--  Mapping for Policy  -->
+  <class name="tyrex.conf.Policy">
+    <description>Policy</description>
+    <map-to xml="policy"/>
+    <field name="killThread" type="boolean" required="false">
+      <xml name="thread-terminate" node="attribute"/>
+    </field>
+    <field name="allowNested" type="boolean" required="false">
+      <xml name="nested-transaction" node="attribute"/>
+    </field>
+    <field name="transTimeout" type="integer" required="false">
+      <xml name="transaction-timeout" node="attribute"/>
+    </field>
+  </class>
+  
+  <!--  Mapping for Interceptor Holder  -->
+  <class name="tyrex.conf.InterceptorHolder">
+    <description>Interceptor Holder</description>
+    <map-to xml="interceptor"/>
+    <field name="interceptor" create-method="createInterceptor" required="false">
+      <xml name="param" node="element"/>
+    </field>
+    <field name="className" type="string" required="true">
+      <xml name="class-name" node="attribute"/>
+    </field>
+  </class>
+  
+</mapping>
+

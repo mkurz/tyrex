@@ -1,111 +1,72 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE schema PUBLIC "-//W3C/DTD XML Schema Version 1.0//EN"
+<!-- <!DOCTYPE schema PUBLIC "-//W3C/DTD XML Schema Version 1.0//EN"
                         "http://www.w3.org/XML/Group/1999/09/23-xmlschema/structures/structures.dtd">
+                        -->
 <!--  For more information see tyrex.dtd  -->
-<schema>
+<xsd:schema xmlns:xsd="http://www.w3.org/1999/XMLSchema"
+            elementFormDefault="qualified"
+            attributeFormDefault="unqualified">
+            
+  <include schemaLocation="http://tyrex.exolab.org/resources.xsd"/>
 
-  <element name="server">
-    <archetype content="elemOnly" model="closed" order="seq">
+  <xsd:element name="server">
+    <xsd:complexType content="mixed">
 
-      <element ref="config" maxOccurs="1"/>
-      <element ref="limits" maxOccurs="1"/>
-      <element ref="log-option" minOccurs="0"/>
+      <xsd:element ref="domain" minOccurs="0"/>
+      <xsd:element ref="description" maxOccurs="1"/>
+      
+      <attribute name="vendor" maxOccurs="1"/>
+      <attribute name="version" maxOccurs="1"/>
+    </xsd:complexType>
+  </xsd:element>
 
-      <attribute name="vendor"/>
-      <attribute name="version"/>
+  <xsd:element name="domain">
+    <xsd:complexType content="mixed">
 
-    </archetype>
-  </element>
+      <xsd:element ref="policy" maxOccurs="1"/>
+      <xsd:element ref="tyrex:resource-limits" maxOccurs="1"/>
+      <xsd:element ref="interceptors" minOccurs="0"/>
+      <xsd:element ref="tyrex:resources" minOccurs="0"/>
+      
+      <attribute name="name" type="NMTOKEN" minOccurs="1" maxOccurs="1"/>
+    </xsd:complexType>
+  </xsd:element>
+  
+  
+  <xsd:element name="interceptors">
+    <xsd:complexType content="mixed">
+      <xsd:element ref="param" minOccurs="1" maxOccurs="1"/>
+      
+      <attribute name="class-name" type="string" minOccurs="1" maxOccurs="1"/>
+    </xsd:complexType>
+  </xsd:element>
+  
+  <xsd:element name="policy" maxOccurs="1">
+    <xsd:complexType content="empty">
 
+      <xsd:attribute name="thread-terminate" type="boolean" default="false" maxOccurs="1">
+        <xsd:enumeration>
+          <xsd:literal>true</xsd:literal>
+          <xsd:literal>false</xsd:literal>
+        </xsd:enumeration>
+      </xsd:attribute>
+      <xsd:attribute name="nested-transaction" type="boolean" default="false" maxOccurs="1">
+        <xsd:enumeration>
+          <xsd:literal>true</xsd:literal>
+          <xsd:literal>false</xsd:literal>
+        </xsd:enumeration>
+      </xsd:attribute>
+      <xsd:attribute name="transaction-timeout" type="integer" maxOccurs="1">
+        <xsd:minInclusive>1</xsd:minInclusive>
+      </xsd:attribute>
 
-  <element name="config" maxOccurs="1">
-    <archetype content="elemOnly" model="closed" order="seq">
+    </xsd:complexType>
+  </xsd:element>
+  
+  
+  <xsd:element name="description">
+    <xsd:complexType content="textOnly"/>
+  </xsd:element>
 
-      <attribute name="thread-terminate" type="boolean" default="false">
-        <enumeration>
-          <literal>true</literal>
-          <literal>false</literal>
-        </enumeration>
-      </attribute>
-      <attribute name="nested-transaction" type="boolean" default="false">
-        <enumeration>
-          <literal>true</literal>
-          <literal>false</literal>
-        </enumeration>
-      </attribute>
-      <attribute name="transaction-timeout" type="integer">
-        <minInclusive>1</minInclusive>
-      </attribute>
-
-    </archetype>
-  </element>
-
-
-  <element name="limits" maxOccurs="1">
-    <archetype content="empty" model="closed" order="seq">
-
-      <attribute name="active-limit" type="integer">
-        <minInclusive>-1</minInclusive>
-      </attribute>
-      <attribute name="upper-limit" type="integer">
-        <minInclusive>-1</minInclusive>
-      </attribute>
-      <attribute name="check-every" type="integer">
-        <minExclusive>0</minExclusive>
-      </attribute>
-      <attribute name="wait-timeout" type="integer">
-        <minInclusive>0</minInclusive>
-      </attribute>
-
-    </archetype>
-  </element>
-
-
-  <element name="log-option">
-    <archetype content="empty" model="closed" order="seq">
-
-      <group order="choice" minOccurs="1" maxOccurs="1">
-
-        <element name="log-console">
-          <archetype content="empty" model="closed">
-          </archetype>
-        </element>
-
-        <element name="log-file">
-          <archetype content="textOnly" model="closed">
-          </archetype>
-        </element>
-
-        <element name="log-server">
-          <archetype content="textOnly" model="closed">
-            <attribute name="port" type="integer"/>
-          </archetype>
-        </element>
-
-      </group>
-
-      <element name="log-header" minOccurs="0" maxOccurs="1">
-        <archetype content="textOnly" model="closed">
-        </archetype>
-      </element>
-
-      <attribute name="errors" type="boolean" default="true">
-        <enumeration>
-          <literal>true</literal>
-          <literal>false</literal>
-        </enumeration>
-      </attribute>
-      <attribute name="meter" type="boolean" default="false">
-        <enumeration>
-          <literal>true</literal>
-          <literal>false</literal>
-        </enumeration>
-      </attribute>
-      <attribute name="prefix" type="string" default="Tyrex"/>
-
-    </archetype>
-  </element>
-
-
-</schema>
+</xsd:schema>
 

@@ -101,7 +101,7 @@
     <mkdir dir="${build}/tests" />
     <javac srcdir="${source}/tests" destdir="${build}/tests"
            classpath="${classpath}" debug="on" deprecation="${deprecation}" 
-           excludes="hidden/*,jdbc/spi/*" />
+           excludes="hidden/**/*,jdbc/spi/*" />
   </target>
 
 

@@ -1,109 +1,142 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE schema PUBLIC "-//W3C/DTD XML Schema Version 1.0//EN"
+<!-- <!DOCTYPE schema PUBLIC "-//W3C/DTD XML Schema Version 1.0//EN"
                         "http://www.w3.org/XML/Group/1999/09/23-xmlschema/structures/structures.dtd">
-<schema>
+                        -->
+<xsd:schema xmlns:xsd="http://www.w3.org/1999/XMLSchema"
+            elementFormDefault="qualified"
+            attributeFormDefault="unqualified">
 
-  <element name="resources">
-    <archetype content="elemOnly" model="closed">
+  <xsd:element name="resources">
+    <xsd:complexType content="elemOnly">
 
-      <element ref="resource" minOccurs="0">
-      <element ref="env-entry" minOccurs="0">
+      <xsd:element ref="resource" minOccurs="0"/>
+      <xsd:element ref="env-entry" minOccurs="0"/>
 
-    </archetype>
-  </element>
-
-
-  <element name="resource">
-    <archetype content="elemOnly" model="closed" order="seq">
-
-      <element ref="param" minOccurs="1" maxOccurs="1"/>
-      <element ref="pool" maxOccurs="1"/>
-      <element ref="visible" minOccurs="1" maxOccurs="1"/>
-
-      <attribute name="res-name" type="NMTOKEN" minOccurs="1"/>
-      <attribute name="res-type" type="NMTOKEN" minOccurs="1"/>
-      <attribute name="res-auth" default="container">
-        <enumeration>
-          <literal>cotainer</literal>
-          <literal>application</literal>
-        </enumeration>
-      </attribute>
-
-    </archetype>
-  </element>
+    </xsd:complexType>
+  </xsd:element>
 
 
-  <element name="pool" maxOccurs="1">
-    <archetype content="empty" model="closed" order="seq">
+  <xsd:element name="resource">
+    <xsd:complexType content="mixed">
 
-      <attribute name="upper-limit" type="integer">
-        <minInclusive>-1</minInclusive>
-      </attribute>
-      <attribute name="desired-size" type="integer">
-        <minInclusive>0</minInclusive>
-      </attribute>
-      <attribute name="prune-factor" type="real">
-        <minInclusive>0</minInclusive>
-        <maxInclusive>1</maxInclusive>
-      </attribute>
-      <attribute name="check-every" type="integer">
-        <minExclusive>0</minExclusive>
-      </attribute>
-      <attribute name="wait-timeout" type="integer">
-        <minInclusive>0</minInclusive>
-      </attribute>
+      <xsd:element ref="param" minOccurs="1" maxOccurs="1"/>
+      <xsd:element ref="pool" maxOccurs="1"/>
+      <xsd:element ref="visible" minOccurs="1" maxOccurs="1"/>
 
-    </archetype>
-  </element>
+      <xsd:attribute name="res-name" type="NMTOKEN" minOccurs="1"/>
+      <xsd:attribute name="res-type" type="NMTOKEN" minOccurs="1"/>
+      <xsd:attribute name="res-auth" default="container">
+        <xsd:enumeration>
+          <xsd:literal>cotainer</xsd:literal>
+          <xsd:literal>application</xsd:literal>
+        </xsd:enumeration>
+      </xsd:attribute>
+
+    </xsd:complexType>
+  </xsd:element>
+
+  <!--
+  <xsd:element name="pool" maxOccurs="1">
+    <xsd:complexType content="empty">
+
+      <xsd:attribute name="upper-limit" type="integer">
+        <xsd:minInclusive>-1</xsd:minInclusive>
+      </xsd:attribute>
+      <xsd:attribute name="desired-size" type="integer">
+        <xsd:minInclusive>0</xsd:minInclusive>
+      </xsd:attribute>
+      <xsd:attribute name="prune-factor" type="real">
+        <xsd:minInclusive>0</xsd:minInclusive>
+        <xsd:maxInclusive>1</xsd:maxInclusive>
+      </xsd:attribute>
+      <xsd:attribute name="check-every" type="integer">
+        <xsd:minExclusive>0</xsd:minExclusive>
+      </xsd:attribute>
+      <xsd:attribute name="wait-timeout" type="integer">
+        <xsd:minInclusive>0</xsd:minInclusive>
+      </xsd:attribute>
+
+    </xsd:complexType>
+  </xsd:element>
+  -->
+  
+  <xsd:element name="pool">
+    <xsd:complexType content="elemOnly">
+
+      <xsd:element ref="resource-limits" minOccurs="1" maxOccurs="1"/>
+    </xsd:complexType>
+  </xsd:element>
+  
+  <xsd:element name="resource-limits" maxOccurs="1">
+    <xsd:complexType content="empty">
+
+      <xsd:attribute name="upper-limit" type="integer">
+        <xsd:minInclusive>-1</xsd:minInclusive>
+      </xsd:attribute>
+      <xsd:attribute name="desired-size" type="integer">
+        <xsd:minInclusive>0</xsd:minInclusive>
+      </xsd:attribute>
+      <xsd:attribute name="prune-factor" type="real">
+        <xsd:minInclusive>0</xsd:minInclusive>
+        <xsd:maxInclusive>1</xsd:maxInclusive>
+      </xsd:attribute>
+      <xsd:attribute name="check-every" type="integer">
+        <xsd:minExclusive>0</xsd:minExclusive>
+      </xsd:attribute>
+      <xsd:attribute name="wait-timeout" type="integer">
+        <xsd:minInclusive>0</xsd:minInclusive>
+      </xsd:attribute>
+
+    </xsd:complexType>
+  </xsd:element>
+
+  <xsd:element name="visible">
+    <xsd:complexType content="elemOnly">
+
+      <xsd:element ref="app-path"/>
+
+    </xsd:complexType>
+  </xsd:element>
 
 
-  <element name="visible">
-    <archetype content="elemCont" model="closed" order="seq">
-
-      <element ref="app-path"/>
-
-    </archetype>
-  </element>
+  <xsd:element name="app-path">
+    <xsd:complexType content="textOnly">
+    </xsd:complexType>
+  </xsd:element>
 
 
-  <element name="app-path">
-    <archetype content="textCont" model="closed">
-    </archetype>
-  </element>
+  <xsd:element name="env-entry">
+    <xsd:complexType content="elemOnly">
+
+      <xsd:element ref="description" minOccurs="0" maxOccurs="1"/>
+      <xsd:element ref="env-entry-name" minOccurs="1" maxOccurs="1"/>
+      <xsd:element ref="env-entry-type" minOccurs="1" maxOccurs="1"/>
+      <xsd:element ref="env-entry-value" minOccurs="0" maxOccurs="1"/>
+
+    </xsd:complexType>
+  </xsd:element>
+
+  <xsd:element name="env-entry-name">
+    <xsd:complexType content="textOnly">
+    </xsd:complexType>
+  </xsd:element>
+
+  <xsd:element name="env-entry-type">
+    <xsd:complexType content="textOnly">
+    </xsd:complexType>
+  </xsd:element>
+
+  <xsd:element name="env-entry-value">
+    <xsd:complexType content="textOnly">
+    </xsd:complexType>
+  </xsd:element>
 
 
-  <element name="env-entry">
-    <archetype content="elemCont" model="closed" order="seq">
-
-      <element ref="description" minOccurs="0" maxOccurs="1">
-      <element ref="env-entry-name" minOccurs="1" maxOccurs="1">
-      <element ref="env-entry-type" minOccurs="1" maxOccurs="1">
-      <element ref="env-entry-value" minOccurs="0" maxOccurs="1">
-
-    </archetype>
-  </element>
-
-  <element name="env-entry-name">
-    <archetype content="textCont" model="closed">
-    </archetype>
-  </element>
-
-  <element name="env-entry-type">
-    <archetype content="textCont" model="closed">
-    </archetype>
-  </element>
-
-  <element name="env-entry-value">
-    <archetype content="textCont" model="closed">
-    </archetype>
-  </element>
+  <xsd:element name="description">
+    <xsd:complexType content="textOnly">
+    </xsd:complexType>
+  </xsd:element>
 
 
-  <element name="description">
-    <archetype content="textCont" model="closed">
-    </archetype>
-  </element>
-
-
-</schema>
+</xsd:schema>
 
