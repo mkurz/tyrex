@@ -44,6 +44,9 @@
            set-method="addConfiguration">
       <bind-xml name="connector" node="element" />
     </field>
+    <field name="anyResource" type="java.util.Iterator"
+           get-method="listConfigurations" />
+      <bind-xml node="element" />
   </class>
 
 

@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionDomain.java,v 1.20 2001/03/19 18:44:46 arkin Exp $
+ * $Id: TransactionDomain.java,v 1.21 2001/03/21 04:22:50 arkin Exp $
  */
 
 
@@ -86,7 +86,7 @@ import tyrex.util.Logger;
  * {@link #terminate terminate}.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.20 $ $Date: 2001/03/19 18:44:46 $
+ * @version $Revision: 1.21 $ $Date: 2001/03/21 04:22:50 $
  */
 public abstract class TransactionDomain
 {
@@ -434,6 +434,18 @@ public abstract class TransactionDomain
         } catch ( Exception except ) {
             throw new DomainConfigurationException( except );
         }
+
+        try {
+        org.exolab.castor.xml.Marshaller marshaller;
+        marshaller = new org.exolab.castor.xml.Marshaller( new java.io.OutputStreamWriter( System.out ) );
+        marshaller.setMapping( mapping );
+        marshaller.marshal( config );
+        } catch ( Exception except ) {
+            throw new DomainConfigurationException( except );
+        }
+
+
+
         // Check that domain name is valid.
         domainName = config.getName();
         if ( domainName == null || domainName.trim().length() == 0 )
