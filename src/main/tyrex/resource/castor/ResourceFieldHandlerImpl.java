@@ -51,7 +51,6 @@ import org.exolab.castor.mapping.FieldHandler;
 import org.exolab.castor.mapping.ValidityException;
 import org.exolab.castor.types.AnyNode;
 import org.exolab.castor.xml.NodeType;
-import tyrex.util.Logger;
 
 /////////////////////////////////////////////////////////////////////
 // ResourceFieldHandlerImpl
@@ -120,8 +119,8 @@ class ResourceFieldHandlerImpl
 		try {
 			actualValue = getValueToBeSet(value);
 
-			if (Logger.resource.isDebugEnabled()) {
-				Logger.resource.debug("Setting value " + actualValue + " in object " + object);	
+			if (ResourceMappingLoader.CATEGORY.isDebugEnabled()) {
+				ResourceMappingLoader.CATEGORY.debug("Setting value " + actualValue + " in object " + object);	
 			}
 			_method.invoke(object, new Object[]{actualValue});
 		}

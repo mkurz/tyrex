@@ -55,7 +55,6 @@ import org.exolab.castor.xml.XMLFieldDescriptor;
 import org.exolab.castor.xml.util.DefaultNaming;
 import org.exolab.castor.xml.util.XMLClassDescriptorImpl;
 import org.exolab.castor.xml.util.XMLFieldDescriptorImpl;
-import tyrex.util.Logger;
 
 /////////////////////////////////////////////////////////////////////
 // ResourceClassDescriptorImpl
@@ -87,13 +86,11 @@ class ResourceClassDescriptorImpl
 										
 										public void setValue(Object object, Object value)
 											throws IllegalStateException, IllegalArgumentException {
-											if (Logger.resource.isDebugEnabled()) {
-												Logger.resource.debug("Ignoring setting value " + 
+											ResourceMappingLoader.CATEGORY.error("Ignoring setting value " + 
 																	  ((value instanceof AnyNode) 
 																		? ((AnyNode)value).getStringValue() 
 																		: value) + 
 																	  " in object " + object);	
-											}
 										}
 									
 										public void resetValue(Object object)
@@ -148,9 +145,7 @@ class ResourceClassDescriptorImpl
 		fieldDescriptor = super.getFieldDescriptor(name, nodeType);
 
 		if (null == fieldDescriptor) {
-			if (Logger.resource.isDebugEnabled()) {
-				Logger.resource.debug("Creating dummy field handler for field " + name);	
-			}
+			ResourceMappingLoader.CATEGORY.error("Ignoring field " + name);	
 			fieldDescriptor = new XMLFieldDescriptorImpl(java.lang.Object.class, name, name, nodeType);
 			((XMLFieldDescriptorImpl)fieldDescriptor).setHandler(DEFAULT_FIELD_HANDLER);
 			fieldDescriptor.setContainingClassDescriptor(this);
@@ -186,8 +181,8 @@ class ResourceClassDescriptorImpl
 					name = method.getName().substring(3);
 					xmlName = NAMING.toXMLName(name);
 
-					if (Logger.resource.isDebugEnabled()) {
-						Logger.resource.debug("Creating resource field descriptor for " + 
+					if (ResourceMappingLoader.CATEGORY.isDebugEnabled()) {
+						ResourceMappingLoader.CATEGORY.debug("Creating resource field descriptor for " + 
 											  method.getName() + " and xml-name " + xmlName);	
 					}
 

@@ -56,7 +56,6 @@ import org.exolab.castor.mapping.xml.FieldMapping;
 import org.exolab.castor.xml.XMLMappingLoader;
 import org.exolab.castor.xml.util.XMLFieldDescriptorImpl;
 import tyrex.resource.ResourceConfig;
-import tyrex.util.Logger;
 
 /////////////////////////////////////////////////////////////////////
 // ResourceMappingLoader
@@ -72,6 +71,11 @@ import tyrex.util.Logger;
  */
 public final class ResourceMappingLoader 
 	extends XMLMappingLoader {
+
+	/**
+	 * Logging category
+	 */
+	static final Category CATEGORY = Category.getInstance("tyrex.resource.castor");
 
 	/**
 	 * The new class to create a class descriptor for
@@ -105,8 +109,8 @@ public final class ResourceMappingLoader
 		descriptor = super.getDescriptor(type);
 
 		if ((null == descriptor) && (type == _newClass)) {
-			if (Logger.resource.isDebugEnabled()) {
-				Logger.resource.debug("Creating resource class descriptor for " + type);
+			if (CATEGORY.isDebugEnabled()) {
+				CATEGORY.debug("Creating resource class descriptor for " + type);
 			}
 			try {
 				descriptor = new ResourceClassDescriptorImpl(type);
