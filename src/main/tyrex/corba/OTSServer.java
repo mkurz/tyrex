@@ -142,7 +142,9 @@ public final class OTSServer
         
         try
         {
-        	txDomain = tyrex.tm.TransactionDomain.createDomain( config_file );
+        	txDomain = tyrex.tm.TransactionDomain.getDomain( config_file );
+        	
+        	if( txDomain == null ) txDomain = tyrex.tm.TransactionDomain.createDomain( config_file );
         }
         catch ( tyrex.tm.DomainConfigurationException ex )
         {
@@ -184,13 +186,7 @@ public final class OTSServer
         return ots;
     }
     
-    /**
-     * Shutdown the transaction manager
-     */
-    public static void shutdownTransactionManager()
-    {
-    	txDomain.removeDomain( txDomain.getDomainName() );
-    }
+   
     
         /**
          * Application entry point
