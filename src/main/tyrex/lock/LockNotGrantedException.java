@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: LockTimeoutException.java,v 1.1 2001/03/12 19:39:15 arkin Exp $
+ * $Id: LockNotGrantedException.java,v 1.1 2001/03/23 04:03:17 arkin Exp $
  */
 
 
@@ -52,14 +52,14 @@ package tyrex.lock;
  * to acquire or change a lock.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2001/03/12 19:39:15 $
+ * @version $Revision: 1.1 $ $Date: 2001/03/23 04:03:17 $
  */
-public final class LockTimeoutException
+public final class LockNotGrantedException
     extends Exception
 {
 
 
-    public LockTimeoutException( String message )
+    public LockNotGrantedException( String message )
     {
         super( message );
     }
