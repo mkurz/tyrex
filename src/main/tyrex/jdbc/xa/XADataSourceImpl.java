@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: XADataSourceImpl.java,v 1.9 2000/09/27 22:11:16 mohammed Exp $
+ * $Id: XADataSourceImpl.java,v 1.10 2000/09/27 22:13:42 mohammed Exp $
  */
 
 
@@ -400,9 +400,9 @@ public abstract class XADataSourceImpl
      */
     public final void setIsolationLevel( int isolationLevel )
     {
-    if ( ( isolationLevel != Connection.TRANSACTION_READ_UNCOMMITTED ) ||
-         ( isolationLevel != Connection.TRANSACTION_READ_COMMITTED ) || 
-         ( isolationLevel != Connection.TRANSACTION_REPEATABLE_READ ) ||
+    if ( ( isolationLevel != Connection.TRANSACTION_READ_UNCOMMITTED ) &&
+         ( isolationLevel != Connection.TRANSACTION_READ_COMMITTED ) && 
+         ( isolationLevel != Connection.TRANSACTION_REPEATABLE_READ ) &&
          ( isolationLevel != Connection.TRANSACTION_SERIALIZABLE ) ) {
         throw new IllegalArgumentException("Invalid isolation level " + isolationLevel );
     }

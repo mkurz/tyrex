@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: EnabledDataSource.java,v 1.8 2000/09/25 23:32:50 mohammed Exp $
+ * $Id: EnabledDataSource.java,v 1.9 2000/09/27 22:11:16 mohammed Exp $
  */
 
 
@@ -174,14 +174,6 @@ public class EnabledDataSource
 
 
     /**
-     * The default isolation level for all global transactions.
-     * <tt>TRANSACTION_NONE</tt> specifies that the driver picks
-     * it's own default isolation level.
-     */
-    private int            _isolationLevel = Connection.TRANSACTION_SERIALIZABLE;
-
-
-    /**
      * Holds the log writer to which all messages should be
      * printed. The default writer is obtained from the driver
      * manager, but it can be specified at the datasource level
@@ -201,6 +193,7 @@ public class EnabledDataSource
     {
 	_logWriter = DriverManager.getLogWriter();
 	_loginTimeout = DriverManager.getLoginTimeout();
+    setIsolationLevel(Connection.TRANSACTION_SERIALIZABLE);
     }
 
     
@@ -461,9 +454,9 @@ public class EnabledDataSource
      *
      * @return The transaction isolation level
      */
-    public String getIsolationLevel()
+    public String getIsolationLevelAsString()
     {
-	switch ( _isolationLevel ) {
+	switch ( getIsolationLevel() ) {
 	case Connection.TRANSACTION_READ_UNCOMMITTED:
 	    return "ReadUncommitted";
 	case Connection.TRANSACTION_READ_COMMITTED:
@@ -496,38 +489,17 @@ public class EnabledDataSource
     public void setIsolationLevel( String level )
     {
 	if ( level == null )
-	    _isolationLevel = Connection.TRANSACTION_NONE;
+	    setIsolationLevel(Connection.TRANSACTION_READ_COMMITTED);
 	else if ( level.equals( "ReadUncommitted" ) )
-	    _isolationLevel = Connection.TRANSACTION_READ_UNCOMMITTED;
+	    setIsolationLevel(Connection.TRANSACTION_READ_UNCOMMITTED);
 	else if ( level.equals( "ReadCommitted" ) )
-	    _isolationLevel = Connection.TRANSACTION_READ_COMMITTED;
+	    setIsolationLevel(Connection.TRANSACTION_READ_COMMITTED);
 	else if ( level.equals( "RepeatableRead" ) )
-	    _isolationLevel = Connection.TRANSACTION_SERIALIZABLE;
+	    setIsolationLevel(Connection.TRANSACTION_SERIALIZABLE);
 	else if ( level.equals( "Serializable" ) )
-	    _isolationLevel = Connection.TRANSACTION_SERIALIZABLE;
+	    setIsolationLevel(Connection.TRANSACTION_SERIALIZABLE);
 	else
-	    _isolationLevel = Connection.TRANSACTION_NONE;
-    }
-
-
-    /**
-     * Sets the transaction isolation level used with all new
-     * transactions, or {@link Connection#TRANSACTION_NONE} if the
-     * driver's default isolation level should be used.
-     * The standard name for this property is <tt>isolationLevel</tt>.
-     *
-     * @param level The transaction isolation level
-     * @see Connection
-     */
-    public void setIsolationLevel( int level )
-    {
-	_isolationLevel = level;
-    }
-
-
-    public int isolationLevel()
-    {
-	return _isolationLevel;
+	    setIsolationLevel(Connection.TRANSACTION_READ_COMMITTED);
     }
 
 
@@ -590,8 +562,8 @@ public class EnabledDataSource
 	    ref.add( new StringRefAddr( "user", _user ) );
 	if ( _password != null )
 	    ref.add( new StringRefAddr( "password", _password ) );
-	if ( getIsolationLevel() != null )
-	    ref.add( new StringRefAddr( "isolationLevel", getIsolationLevel() ) );
+	if ( getIsolationLevelAsString() != null )
+	    ref.add( new StringRefAddr( "isolationLevel", getIsolationLevelAsString() ) );
 	ref.add( new StringRefAddr( "transactionTimeout", Integer.toString( getTransactionTimeout() ) ) );
  	return ref;
     }
