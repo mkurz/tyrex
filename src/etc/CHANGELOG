@@ -1,5 +1,17 @@
+Version 0.9.4 February 2 2000
+-----------------------------
+
+- Added first set of documentation.
+
+
 Version 0.9.3 January 21 2000
 -----------------------------
+
+- Modified tyrex.xml to add support for transaction domains and
+  interceptors.
+
+- Added Tyrex interceptors and provided default interceptors for
+  logging and performance monitoring in package tyrex.tools.
 
 - Added TransactionDomain. Multiple transaction monitors are now
   supported each running within its own transaction domain, where all
@@ -10,6 +22,9 @@ Version 0.9.3 January 21 2000
 - Added package for resource factories and pool management, defining
   the interfaces for resource limits, resource pool and resouce pool
   manager to be used across Tyrex.
+
+- Moved all test cases to separate package tests build with a separate
+  target 'tests'.
 
 
 Version 0.9.2 January 10 2000

@@ -1,10 +1,4 @@
--- Migrate implementation to use TransactionDomain instead of TransactionServer.
-
--- New configuration file supporting multiple transaction domains and ResourceLimits.
-
 -- Finish interfaces in connector package.
-
--- Merge server and connector Heuristic interfaces.
 
 -- Configuration for logger.
 

@@ -98,7 +98,7 @@
     <copyfile src="${source}/etc/CHANGELOG" dest="${classes}/CHANGELOG" />
 
     <jar jarfile="${dist}/${archive}.jar" basedir="${classes}"
-         manifest="${classes}/MANIFEST.MF" includes="LICENSE,README,CHANGELOG,org/**" />
+         manifest="${classes}/MANIFEST.MF" includes="LICENSE,README,CHANGELOG,tyrex/**" />
   </target>
 
 

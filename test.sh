@@ -1,29 +1,27 @@
 #! /bin/sh
 
-# $Id: test.sh,v 1.3 2000/01/18 04:56:13 arkin Exp $
+# $Id: test.sh,v 1.4 2000/02/23 21:19:05 arkin Exp $
 
 if [ -z "$JAVA_HOME" ] ; then
-  JAVAC=`which java`
-  if [ -z "$JAVAC" ] ; then
+  JAVA=`which java`
+  if [ -z "$JAVA" ] ; then
     echo "Cannot find JAVA. Please set your PATH."
     exit 1
   fi
-  JAVA_BIN=`dirname $JAVAC`
+  JAVA_BIN=`dirname $JAVA`
   JAVA_HOME=$JAVA_BIN/..
 fi
 
-JAVAC=$JAVA_HOME/bin/java
+JAVA=$JAVA_HOME/bin/java
 
+CLASSPATH=./build/classes:./build/tests:$CLASSPATH
 CLASSPATH=`echo lib/*.jar | tr ' ' ':'`:$CLASSPATH
-CLASSPATH=build/classes/:build/tests/:src/etc/:$CLASSPATH
+CLASSPATH=$JAVA_HOME/lib/tools.jar:$CLASSPATH
 
 if [ -z $1 ] ; then
-  echo "Usage: test.sh [Demo|<pkg> [<params>]]";
-  exit 1;
+  echo "Usage: test <pkg>";
+  exit;
 fi
-if [ $1 = "Demo" ] ; then
-  $JAVAC -cp $CLASSPATH tyrex.tools.Demo $2 $3 $4
-else
-  $JAVAC -cp $CLASSPATH tests.$1 $2 $3 $4
-fi
+$JAVA -cp $CLASSPATH tests.$1 $2 $3 $4 $5 $6
+
 
