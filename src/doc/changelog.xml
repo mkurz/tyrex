@@ -2,6 +2,9 @@
 <document url="http://tyrex.sourceforge.net/changelog.xml">
   <body>
     <title>Change log</title>
+<section title="Version 1.0.2  May 6 2004"><pre>
+- Moved logging to be based on commons-logging instead of log4j. This enables greater deployment flexibility.
+    </pre></section>    
 <section title="Version 1.0.1  November 11 2003"><pre>
 - Modified domain schema, so data source configuration does not demand jar to be specified explicitly.
   If datasource jar and / or path not specified - the JVM classpath will simply be used. This change
