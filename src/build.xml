@@ -1,4 +1,4 @@
-<project name="Tyrex" default="all" basedir=".">
+<project name="Tyrex" default="all" basedir="..">
 
   <target name="init">
     <property name="project" value="tyrex" />
@@ -50,23 +50,24 @@
 
 
   <!-- Prepare target directories -->
-  <target name="prepare">
+  <target name="prepare" depends="init">
     <mkdir dir="${build}"/>
     <mkdir dir="${classes}"/>
     <mkdir dir="${dist}"/>
 
     <!-- Copy the DTD and schema to the schema directory -->
-    <deltree dir="${schema}" />
+    <delete  dir="${schema}" />
     <mkdir   dir="${schema}" />
 
-    <copydir src="${main}/tyrex/conf/" includes="*.dtd,*.xsd"
-             dest="${schema}" />
+    <copy todir="${schema}">
+       <fileset dir="${main}/tyrex/conf" includes="*.dtd,*.xsd" />
+    </copy>
   </target>
 
   <!-- Kill all the directories created in prepare -->
-  <target name="clean">
-    <deltree dir="${build}"/>
-    <deltree dir="${dist}"/>
+  <target name="clean" depends="init">
+    <delete dir="${build}"/>
+    <delete dir="${dist}"/>
   </target>
 
 
@@ -96,7 +97,7 @@
            classpath="${classpath}" debug="off" deprecation="off" optimize="on" />
   </target>
 
-  <target name="main-iiop" >
+  <target name="main-iiop" depends="init">
     <javac srcdir="${main}" destdir="${classes}" 
            includes="tyrex/corba/*"/>
   </target>
@@ -106,9 +107,22 @@
     <mkdir dir="${build}/tests" />
     <javac srcdir="${source}/tests" destdir="${build}/tests"
            classpath="${classpath}" debug="on" deprecation="${deprecation}" 
-           excludes="hidden/**/*,jdbc/spi/*" />
+           excludes="hidden/**/*,jdbc/spi/*,ots/**" />
   </target>
 
+  <!-- Build the test iiop packages -->
+  <target name="tests-iiop" depends="prepare">
+    <mkdir dir="${build}/tests" />
+    <java classname="org.openorb.compiler.IdlCompiler" fork="yes">
+    	<arg line="${source}/tests/ots/idl/test.idl -d ${build}/tests" />
+    </java>
+    <javac srcdir="${build}/tests" destdir="${build}/tests"
+           classpath="${classpath}" debug="on" deprecation="${deprecation}" 
+           includes="otstests/**" />
+    <javac srcdir="${source}/tests" destdir="${build}/tests"
+           classpath="${classpath}" debug="on" deprecation="${deprecation}" 
+           includes="ots/**" />    
+  </target>
 
   <!-- Build the JAR file using main-opt -->
   <target name="jar" depends="main-opt">
