@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: TransactionImpl.java,v 1.1 2000/08/28 19:01:52 mohammed Exp $
+ * $Id: TransactionImpl.java,v 1.2 2000/08/31 00:28:29 mohammed Exp $
  */
 
 
@@ -79,7 +79,7 @@ import tyrex.util.Messages;
  * they are added.
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2000/08/28 19:01:52 $
+ * @version $Revision: 1.2 $ $Date: 2000/08/31 00:28:29 $
  * @see XAResourceHolder
  * @see TransactionManagerImpl
  * @see TransactionDomain
@@ -948,7 +948,7 @@ final class TransactionImpl
 	// decision not to commit this transaction.
 	if ( _enlisted != null ) {
 
-	    endEnlistedResources();
+	    endEnlistedResourcesForCommit();
 
 	    // Prepare all the resources that we are about to commit.
 	    // Shared resources do not need preparation, they will not
@@ -1184,7 +1184,8 @@ final class TransactionImpl
 
     /**
      * If there any enlisted resources end them with
-     * with the flag XAResource.TMSUCCESS.
+     * with the flag XAResource.TMSUCCESS as the resources
+     * are to be committed.
      * <P>
      * If an exception occurs set the system error and
      * add {@link Heuristic.Rollback} to the current
@@ -1193,30 +1194,51 @@ final class TransactionImpl
      * @see #_heuristic
      * @see #error
      */
-    private void endEnlistedResources()
+    private void endEnlistedResourcesForCommit()
     {
     // We always end these resources, even if we made a heuristic
 	// decision not to commit this transaction.
 	if ( _enlisted != null ) {
-        XAResourceHolder xaRes;
-	    // Tell all the XAResources that their transaction
-	    // has ended successfuly. Notice handling of
-	    // suspended resources.
+        // Tell all the XAResources that their transaction
+	    // has ended successfuly. 
 	    for ( int i = 0 ; i < _enlisted.length ; ++i ) {
-		xaRes = _enlisted[ i ];
-		if ( ( xaRes.endFlag == XAResource.TMNOFLAGS ) || 
-             ( xaRes.endFlag == XAResource.TMSUSPEND ) ) {
-            try {
-                xaRes.xa.end( xaRes.xid, XAResource.TMSUCCESS );
-                xaRes.endFlag = XAResource.TMSUCCESS;
-    		} catch ( Exception except ) {
-                // Error occured, we won't be commiting this transaction.
-    		    _heuristic |= Heuristic.Rollback;
-    		    error( except );
-    		}
+		try {
+            endForTransactionBoundary( _enlisted[ i ] );
+        } catch ( Exception except ) {
+            // Error occured, we won't be commiting this transaction.
+            _heuristic |= Heuristic.Rollback;
+            error( except );
         }
-	    }
+        }
+	}
     }
+
+
+    /**
+     * End the work performed by the specified xa resource
+     *  successfully for a transaction boundary ie commit or rollback
+     *
+     * @param xaRes the xa resource holder
+     * @throws XAException if there is a problem ending
+     *      the work
+     * @throws SystemException if the xa resource is not
+     *      in the proper state for its work to be ended.
+     */
+    private void endForTransactionBoundary( XAResourceHolder xaRes )
+        throws SystemException, XAException
+    {
+        if ( ( xaRes.endFlag == XAResource.TMNOFLAGS ) || 
+             ( xaRes.endFlag == XAResource.TMSUSPEND ) ) {
+            if (xaRes.endFlag == XAResource.TMSUSPEND) {
+                XAResourceHelperManager.getHelper( xaRes.xa ).endSuspended( xaRes.xa, xaRes.xid );
+            } else {
+                xaRes.xa.end( xaRes.xid, XAResource.TMSUCCESS );
+            }
+            xaRes.endFlag = XAResource.TMSUCCESS;
+        } else if ( xaRes.endFlag != XAResource.TMSUCCESS ) {
+            throw new SystemException( "XA resource is not in the proper state to be ended" );
+        }
+
     }
      
     /**
@@ -1313,8 +1335,7 @@ final class TransactionImpl
     // We always end these resources, even if we made a heuristic
 	// decision not to commit this transaction.
 	if ( _enlisted != null ) {
-
-	    endEnlistedResources();
+        endEnlistedResourcesForCommit();
     }
 	// if the heuristic has not changed set it to commit
     if ( _heuristic == Heuristic.ReadOnly ) {
@@ -1596,24 +1617,17 @@ final class TransactionImpl
 
 	if ( _enlisted != null ) {
 	    // Tell all the XAResources that their transaction
-	    // has ended with a failure. Notice handling of
-	    // suspended resource.
+	    // has ended with a failure.
 	    for ( i = 0 ; i < _enlisted.length ; ++i ) {
-		xaRes = _enlisted[ i ];
-		if ( ( xaRes.endFlag == XAResource.TMNOFLAGS ) || 
-             ( xaRes.endFlag == XAResource.TMSUSPEND ) ) {
-            try {
-    		    xaRes.xa.end( xaRes.xid, XAResource.TMSUCCESS );
-                xaRes.endFlag = XAResource.TMSUCCESS;
-
-    		} catch ( XAException except ) {
-    		    xaExceptionOccurred( except );
-    		} catch ( Exception except ) {
-    		    _heuristic = _heuristic | Heuristic.Unknown;
-    		    error( except );
-    		}
+		try {
+            endForTransactionBoundary( _enlisted[ i ] );
+        } catch ( XAException except ) {
+            xaExceptionOccurred( except );
+        } catch ( Exception except ) {
+            _heuristic = _heuristic | Heuristic.Unknown;
+            error( except );
         }
-	    }
+        }
 	    rollbackXAResources(_enlisted);
 	}
 
@@ -1880,7 +1894,7 @@ final class TransactionImpl
     /**
      * Suspend the resources associated with the transaction.
      * <P>
-     * The transactions that are already suspended are not affected.
+     * The resources that are already suspended are not affected.
      */
     synchronized void suspendResources()
     throws IllegalStateException, SystemException
@@ -1923,9 +1937,9 @@ final class TransactionImpl
             try {
             xaRes.xa.end( xaRes.xid, XAResource.TMSUSPEND );
             xaRes.endFlag = XAResource.TMSUSPEND;
-            } catch ( XAException except ) {
+            } /*catch ( XAException except ) {
                 //RM do nothing
-            } catch ( Exception except ) {
+            }*/ catch ( Exception except ) {
             throw new SystemException( except.toString() );
             }
         }
@@ -2296,9 +2310,6 @@ final class TransactionImpl
             return true;    
         }
     } catch (XAException e) {
-        System.out.println("shared");
-        // rm
-        e.printStackTrace();
         return false;
     }
 
@@ -2308,9 +2319,10 @@ final class TransactionImpl
 	// and to enlist it.
 	xaRes = new XAResourceHolder();
 	xaRes.xa = xa;
-	xaRes.xid = _xid.newBranch();
-	try {
-	    xa.start( xaRes.xid, XAResource.TMNOFLAGS );
+    
+    try {
+        xaRes.xid = XAResourceHelperManager.getHelper( xa ).getXid( _xid.newBranch() );
+        xa.start( xaRes.xid, XAResource.TMNOFLAGS );
 	    if ( _enlisted == null ) {
 		_enlisted = new XAResourceHolder[ 1 ];
 		_enlisted[ 0 ] = xaRes;
@@ -2326,7 +2338,7 @@ final class TransactionImpl
         //except.printStackTrace();
         return false;
 	} catch ( Exception except ) {
-	    throw new SystemException( except.toString() );
+        throw new SystemException( except.toString() );
 	}
 
     }
