@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionImpl.java,v 1.48 2002/05/07 10:27:50 mohammed Exp $
+ * $Id: TransactionImpl.java,v 1.49 2004/09/08 00:15:00 metaboss Exp $
  */
 
 
@@ -48,34 +48,35 @@ package tyrex.tm.impl;
 
 
 import java.rmi.RemoteException;
-import javax.transaction.Transaction;
-import javax.transaction.Status;
-import javax.transaction.Synchronization;
-import javax.transaction.RollbackException;
-import javax.transaction.SystemException;
+
 import javax.transaction.HeuristicMixedException;
 import javax.transaction.HeuristicRollbackException;
-import javax.transaction.xa.Xid;
-import javax.transaction.xa.XAResource;
+import javax.transaction.RollbackException;
+import javax.transaction.Status;
+import javax.transaction.Synchronization;
+import javax.transaction.SystemException;
+import javax.transaction.Transaction;
 import javax.transaction.xa.XAException;
-import org.omg.CosTransactions.Resource;
-import org.omg.CosTransactions.HeuristicRollback;
-import org.omg.CosTransactions.HeuristicMixed;
-import org.omg.CosTransactions.HeuristicHazard;
-import org.omg.CosTransactions.HeuristicCommit;
-import org.omg.CosTransactions.Vote;
-import org.omg.CosTransactions.Coordinator;
-import org.omg.CosTransactions.Inactive;
-import org.omg.CosTransactions.Control;
-import org.omg.CosTransactions.PropagationContext;
-import org.omg.CORBA.ORB;
+import javax.transaction.xa.XAResource;
+import javax.transaction.xa.Xid;
+
 import org.omg.CORBA.TRANSACTION_ROLLEDBACK;
+import org.omg.CosTransactions.Control;
+import org.omg.CosTransactions.HeuristicCommit;
+import org.omg.CosTransactions.HeuristicHazard;
+import org.omg.CosTransactions.HeuristicMixed;
+import org.omg.CosTransactions.HeuristicRollback;
+import org.omg.CosTransactions.Inactive;
+import org.omg.CosTransactions.PropagationContext;
+import org.omg.CosTransactions.Resource;
+import org.omg.CosTransactions.Vote;
+
+import tyrex.services.Clock;
 import tyrex.tm.Heuristic;
 import tyrex.tm.TyrexTransaction;
 import tyrex.tm.XAResourceCallback;
 import tyrex.tm.xid.BaseXid;
 import tyrex.tm.xid.XidUtils;
-import tyrex.services.Clock;
 import tyrex.util.Messages;
 
 
@@ -90,7 +91,7 @@ import tyrex.util.Messages;
  * they are added.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.48 $ $Date: 2002/05/07 10:27:50 $
+ * @version $Revision: 1.49 $ $Date: 2004/09/08 00:15:00 $
  * @see InternalXAResourceHolder
  * @see TransactionManagerImpl
  * @see TransactionDomain
@@ -911,13 +912,13 @@ final class TransactionImpl
         
         // if there is only one enlisted resource then yes
         if ( ( null != _enlisted ) && 
-             ( _enlisted._nextHolder != null ) && 
+             ( null == _enlisted._nextHolder) && 
              ( null == _delisted ) )
             return true;    
         
         // if there is only one delisted resource then yes
         if ( ( null != _delisted ) && 
-             ( _delisted._nextHolder != null ) && 
+             ( null == _delisted._nextHolder) &&  
              ( null == _enlisted ) )
             return true;    
         
