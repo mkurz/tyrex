@@ -81,12 +81,11 @@ Security Policy
 ---------------
 
 The Tomcat-Tyrex connector requires certain permissions to interact with
-the transaction manager and the JNDI environment naming context. If a
-security exception is reported, add permissions to your Tomcat directory
-in the policy.java file, e.g:
+the transaction manager and the JNDI environment naming context. Add the
+following permissions to your Tomcat directory in the policy.java file:
 
 grant codeBase "file:/opt/tomcat/-" {
-        permission java.security.AllPermission;
+        permission tyrex.TyrexPermission "*";
 };
 
 
