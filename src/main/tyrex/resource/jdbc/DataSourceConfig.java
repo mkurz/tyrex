@@ -68,7 +68,7 @@ import tyrex.util.Logger;
 /**
  * 
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  */
 public class DataSourceConfig
     extends ResourceConfig
@@ -85,6 +85,12 @@ public class DataSourceConfig
      * The resource, if created.
      */
     private Resource                _resource;
+
+
+    /**
+     * The class loader used to load the data source.
+     */
+    private ClassLoader             _classLoader;
 
 
     /**
@@ -136,7 +142,6 @@ public class DataSourceConfig
         Class                   cls;
         Object                  object;
         String                  paths;
-        ClassLoader             classLoader;
 
         name = _name;
         if ( name == null || name.trim().length() == 0 )
@@ -178,9 +183,9 @@ public class DataSourceConfig
         // Create a new URL class loader for the data source.
         // Create a new data source using the class names
         // specified in the configuration file.
-        classLoader = new URLClassLoader( urls, getClass().getClassLoader() );
+        _classLoader = new URLClassLoader( urls, getClass().getClassLoader() );
         try {
-            cls = classLoader.loadClass( className );
+            cls = _classLoader.loadClass( className );
             object = cls.newInstance();
         } catch ( Exception except ) {
             throw new ResourceException( except );
@@ -214,12 +219,14 @@ public class DataSourceConfig
         if ( factory == null )
             throw new ResourceException( "No data source configured" );
         if ( factory instanceof XADataSource ) {
-            _resource = new ConnectionPool( name, super.getLimits(), (XADataSource) factory, null,
-                                           txManager, Category.getInstance( Logger.resource.getName() + "." + name ) );
+            _resource = new ConnectionPool( name, super.getLimits(), _classLoader,
+                                            (XADataSource) factory, null,
+                                            txManager, Category.getInstance( Logger.resource.getName() + "." + name ) );
             return _resource;
         } else if ( factory instanceof ConnectionPoolDataSource ) {
-            _resource = new ConnectionPool( name, super.getLimits(), null, (ConnectionPoolDataSource) factory,
-                                           txManager, Category.getInstance( Logger.resource.getName() + "." + name ) );
+            _resource = new ConnectionPool( name, super.getLimits(), _classLoader,
+                                            null, (ConnectionPoolDataSource) factory,
+                                            txManager, Category.getInstance( Logger.resource.getName() + "." + name ) );
             return _resource;
         } else if ( factory instanceof DataSource ) {
             _resource = new DataSourceResource( (DataSource) factory );

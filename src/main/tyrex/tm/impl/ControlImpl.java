@@ -40,43 +40,26 @@
  *
  * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: ControlImpl.java,v 1.1 2001/02/27 00:37:52 arkin Exp $
+ * $Id: ControlImpl.java,v 1.2 2001/03/05 18:25:12 arkin Exp $
  */
 
 
 package tyrex.tm.impl;
 
 
-import org.omg.CosTransactions.otid_t;
 import org.omg.CosTransactions.Control;
+import org.omg.CosTransactions._ControlImplBase;
+import org.omg.CosTransactions.RecoveryCoordinator;
 import org.omg.CosTransactions.Terminator;
 import org.omg.CosTransactions.Coordinator;
-import org.omg.CosTransactions.RecoveryCoordinator;
-import org.omg.CosTransactions.CoordinatorTie;
-import org.omg.CosTransactions.TerminatorTie;
-import org.omg.CosTransactions.SubtransactionAwareResource;
-import org.omg.CosTransactions.Synchronization;
 import org.omg.CosTransactions.PropagationContext;
 import org.omg.CosTransactions.TransIdentity;
-import org.omg.CosTransactions.Status;
 import org.omg.CosTransactions.Unavailable;
+import org.omg.CosTransactions.Status;
 import org.omg.CosTransactions.Resource;
-import org.omg.CosTransactions.SubtransactionsUnavailable;
-import org.omg.CosTransactions.Inactive;
-import org.omg.CosTransactions.SynchronizationUnavailable;
-import org.omg.CosTransactions.NotSubtransaction;
-import org.omg.CosTransactions.HeuristicMixed;
-import org.omg.CosTransactions.HeuristicHazard;
-import org.omg.CosTransactions._ControlImplBase;
+import org.omg.CosTransactions.otid_t;
 import org.omg.CORBA.ORB;
 import org.omg.CORBA.Any;
-import org.omg.CORBA.INVALID_TRANSACTION;
-import org.omg.CORBA.TRANSACTION_ROLLEDBACK;
-import javax.transaction.SystemException;
-import javax.transaction.RollbackException;
-import javax.transaction.HeuristicMixedException;
-import javax.transaction.HeuristicRollbackException;
-import javax.transaction.InvalidTransactionException;
 import javax.transaction.xa.Xid;
 
 
@@ -92,7 +75,7 @@ import javax.transaction.xa.Xid;
  * and indirectly by {@link TransactionFactory}.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2001/02/27 00:37:52 $
+ * @version $Revision: 1.2 $ $Date: 2001/03/05 18:25:12 $
  * @see TransactionImpl
  *
  * Changes 
@@ -101,7 +84,7 @@ import javax.transaction.xa.Xid;
  */
 final class ControlImpl
     extends _ControlImplBase
-    implements Terminator, Coordinator, RecoveryCoordinator
+    implements Control, RecoveryCoordinator
 {
 
 
@@ -109,7 +92,7 @@ final class ControlImpl
      * The underlying transaction to which this control serves
      * as an interface.
      */
-    private final TransactionImpl    _tx;
+    protected final TransactionImpl  _tx;
 
 
     /**
@@ -117,7 +100,7 @@ final class ControlImpl
      * at index 0 and the top level parent at index n-1. If this
      * transaction is a top level, this variable is null.
      */
-    private final TransIdentity[]    _parents;
+    protected final TransIdentity[]  _parents;
 
 
     /**
@@ -187,14 +170,14 @@ final class ControlImpl
 	    if ( parent._parents == null ) {
 		// Parent is a top-level one, this control has
 		// one parent.
-		_parents = new TransIdentity[] { parent.get_identity() };
+		_parents = new TransIdentity[] { parent.getIdentity() };
 	    } else {
 		// Parent is not a top level one, copy the list
 		// of its parents and add itself as the first one.
 		_parents = new TransIdentity[ parent._parents.length + 1 ];
                 for ( int i = parent._parents.length ; i-- > 0 ; )
                     _parents[ i + 1 ] = parent._parents[ i ];
-		_parents[ 0 ] = parent.get_identity();
+		_parents[ 0 ] = parent.getIdentity();
 	    }
 	} else
             _parents = null;
@@ -210,35 +193,13 @@ final class ControlImpl
 	// if the transaction is active.
 	status = _tx.getStatus();
 	if ( status == javax.transaction.Status.STATUS_ACTIVE ||
-	     status == javax.transaction.Status.STATUS_MARKED_ROLLBACK )
-	    return terminator();
+	     status == javax.transaction.Status.STATUS_MARKED_ROLLBACK ) {
+            return getTerminator();
+        }
 	throw new Unavailable();
     }
 
     
-    /**
-     * This operation is used to return the CORBA reference for the terminator
-     * interface. As an object implementation cannot inherit from several
-     * CORBA skeletons, this class doesn't inherit from the Terminator 
-     * interface skeleton. So, we need to use the delegation approach.
-     * If the delegation object is not previously created this operation creates
-     * it.
-     */
-    private Terminator terminator()
-    {
-        ORB orb;
-
-        if ( _terminator != null )
-            return _terminator;
-        orb = _tx._txDomain._orb;
-        if ( orb == null )
-            return this;
-        _terminator = new TerminatorTie( this );
-        orb.connect( _terminator );
-        return _terminator;
-    }
-
-
     public Coordinator get_coordinator()
         throws Unavailable
     {
@@ -248,284 +209,91 @@ final class ControlImpl
         // if the transaction is active.
         status = _tx.getStatus();
         if ( status == javax.transaction.Status.STATUS_ACTIVE ||
-             status == javax.transaction.Status.STATUS_MARKED_ROLLBACK )
-            return coordinator();
+             status == javax.transaction.Status.STATUS_MARKED_ROLLBACK ) {
+            return getCoordinator();
+        }
         throw new Unavailable();
-   }
+    }
 
-    
-    /**
-     * This operation is used to return the CORBA reference for the terminator
-     * interface. As an object implementation cannot inherit from several
-     * CORBA skeletons, this class doesn't inherit from the Terminator 
-     * interface skeleton. So, we need to use the delegation approach.
-     * If the delegation object is not previously created this operation creates
-     * it.
-     */
-    private Coordinator coordinator()
+
+    protected Terminator getTerminator()
+    {
+        ORB orb;
+
+        if ( _terminator != null )
+            return _terminator;
+        _terminator = new TerminatorImpl( this );
+        orb = _tx._txDomain._orb;
+        if ( orb != null )
+            orb.connect( _terminator );
+        return _terminator;
+    }
+
+
+    protected Coordinator getCoordinator()
     {
         ORB orb;
 
         if ( _coordinator != null )
             return _coordinator;
+        _coordinator = new CoordinatorImpl( this );
         orb = _tx._txDomain._orb;
-        if ( orb == null )
-            return this;
-        _coordinator = new CoordinatorTie( this );
-        orb.connect( _coordinator );
+        if ( orb != null )
+            orb.connect( _coordinator );
         return _coordinator;
     }
 
 
-    public void commit( boolean reportHeuristic )
-        throws HeuristicMixed, HeuristicHazard
-    {        
-        // No heuristics are reported on subtransaction completion.
-        if ( _parents != null )
-            reportHeuristic = false;
-        try {
-            _tx.commit();
-	} catch ( IllegalStateException except ) {
-	    throw new INVALID_TRANSACTION( except.getMessage() );
-	} catch ( SystemException except ) {
-	    if ( reportHeuristic )
-		throw new HeuristicHazard();
-	} catch ( RollbackException except ) {
-	    throw new TRANSACTION_ROLLEDBACK( except.getMessage() );
-	} catch ( HeuristicRollbackException except ) {
-	    if ( reportHeuristic )
-		throw new TRANSACTION_ROLLEDBACK( except.getMessage() );
-	} catch ( HeuristicMixedException except ) {
-	    if ( reportHeuristic )
-		throw new HeuristicMixed();
-	} catch ( SecurityException except ) {
-            except.printStackTrace();
-	    if ( reportHeuristic )
-		throw new HeuristicHazard();
-	    throw new INVALID_TRANSACTION( except.toString() );
-        } finally {
-            deactivate();
-        }
-    }
-
-
-    public void rollback()
+    protected synchronized PropagationContext getPropagationContext()
     {
-	try {
-	    _tx.rollback();
-	} catch ( IllegalStateException except ) {
-	    throw new INVALID_TRANSACTION( except.getMessage() );
-	} catch ( SystemException except ) {
-	    throw new INVALID_TRANSACTION( except.toString() );
-	} finally {
-            deactivate();
-        }
-    }
-
-
-    public Status get_parent_status()
-    {
-	if ( _parents == null )
-	    return fromJTAStatus( _tx.getStatus() );
-	else
-	    return _parents[ 0 ].coord.get_status();
-    }
-
-
-    public Status get_status()
-    {
-	return fromJTAStatus( _tx.getStatus() );
-    }
-
-
-    public Status get_top_level_status()
-    {
-	if ( _parents == null )
-	    return fromJTAStatus( _tx.getStatus() );
-	else
-	    return _parents[ _parents.length - 1 ].coord.get_status();
-    }
-
-
-    public boolean is_top_level_transaction()
-    {
-	return ( _parents == null );
-    }
-
-
-    public boolean is_same_transaction( Coordinator coord )
-    {
-	if ( hash_transaction() == coord.hash_transaction() )
-            return true;
-        return false;
-    }
-
-
-    public boolean is_related_transaction( Coordinator coord )
-    {
-	if ( _parents == null )
-	    return is_same_transaction( coord );
-	for ( int i = _parents.length ; i-- > 0 ; ++i )
-	    if ( _parents[ i ].coord.is_ancestor_transaction( coord ) )
-		return true;
-	return false;
-    }
-
-
-    public boolean is_ancestor_transaction( Coordinator coord )
-    {
-        return coord.is_descendant_transaction( coordinator() );
-    }
-
-
-    public boolean is_descendant_transaction( Coordinator coord )
-    {
-       if ( _parents == null )
-           return false;
-       for ( int i = _parents.length ; i-- > 0 ; )
-           if ( _parents[ i ].coord.is_same_transaction( coord ) )
-               return true;
-       return false;
-    }
-
-
-    public boolean is_top_level_transaction( Coordinator coord )
-    {
-	return ( _parents == null );
-    }
-
-
-    public int hash_transaction()
-    {
-	return _tx._hashCode;
-    }
-
-
-    public int hash_top_level_tran()
-    {
-	if ( _parents == null )
-	    return _tx._hashCode;
-	else
-	    return _parents[ _parents.length - 1 ].coord.hash_transaction();
-    }
-
-
-    public RecoveryCoordinator register_resource( Resource resource )
-	throws Inactive
-    {
-	try {
-	    _tx.registerResource( resource );
-	    if ( resource instanceof SubtransactionAwareResource )
-		_tx.registerSynchronization( new SubtransactionAwareWrapper( (SubtransactionAwareResource) resource, this ) ); 
-	} catch ( RollbackException except ) {
-	    throw new TRANSACTION_ROLLEDBACK( except.getMessage() );
-	} catch ( IllegalStateException except ) {
-	    throw new Inactive();
-	} catch ( SystemException except ) {
-	    throw new Inactive();
-	}
-	return this;
-    }
-
-
-    public void register_subtran_aware( SubtransactionAwareResource resource )
-	throws Inactive, NotSubtransaction
-    {
-	if ( _parents == null )
-	    throw new NotSubtransaction();
-	try {
-	    _tx.registerSynchronization( new SubtransactionAwareWrapper( resource, this ) ); 
-	} catch ( RollbackException except ) {
-	    throw new TRANSACTION_ROLLEDBACK( except.getMessage() );
-	} catch ( IllegalStateException except ) {
-	    throw new Inactive();
-	} catch ( SystemException except ) {
-	    throw new Inactive();
-	}
-    }
-    
-
-
-    public void register_synchronization( Synchronization sync )
-	throws Inactive, SynchronizationUnavailable
-    {
-	try {
-	    _tx.registerSynchronization( new SynhronizationWrapper( sync ) );
-	} catch ( RollbackException except ) {
-	    throw new TRANSACTION_ROLLEDBACK( except.getMessage() );
-	} catch ( IllegalStateException except ) {
-	    throw new Inactive();
-	} catch ( SystemException except ) {
-	    throw new Inactive();
-	}
-    }
-
-
-    public void rollback_only()
-	throws Inactive
-    {
-	try {
-	    _tx.setRollbackOnly();
-	} catch ( IllegalStateException except ) {
-	    throw new Inactive();
-	} catch ( SystemException except ) {
-	    throw new Inactive();
-	}
-    }
-
-
-    public String get_transaction_name()
-    {
-	return _tx.toString();
-    }
-
-
-    public Control create_subtransaction()
-	throws SubtransactionsUnavailable, Inactive
-    {
-	TransactionImpl tx;
-	TransIdentity[] parents;
-
-	if ( _tx.getStatus() != javax.transaction.Status.STATUS_ACTIVE &&
-	     _tx.getStatus() != javax.transaction.Status.STATUS_MARKED_ROLLBACK )
-	    throw new Inactive();
-
-	try {
-	    tx = _tx._txDomain.createTransaction( _tx, null, 0 );
-	    return tx.getControl();
-	} catch ( SystemException except ) {
-	    throw new Inactive();
-	}
-    }
-
-
-    public synchronized PropagationContext get_txcontext()
-    {
-        ORB orb;
-        Any any;
+        ORB           orb;
+        Any           any;
+	Xid           xid;
+	otid_t        otid;
+	byte[]        global;
+        TransIdentity identity;
 
         if ( _pgContext != null )
             return _pgContext;
+	xid = _tx._xid;
+	global = xid.getGlobalTransactionId();
+	otid = new otid_t( xid.getFormatId(), global.length, global );
+	identity = new TransIdentity( getCoordinator(), getTerminator(), otid );
         orb = _tx._txDomain._orb;
         if ( orb == null ) 
 	    _pgContext = new PropagationContext( _tx._txDomain.getTransactionTimeout( _tx ),
-                                                 get_identity(), _parents != null ? _parents :
+                                                 identity, _parents != null ? _parents :
                                                  new TransIdentity[ 0 ], null );	    
         else {
             any = orb.create_any();
             _pgContext = new PropagationContext( _tx._txDomain.getTransactionTimeout( _tx ),
-                                                 get_identity(), _parents != null ? _parents :
+                                                 identity, _parents != null ? _parents :
                                                  new TransIdentity[ 0 ], any );
         }
         return _pgContext;
     }
 
 
+    protected TransIdentity getIdentity()
+    {
+	Xid           xid;
+	otid_t        otid;
+	byte[]        global;
+        TransIdentity identity;
+
+	xid = _tx._xid;
+	global = xid.getGlobalTransactionId();
+	otid = new otid_t( xid.getFormatId(), global.length, global );
+	identity = new TransIdentity( getCoordinator(), getTerminator(), otid );
+        return identity;
+    } 
+
+
     /**
      * This operation is used to deactivate all CORBA objects. It is used
      * when a transaction is ended ( rolled back or commited ).
      */
-    private void deactivate()
+    protected void deactivate()
     {
         ORB orb;
 
@@ -542,20 +310,7 @@ final class ControlImpl
 
     public Status replay_completion( Resource resource )
     {
-	return get_status();
-    }
-
-
-    TransIdentity get_identity()
-    {
-	Xid     xid;
-	otid_t  otid;
-	byte[]  global;
-
-	xid = _tx._xid;
-	global = xid.getGlobalTransactionId();
-	otid = new otid_t( xid.getFormatId(), global.length, global );
-	return new TransIdentity( coordinator(), terminator(), otid );
+	return CoordinatorImpl.fromJTAStatus( _tx.getStatus() );
     }
 
 
@@ -566,171 +321,6 @@ final class ControlImpl
     TransactionImpl getTransaction()
     {
 	return _tx;
-    }
-
-
-    /**
-     * Convert JTA transaction statuc code into OTS transaction code.
-     */
-    static Status fromJTAStatus( int status )
-    {
-	switch ( status ) {
-	case javax.transaction.Status.STATUS_ACTIVE:
-	    return Status.StatusActive;
-	case javax.transaction.Status.STATUS_MARKED_ROLLBACK:
-	    return Status.StatusMarkedRollback;
-	case javax.transaction.Status.STATUS_COMMITTING:
-	    return Status.StatusCommitting;
-	case javax.transaction.Status.STATUS_COMMITTED:
-	    return Status.StatusCommitted;
-	case javax.transaction.Status.STATUS_ROLLING_BACK:
-	    return Status.StatusRollingBack;
-	case javax.transaction.Status.STATUS_ROLLEDBACK:
-	    return Status.StatusRolledBack;
-	case javax.transaction.Status.STATUS_PREPARED:
-	    return Status.StatusPrepared;
-	case javax.transaction.Status.STATUS_PREPARING:
-	    return Status.StatusPreparing;
-	case javax.transaction.Status.STATUS_NO_TRANSACTION:
-	    return Status.StatusNoTransaction;
-	case javax.transaction.Status.STATUS_UNKNOWN:
-	default:
-	    return Status.StatusUnknown;
-	}
-    }
- 
-
-    /**
-     * Synchronization wrapper necessary to feed an OTS synchronization
-     * object into a JTA transaction.
-     *
-     * Caveat: TransactionImpl accepts multiple synchronization
-     * registration and consolidates them based on reference equality.
-     * This means that registering the same OTS synchronization twice
-     * will lead to double notification.
-     */
-    private static class SynhronizationWrapper
-        implements javax.transaction.Synchronization
-    {
-        
-        
-        /**
-         * The OTS synchronization object to which JTA synchronization
-         * events will be directed.
-         */
-        private final Synchronization _sync;
-        
-        
-        /**
-         * Construct a JTA synchronization listener which will direct
-         * notifications to the underlying OTS synchronization object.
-         *
-         * @param sync The OTS synchronization object to which JTA
-         *   synchronization events will be directed
-         */
-        SynhronizationWrapper( Synchronization sync )
-        {
-            _sync = sync;
-        }
-        
-    
-        public void afterCompletion( int status )
-        {
-            _sync.after_completion( ControlImpl.fromJTAStatus( status ) );
-        }
-        
-        
-        public void beforeCompletion()
-        {
-            _sync.before_completion();
-        }   
-        
-    }
-
-
-    /**
-     * Synchronization wrapper necessary to feed an OTS subtransaction
-     * aware resource into a JTA transaction as a synchronization.
-     * {@link TransactionImpl} can notify of subtransaction commit and
-     * rollback only through the sychronization mechanism. This happens
-     * to match well to {@link SubtransactionAwareResource} needs.
-     *
-     * Caveat: TransactionImpl accepts multiple synchronization
-     * registration and consolidates them based on reference equality.
-     * This means that registering the same OTS subtransaction aware
-     * resource twice will lead to double notification.
-     */
-    private static class SubtransactionAwareWrapper
-        implements javax.transaction.Synchronization
-    {
-        
-
-        // IMPLEMENTATION NOTES:
-        //
-        //   The OTS resource wants to know immediately as the
-        //   subtransaction is being committed or rolledback.
-        //
-        //   In the current implementation, commit on a subtransaction
-        //   not from its parent will only engage the preparation
-        //   stage. Therefore the notification has to be done at the
-        //   point of beforeCompletion.
-        //
-        //   Rollback will always be done fully and will report
-        //   afterCompletion. Since commit will also report
-        //   afterCompletion, we conditionally report only a rollback.
-        
-
-        /**
-         * The subtransaction aware resource to which subtransaction
-         * events will be directed.
-         */
-        private final SubtransactionAwareResource _aware;
-        
-        
-        /**
-         * The subtransaction which performed the registration.
-         * This reference will be passed on the before-completion
-         * notification.
-         */
-        private final Coordinator                 _parent;
-        
-        
-        /**
-         * Construct a JTA synchronization listener which will direct
-         * notifications to the underlying OTS subtransaction aware
-         * resource.
-         *
-         * @param aware The subtransaction aware resource to which
-         *   subtransaction events will be directed.
-         * @param parent The subtransaction which performed the
-         *   registration
-         */
-        SubtransactionAwareWrapper( SubtransactionAwareResource aware,
-                                    Coordinator parent )
-        {
-            _aware = aware;
-            _parent = parent;
-        }
-
-        
-        public void beforeCompletion()
-        {
-            // beforeCompletion will be called during preperation of the
-            // subtransaction. We still get a chance to mark it for roll back.
-            _aware.commit_subtransaction( _parent );
-        }
-        
-        
-        public void afterCompletion( int status )
-        {
-            // afterCompletion will be called after the subtransaction has
-            // been rolledback as a subtransaction (rolledback status) or
-            // after it has been commited as part of the parent transaction's
-            // 2pc, in which case we have nothing new to notify.
-            if ( status == javax.transaction.Status.STATUS_ROLLEDBACK )
-                _aware.rollback_subtransaction();
-        }
-        
     }
 
 

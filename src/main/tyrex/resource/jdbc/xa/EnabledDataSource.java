@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: EnabledDataSource.java,v 1.1 2001/03/02 19:02:08 arkin Exp $
+ * $Id: EnabledDataSource.java,v 1.2 2001/03/05 18:25:09 arkin Exp $
  */
 
 
@@ -208,8 +208,9 @@ public class EnabledDataSource
     public synchronized Connection getConnection( String user, String password )
         throws SQLException
     {
-        Connection conn;
-        Properties info;
+        Connection  conn;
+        Properties  info;
+        ClassLoader loader;
         
         if ( _driver == null ) {
             
@@ -219,12 +220,19 @@ public class EnabledDataSource
                 throw new SQLException ( "The driver name is not set." );
             }
             try {
-		if ( _driverClassName != null )
-		    Class.forName( _driverClassName );
-	    } catch ( ClassNotFoundException except ) {
+		if ( _driverClassName != null ) {
+                    loader = Thread.currentThread().getContextClassLoader();
+                    if ( loader == null )
+                        _driver = (Driver) Class.forName( _driverClassName ).newInstance();
+                    else
+                        _driver = (Driver) loader.loadClass( _driverClassName ).newInstance();
+                }
+	    } catch ( Exception except ) {
 		if ( _logWriter != null )
-		    _logWriter.println( "DataSource: Failed to load JDBC driver: " + except.getMessage() );
+		    _logWriter.println( "DataSource: Failed to load JDBC driver: " + except.toString() );
+                throw new SQLException( except.toString() );
 	    }
+            /*
 	    try {
 		_driver = DriverManager.getDriver( _driverName );
 	    } catch ( SQLException except ) {
@@ -232,6 +240,7 @@ public class EnabledDataSource
 		    _logWriter.println( "DataSource: Failed to initialize JDBC driver: " + except );
 		throw except;
 	    }
+            */
 	}
         
 	// Use info to supply properties that are not in the URL.

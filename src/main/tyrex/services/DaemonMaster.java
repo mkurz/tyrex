@@ -40,7 +40,7 @@
  *
  * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: DaemonMaster.java,v 1.1 2001/02/27 00:37:52 arkin Exp $
+ * $Id: DaemonMaster.java,v 1.2 2001/03/05 18:25:10 arkin Exp $
  */
 
 
@@ -76,7 +76,7 @@ import tyrex.util.Logger;
  * server. The daemon master is thread-safe and consumes a single thread.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 public class DaemonMaster
     extends ThreadGroup
@@ -151,9 +151,9 @@ public class DaemonMaster
      * @param runnable The runnable object
      * @param name The daemon name
      */
-    public static Thread addDaemon( Runnable runnable, String name )
+    public static void addDaemon( Runnable runnable, String name )
     {
-        return addDaemon( runnable, name, Thread.NORM_PRIORITY );
+        addDaemon( runnable, name, Thread.NORM_PRIORITY );
     }
 
 
@@ -167,8 +167,9 @@ public class DaemonMaster
      * @param name The daemon name
      * @param priority The thread priority
      */
-    public static Thread addDaemon( Runnable runnable, String name, int priority )
+    public static void addDaemon( Runnable runnable, String name, int priority )
     {
+        DaemonRecord record;
         Thread       thread;
 
         synchronized( _instance ) {
@@ -176,6 +177,12 @@ public class DaemonMaster
                 throw new IllegalArgumentException( "Argument runnable is null" );
             if ( name == null )
                 throw new IllegalArgumentException( "Argument name is null" );
+            record = _instance._first;
+            while( record != null ) {
+                if ( record._runnable == runnable )
+                    return;
+                record = record._next;
+            }
             thread = new Thread( _instance, runnable, name );
             _instance._first = new DaemonRecord( runnable, name, priority, thread, _instance._first );
             ++_instance._count;
@@ -183,7 +190,6 @@ public class DaemonMaster
                 Logger.tyrex.info( "Starting daemon: " + name );
             thread.setPriority( priority );
             thread.start();
-            return thread;
         }
     }
 
@@ -191,7 +197,8 @@ public class DaemonMaster
     /**
      * Removes a daemon. Once removed, the daemon master will no longer
      * attempt to restart the daemon. This method must be called before
-     * the thread has completed to prevent accidental restart.
+     * the thread has completed to prevent accidental restart. It will
+     * automatically interrupt the background thread.
      *
      * @param runnable The runnable object
      */
@@ -210,6 +217,7 @@ public class DaemonMaster
                     else
                         last._next = record._next;
                     --_instance._count;
+                    record._thread.interrupt();
                     return true;
                 } else
                     last = record;

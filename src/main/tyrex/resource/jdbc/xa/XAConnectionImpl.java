@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: XAConnectionImpl.java,v 1.1 2001/03/02 19:02:08 arkin Exp $
+ * $Id: XAConnectionImpl.java,v 1.2 2001/03/05 18:25:09 arkin Exp $
  */
 
 
@@ -189,12 +189,14 @@ public final class XAConnectionImpl
                       Connection underlying,
                       String userName,
                       String password )
+        throws SQLException
     {
         _underlying = underlying;
         _resManager = resManager;
         _userName = userName;
         _password = password;
         _txTimeout = resManager.getTransactionTimeout();
+        getUnderlying( _clientId );
     }
 
 
@@ -925,7 +927,7 @@ public final class XAConnectionImpl
 	    return _txConn.conn;
 	}
 	if ( _underlying == null ) {
-        _underlying = _resManager.newConnection( _userName, _password );
+            _underlying = _resManager.newConnection( _userName, _password );
 	    _underlying.setAutoCommit( true );
 	}
 	return _underlying;

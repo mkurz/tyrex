@@ -40,7 +40,7 @@
  *
  * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionDomainImpl.java,v 1.9 2001/03/03 04:38:49 arkin Exp $
+ * $Id: TransactionDomainImpl.java,v 1.10 2001/03/05 18:25:12 arkin Exp $
  */
 
 
@@ -53,6 +53,7 @@ import java.util.Properties;
 import java.util.Iterator;
 import java.security.AccessController;
 import org.apache.log4j.Category;
+import org.omg.CosTransactions.otid_t;
 import org.omg.CosTransactions.PropagationContext;
 import org.omg.CosTransactions.Inactive;
 import org.omg.CosTransactions.TransactionFactory;
@@ -83,6 +84,7 @@ import tyrex.tm.xid.XidUtils;
 import tyrex.resource.Resource;
 import tyrex.resource.Resources;
 import tyrex.services.Clock;
+import tyrex.services.DaemonMaster;
 import tyrex.util.Messages;
 import tyrex.util.Configuration;
 
@@ -91,7 +93,7 @@ import tyrex.util.Configuration;
  * Implementation of a transaction domain.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.9 $ $Date: 2001/03/03 04:38:49 $
+ * @version $Revision: 1.10 $ $Date: 2001/03/05 18:25:12 $
  */
 public class TransactionDomainImpl
     extends TransactionDomain
@@ -211,12 +213,6 @@ public class TransactionDomainImpl
 
 
     /**
-     * The background thread.
-     */
-    protected final Thread                 _background;
-
-
-    /**
      * The maximum number of concurrent transactions supported.
      */
     private final int                      _maximum;
@@ -232,6 +228,13 @@ public class TransactionDomainImpl
      * Resources loaded for this transaction domain.
      */
     private final Resources                _resources;
+
+
+    /**
+     * Monitor object used to block for timeout of transaction and notify
+     * change in timeout of next transaction.
+     */
+    private final Object                   _timeoutLock = new Object();
 
 
     /**
@@ -308,9 +311,7 @@ public class TransactionDomainImpl
         recover( _journal, xaResources );
 
         // starts the background thread
-        _background = new Thread( this, "Transaction Domain " + _domainName );
-        _background.setDaemon(true);
-        _background.start();
+        DaemonMaster.addDaemon( this, "Transaction Domain " + _domainName );
     }
 
 
@@ -393,21 +394,7 @@ public class TransactionDomainImpl
 
     public void shutdown()
     {
-        // !!! Not implemented yet
-        /*
-	Enumeration       enum;
-	TransactionHolder txh;
-
-	// Manually terminate all the transactions that have
-	// not timed out yet.
-	enum = _txTable.elements();
-	while ( enum.hasMoreElements() ) {
-	    txh = (TransactionHolder) enum.nextElement();
-	    try {
-		terminateTransaction( txh );
-	    } catch ( Exception except ) { }
-	}
-        */
+        DaemonMaster.removeDaemon( this );
     }
 
 
@@ -563,10 +550,10 @@ public class TransactionDomainImpl
         // If this transaction times out before any other transaction,
         // need to wakeup the background thread so it can update its
         // transaction timeout.
-        synchronized ( _background ) {
+        synchronized ( _timeoutLock ) {
             if ( _nextTimeout == 0 || _nextTimeout > timeout ) {
                 _nextTimeout = timeout;
-                _background.notify();
+                _timeoutLock.notify();
             }
         }
     	return newTx;
@@ -596,15 +583,22 @@ public class TransactionDomainImpl
     	TransactionImpl newTx;
     	TransactionImpl entry;
     	TransactionImpl next;
-    	BaseXid        xid;
+        otid_t          otid;
+        byte[]          global;
+    	BaseXid         xid;
         int             hashCode;
         int             index;
         long            timeout;
 
         if ( pgContext == null )
             throw new IllegalArgumentException( "Argument pgContext is null" );
-        // !!! How do we get the global transaction identifier from pgContext
-        xid = (BaseXid) XidUtils.importXid( null );
+        if ( pgContext.current == null || pgContext.current.otid == null )
+            throw new SystemException( "Propagation context missing otid in current transaction identifier" );
+        otid = pgContext.current.otid;
+        global = new byte[ otid.bexqual_length ];
+        for ( int i = otid.bequal_length ; i-- > 0 ; )
+            global[ i ] = otid.tid[ i ];
+        xid = (BaseXid) XidUtils.importXid( otid.formatID, global, null );
         timeout = pgContext.timeout;
         if ( timeout <= 0 )
             timeout = _txTimeout;
@@ -653,10 +647,10 @@ public class TransactionDomainImpl
         // If this transaction times out before any other transaction,
         // need to wakeup the background thread so it can update its
         // transaction timeout.
-        synchronized ( _background ) {
+        synchronized ( _timeoutLock ) {
             if ( _nextTimeout == 0 || _nextTimeout > timeout ) {
                 _nextTimeout = timeout;
-                _background.notify();
+                _timeoutLock.notify();
             }
         }
     	return newTx;
@@ -768,10 +762,10 @@ public class TransactionDomainImpl
         // Synchronization is required to block background thread from
         // attempting to time out the transaction while we process it,
         // and so we can notify it of the next timeout.
-        synchronized ( _background ) {
+        synchronized ( _timeoutLock ) {
             // Timeout is never set back.
             newTimeout = tx._started + timeout * 1000;
-            if ( newTimeout != tx._timeout ) {
+            if ( newTimeout > tx._timeout ) {
                 System.out.println( "Old timeout " + tx._timeout );
                 tx._timeout = newTimeout;
                 System.out.println( "New timeout " + tx._timeout );
@@ -782,7 +776,7 @@ public class TransactionDomainImpl
                 // hash table.
                 if ( _nextTimeout == 0 || _nextTimeout > newTimeout ) {
                     _nextTimeout = newTimeout;
-                    _background.notify();
+                    _timeoutLock.notify();
                 }
             }
 	}
@@ -1101,16 +1095,16 @@ public class TransactionDomainImpl
                 // We synchronize to be notified when the timeout of any
                 // transaction changes on the hashtable object, and we will
                 // need to remove records from the hashtable.
-                synchronized ( _background ) {
+                synchronized ( _timeoutLock ) {
                     // No transaction to time out, wait forever. Otherwise,
                     // wait until the next transaction times out.
                     if ( _nextTimeout == 0 ) {
-                        _background.wait();
+                        _timeoutLock.wait();
                         clock = Clock.clock();
                     } else {
                         clock = Clock.clock();
                         if ( _nextTimeout > clock ) {
-                            _background.wait( _nextTimeout - clock );
+                            _timeoutLock.wait( _nextTimeout - clock );
                             clock = Clock.clock();
                         }
 

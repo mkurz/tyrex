@@ -53,6 +53,10 @@
         <display>API</display>
       </navLink>
       <navLink>
+        <url>configuration.xml</url>
+        <display>Configuration</display>
+      </navLink>
+      <navLink>
         <url>tpmonitor.xml</url>
         <display>TP Monitoring</display>
       </navLink>

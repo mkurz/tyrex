@@ -68,23 +68,19 @@ public interface TyrexTransaction
     /**
      * Perform an asynchronous commit on the transaction.
      *
-     * @param callback The object that is registered to receive callbacks
-     * during the asynchronous commit. May be null.
      * @throws SystemException A problem occured while associating the
      * transaction with the new thread.
      * @throws SecurityException The current thread is not allowed to
      * rollback the transaction
      * @throws RollbackException The transaction has been marked for rollback
      */
-    public void asyncCommit( AsyncCompletionCallback callback )
+    public void asyncCommit()
         throws SystemException, SecurityException, RollbackException;
 
 
     /**
      * Perform an asynchronous rollback on the transaction.
      *
-     * @param callback The object that is registered to receive callbacks
-     * during the asynchronous commit. May be null.
      * @throws IllegalStateException The transaction is not in the proper
      * state to be rolled back
      * @throws SystemException A problem occured while associating the
@@ -92,7 +88,7 @@ public interface TyrexTransaction
      * @throws SecurityException The current thread is not allowed to
      * rollback the transaction.
      */
-    public void asyncRollback( AsyncCompletionCallback callback )
+    public void asyncRollback()
         throws IllegalStateException, SystemException, SecurityException;
     
 

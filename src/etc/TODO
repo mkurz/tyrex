@@ -1,13 +1,23 @@
 - Make UserTransactionImpl serializable by looking up
   the transaction domain upon de-serialization.
 
-- Implement shutdown for transaction domain.
-
 - Need to validate that both TransactionManager and TransactionFactory
   provide the proper timeout in seconds.
 
-- When creating transaction from pgContext need to get Xid
-
 - OTS requires other mechanism to bypass thread owner check
 
-- Complete recovery sequence
+- Separate method for recovery of transaction domain, allowing resources to be added
+  after domain has been created and participate in recovery sequence
+
+- Implement shutdown for transaction domain and connection pool
+
+- Add ThreadPool implementation with ThreadPoolMetrics for statistics (including average
+  execution time, average block time, block/unblock ratio)
+
+- ThreadPool to use Runnable but add stop() method
+
+- Have all asynch transactions complete in background thread of TransactionDomain
+
+- Finish JCA connection pool and provide optional code building in build.xml
+
+- Revise src/doc/library.xml

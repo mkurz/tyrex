@@ -40,7 +40,7 @@
  *
  * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Performance.java,v 1.5 2001/03/03 03:00:56 arkin Exp $
+ * $Id: Performance.java,v 1.6 2001/03/05 18:25:12 arkin Exp $
  */
 
 
@@ -59,7 +59,7 @@ import tyrex.tm.TyrexTransactionManager;
 /**
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.5 $ $Date: 2001/03/03 03:00:56 $
+ * @version $Revision: 1.6 $ $Date: 2001/03/05 18:25:12 $
  */
 public class Performance
 {
@@ -111,6 +111,7 @@ public class Performance
 	    _txManager.commit();
 
 	    System.out.println( "Creating transaction locally" );
+            _txManager.setTransactionTimeout( 1 );
 	    _txManager.begin();
 	    tx = _txManager.getTransaction();
 	    System.out.println( "Transaction: " + tx.toString() );
@@ -118,7 +119,6 @@ public class Performance
 	    if ( test == TEST_TM_TIMEOUT ) {
 		new SecondThread( tx, writer ).start();
 
-		_txManager.setTransactionTimeout( 1 );
                 _txManager.dumpCurrentTransaction( writer );
                 try {
                     Thread.sleep( 3000 );

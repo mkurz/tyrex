@@ -40,7 +40,7 @@
  *
  * Copyright 2000,2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionFactoryImpl.java,v 1.2 2001/03/02 20:43:27 arkin Exp $
+ * $Id: TransactionFactoryImpl.java,v 1.3 2001/03/05 18:25:12 arkin Exp $
  */
 
 
@@ -72,7 +72,7 @@ import org.omg.CosTSPortability.Receiver;
  * of remote transactions.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $ $Date: 2001/03/02 20:43:27 $
+ * @version $Revision: 1.3 $ $Date: 2001/03/05 18:25:12 $
  * @see TransactionImpl
  *
  * Changes 
@@ -137,7 +137,7 @@ final class TransactionFactoryImpl
         txImpl = (TransactionImpl) _txDomain._txManager.getTransaction();
         if ( txImpl == null )
             throw new TRANSACTION_REQUIRED();
-        pgxh.value = txImpl.getControl().get_txcontext();
+        pgxh.value = txImpl.getControl().getPropagationContext();
     }
 
 
@@ -220,7 +220,7 @@ final class TransactionFactoryImpl
         // Note that an exception can be an error on both side, but
         // we do not deal with asynchronous transactions here.
         txImpl = (TransactionImpl) _txDomain._txManager.getTransaction();
-        if ( txImpl == null || txImpl.getControl() != pgContext.current.coord )
+        if ( txImpl == null || txImpl.getControl().getCoordinator() != pgContext.current.coord )
             throw new WrongTransaction();
     }
 

@@ -40,7 +40,7 @@
  *
  * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionImpl.java,v 1.5 2001/03/03 03:00:56 arkin Exp $
+ * $Id: TransactionImpl.java,v 1.6 2001/03/05 18:25:12 arkin Exp $
  */
 
 
@@ -71,7 +71,6 @@ import org.omg.CosTransactions.PropagationContext;
 import org.omg.CORBA.ORB;
 import org.omg.CORBA.TRANSACTION_ROLLEDBACK;
 import tyrex.tm.Heuristic;
-import tyrex.tm.AsyncCompletionCallback;
 import tyrex.tm.TyrexTransaction;
 import tyrex.tm.xid.BaseXid;
 import tyrex.services.Clock;
@@ -89,7 +88,7 @@ import tyrex.util.Messages;
  * they are added.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.5 $ $Date: 2001/03/03 03:00:56 $
+ * @version $Revision: 1.6 $ $Date: 2001/03/05 18:25:12 $
  * @see XAResourceHolder
  * @see TransactionManagerImpl
  * @see TransactionDomain
@@ -778,7 +777,7 @@ final class TransactionImpl
     //-------------------------------------------------------------------------
 
 
-    public synchronized void asyncCommit(AsyncCompletionCallback callback)
+    public synchronized void asyncCommit()
         throws SystemException, SecurityException, RollbackException
     {
         Thread thread;
@@ -797,7 +796,20 @@ final class TransactionImpl
             throw new RollbackException( Messages.message( "tyrex.tx.rolledback" ) );
         }
     
-        thread = new Thread( getAsyncCommitRunnable( callback ) );
+        thread = new Thread( new Runnable() {
+                public void run() 
+                {
+                    boolean exceptionOccurred = false;
+                    
+                    synchronized ( TransactionImpl.this ) {
+                        try {
+                            TransactionImpl.this.commit();
+                        } catch( Exception e ) {
+                            exceptionOccurred = true;
+                        }
+                    }
+                }
+            } );
         // enlist the thread
         _txDomain.enlistThread( this, thread );
         // start the thread
@@ -805,7 +817,7 @@ final class TransactionImpl
     }
 
 
-    public synchronized void asyncRollback( AsyncCompletionCallback callback )
+    public synchronized void asyncRollback()
         throws IllegalStateException, SystemException, SecurityException
     {
         Thread thread;
@@ -822,7 +834,20 @@ final class TransactionImpl
         if ( null != _sysError )
             throw _sysError;
         
-        thread = new Thread( getAsyncRollbackRunnable( callback ) );
+        thread = new Thread( new Runnable() {
+                public void run() 
+                {
+                    boolean exceptionOccurred = false;
+                    
+                    synchronized ( TransactionImpl.this ) {
+                        try {
+                            TransactionImpl.this.rollback();
+                        } catch( Exception e ) {
+                            exceptionOccurred = true;
+                        }
+                    }
+                }
+            } );
         // enlist the thread
         _txDomain.enlistThread( this, thread );
         // start the thread
@@ -2070,9 +2095,6 @@ final class TransactionImpl
 
         if ( thread == null )
             throw new IllegalArgumentException( "Argument thread is null" );
-	// The background thread can terminate any transaction.
-	if ( thread == _txDomain._background )
-	    return true;
         threads = _threads;
         if ( threads != null ) {
             for ( int i = threads.length ; i-- > 0 ; ) {
@@ -2135,74 +2157,6 @@ final class TransactionImpl
             _status = STATUS_MARKED_ROLLBACK;
             error( except );
         }
-    }
-
-
-    /**
-     * Return a runnable that will perform an asynchronous 
-     * commit on the transaction when the runnable is
-     * executed.
-     *
-     * @param callback the object that is registered
-     * to receive callbacks during the asynchronous commit.
-     * Can be null.
-     */
-    private Runnable getAsyncCommitRunnable( final AsyncCompletionCallback callback )
-    {
-        return new Runnable() {
-                public void run() 
-                {
-                    boolean exceptionOccurred = false;
-
-                    synchronized ( TransactionImpl.this ) {
-                        if ( null != callback )
-                            callback.beforeCompletion( TransactionImpl.this );    
-                        try {
-                            TransactionImpl.this.commit();
-                        } catch( Exception e ) {
-                            exceptionOccurred = true;
-                            if ( null != callback )
-                                callback.errorOccurred( TransactionImpl.this, e );    
-                        }
-                        if ( !exceptionOccurred && ( null != callback ) )
-                            callback.afterCompletion( TransactionImpl.this );
-                    }
-                }
-            };
-    }
-    
-    
-    /**
-     * Return a runnable that will perform an asynchronous 
-     * rollback on the transaction when the runnable is
-     * executed.
-     *
-     * @param callback the object that is registered
-     * to receive callbacks during the asynchronous commit.
-     * Can be null.
-     */
-    private Runnable getAsyncRollbackRunnable( final AsyncCompletionCallback callback )
-    {
-        return new Runnable() {
-                public void run() 
-                {
-                    boolean exceptionOccurred = false;
-
-                    synchronized ( TransactionImpl.this ) {
-                        if ( null != callback )
-                            callback.beforeCompletion( TransactionImpl.this );    
-                        try {
-                            TransactionImpl.this.rollback();
-                        } catch( Exception e ) {
-                            exceptionOccurred = true;
-                            if ( null != callback )
-                                callback.errorOccurred( TransactionImpl.this, e );    
-                        }
-                        if ( !exceptionOccurred && ( null != callback ) )
-                            callback.afterCompletion( TransactionImpl.this );
-                    }
-                }
-            };
     }
 
 

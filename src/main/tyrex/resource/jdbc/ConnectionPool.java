@@ -75,6 +75,7 @@ import tyrex.resource.PoolMetrics;
 import tyrex.resource.Resource;
 import tyrex.resource.ResourceException;
 import tyrex.services.Clock;
+import tyrex.services.DaemonMaster;
 import tyrex.util.Primes;
 import tyrex.util.Configuration;
 import tyrex.util.LoggerPrintWriter;
@@ -83,10 +84,10 @@ import tyrex.util.LoggerPrintWriter;
 /**
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  */
 final class ConnectionPool
-    implements Resource, DataSource, ConnectionEventListener
+    implements Resource, DataSource, ConnectionEventListener, Runnable
 {
 
 
@@ -165,8 +166,14 @@ final class ConnectionPool
     private final ConnectionPoolDataSource _poolDataSource;
 
 
+    /**
+     * The class loader used to load the data source.
+     */
+    private final ClassLoader              _classLoader;
+
+
     ConnectionPool( String name, ResourceLimits limits,
-                    XADataSource xaDataSource,
+                    ClassLoader loader, XADataSource xaDataSource,
                     ConnectionPoolDataSource poolDataSource,
                     TyrexTransactionManager txManager, Category category )
         throws ResourceException
@@ -185,6 +192,7 @@ final class ConnectionPool
         // Need to set all these variables before we attempt to
         // create the initial number of connections.
         _name = name;
+        _classLoader = loader;
         _xaDataSource = xaDataSource;
         _poolDataSource = poolDataSource;
         _metrics = new PoolMetrics();
@@ -241,6 +249,8 @@ final class ConnectionPool
         _category.info( "Created connection pool for data source " + name +
                         " with initial size " + _limits.getInitial() +
                         " and maximum size " + _limits.getMaximum() );
+
+        DaemonMaster.addDaemon( this, "Connection Pool " + name );
     }
 
 
@@ -276,10 +286,11 @@ final class ConnectionPool
 
     public void destroy()
     {
+        DaemonMaster.removeDaemon( this );
     }
 
 
-    public void run()
+    public synchronized void run()
     {
         long nextExpiration;
         long clock;
@@ -440,17 +451,26 @@ final class ConnectionPool
     private PooledConnection createPooledConnection( String user, String password )
         throws SQLException
     {
+        ClassLoader      loader;
+        PooledConnection connection;
+        Thread           thread;
+        
+        thread = Thread.currentThread();
+        loader = thread.getContextClassLoader();
+        thread.setContextClassLoader( _classLoader );
         if ( _xaDataSource != null ) {
             if ( user != null )
-                return _xaDataSource.getXAConnection( user, password );
+                connection = _xaDataSource.getXAConnection( user, password );
             else
-                return _xaDataSource.getXAConnection();
+                connection =_xaDataSource.getXAConnection();
         } else {
             if ( user != null )
-                return _poolDataSource.getPooledConnection( user, password );
+                connection = _poolDataSource.getPooledConnection( user, password );
             else
-                return _poolDataSource.getPooledConnection();
+                connection = _poolDataSource.getPooledConnection();
         }
+        thread.setContextClassLoader( loader );
+        return connection;
     }
 
 

@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: XADataSourceImpl.java,v 1.2 2001/03/02 23:06:53 arkin Exp $
+ * $Id: XADataSourceImpl.java,v 1.3 2001/03/05 18:25:09 arkin Exp $
  */
 
 
@@ -195,7 +195,7 @@ public abstract class XADataSourceImpl
 	// or obtain it from a transaction, we cannot support XA
 	// connections with a caller specified user name.
 	//throw new SQLException( "XAConnection does not support connections with caller specified user name" );
-    return new XAConnectionImpl( this, null, user, password );
+        return new XAConnectionImpl( this, null, user, password );
     }
     
     
@@ -351,26 +351,26 @@ public abstract class XADataSourceImpl
     Connection newConnection( String userName, String password )
 	throws SQLException
     {
-    Connection connection;
-    synchronized ( _pool ) {
-        // Check in the pool first.
-        if ( ! _pool.isEmpty() ) {
-            String account = getAccount( userName, password );
-            ConnectionEntry entry;
-
-            for ( Iterator i = _pool.iterator(); i.hasNext(); ) {
-                entry = ( ConnectionEntry )i.next();
-                if ( entry._account.equals( account )) {
-                    i.remove();
-                    entry._connection.setTransactionIsolation(_isolationLevel);
-                    return entry._connection;
+        Connection connection;
+        synchronized ( _pool ) {
+            // Check in the pool first.
+            if ( ! _pool.isEmpty() ) {
+                String account = getAccount( userName, password );
+                ConnectionEntry entry;
+                
+                for ( Iterator i = _pool.iterator(); i.hasNext(); ) {
+                    entry = ( ConnectionEntry )i.next();
+                    if ( entry._account.equals( account )) {
+                        i.remove();
+                        entry._connection.setTransactionIsolation(_isolationLevel);
+                        return entry._connection;
+                    }
                 }
             }
-    	}
-    }
-    connection = getConnection( userName, password );
-    connection.setTransactionIsolation(_isolationLevel);
-    return connection;
+        }
+        connection = getConnection( userName, password );
+        connection.setTransactionIsolation(_isolationLevel);
+        return connection;
     }
 
 
