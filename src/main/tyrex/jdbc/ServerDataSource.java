@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: ServerDataSource.java,v 1.10 2000/09/26 17:44:05 mohammed Exp $
+ * $Id: ServerDataSource.java,v 1.11 2000/09/26 18:27:17 mohammed Exp $
  */
 
 
@@ -99,7 +99,7 @@ import tyrex.util.Messages;
  * {@link tyrex.resource.ResourcePool}.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.10 $ $Date: 2000/09/26 17:44:05 $
+ * @version $Revision: 1.11 $ $Date: 2000/09/26 18:27:17 $
  *
  * Date         Author          Changes
  * ?            Assaf Arkin     Created  
@@ -230,6 +230,7 @@ public class ServerDataSource
 	ConnectionPoolEntry entry;
 	Connection          conn;
     int                 retryAttempts = 0;
+    SQLException exception = null;
 
     while ( ( -1 == _retryAttempts ) ||
             ( retryAttempts <= _retryAttempts ) ) {
@@ -265,8 +266,12 @@ public class ServerDataSource
     	} catch ( SQLException except ) {
     	    // This is not a problem of creating a new entry,
     	    // so just try to create a new one.
+            exception = except;
         }
         ++retryAttempts;
+    }
+    if ( null != exception ) {
+        throw exception;    
     }
     throw new SQLException("Failed to get a connection.");
     }
