@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionImpl.java,v 1.47 2002/05/06 16:54:42 mohammed Exp $
+ * $Id: TransactionImpl.java,v 1.48 2002/05/07 10:27:50 mohammed Exp $
  */
 
 
@@ -90,7 +90,7 @@ import tyrex.util.Messages;
  * they are added.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.47 $ $Date: 2002/05/06 16:54:42 $
+ * @version $Revision: 1.48 $ $Date: 2002/05/07 10:27:50 $
  * @see InternalXAResourceHolder
  * @see TransactionManagerImpl
  * @see TransactionDomain
@@ -2781,14 +2781,14 @@ final class TransactionImpl
     {
         Throwable orig;
 
-        orig = except;
-
         // If a remote exception, we would rather record the underlying
         // exception directly.
         if ( except instanceof RemoteException &&
              ( (RemoteException) except ).detail != null )
             except = ( (RemoteException) except ).detail;
         
+        orig = except;
+
         // In the event of an XAException, we would like to
         // provide a meaningful description of the exception.
         // The error code just doesn't cut it.
@@ -2840,11 +2840,13 @@ final class TransactionImpl
         }
         
         // Log the message with whatever logging mechanism we have.
-        if ( orig instanceof RuntimeException )
+        if ( ! ( orig instanceof XAException ) )
             _txDomain._category.error( "Error " + orig.toString() + " reported in transaction " + _xid, orig );
         else
-            _txDomain._category.error( "Error " + orig.toString() + " reported in transaction " 
-                                       + _xid + ( orig instanceof XAException ? getXAErrorString( ( XAException ) orig ) : "" ), orig );
+            _txDomain._category.error( "Error " + orig.toString() + 
+                                       "[code " + ( (XAException) orig ).errorCode 
+                                       + " - " + except.getMessage() + "] reported in transaction " 
+                                       + _xid + getXAErrorString( ( XAException ) orig ), orig );
        
         // Record the first general exception as a system exception,
         // so it may be returned from commit/rollback.
