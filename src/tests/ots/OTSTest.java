@@ -83,7 +83,7 @@ public class OTSTest extends TestCase
      */
     protected void tearDown()
     {
-    	//OTSServer.shutdownTransactionManager();	
+    	   OTSServer.shutdownTransactionManager();	
         _orb.shutdown(true);
         _svcORB.shutdown(true);
     }
