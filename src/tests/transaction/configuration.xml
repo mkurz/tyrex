@@ -1,11 +1,54 @@
+<!--
+  The configuration file is located according to the following criteria:
+  First look at the tyrex.test.transaction.configuration property
+  Then look for the configuration.xml as a resource
+  Then look for the configuration.xml in working directory
+  Then look for the configuration.xml in the home directory
+  Then look for the configuration.xml in the java directory
+  Then throw exception that the configuration file cannot be found
+   
+  
+  The group tag defines a grouping of data source(s) and performance. A performance
+  must have only unique group names.
+  Performance and datasource elements can have mulitple group tags so that
+  they can belong to multipleg groups.
+  
+  The two-phase commit tests can only apply to multiple data sources so if a single
+  data source is defined then the two-phase commit tests are not run.
+-->
+
 <configuration>
+  <!--
+    The iterations define how many interations to perform duringtesting. 
+    The value refers to the minumum number of operations per minute that should
+    performed. If the actual number of operations per minute is lower then
+    the performance test fails.
+    
+    There are performance tests for one-phase commits, two-phase commits, rollbacks
+  -->
   <performance>
     <group>test</group>
     <one_phase_commit iterations="100" value="3000"/>
     <two_phase_commit iterations="100" value="2500"/>
     <rollback iterations="100" value="2000"/>
   </performance>
-    
+
+<!--
+  class - the class of the data source
+  attribute - javabean propertes to be set on data source
+  group - the group this datasource belongs belongs to
+  user_name - the user name
+  password - the password
+  table_name - the name of the table to be used for testing
+  fail_sleep_time - ignored for now (Oracle tables must be given some time 
+                    to recover when an Oracle XA resource is delisted with TMFAIL.
+  performance_test - True if this data source takes part in the performance test
+  reuse_delisted_xaresources - True if delisted XA resources (TMSUCCESS) can be reused in another transaction before
+                                the original transaction commits         
+  name - the pretty name of the data source                                           
+  
+  If attributes are given then the class defines a JDBC 2.0 XADataSource.
+-->  
   <datasource>
     <class>oracle.jdbc.xa.client.OracleXADataSource</class>
     <attribute name="serverName" value="server" type="string"/>
@@ -22,6 +65,23 @@
     <name>Oracle</name>
   </datasource>
 
+<!--
+  class - the class of the JDBC 1.1 driver
+  uri - the JDBC 1.1 uri
+  group - the group this datasource belongs belongs to
+  user_name - the user name
+  password - the password
+  table_name - the name of the table to be used for testing
+  fail_sleep_time - ignored for now (Oracle tables must be given some time 
+                    to recover when an Oracle XA resource is delisted with TMFAIL.
+  performance_test - True if this data source takes part in the performance test
+  reuse_delisted_xaresources - True if delisted XA resources (TMSUCCESS) can be reused in another transaction before
+                                the original transaction commits         
+  name - the pretty name of the data source                                           
+  
+  The specified uri, user name and password are passed to tyrex.jdbc.xa.EnabledDataSource so that the 
+  JDBC 1.1 driver can be treated as an XADataSource
+-->  
   <datasource>  
     <class>com.sybase.jdbc2.jdbc.SybDriver</class>
     <uri>jdbc:sybase:Tds:server:port/database</uri>
