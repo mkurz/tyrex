@@ -69,7 +69,7 @@ package tyrex.resource;
  * future behavior of the connection pool.
  * 
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 public final class PoolLimits
 {
@@ -124,6 +124,13 @@ public final class PoolLimits
      * True to enable tracing of connections.
      */
     private boolean       _trace = false;
+
+
+    /**
+     * The flag specifying the resuse option of the connections 
+     * in the pool.
+     */
+    private int           _reuseOption = ReuseOptions.REUSE_ON;
 
 
     /**
@@ -311,5 +318,78 @@ public final class PoolLimits
         return _trace;
     }
 
+    
+    /**
+     * Set the reuse option. This is the option that controls the 
+     * reuse of a connection when it is returned to the pool. 
+     *
+     * @param One of {@link ReuseOptions#REUSE_ON_NAME}, 
+     *      {@link ReuseOptions#REUSE_OFF_NAME}, 
+     *      {@link ReuseOptions#REUSE_TRANSACTION_NAME} or 
+     *      {@link ReuseOptions#REUSE_TRANSACTION_OFF_NAME}
+     * @throws IllegalArgumentException if the reuse option is not 
+     *      recognised. 
+     *
+     * @see ReuseOptions#REUSE_OFF_NAME
+     * @see ReuseOptions#REUSE_TRANSACTION_NAME
+     * @see ReuseOptions#REUSE_TRANSACTION_OFF_NAME
+     */
+    public void setReuseOptionAsString(String option) { 
+        _reuseOption = ReuseOptions.fromString(option);
+    }
 
+    /**
+     * Return the reuse option. This is the option that controls the 
+     * reuse of a connection when it is returned to the pool. 
+     *
+     * @return One of {@link ReuseOptions#REUSE_ON_NAME}, 
+     *      {@link ReuseOptions#REUSE_OFF_NAME}, 
+     *      {@link ReuseOptions#REUSE_TRANSACTION_NAME} or 
+     *      {@link ReuseOptions#REUSE_TRANSACTION_OFF_NAME}
+     *
+     * @see ReuseOptions#REUSE_OFF_NAME
+     * @see ReuseOptions#REUSE_TRANSACTION_NAME
+     * @see ReuseOptions#REUSE_TRANSACTION_OFF_NAME
+     */
+    public String getReuseOptionAsString() { 
+        return ReuseOptions.toString(_reuseOption);
+    }
+
+    /**
+     * Set the reuse option. This is the option that controls the 
+     * reuse of a connection when it is returned to the pool. 
+     *
+     * @param One of {@link ReuseOptions#REUSE_ON}, 
+     *      {@link ReuseOptions#REUSE_OFF}, 
+     *      {@link ReuseOptions#REUSE_TRANSACTION} or 
+     *      {@link ReuseOptions#REUSE_TRANSACTION_OFF}
+     * @throws IllegalArgumentException if the reuse option is not 
+     *      recognised. 
+     *
+     * @see ReuseOptions#REUSE_OFF
+     * @see ReuseOptions#REUSE_TRANSACTION
+     * @see ReuseOptions#REUSE_TRANSACTION_OFF
+     */
+    public void setReuseOption(int option) { 
+        ReuseOptions.validate(option);
+
+        _reuseOption = option;
+    }
+
+    /**
+     * Return the reuse option. This is the option that controls the 
+     * reuse of a connection when it is returned to the pool. 
+     *
+     * @return One of {@link ReuseOptions#REUSE_ON}, 
+     *      {@link ReuseOptions#REUSE_OFF}, 
+     *      {@link ReuseOptions#REUSE_TRANSACTION} or 
+     *      {@link ReuseOptions#REUSE_TRANSACTION_OFF}
+     *
+     * @see ReuseOptions#REUSE_OFF
+     * @see ReuseOptions#REUSE_TRANSACTION
+     * @see ReuseOptions#REUSE_TRANSACTION_OFF
+     */
+    public int getReuseOption() { 
+        return _reuseOption;
+    }
 }

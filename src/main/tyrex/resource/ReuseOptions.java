@@ -190,6 +190,21 @@ public final class ReuseOptions {
     }
 
     /**
+     * Validate that the option is recognized
+     *
+     * @param option. One of {@link #REUSE_ON}, 
+     *      {@link #REUSE_OFF}, {@link #REUSE_TRANSACTION}
+     *      or {@link #REUSE_TRANSACTION_OFF}.
+     * @throws IllegalArgumentException if the option is not 
+     *      recognised.
+     */
+    public static void validate(int option) {
+        if (!isValid(option)) {
+            throw new IllegalArgumentException("Unknown reuse option: " + option);
+        }
+    }
+
+    /**
      * Return true if the reuse option is valid. Return false
      * if the reuse option is invalid.
      *
