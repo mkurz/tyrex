@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Configuration.java,v 1.5 2001/03/19 17:39:03 arkin Exp $
+ * $Id: Configuration.java,v 1.6 2001/03/22 20:27:29 arkin Exp $
  */
 
 
@@ -60,16 +60,9 @@ import java.security.SecureRandom;
  * Provides basic configuration for Tyrex components based on the
  * <tt>tyrex.config</tt> configuration file. Several Tyrex services
  * rely on this configuration file.
- * <p>
- * The configuration file is loaded from the Java <tt>lib</tt>
- * directory, the classpath and the Tyrex JAR. Properties set in the
- * classpath file takes precedence over properties set in the Java
- * library configuration file and properties set in the Tyrex JAR,
- * allowing for layered customization. All three files are named
- * <tt>tyrex.config</tt>.
  *
  * @author <a href="mailto:arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.5 $ $Date: 2001/03/19 17:39:03 $
+ * @version $Revision: 1.6 $ $Date: 2001/03/22 20:27:29 $
  */
 public final class Configuration
 {
@@ -172,7 +165,7 @@ public final class Configuration
      * file. Otherwise, the configuration file {@link #FILE_NAME} will be
      * looked for in the classpath.
      */
-    public static final String CONFIG_SYSTEM_PROPERTY = "tyrex.config";
+    public static final String CONFIG_SYSTEM_PROPERTY = "tyrex.config.file";
 
 
     /**

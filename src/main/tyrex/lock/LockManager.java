@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: LockSetFactory.java,v 1.3 2001/03/19 17:39:00 arkin Exp $
+ * $Id: LockManager.java,v 1.1 2001/03/22 20:28:07 arkin Exp $
  */
 
 
@@ -56,15 +56,10 @@ import tyrex.tm.TransactionDomain;
  * A factory for creating new lock sets.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.3 $ $Date: 2001/03/19 17:39:00 $
+ * @version $Revision: 1.1 $ $Date: 2001/03/22 20:28:07 $
  */
-public final  class LockSetFactory
+public final class LockManager
 {
-
-
-    public LockSetFactory()
-    {
-    }
 
 
     /**
@@ -72,7 +67,7 @@ public final  class LockSetFactory
      *
      * @return A new lock set
      */
-    public LockSet create()
+    public static LockSet create()
     {
         return new LockSet( null, null );
     }
@@ -84,7 +79,7 @@ public final  class LockSetFactory
      * @param identifier The lock set identifier (may be null)
      * @return A new lock set
      */
-    public LockSet create( String identifier )
+    public static LockSet create( String identifier )
     {
         return new LockSet( identifier, null );
     }
@@ -97,12 +92,10 @@ public final  class LockSetFactory
      * @param related The related lock set
      * @return A new lock set
      */
-    /*
-    public LockSet createRelated( LockSet related )
+    public static LockSet createRelated( LockSet related )
     {
         return new LockSet( null, related );
     }
-    */
 
 
     /**
@@ -113,9 +106,21 @@ public final  class LockSetFactory
      * @param related The related lock set
      * @return A new lock set
      */
-    public LockSet createRelated( String identifier, LockSet related )
+    public static LockSet createRelated( String identifier, LockSet related )
     {
         return new LockSet( identifier, related );
+    }
+
+
+    public static int getBlockedCount()
+    {
+        return BlockedOwner._blockedCount;
+    }
+
+
+    public static int getOwnerCount()
+    {
+        return LockOwner._ownerCount;
     }
 
 

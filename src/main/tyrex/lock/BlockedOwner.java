@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: LockCoordinator.java,v 1.2 2001/03/22 20:27:28 arkin Exp $
+ * $Id: BlockedOwner.java,v 1.1 2001/03/22 20:28:07 arkin Exp $
  */
 
 
@@ -48,45 +48,88 @@ package tyrex.lock;
 
 
 /**
- * The lock coordinator is used to drop all locks held by a
- * particular owner. Dropping all locks at once assures the lock
- * set and all related lock sets remain in a consistent state.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $ $Date: 2001/03/22 20:27:28 $
+ * @version $Revision: 1.1 $ $Date: 2001/03/22 20:28:07 $
+ * @see LockMode
+ * @see LockCoordinator
  */
-public final class LockCoordinator
+final class BlockedOwner
 {
 
 
-    private final LockOwner  _owner;
+    static final int            BLOCKED = 0;
 
 
-    private final LockSet    _lockSet;
+    static final int            DONE    = 1;
 
 
-    LockCoordinator( LockSet lockSet, LockOwner owner )
+    static final int            TIMEOUT = 2;
+
+
+    BlockedOwner                _nextInSet;
+
+
+    private BlockedOwner        _nextBlocked;
+
+
+    private BlockedOwner        _prevBlocked;
+
+
+    private static BlockedOwner _firstBlocked;
+
+
+    private static BlockedOwner _lastBlocked;
+
+
+    static int                  _blockedCount;
+
+
+    final LockOwner             _owner;
+
+
+    int                         _state = BLOCKED;
+
+
+    BlockedOwner( LockOwner owner )
     {
-        if ( lockSet == null )
-            throw new IllegalArgumentException( "Argument lockSet is null" );
-        if ( owner == null )
-            throw new IllegalArgumentException( "Argument owner is null" );
-        _lockSet = lockSet;
         _owner = owner;
+        synchronized ( BlockedOwner.class ) {
+            if ( _firstBlocked == null ) {
+                _firstBlocked = this;
+                _lastBlocked = this;
+            } else {
+                _prevBlocked = _lastBlocked;
+                _lastBlocked._nextBlocked = this;
+            }
+            ++_blockedCount;
+        }
     }
 
 
-    /**
-     * Releases all locks helds by the owner. Includes both locks in
-     * this lock set and related lock sets.
-     * <p>
-     * For nested transactions this operation must be called when
-     * the nested transaction aborts, or when the parent transaction
-     * commits.
-     */
-    public void dropLocks()
+    synchronized void remove()
     {
-        _lockSet.drop( _owner, true );
+        synchronized ( BlockedOwner.class ) {
+            if ( _firstBlocked == this ) {
+                _firstBlocked = _nextBlocked;
+                if ( _nextBlocked != null )
+                    _nextBlocked._prevBlocked = null;
+            } else {
+                _prevBlocked._nextBlocked = _nextBlocked;
+                if ( _nextBlocked != null )
+                    _nextBlocked._prevBlocked = _prevBlocked;
+            }
+            if ( _lastBlocked == this ) {
+                _lastBlocked = _prevBlocked;
+                if ( _prevBlocked != null )
+                    _prevBlocked._nextBlocked = null;
+            } else {
+                _nextBlocked._prevBlocked = _prevBlocked;
+                if ( _prevBlocked != null )
+                    _prevBlocked._nextBlocked = _nextBlocked;
+            }
+            --_blockedCount;
+        }
     }
 
 

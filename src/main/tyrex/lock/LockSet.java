@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: LockSet.java,v 1.4 2001/03/21 20:02:42 arkin Exp $
+ * $Id: LockSet.java,v 1.5 2001/03/22 20:27:28 arkin Exp $
  */
 
 
@@ -52,7 +52,6 @@ import java.io.ObjectOutputStream;
 import java.io.ObjectInputStream;
 import java.io.IOException;
 import javax.transaction.Transaction;
-import javax.transaction.Synchronization;
 import javax.transaction.RollbackException;
 import javax.transaction.SystemException;
 import tyrex.tm.TransactionDomain;
@@ -68,21 +67,6 @@ import tyrex.services.UUID;
  * A lock set is associated with a resource in an application specific way.
  * The lock set can be used to acquire multiple locks on behalf of multiple
  * owners.
- * <p>
- * A lock set supports five lock modes:
- * <ul>
- * <li>{@link #READ_INTENT} Read intention lock, acquired to signal an intention
- * to acquire a read lock.</li>
- * <li>{@link #READ} Read locks conflict with any write locks, but multiple read
- * locks by different owners are allowed.</li>
- * <li>{@link #UPGRADE} Upgrade locks are read locks that conflict with each other.
- * Read and upgrade locks are allowed at the same time, but multiple upgrade locks
- * are not.</li>
- * <li>{@link #WRITE_INTENT} Write intention lock, acquired to signal an intention
- * to acquire a write lock.</li>
- * <li>{@link #WRITE} Write locks conflicts with read and write locks. They are
- * exclusive locks.</li>
- * </ul>
  * <p>
  * Compatible lock modes can be acquired by multiple owners, while incompatible
  * lock modes provide exclusive locking for a single owner. The same owner is
@@ -108,10 +92,12 @@ import tyrex.services.UUID;
  * creating a new lock set, a unique identifier is assigned to the lock set.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.4 $ $Date: 2001/03/21 20:02:42 $
+ * @version $Revision: 1.5 $ $Date: 2001/03/22 20:27:28 $
+ * @see LockMode
+ * @see LockCoordinator
  */
 public final class LockSet
-    implements Synchronization, Serializable
+    implements Serializable
 {
 
 
@@ -119,54 +105,6 @@ public final class LockSet
     // - Prevent lock from being acquired if transaction aborted.
     // - Should tryLock just check if the lock can be acquired, but
     //   not acquire it?
-
-
-    /**
-     * Read intention lock, acquired to signal an intention to
-     * acquire a read lock.
-     * <p>
-     * Conflicts with: {@link #WRITE}.
-     */
-    public static final int READ_INTENT  = 0;
-
-
-    /**
-     * Read locks conflict with any write locks, but multiple read
-     * locks by different owners are allowed.
-     * <p>
-     * Conflicts with: {@link #WRITE}, {@link #WRITE_INTENT}
-     */
-    public static final int READ         = 1;
-    
-
-    /**
-     * Upgrade locks are read locks that conflict with each other.
-     * Read and upgrade locks are allowed at the same time, but multiple
-     * upgrade locks are not. Upgrade locks are used to detect deadlocks
-     * while upgrading from a read lock to a write lock.
-     * <p>
-     * Conflicts with: {@link #WRITE}, {@link #WRITE_INTENT},
-     * {@link #UPGRADE}
-     */
-    public static final int UPGRADE      = 2;
-
-
-    /**
-     * Write intention lock, acquired to signal an intention to
-     * acquire a write lock.
-     * <p>
-     * Conflicts with: {@link #WRITE}, {@link #UPGRADE}, {@link #READ}
-     */
-    public static final int WRITE_INTENT = 3;
-
-
-    /**
-     * Write locks conflicts with read and write locks. They are exclusive
-     * locks.
-     * <p>
-     * Conflicts with: all locks.
-     */
-    public static final int WRITE        = 4;
 
 
     /**
@@ -200,11 +138,11 @@ public final class LockSet
 
 
     /**
-     * A linked list of waiting threads. Used to track them
-     * in FIFO order and notify the first-in of the next
-     * release of a lock.
+     * A linked list of blocked owners. Used to track them
+     * in FIFO order and notify the first when a lock can
+     * be acquired.
      */
-    private transient Waiting      _waiting;
+    private transient BlockedOwner _blocked;
 
 
     /**
@@ -289,7 +227,7 @@ public final class LockSet
     public final void lock( int mode )
         throws LockTimeoutException
     {
-        internalLock( mode, getOwner(), 0 );
+        internalLock( mode, LockOwner.getOwner(), 0 );
     }
 
 
@@ -313,34 +251,7 @@ public final class LockSet
     public final void lock( int mode, int ms )
         throws LockTimeoutException
     {
-        internalLock( mode, getOwner(), ms );
-    }
-
-
-    /**
-     * Acquires a lock on this lock set in the specified mode on behalf
-     * of a transaction. This method blocks for the specified timeout.
-     * <p>
-     * If a lock is held in an incompatible mode by a different owner,
-     * then this method will block until the lock can be acquired, or the
-     * specified time has elapsed (specified in milliseconds).
-     * <p>
-     * If no lock is held in an incompatible model, or a lock is held by
-     * the same or related owner, the lock will be acquired and this method
-     * will return successfully.
-     *
-     * @param tx The owner transaction
-     * @param mode The requested lock mode
-     * @param ms The number of milliseconds to block
-     * @throws LockTimeoutException The lock could not be acquired in the
-     * specified time
-     */
-    public final void lock( Transaction tx, int mode, int ms )
-        throws LockTimeoutException
-    {
-        if ( tx == null )
-            throw new IllegalArgumentException( "Argument tx is null" );
-        internalLock( mode, tx, ms );
+        internalLock( mode, LockOwner.getOwner(), ms );
     }
 
 
@@ -359,27 +270,7 @@ public final class LockSet
      */
     public final boolean tryLock( int mode )
     {
-        return internalTryLock( mode, getOwner() );
-    }
-
-
-    /**
-     * Attempt to acquires a lock on this lock set in the specified mode.
-     * <p>
-     * If a lock is held in an incompatible mode by a different owner,
-     * then this method returns false.
-     * <p>
-     * If no lock is held in an incompatible model, or a lock is held by
-     * the same or related owner, the lock will be acquired and this method
-     * will return true.
-     *
-     * @param tx The owner transaction
-     * @param mode The requested lock mode
-     * @return True if lock acquired, false if failed to acquire lock
-     */
-    public final boolean tryLock( Transaction tx, int mode )
-    {
-        return internalTryLock( mode, tx );
+        return internalTryLock( mode, LockOwner.getOwner(), false );
     }
 
 
@@ -396,27 +287,7 @@ public final class LockSet
     public final void unlock( int mode )
         throws LockNotHeldException
     {
-        internalUnlock( mode, getOwner() );
-    }
-
-
-    /**
-     * Drops a single lock from this lock set on behalf of a transaction.
-     * <p>
-     * If the lock was acquired multiple times, it will be released
-     * exactly once. This method must be called once for each time
-     * {@link #lock lock} has been called to acquire this lock.
-     *
-     * @param tx The owner transaction
-     * @param mode The lock mode
-     * @throws LockNotHeldException The lock is not held
-     */
-    public final void unlock( Transaction tx, int mode )
-        throws LockNotHeldException
-    {
-        if ( tx == null )
-            throw new IllegalArgumentException( "Argument tx is null" );
-        internalUnlock( mode, tx );
+        internalUnlock( mode, LockOwner.getOwner() );
     }
 
 
@@ -443,7 +314,7 @@ public final class LockSet
     public final void changeMode( int heldMode, int newMode )
         throws LockNotHeldException, LockTimeoutException
     {
-        internalChange( heldMode, newMode, getOwner(), 0 );
+        internalChange( heldMode, newMode, LockOwner.getOwner(), 0 );
     }
 
 
@@ -473,55 +344,7 @@ public final class LockSet
     public final void changeMode( int heldMode, int newMode, int ms )
         throws LockNotHeldException, LockTimeoutException
     {
-        internalChange( heldMode, newMode, getOwner(), ms );
-    }
-
-
-    /**
-     * Changes from one lock to another on hehalf of a transaction.
-     * This method attempts to acquire a new lock before releasing
-     * an already held lock. This method blocks for the specified timeout.
-     * <p>
-     * If a lock is held in an incompatible mode by a different owner,
-     * then this method will block until the lock can be acquired, or the
-     * specified time has elapsed (specified in milliseconds).
-     * <p>
-     * If no lock is held in an incompatible model, or a lock is held by
-     * the same or related owner, the lock will be acquired and this method
-     * will return successfully.
-     * <p>
-     * If the held lock was acquired multiple times, it will be released
-     * exactly once.
-     *
-     * @param tx The owner transaction
-     * @param heldMode The held lock mode
-     * @param newMode The new lock mode
-     * @param ms The number of milliseconds to block
-     * @throws LockNotHeldException The lock is not held
-     * @throws LockTimeoutException The lock could not be acquired in the
-     * specified time
-     */
-    public final void changeMode( Transaction tx, int heldMode,
-                                  int newMode, int ms )
-        throws LockNotHeldException, LockTimeoutException
-    {
-        if ( tx == null )
-            throw new IllegalArgumentException( "Argument tx is null" );
-        internalChange( heldMode, newMode, tx, ms );
-    }
-
-
-    /**
-     * Returns the lock coordinator associated with the specified
-     * transaction
-     *
-     * @param tx The transaction
-     */
-    public final LockCoordinator getCoordinator( Transaction tx )
-    {
-        if ( tx == null )
-            throw new IllegalArgumentException( "Argument tx is null" );
-        return new LockCoordinator( this, tx );
+        internalChange( heldMode, newMode, LockOwner.getOwner(), ms );
     }
 
 
@@ -530,7 +353,18 @@ public final class LockSet
      */
     public final LockCoordinator getCoordinator()
     {
-        return new LockCoordinator( this, getOwner() );
+        return new LockCoordinator( this, LockOwner.getOwner() );
+    }
+
+
+    /**
+     * Returns an arrays with all the locks held by this owner.
+     *
+     * @return All locks helds by this owner
+     */
+    public static final LockSet[] listLockSets()
+    {
+        return LockOwner.getOwner().getLockSets();
     }
 
 
@@ -540,9 +374,9 @@ public final class LockSet
 
 
     /**
-     * Called to acquire a lock of the specified type on behalf
-     * of the specified owner. This method will block until the
-     * lock can be acquired, or a timeout occured.
+     * Called to acquire a lock of the specified mode on behalf
+     * of an owner. This method will block until the lock can be
+     * acquired, or a timeout occurs.
      *
      * @param mode The lock to acquire
      * @param owner The lock owner
@@ -550,35 +384,42 @@ public final class LockSet
      * @throws LockTimeoutException Timeout occured before lock
      * can be acquired
      */
-    private synchronized void internalLock( int mode, Object owner, int ms )
+    private synchronized void internalLock( int mode, LockOwner owner, int ms )
         throws LockTimeoutException
     {
-        Waiting waiting;
-        Waiting last = null;
-        long    clock;
-        long    timeout;
+        BlockedOwner blocked;
+        BlockedOwner last = null;
+        BlockedOwner next;
+        long         clock;
+        long         timeout;
+
+        // If the owner is not allowed to acquire any more locks,
+        // we throw an exception.
+        if ( owner.getPhase() == LockOwner.SHRINKING )
+            throw new LockTimeoutException( "Owner cannot acquire any new locks" );
 
         // Try to acquire lock, return if successful.
-        if ( internalTryLock( mode, owner ) )
+        if ( internalTryLock( mode, owner, true ) )
             return;
         if ( ms <= 0 )
             throw new LockTimeoutException( "Cannot acquire lock in specified time" );
 
-        // This thread has to block until a lock becomes available.
-        // Put a record in the FIFO linked list (_waiting) and
-        // track your position (waiting).
-        waiting = new Waiting();
-        if ( _waiting == null )
-            _waiting = waiting;
+        // This thread must block until a lock becomes available.
+        // Put a record in the FIFO linked list.
+        blocked = new BlockedOwner( owner );
+        if ( _blocked == null )
+            _blocked = blocked;
         else {
-            last = _waiting;
-            while ( last._next != null )
-                last = last._next;
-            last._next = waiting;
+            last = _blocked;
+            next = last._nextInSet;
+            while ( next != null ) {
+                last = next;
+                next = next._nextInSet;
+            }
+            last._nextInSet = blocked;
         }
 
-        // This method will repeat until lock can be acquired,
-        // or timeout occured.
+        // Repeat until lock can be acquired, or timeout occurs.
         clock = Clock.clock();
         timeout = clock + ms;
         while ( timeout > clock ) {
@@ -592,33 +433,49 @@ public final class LockSet
 
             // If we are next in FIFO list, we can attempt to acquire
             // lock and remove ourselves from list.
-            if ( _waiting == waiting && internalTryLock( mode, owner ) ) {
-                _waiting = _waiting._next;
+            if ( _blocked == blocked &&
+                 internalTryLock( mode, owner, true ) ) {
+                _blocked = blocked._nextInSet;
                 return;
+            }
+
+            // If the owner is not allowed to acquire any more locks,
+            // we throw an exception.
+            if ( owner.getPhase() == LockOwner.SHRINKING ) {
+                if ( _blocked == blocked )
+                    _blocked = blocked._nextInSet;
+                else
+                    last._nextInSet = blocked._nextInSet;
+                blocked.remove();
+                throw new LockTimeoutException( "Owner cannot acquire any new locks" );
             }
 
             // Repeat until timeout.
             clock = Clock.clock();
         }
 
-        // Remove this thread from the waiting list.
-        if ( _waiting == waiting )
-            _waiting = _waiting._next;
+        // Remove this thread from the blocked list.
+        if ( _blocked == blocked )
+            _blocked = blocked._nextInSet;
         else
-            last._next = waiting._next;
-        throw new LockTimeoutException( "Cannot acquire lock in specified time" );
+            last._nextInSet = blocked._nextInSet;
+        blocked.remove();
+        throw new LockTimeoutException( "Timeout occured while waiting to acquire lock" );
     }
-    
+
 
     /**
-     * Attempt to acquire a lock of the specified type.
-     * Return true if the lock has been acquired, false if failed.
+     * Attempt to acquire a lock of the specified mode. Returns true
+     * if the lock can be acquired, false if the lock cannot be
+     * acquired. The lock is acquired only if <tt>acquire</tt> is true.
      * This method never blocks.
      *
      * @param mode The lock to acquire
      * @param owner The lock owner
+     * @param acquire True to acquire lock
      */
-    private synchronized boolean internalTryLock( int mode, Object owner )
+    private synchronized boolean internalTryLock( int mode, LockOwner owner,
+                                                  boolean acquire )
     {
         Lock lock;
         Lock next;
@@ -626,174 +483,217 @@ public final class LockSet
 
         // Determine which lock needs to be acquired.
         switch ( mode ) {
-        case READ_INTENT:
+        case LockMode.READ_INTENT:
             lock = _readIntent;
             break;
-        case READ:
+        case LockMode.READ:
             lock = _readLock;
             break;
-        case UPGRADE:
+        case LockMode.UPGRADE:
             lock = _upgradeLock;
             break;
-        case WRITE:
+        case LockMode.WRITE:
             lock = _writeLock;
             break;
-        case WRITE_INTENT:
+        case LockMode.WRITE_INTENT:
             lock = _writeIntent;
             break;
         default:
-            throw new IllegalArgumentException( "Lock mode is invalid" );
+            throw new IllegalArgumentException( "Lock mode " + mode + " is invalid" );
         }
 
-        // Detect existing lock by same owner. If found, increase
-        // lock count and return true. If not found, lock points to
-        // last lock in the linked list (or null)
+        // Detect existing lock by same owner. If found,
+        // increase lock count and return immediately.
+        // If not found, the variable lock points to the
+        // last lock in the linked list or null.
         if ( lock != null ) {
             if ( lock._owner == owner ) {
                 ++lock._count;
                 return true;
             }
-            next = lock._next;
+            next = lock._nextInMode;
             while ( next != null ) {
                 if ( next._owner == owner ) {
                     ++next._count;
                     return true;
                 }
                 lock = next;
-                next = next._next;
+                next = next._nextInMode;
             }
         }
 
-        // Check for conflicting locks and if no conflicts found,
-        // acquire new lock.
+        // Check for conflictng locks. If conflicting lock
+        // found, return false.
         switch ( mode ) {
-        case READ_INTENT:
+        case LockMode.READ_INTENT:
             // Detect conflicting locks: write
             other = _writeLock;
-            while ( other != null ) {
-                if ( ! isRelated( other._owner, owner ) )
+            if ( other != null ) {
+                while ( other != null ) {
+                    if ( other._owner.isRelated( owner ) )
+                        break;
+                    other = other._nextInMode;
+                }
+                if ( other == null )
                     return false;
-                other = other._next;
             }
-            // Add new lock.
-            if ( lock == null )
-                _readIntent = new Lock( owner );
-            else
-                lock._next = new Lock( owner );
+            // Add new lock if acquiring.
+            if ( acquire ) {
+                if ( lock == null )
+                    _readIntent = new Lock( this, owner );
+                else
+                    lock._nextInMode = new Lock( this, owner );
+            }
             break;
-        case READ:
+        case LockMode.READ:
             // Detect conflicting locks: write, write intent
             other = _writeLock;
-            while ( other != null ) {
-                if ( ! isRelated( other._owner, owner ) )
+            if ( other != null ) {
+                while ( other != null ) {
+                    if ( other._owner.isRelated( owner ) )
+                        break;
+                    other = other._nextInMode;
+                }
+                if ( other == null )
                     return false;
-                other = other._next;
             }
             other = _writeIntent;
-            while ( other != null ) {
-                if ( ! isRelated( other._owner, owner ) )
+            if ( other != null ) {
+                while ( other != null ) {
+                    if ( other._owner.isRelated( owner ) )
+                        break;
+                    other = other._nextInMode;
+                }
+                if ( other == null )
                     return false;
-                other = other._next;
             }
-            // Add new lock.
-            if ( lock == null )
-                _readLock = new Lock( owner );
-            else
-                lock._next = new Lock( owner );
+            // Add new lock if acquiring.
+            if ( acquire ) {
+                if ( lock == null )
+                    _readLock = new Lock( this, owner );
+                else
+                    lock._nextInMode = new Lock( this, owner );
+            }
             break;
-        case UPGRADE:
+        case LockMode.UPGRADE:
             // Detect conflicting locks: write intent, upgrade
             other = _writeIntent;
-            while ( other != null ) {
-                if ( ! isRelated( other._owner, owner ) )
+            if ( other != null ) {
+                while ( other != null ) {
+                    if ( other._owner.isRelated( owner ) )
+                        break;
+                    other = other._nextInMode;
+                }
+                if ( other == null )
                     return false;
-                other = other._next;
             }
             other = _upgradeLock;
-            while ( other != null ) {
-                if ( ! isRelated( other._owner, owner ) )
+            if ( other != null ) {
+                while ( other != null ) {
+                    if ( other._owner.isRelated( owner ) )
+                        break;
+                    other = other._nextInMode;
+                }
+                if ( other == null )
                     return false;
-                other = other._next;
             }
-            // Add new lock.
-            if ( lock == null )
-                _upgradeLock = new Lock( owner );
-            else
-                lock._next = new Lock( owner );
+            // Add new lock if acquiring.
+            if ( acquire ) {
+                if ( lock == null )
+                    _upgradeLock = new Lock( this, owner );
+                else
+                    lock._nextInMode = new Lock( this, owner );
+            }
             break;
-        case WRITE:
+        case LockMode.WRITE:
             // Detect conflicting locks: write intent, read, read intent
             other = _writeIntent;
-            while ( other != null ) {
-                if ( ! isRelated( other._owner, owner ) )
+            if ( other != null ) {
+                while ( other != null ) {
+                    if ( other._owner.isRelated( owner ) )
+                        break;
+                    other = other._nextInMode;
+                }
+                if ( other == null )
                     return false;
-                other = other._next;
             }
             other = _readLock;
-            while ( other != null ) {
-                if ( ! isRelated( other._owner, owner ) )
+            if ( other != null ) {
+                while ( other != null ) {
+                    if ( other._owner.isRelated( owner ) )
+                        break;
+                    other = other._nextInMode;
+                }
+                if ( other == null )
                     return false;
-                other = other._next;
             }
             other = _readIntent;
-            while ( other != null ) {
-                if ( ! isRelated( other._owner, owner ) )
+            if ( other != null ) {
+                while ( other != null ) {
+                    if ( other._owner.isRelated( owner ) )
+                        break;
+                    other = other._nextInMode;
+                }
+                if ( other == null )
                     return false;
-                other = other._next;
             }
-            // Add new lock.
-            if ( lock == null )
-                _writeLock = new Lock( owner );
-            else
-                lock._next = new Lock( owner );
+            // Add new lock if acquiring.
+            if ( acquire ) {
+                if ( lock == null )
+                    _writeLock = new Lock( this, owner );
+                else
+                    lock._nextInMode = new Lock( this, owner );
+            }
             break;
-        case WRITE_INTENT:
+        case LockMode.WRITE_INTENT:
             // Detect conflicting locks: write, upgrade, read
             other = _writeLock;
-            while ( other != null ) {
-                if ( ! isRelated( other._owner, owner ) )
+            if ( other != null ) {
+                while ( other != null ) {
+                    if ( other._owner.isRelated( owner ) )
+                        break;
+                    other = other._nextInMode;
+                }
+                if ( other == null )
                     return false;
-                other = other._next;
             }
             other = _upgradeLock;
-            while ( other != null ) {
-                if ( ! isRelated( other._owner, owner ) )
+            if ( other != null ) {
+                while ( other != null ) {
+                    if ( other._owner.isRelated( owner ) )
+                        break;
+                    other = other._nextInMode;
+                }
+                if ( other == null )
                     return false;
-                other = other._next;
             }
             other = _readLock;
-            while ( other != null ) {
-                if ( ! isRelated( other._owner, owner ) )
+            if ( other != null ) {
+                while ( other != null ) {
+                    if ( other._owner.isRelated( owner ) )
+                        break;
+                    other = other._nextInMode;
+                }
+                if ( other == null )
                     return false;
-                other = other._next;
             }
-            // Add new lock.
-            if ( lock == null )
-                _writeIntent = new Lock( owner );
-            else
-                lock._next = new Lock( owner );
+            // Add new lock if acquiring.
+            if ( acquire ) {
+                if ( lock == null )
+                    _writeIntent = new Lock( this, owner );
+                else
+                    lock._nextInMode = new Lock( this, owner );
+            }
             break;
         default:
-            throw new IllegalArgumentException( "Lock mode is invalid" );
-        }
-
-        // If the owner is a transaction, must register for synchronization
-        // to drop the locks upon completion of the transaction.
-        if ( owner instanceof Transaction ) {
-            try {
-                ( (Transaction) owner ).registerSynchronization( this );
-            } catch ( RollbackException except ) {
-                // Transaction rollback, no need to register.
-            } catch ( SystemException except ) {
-                // System error, no need to register.
-            }
+            throw new IllegalArgumentException( "Lock mode " + mode + " is invalid" );
         }
         return true;
     }
 
 
     /**
-     * Releases the specified lock for the specified owner.
+     * Releases the lock in the specified mode on behalf of the owner.
      *
      * @param mode The lock to acquire
      * @param owner The lock owner
@@ -809,52 +709,72 @@ public final class LockSet
         // directly if the first lock in the linked lists is
         // held by same owner.
         switch ( mode ) {
-        case READ_INTENT:
+        case LockMode.READ_INTENT:
             lock = _readIntent;
-            if ( lock != null && lock._owner == owner ) {
+            if ( lock == null )
+                throw new LockNotHeldException( "Lock not held by owner" );
+            if ( lock._owner == owner ) {
                 if ( --lock._count <= 0 ) {
-                    _readIntent = lock._next;
-                    notifyAll();
+                    lock._owner.remove( lock );
+                    _readIntent = lock._nextInMode;
+                    if ( _blocked != null )
+                        notifyAll();
                 }
                 return;
             }
             break;
-        case READ:
+        case LockMode.READ:
             lock = _readLock;
-            if ( lock != null && lock._owner == owner ) {
+            if ( lock == null )
+                throw new LockNotHeldException( "Lock not held by owner" );
+            if ( lock._owner == owner ) {
                 if ( --lock._count <= 0 ) {
-                    _readLock = lock._next;
-                    notifyAll();
+                    lock._owner.remove( lock );
+                    _readLock = lock._nextInMode;
+                    if ( _blocked != null )
+                        notifyAll();
                 }
                 return;
             }
             break;
-        case UPGRADE:
+        case LockMode.UPGRADE:
             lock = _upgradeLock;
-            if ( lock != null && lock._owner == owner ) {
+            if ( lock == null )
+                throw new LockNotHeldException( "Lock not held by owner" );
+            if ( lock._owner == owner ) {
                 if ( --lock._count <= 0 ) {
-                    _upgradeLock = lock._next;
-                    notifyAll();
+                    lock._owner.remove( lock );
+                    _upgradeLock = lock._nextInMode;
+                    if ( _blocked != null )
+                        notifyAll();
                 }
                 return;
             }
             break;
-        case WRITE:
+        case LockMode.WRITE:
             lock = _writeLock;
-            if ( lock != null && lock._owner == owner ) {
+            if ( lock == null )
+                throw new LockNotHeldException( "Lock not held by owner" );
+            if ( lock._owner == owner ) {
                 if ( --lock._count <= 0 ) {
-                    _writeLock = lock._next;
-                    notifyAll();
+                    lock._owner.remove( lock );
+                    _writeLock = lock._nextInMode;
+                    if ( _blocked != null )
+                        notifyAll();
                 }
                 return;
             }
             break;
-        case WRITE_INTENT:
+        case LockMode.WRITE_INTENT:
             lock = _writeIntent;
-            if ( lock != null && lock._owner == owner ) {
+            if ( lock == null )
+                throw new LockNotHeldException( "Lock not held by owner" );
+            if ( lock._owner == owner ) {
                 if ( --lock._count <= 0 ) {
-                    _writeIntent = lock._next;
-                    notifyAll();
+                    lock._owner.remove( lock );
+                    _writeIntent = lock._nextInMode;
+                    if ( _blocked != null )
+                        notifyAll();
                 }
                 return;
             }
@@ -865,19 +785,19 @@ public final class LockSet
 
         // Iterate over all locks in the linked list and
         // release the suitable one.
-        if ( lock != null ) {
-            next = lock._next;
-            while ( next != null ) {
-                if ( next._owner == owner ) {
-                    if ( --next._count <= 0 ) {
-                        lock._next = next._next;
+        next = lock._nextInMode;
+        while ( next != null ) {
+            if ( next._owner == owner ) {
+                if ( --next._count <= 0 ) {
+                    lock._nextInMode = next._nextInMode;
+                    next._owner.remove( next );
+                    if ( _blocked != null )
                         notifyAll();
-                    }
-                    return;
                 }
-                lock = next;
-                next = next._next;
+                return;
             }
+            lock = next;
+            next = next._nextInMode;
         }
         // No lock found for this owner.
         throw new LockNotHeldException( "Lock not held by owner" );
@@ -896,7 +816,8 @@ public final class LockSet
      * can be acquired
      * @throw LockNotHeldException Lock not held by this owner
      */    
-    private synchronized void internalChange( int heldMode, int newMode, Object owner, int ms )
+    private synchronized void internalChange( int heldMode, int newMode,
+                                              LockOwner owner, int ms )
         throws LockNotHeldException, LockTimeoutException
     {
         Lock lock;
@@ -905,28 +826,28 @@ public final class LockSet
         // is essential, since we acquire the new lock before giving up
         // on the old lock.
         switch ( heldMode ) {
-        case READ_INTENT:
+        case LockMode.READ_INTENT:
             lock = _readIntent;
             break;
-        case READ:
+        case LockMode.READ:
             lock = _readLock;
             break;
-        case UPGRADE:
+        case LockMode.UPGRADE:
             lock = _upgradeLock;
             break;
-        case WRITE:
+        case LockMode.WRITE:
             lock = _writeLock;
             break;
-        case WRITE_INTENT:
+        case LockMode.WRITE_INTENT:
             lock = _writeIntent;
             break;
         default:
-            throw new IllegalArgumentException( "Lock mode is invalid" );
+            throw new IllegalArgumentException( "Lock mode " + heldMode + " is invalid" );
         }
         while ( lock != null ) {
             if ( lock._owner == owner )
                 break;
-            lock = lock._next;
+            lock = lock._nextInMode;
         }
         if ( lock == null )
             throw new LockNotHeldException( "Lock not held by owner" );
@@ -936,14 +857,17 @@ public final class LockSet
 
 
     /**
-     * Drop all the locks belonging to a specific owner. This includes
-     * locks acquired by the owner and locks acquired by related owners
-     * (e.g. nested transactions). This method also drops locks on all
-     * subordinate lock sets.
+     * Drop all locks belonging to a specific owner.
+     * Includes locks acquired by the owner and locks
+     * acquired by related owners (e.g. nested transactions).
+     * This method drops lock on all subordinate locks sets
+     * as well.
      *
      * @param owner The owner
+     * @param callOwner True if the owner should be notified
+     * that a lock is being removed
      */
-    protected synchronized void internalDropLocks( Object owner )
+    protected synchronized void drop( LockOwner owner, boolean callOwner )
     {
         Lock        lock;
         Lock        next;
@@ -951,87 +875,111 @@ public final class LockSet
 
         // Drop all locks held by this owner.
         lock = _readIntent;
-        while ( lock != null && isRelated( owner, lock._owner ) ) {
-            lock = lock._next;
+        while ( lock != null && owner.isRelated( lock._owner ) ) {
+            if ( callOwner )
+                owner.remove( lock );
+            lock = lock._nextInMode;
             _readIntent = lock;
         }
         if ( lock != null ) {
-            next = lock._next;
+            next = lock._nextInMode;
             while ( next != null ) {
-                if ( isRelated( owner, next._owner ) ) {
-                    next = next._next;
-                    lock._next = next;
+                if ( owner.isRelated( next._owner ) ) {
+                    if ( callOwner )
+                        owner.remove( next );
+                    next = next._nextInMode;
+                    lock._nextInMode = next;
                 } else {
                     lock = next;
-                    next = next._next;
+                    next = next._nextInMode;
                 }
             }
         }
+
         lock = _readLock;
-        while ( lock != null && isRelated( owner, lock._owner ) ) {
-            lock = lock._next;
+        while ( lock != null && owner.isRelated( lock._owner ) ) {
+            if ( callOwner )
+                owner.remove( lock );
+            lock = lock._nextInMode;
             _readLock = lock;
         }
         if ( lock != null ) {
-            next = lock._next;
+            next = lock._nextInMode;
             while ( next != null ) {
-                if ( isRelated( owner, next._owner ) ) {
-                    next = next._next;
-                    lock._next = next;
+                if ( owner.isRelated( next._owner ) ) {
+                    if ( callOwner )
+                        owner.remove( next );
+                    next = next._nextInMode;
+                    lock._nextInMode = next;
                 } else {
                     lock = next;
-                    next = next._next;
+                    next = next._nextInMode;
                 }
             }
         }
+
         lock = _upgradeLock;
-        while ( lock != null && isRelated( owner, lock._owner ) ) {
-            lock = lock._next;
+        while ( lock != null && owner.isRelated( lock._owner ) ) {
+            if ( callOwner )
+                owner.remove( lock );
+            lock = lock._nextInMode;
             _upgradeLock = lock;
         }
         if ( lock != null ) {
-            next = lock._next;
+            next = lock._nextInMode;
             while ( next != null ) {
-                if ( isRelated( owner, next._owner ) ) {
-                    next = next._next;
-                    lock._next = next;
+                if ( owner.isRelated( next._owner ) ) {
+                    if ( callOwner )
+                        owner.remove( next );
+                    next = next._nextInMode;
+                    lock._nextInMode = next;
                 } else {
                     lock = next;
-                    next = next._next;
+                    next = next._nextInMode;
                 }
             }
         }
+
         lock = _writeLock;
-        while ( lock != null && isRelated( owner, lock._owner ) ) {
-            lock = lock._next;
+        while ( lock != null && owner.isRelated( lock._owner ) ) {
+            if ( callOwner )
+                owner.remove( lock );
+            lock = lock._nextInMode;
             _writeLock = lock;
         }
         if ( lock != null ) {
-            next = lock._next;
+            next = lock._nextInMode;
             while ( next != null ) {
-                if ( isRelated( owner, next._owner ) ) {
-                    next = next._next;
-                    lock._next = next;
+                if ( owner.isRelated( next._owner ) ) {
+                    if ( callOwner )
+                        owner.remove( next );
+                    next = next._nextInMode;
+                    lock._nextInMode = next;
                 } else {
                     lock = next;
-                    next = next._next;
+                    next = next._nextInMode;
                 }
             }
         }
+
         lock = _writeIntent;
-        while ( lock != null && isRelated( owner, lock._owner ) ) {
-            lock = lock._next;
+        while ( lock != null && owner.isRelated( lock._owner ) ) {
+            if ( callOwner )
+                owner.remove( lock );
+            lock = lock._nextInMode;
             _writeIntent = lock;
         }
         if ( lock != null ) {
-            next = lock._next;
+            next = lock._nextInMode;
             while ( next != null ) {
-                if ( isRelated( owner, next._owner ) ) {
-                    next = next._next;
-                    lock._next = next;
+                if ( owner.isRelated( next._owner ) ) {
+                    if ( callOwner )
+                        owner.remove( next );
+                    next = next._nextInMode;
+                    lock._nextInMode = next;
                 } else {
                     lock = next;
-                    next = next._next;
+                    next = next._nextInMode;
                 }
             }
         }
@@ -1039,90 +987,12 @@ public final class LockSet
         // Drop locks on all the subordinates.
         sub = _subordinate;
         while ( sub != null ) {
-            sub._lockSet.internalDropLocks( owner );
+            sub._lockSet.drop( owner, callOwner );
             sub = sub._next;
         }
-        // Notify next thread waiting for lock.
-        if ( _waiting != null )
+        // Notify next blocked owner.
+        if ( _blocked != null )
             notifyAll();
-    }
-
-
-    /**
-     * Determine if existing owner of lock (<tt>existing</tt>) is related
-     * to owner requesting new lock (<tt>requesting</tt>), or they are
-     * the same owner.
-     * <p>
-     * Two owners are related if the requesting owner can acquire a lock
-     * held by the existing owner without conflict. From a transaction
-     * perspective, the existing owner must be a parent of the requesting
-     * owner.
-     * <p>
-     * Since the two owners are only related, if this method returns true,
-     * the requesting owner acquires a new lock.
-     *
-     * @param existing The existing lock owner
-     * @param requesting The requesting lock owner
-     * @return True if requesting lock owner can acquire lock held by
-     * existing lock owner without conflict
-     */
-    private boolean isRelated( Object existing, Object requesting )
-    {
-        TyrexTransaction parent;
-
-        if ( existing == requesting )
-            return true;
-        if ( existing instanceof TyrexTransaction &&
-             requesting instanceof TyrexTransaction ) {
-            parent = (TyrexTransaction) ( (TyrexTransaction) requesting ).getParent();
-            while ( parent != null ) {
-                if ( parent == existing )
-                    return true;
-                parent = (TyrexTransaction) parent.getParent();
-            }
-        }
-        return false;
-    }
-
-
-    /**
-     * Returns the owner for this request. If the current thread is
-     * associated with a transaction, the transaction is returned and
-     * will be used as the owner for the lock. Otherwise, the thread
-     * context will be used.
-     * <p>
-     * Using the thread context instead of the thread allows locks to
-     * be used across method invocations.
-     *
-     * @return The owner, either a transaction or thread context
-     */
-    private Object getOwner()
-    {
-        ThreadContext context;
-        Transaction   tx;
-
-        context = ThreadContext.getThreadContext();
-        tx = context.getTransaction();
-        if ( tx != null )
-            return tx;
-        else
-            return context;
-    }
-
-
-    //----------------------------------------------------------------------------
-    // Transaction synchronization
-    //----------------------------------------------------------------------------
-
-
-    public void beforeCompletion()
-    {
-    }
-
-
-    public void afterCompletion( int heuristic )
-    {
-        internalDropLocks( getOwner() );
     }
 
 
@@ -1131,6 +1001,7 @@ public final class LockSet
     //----------------------------------------------------------------------------
 
 
+    /*
     private void writeObject( ObjectOutputStream stream )
         throws IOException
     {
@@ -1279,57 +1150,7 @@ public final class LockSet
             _subordinate = new Subordinate( lockSet, _subordinate );
         }
     }
-
-
-
-    /**
-     * A lock on behalf of an owner. Locks are linked lists to allow
-     * multiple owners to acquire non-conflicting locks. If the same
-     * owner acquires the same lock, a reference count is used.
-     */
-    private final static class Lock
-    {
-
-        /**
-         * The owner of the lock. The owner could be a thread or
-         * a transaction.
-         */
-        final Object   _owner;
-
-
-        /**
-         * The number of times the lock has been acquired by this
-         * owner.
-         */
-        int            _count = 1;
-
-
-        /**
-         * Reference to the next lock for a different owner.
-         */
-        Lock           _next;
-
-
-        Lock( Object owner )
-        {
-            _owner = owner;
-        }
-
-
-    }
-
-
-    /**
-     * A linked list of threads blocked and waiting for the release
-     * of a lock. Each thread adds itself to the end of the list, and
-     * when notified checks to see if it's at the top.
-     */
-    private static final class Waiting
-    {
-
-        Waiting _next;
-
-    }
+    */
 
 
     /**

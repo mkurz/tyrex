@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: ThreadContext.java,v 1.4 2001/03/17 01:27:19 arkin Exp $
+ * $Id: ThreadContext.java,v 1.5 2001/03/22 20:27:28 arkin Exp $
  */
 
 
@@ -56,6 +56,7 @@ import tyrex.tm.RuntimeContext;
 import tyrex.naming.MemoryContext;
 import tyrex.naming.MemoryContextFactory;
 import tyrex.naming.MemoryBinding;
+import tyrex.lock.LockOwner;
 import tyrex.util.FastThreadLocal;
 
 
@@ -63,7 +64,7 @@ import tyrex.util.FastThreadLocal;
  * Implementation of {@link RuntimeContext}.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.4 $ $Date: 2001/03/17 01:27:19 $
+ * @version $Revision: 1.5 $ $Date: 2001/03/22 20:27:28 $
  */
 public class ThreadContext
     extends RuntimeContext
@@ -93,6 +94,9 @@ public class ThreadContext
     private final MemoryBinding     _bindings;
 
 
+    private final LockOwner         _lockOwner;
+
+
     private static ThreadEntry[]    _table;
 
 
@@ -117,6 +121,7 @@ public class ThreadContext
     {
         _bindings = new MemoryBinding();
         _subject = subject;
+        _lockOwner = new ThreadLockOwner();
     }
 
 
@@ -134,6 +139,7 @@ public class ThreadContext
                 throw new NamingException( "The context is not a root context" );
         }
         _subject = subject;
+        _lockOwner = new ThreadLockOwner();
     }
 
 
@@ -340,6 +346,12 @@ public class ThreadContext
     }
 
 
+    public LockOwner getLockOwner()
+    {
+        return _lockOwner;
+    }
+
+
     /**
      * Adds an XA resource to the association list.
      */
@@ -464,6 +476,26 @@ public class ThreadContext
                 _previous = previous;
                 _nextEntry = previous._nextEntry;
             }
+        }
+
+
+    }
+
+
+    static private class ThreadLockOwner
+        extends LockOwner
+    {
+
+
+        public boolean isRelated( LockOwner requesting )
+        {
+            return ( requesting == this );
+        }
+
+
+        public boolean canAcquire()
+        {
+            return true;
         }
 
 
