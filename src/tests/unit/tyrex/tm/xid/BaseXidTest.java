@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: BaseXidTest.java,v 1.3 2001/09/07 01:17:34 mills Exp $
+ * $Id: BaseXidTest.java,v 1.4 2001/09/12 11:17:52 mills Exp $
  */
 
 package tyrex.tm.xid;
@@ -53,7 +53,7 @@ import java.io.PrintWriter;
 
 /**
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  */
 
 public abstract class BaseXidTest extends TestCase
@@ -85,9 +85,15 @@ public abstract class BaseXidTest extends TestCase
     /**
      * <p>Create an instance.</p>
      *
-     * @result Ensure that hasMoreElements() returns true.  Call
-     * next() three times ensuring that the correct values are
-     * returned each time.  hasMoreElements() should now return false.
+     * @result Create a prefix using createPrefix().  It should return
+     * a prefix of the correct form.  Create a String from this array
+     * and ensure that the String is of the correct form.  Call
+     * toString().  Compare the value returned to that returned by the
+     * test classes getStringXid() (which should return the correct
+     * string for the type of Xid).  Ensure they are the same.
+     *
+     * <p>Ensure that two calls to hashCode() return the same
+     * value.</p>
      */
 
     public void testBasicFunctionality()
@@ -102,7 +108,7 @@ public abstract class BaseXidTest extends TestCase
         // The hashCode() function uses String's version.  To test
         // it's value String's version would have to be used again.
         // Therefore there is no gain.
-        xid.hashCode();
+        assertEquals("HashCode", xid.hashCode(), xid.hashCode());
     }
 
 

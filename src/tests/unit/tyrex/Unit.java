@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Unit.java,v 1.6 2001/09/08 05:05:31 mills Exp $
+ * $Id: Unit.java,v 1.7 2001/09/12 11:17:52 mills Exp $
  */
 
 package tyrex;
@@ -69,7 +69,7 @@ import java.util.Vector;
  * Main entry class for test cases execution.
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.7 $
  */
 
 public class Unit
@@ -135,7 +135,7 @@ public class Unit
 
     public static String byteArrayToString(byte[] bytes)
     {
-        StringBuffer buffer = new StringBuffer(bytes.length * 2 + 1);
+        StringBuffer buffer = new StringBuffer(bytes.length * 2);
         for ( int i = bytes.length ; i-- > 0 ; ) {
             buffer.append(HEX_DIGITS[(bytes[i] & 0xF0) >> 4]);
             buffer.append(HEX_DIGITS[(bytes[i] & 0x0F)]);

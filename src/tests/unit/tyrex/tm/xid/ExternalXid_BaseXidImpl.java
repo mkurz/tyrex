@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: ExternalXid_BaseXidImpl.java,v 1.1 2001/09/07 01:17:34 mills Exp $
+ * $Id: ExternalXid_BaseXidImpl.java,v 1.2 2001/09/12 11:17:52 mills Exp $
  */
 
 package tyrex.tm.xid;
@@ -54,11 +54,16 @@ import java.io.PrintWriter;
 /**
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 
 public class ExternalXid_BaseXidImpl extends BaseXidTest
 {
+    private byte[] _global = new byte[] {(byte)0xA8, (byte)0xB7, (byte)0xC6,
+                                        (byte)0xD5, (byte)0xE4, (byte)0xF3};
+    private byte[] _branch = new byte[] {(byte)0x9F, (byte)0x8E, (byte)0x7D,
+                                        (byte)0x6C, (byte)0x5B, (byte)0x4A};
+
     public ExternalXid_BaseXidImpl(String name)
     {
         super(name);
@@ -71,9 +76,7 @@ public class ExternalXid_BaseXidImpl extends BaseXidTest
     public BaseXid newBaseXid()
         throws Exception
     {
-        byte[] global = new byte[] { (byte)0xA8, (byte)0xB7, (byte)0xC6, (byte)0xD5, (byte)0xE4, (byte)0xF3};
-        byte[] branch = new byte[] { (byte)0x9F, (byte)0x8E, (byte)0x7D, (byte)0x6C, (byte)0x5B, (byte)0x4A};
-        return (BaseXid) new ExternalXid(BaseXid.FORMAT_ID, global, branch);
+        return (BaseXid) new ExternalXid(BaseXid.FORMAT_ID, _global, _branch);
     }
 
 
@@ -86,6 +89,7 @@ public class ExternalXid_BaseXidImpl extends BaseXidTest
         throws Exception
     {
         char[] pref = xid.createPrefix(BaseXid.FORMAT_ID);
-        return new String(pref) + "f3e4d5c6b7a8-4a5b6c7d8e9f";
+        return new String(pref) + tyrex.Unit.byteArrayToString(_global) + "-"
+            + tyrex.Unit.byteArrayToString(_branch);
     }
 }

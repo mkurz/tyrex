@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: LocalXidTest.java,v 1.2 2001/09/08 05:05:31 mills Exp $
+ * $Id: LocalXidTest.java,v 1.3 2001/09/12 11:17:52 mills Exp $
  */
 
 package tyrex.tm.xid;
@@ -56,7 +56,7 @@ import junit.extensions.*;
 /**
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  */
 
 public class LocalXidTest extends TestCase
@@ -93,8 +93,8 @@ public class LocalXidTest extends TestCase
      * <p>Create an ExternalXid using the attributes from the first
      * LocalXid.  Because an ExternalXid cannot be created with a null
      * or zero length global value the ExternalXid won't be equal to
-     * the first LocalXid but using it in an equals call will test
-     * equals().</p>
+     * the first LocalXid but using it in an equals call will further
+     * extend the test coverage of the method equals().</p>
      */
 
     public void testNonBaseXidFunctions()
@@ -103,10 +103,10 @@ public class LocalXidTest extends TestCase
         LocalXid localId1 = new LocalXid();
         LocalXid localId2 = new LocalXid(localId1.toString(),
                                          localId1.getBranchQualifier());
-        assert("Copy", localId1.equals(localId2));
+        assert("Copy1", localId1.equals(localId2));
         LocalXid localId3 = (LocalXid)localId1.newBranch();
-        assert("Copy", !localId1.equals(localId3));
-        assert("Copy", !localId2.equals(localId3));
+        assert("Copy2", !localId1.equals(localId3));
+        assert("Copy3", !localId2.equals(localId3));
         assertEquals("Format id", LocalXid.LOCAL_FORMAT_ID,
                      localId1.getFormatId());
         assertEquals(BaseXid.EMPTY_ARRAY, localId1.getGlobalTransactionId());
@@ -116,8 +116,8 @@ public class LocalXidTest extends TestCase
         ExternalXid exId = new ExternalXid(LocalXid.LOCAL_FORMAT_ID,
                                            global,
                                            localId1.getBranchQualifier());
-        assert("Copy1", !localId1.equals(exId));
-        assert("Copy2", !localId1.equals(xid));
+        assert("Copy4", !localId1.equals(exId));
+        assert("Copy5", !localId1.equals(xid));
     }
 
 

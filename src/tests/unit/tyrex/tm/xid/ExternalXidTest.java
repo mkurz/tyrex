@@ -40,15 +40,14 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: ExternalXidTest.java,v 1.1 2001/09/07 01:17:34 mills Exp $
+ * $Id: ExternalXidTest.java,v 1.2 2001/09/12 11:17:52 mills Exp $
  */
 
 package tyrex.tm.xid;
 
-import java.io.OutputStream;
+import javax.transaction.xa.Xid;
+
 import java.io.PrintWriter;
-import java.io.FileInputStream;
-import java.io.File;
 
 import junit.framework.*;
 import junit.extensions.*;
@@ -57,7 +56,7 @@ import junit.extensions.*;
 /**
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 
 public class ExternalXidTest extends TestCase
@@ -79,9 +78,105 @@ public class ExternalXidTest extends TestCase
         _logger.flush();
     }
 
-    public void testNone()
+
+    /**
+     * <p>Test the aspects of the class that do not relate to
+     * BaseXid.</p>
+     *
+     * @result Create an instance.  Using its getFormatId(),
+     * getGlobalTransactionId() and getBranchQualifier() values create
+     * a second instance.  Ensure that these are equal.  Create a
+     * third instance using the first as argument.  Ensure that this
+     * is also equal.  Create a fourth using toString() from the first
+     * and otherwise the same arguments as the first.  Ensure that
+     * this is also equal.
+     *
+     * <p>Call newBranch() on the first.  The xid returned should not
+     * be equal.  Ensure that the value returned by getFormatId() is
+     * equal to BaseXid.FORMAT_ID and that the values returned by
+     * getGlobalTransactionId() and getBranchQualifier() are equal to
+     * the values used in the constructor.
+     *
+     * <p>Create an Xid using XidUtils.parse().  Ensure that the id
+     * returned is equal to the one used as argument in the call.</p>
+     */
+
+    public void testNonBaseXidFunctions()
         throws Exception
     {
+        byte[] global = new byte[] {(byte)0xA8, (byte)0xB7, (byte)0xC6,
+                                    (byte)0xD5, (byte)0xE4, (byte)0xF3};
+        byte[] branch = new byte[] {(byte)0x9F, (byte)0x8E, (byte)0x7D,
+                                    (byte)0x6C, (byte)0x5B, (byte)0x4A};
+        ExternalXid extId1 = new ExternalXid(BaseXid.FORMAT_ID, global,
+                                             branch);
+        ExternalXid extId2 = new ExternalXid(extId1.getFormatId(),
+                                             extId1.getGlobalTransactionId(),
+                                             extId1.getBranchQualifier());
+        ExternalXid extId3 = new ExternalXid(extId1);
+        ExternalXid extId4 = new ExternalXid(extId1.toString(),
+                                             BaseXid.FORMAT_ID, global,
+                                             branch);
+        assert("Copy1", extId1.equals(extId2));
+        assert("Copy2", extId1.equals(extId3));
+        assert("Copy3", extId1.equals(extId4));
+        ExternalXid extId5 = (ExternalXid)extId1.newBranch();
+        assert("Copy4", !extId1.equals(extId5));
+        assertEquals("Format id", BaseXid.FORMAT_ID, extId1.getFormatId());
+        assertEquals("Transaction id", global,
+                     extId1.getGlobalTransactionId());
+        assertEquals("Branch id", branch, extId1.getBranchQualifier());
+        Xid xid = XidUtils.parse(extId1.toString());
+        assert("Equals", extId1.equals(xid));
+    }
+
+
+    /**
+     * <p>Bounds tests.  Ensure that illegal values result in the
+     * correct exceptions being thrown.</p>
+     *
+     * @result Call the constructor with a -1 format id or a null or
+     * empty byte array global value.  It should throw an
+     * IllegalArgumentException:
+     */
+
+    public void testBounds()
+        throws Exception
+    {
+        byte[] global = new byte[] {(byte)0xA8, (byte)0xB7, (byte)0xC6,
+                                    (byte)0xD5, (byte)0xE4, (byte)0xF3};
+        byte[] branch = new byte[] {(byte)0x9F, (byte)0x8E, (byte)0x7D,
+                                    (byte)0x6C, (byte)0x5B, (byte)0x4A};
+        try
+        {
+            ExternalXid extId1 = new ExternalXid(-1, global, branch);
+            fail("Expected an exception to have been raised.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            // Expected.
+        }
+        try
+        {
+            ExternalXid extId1 = new ExternalXid(BaseXid.FORMAT_ID, null,
+                                                 branch);
+            fail("Expected an exception to have been raised.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            // Expected.
+        }
+        try
+        {
+            ExternalXid extId1 = new ExternalXid(BaseXid.FORMAT_ID,
+                                                 BaseXid.EMPTY_ARRAY,
+                                                 branch);
+            fail("Expected an exception to have been raised.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            // Expected.
+        }
     }
 
 

@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: XidUtilsTest.java,v 1.3 2001/09/08 07:44:57 mills Exp $
+ * $Id: XidUtilsTest.java,v 1.4 2001/09/12 11:17:52 mills Exp $
  */
 
 
@@ -56,7 +56,7 @@ import junit.framework.TestSuite;
 /**
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  */
 
 
@@ -123,12 +123,12 @@ public class XidUtilsTest extends TestCase
         localId = XidUtils.newLocal();
         branchId = XidUtils.newBranch(localId);
         globalId = XidUtils.newGlobal();
-        assert("Uniqueness", localId.toString().compareTo(branchId.toString())
+        assert("Uniqueness1", localId.toString().compareTo(branchId.toString())
                != 0);
-        assert("Uniqueness", localId.toString().compareTo(globalId.toString())
+        assert("Uniqueness2", localId.toString().compareTo(globalId.toString())
                != 0);
-        assert("Uniqueness", globalId.toString().compareTo(branchId.toString())
-               != 0);
+        assert("Uniqueness3",
+               globalId.toString().compareTo(branchId.toString()) != 0);
     }
 
 
@@ -136,7 +136,22 @@ public class XidUtilsTest extends TestCase
      * <p>Bounds tests.  Ensure that illegal values result in the
      * correct exceptions being thrown.</p>
      *
-     * @result */
+     * @result All of the following calls with a null argument should
+     * result in an IllegalArgumentException being thrown:
+     * importXid(), newBranch(), isLocal(), isGlobal(), isBranch(),
+     * toString() and parse().
+     *
+     * <p>These calls should result in an InvalidXidException being
+     * thrown: call parse() with an argument that does not begin with
+     * the XID_PREFIX, call parse() with an id whose transaction part
+     * has an odd number of hexidecimal digits, calling it with an id
+     * where the first part after the prefix equates to -1, calling it
+     * with an id that is just a prefix, calling it with an id whose
+     * global value too long, calling it with an id whose global value
+     * has an odd number of hexidecimal digits, calling it with an id
+     * whose branch value too long, calling with an id that contains
+     * characters that are not dash ("-") or hexidecimal digits.</p>
+     */
 
     public void testBounds()
         throws Exception
