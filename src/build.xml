@@ -350,7 +350,7 @@
     <copydir src="${dist.dir}" dest="${build.dir}/${archive}"
              includes="${archive}-iiop.jar" />
     <copydir src="${lib.dir}" dest="${build.dir}/${archive}"
-             includes="jdbc-se2.0.jar,jndi.jar,jta1.0.1.jar,jts.jar,ots.jar,xerces.jar" />
+             includes="jdbc-se2.0.jar,jndi.jar,jta_1.0.1.jar,jts.jar,ots-jts_1.0.jar,xerces-J_1.4.0.jar" />
     <copydir src="${source.schema}" dest="${build.dir}/${archive}/schema" />
     <copydir src="${build.doc}" dest="${build.dir}/${archive}/doc" />
     <deltree dir="${build.dir}/${archive}/doc/javadoc" />
