@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Logger.java,v 1.6 2000/09/25 06:41:56 mohammed Exp $
+ * $Id: Logger.java,v 1.7 2000/11/01 00:21:55 mohammed Exp $
  */
 
 
@@ -65,7 +65,7 @@ import java.util.Date;
  * post-mortem analysis.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.6 $ $Date: 2000/09/25 06:41:56 $
+ * @version $Revision: 1.7 $ $Date: 2000/11/01 00:21:55 $
  */
 public class Logger
     extends PrintWriter
@@ -346,16 +346,19 @@ public class Logger
 	int i;
 	int offset;
 
+        i = 0;
 	offset = 0;
-	for ( i = 0 ; i < value.length() ; ++i ) {
-	    if ( value.charAt( i ) == '\n' ) {
-		prefixLine();
-		super.write( value, offset, i - offset );
-		super.println();
-		_newLine = true;
-		offset = i + 1;
-	    }
-	}
+        if (null != value) {
+            for ( i = 0 ; i < value.length() ; ++i ) {
+                if ( value.charAt( i ) == '\n' ) {
+                    prefixLine();
+                    super.write( value, offset, i - offset );
+                    super.println();
+                    _newLine = true;
+                    offset = i + 1;
+                }
+            }
+        }
 	if ( i > offset ) {
 	    prefixLine();
 	    super.write( value, offset, i - offset );
