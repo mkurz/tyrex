@@ -48,7 +48,9 @@ import java.sql.*;
 import java.util.*;
 
 /**
- * The test jdbc driver
+ * The test jdbc driver.
+ * <P>
+ * The number of connections created is across all TestDriverImpl instances
  */
 public final class TestDriverImpl 
     implements Driver
@@ -74,7 +76,7 @@ public final class TestDriverImpl
     /**
      * The number of connections created
      */
-    private int _numberOfCreatedConnections = 0;
+    private static int _numberOfCreatedConnections = 0;
 
 
     /**
@@ -104,7 +106,6 @@ public final class TestDriverImpl
      */
     public TestDriverImpl()
     {
-
     }
 
     /**
