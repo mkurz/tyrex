@@ -117,6 +117,14 @@
            deprecation="${deprecation}">
     </javac>
   </target>
+ 
+  <target name="iiop-jar" depends="iiop">
+    <property name="archive" value="${project}-${version}" />
+    <jar jarfile="${dist.dir}/${archive}-iiop.jar"
+         basedir="${build.classes}"
+         manifest="${build.classes}/MANIFEST.MF"
+         includes="tyrex/corba/*" />
+  </target>
 
   <target name="jar" depends="main"
           description="Builds the binary JAR in the dist directory">
@@ -253,6 +261,7 @@
   <!-- Build the source distribution -->
   <target name="source" depends="prepare"
           description="Builds the source distribution">
+    <property name="archive" value="${project}-${version}" />
     <delete  file="${dist.dir}/${archive}-src.tgz" />
     <delete  file="${dist.dir}/${archive}-src.zip" />
     <deltree dir="${build.dir}/${archive}" />
@@ -284,6 +293,8 @@
   <!-- Build the source distribution -->
   <target name="docs" depends="prepare"
           description="Builds the source distribution">
+    <property name="archive" value="${project}-${version}" />
+    <property name="dist.dir" value="dist" />
     <delete  file="${dist.dir}/${archive}-src.tgz" />
     <delete  file="${dist.dir}/${archive}-src.zip" />
     <deltree dir="${build.dir}/${archive}" />
@@ -311,6 +322,7 @@
   <!-- Build the tarball including JAR and all dependent packages -->
   <target name="tarball" depends="prepare,jar"
           description="Builds the binary distribution in the dist directory">
+    <property name="archive" value="${project}-${version}" />
     <delete  file="${dist.dir}/${archive}.tgz" />
     <delete  file="${dist.dir}/${archive}.zip" />
     <deltree dir="${build.dir}/${archive}" />
@@ -320,13 +332,15 @@
              includes="README,LICENSE,CHANGELOG" />
     <copydir src="${dist.dir}" dest="${build.dir}/${archive}"
              includes="${archive}.jar" />
+    <copydir src="${dist.dir}" dest="${build.dir}/${archive}"
+             includes="${archive}-iiop.jar" />
     <copydir src="${lib.dir}" dest="${build.dir}/${archive}"
              includes="jdbc-se2.0.jar,jndi.jar,jta1.0.1.jar,jts.jar,ots.jar,xerces.jar" />
     <copydir src="${source.schema}" dest="${build.dir}/${archive}/schema" />
     <copydir src="${build.doc}" dest="${build.dir}/${archive}/doc" />
     <deltree dir="${build.dir}/${archive}/doc/javadoc" />
 
-    <tar     tarfile="${dist}/${archive}.tar" basedir="${build.dir}"
+    <tar     tarfile="${dist.dir}/${archive}.tar" basedir="${build.dir}"
              includes="${archive}/**" excludes="${archive}/*.tar,${archive}/*.zip" />
     <gzip    src="${dist.dir}/${archive}.tar" zipfile="${dist.dir}/${archive}.tgz" />
     <delete  file="${dist.dir}/${archive}.tar" />
