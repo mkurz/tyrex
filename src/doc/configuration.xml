@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!-- $Id: configuration.xml,v 1.1 2001/03/05 18:25:38 arkin Exp $ -->
+<!-- $Id: configuration.xml,v 1.2 2001/03/14 21:39:27 arkin Exp $ -->
 <document>
   <properties>
     <title>Tyrex Configuration</title>
@@ -65,7 +65,7 @@ java -Dtyrex.config=tyrex.config $1 ]]></code>
       <p>The following example illustrates a server configuration file for a deployment
         environment:</p>
 
-    <code><![CDATA[
+    <code>
 tyrex.verbose=false
 tyrex.silent=true
 
@@ -81,7 +81,7 @@ tyrex.secureRandom=true
 # The name of the UUID state file
 tyrex.uuid.stateFile=uuid.state
 # The name of the domain configuration file
-tyrex.domain.fila=domain.xml ]]></code>
+tyrex.domain.fila=domain.xml</code>
 
     </section>
 
@@ -119,9 +119,9 @@ tyrex.domain.fila=domain.xml ]]></code>
         network card address 08:00:46:08:64:C3 using the clock sequence 100. Both values
         are specified as hexadecimal values:</p>
       
-      <code><![CDATA[
+      <code>
 uuid.nodeIdentifier=0800460864C3    
-uuid.clockSequence=0100 ]]></code>
+uuid.clockSequence=0100</code>
 
       <p>The UUID state file is typically located in the installation directory of Tyrex.
         The location of the file can be changed by setting the property <tt>tyrex.uuid.stateFile</tt>
@@ -285,11 +285,11 @@ uuid.clockSequence=0100 ]]></code>
         the respective <tt>set</tt> method.</p>
 
       <p>For example, for a <tt>DataSource</tt> that has the methods <tt>setHostName</tt>
-        and <tt>setUser</tt>, use:<code><![CDATA[
-<config>
-  <hostName>host.domain.com</hostName>
-  <user>myself</user>
-</config> ]]></code></p>
+        and <tt>setUser</tt>, use:<code>
+&lt;config&gt;
+  &lt;hostName&gt;host.domain.com&lt;/hostName&gt;
+  &lt;user&gt;myself&lt;/user&gt;
+&lt;/config&gt;</code></p>
 
       <h4>[dataSource|connector]/limits</h4>
 
@@ -378,39 +378,39 @@ uuid.clockSequence=0100 ]]></code>
       <h4>Example</h4>
 
       <p>The following example illustrates a domain configuration file using Sybase jConnect 5.2:</p>
-        <code><![CDATA[
-<domain>
-  <name>default</name>
-  <!-- Limit to 50 concurrent transactions -->
-  <maximum>50</maximum>
-  <!-- Default transaction timeout: 2 minuts -->
-  <timeout>120</timeout>
-  <resources>
-    <dataSource>
-      <name>myDb</name>
-      <jar>jconnect_5.2.jar</jar>
-      <class>com.sybase.jdbc2.jdbc.SybXADataSource</class>
-      <config>
-        <!-- Properties defined by SybXADataSource -->
-        <user>arkin</user>
-        <password>secret</password>
-        <serverName>tyrex.exolab.org</serverName>
-        <postNumber>4100</portNumber>
-      </config>
-      <limits>
-        <!-- Start with 5 connections, never go below 5,
-             and never go above 50 -->
-        <maximum>50</maximum>
-        <minimum>5</minimum>
-        <initial>5</initial>
-        <!-- Discard connections after 5 idle minutes -->
-        <maxRetain>300</maxRetain>
-        <!-- If maximum reached, block for 10 seconds -->
-        <timeout>10</timeout>
-      </limits>
-    </dataSource>
-  </resources>
-</domain> ]]></code> 
+        <code>
+&lt;domain&gt;
+  &lt;name&gt;default&lt;/name&gt;
+  &lt;!-- Limit to 50 concurrent transactions --&gt;
+  &lt;maximum&gt;50&lt;/maximum&gt;
+  &lt;!-- Default transaction timeout: 2 minuts --&gt;
+  &lt;timeout&gt;120&lt;/timeout&gt;
+  &lt;resources&gt;
+    &lt;dataSource&gt;
+      &lt;name&gt;myDb&lt;/name&gt;
+      &lt;jar&gt;jconnect_5.2.jar&lt;/jar&gt;
+      &lt;class&gt;com.sybase.jdbc2.jdbc.SybXADataSource&lt;/class&gt;
+      &lt;config&gt;
+        &lt;!-- Properties defined by SybXADataSource --&gt;
+        &lt;user&gt;arkin&lt;/user&gt;
+        &lt;password&gt;secret&lt;/password&gt;
+        &lt;serverName>tyrex.exolab.org&lt;/serverName&gt;
+        &lt;postNumber&gt;4100&lt;/portNumber&gt;
+      &lt;/config&gt;
+      &lt;limits&gt;
+        &lt;!-- Start with 5 connections, never go below 5,
+             and never go above 50 --&gt;
+        &lt;maximum&gt;50&lt;/maximum&gt;
+        &lt;minimum&gt;5&lt;/minimum&gt;
+        &lt;initial&gt;5&lt;/initial&gt;
+        &lt;!-- Discard connections after 5 idle minutes --&gt;
+        &lt;maxRetain&gt;300&lt;/maxRetain&gt;
+        &lt;!-- If maximum reached, block for 10 seconds --&gt;
+        &lt;timeout&gt;10&lt;/timeout&gt;
+      &lt;/limits&gt;
+    &lt;/dataSource&gt;
+  &lt;/resources&gt;
+&lt;/domain&gt;</code> 
 
     </section>
     

@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!-- $Id: services.xml,v 1.1 2001/03/13 03:15:21 arkin Exp $ -->
+<!-- $Id: services.xml,v 1.2 2001/03/14 21:39:27 arkin Exp $ -->
 <document>
   <properties>
     <title>Services</title>
@@ -70,8 +70,8 @@ if ( ! lockSet.trylock( LockSet.UPGRADE ) )
 lockSet.changeMode( LockSet.READ, LockSet.WRITE );
 lockSet.unlock( LockSet.UPGRADE );
 . . .
-<comment>// Lock will be released at end of transaction</comment>
-<comment>// If not transactional, release it explicitly</comment>
+<comment>// Lock will be released at end of transaction
+// If not transactional, release it explicitly</comment>
 lockSet.getCoordinator().dropLocks();
         </code></p>
 

@@ -6,9 +6,6 @@
 
 - OTS requires other mechanism to bypass thread owner check
 
-- Separate method for recovery of transaction domain, allowing resources to be added
-  after domain has been created and participate in recovery sequence
-
 - Implement shutdown for transaction domain and connection pool
 
 - Add ThreadPool implementation with ThreadPoolMetrics for statistics (including average
@@ -17,7 +14,5 @@
 - ThreadPool to use Runnable but add stop() method
 
 - Have all asynch transactions complete in background thread of TransactionDomain
-
-- Finish JCA connection pool and provide optional code building in build.xml
 
 - Revise src/doc/library.xml

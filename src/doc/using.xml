@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!-- $Id: using.xml,v 1.1 2001/03/13 03:15:21 arkin Exp $ -->
+<!-- $Id: using.xml,v 1.2 2001/03/14 21:39:27 arkin Exp $ -->
 <document>
   <properties>
     <title>Using Tyrex</title>
@@ -27,7 +27,8 @@
 InputStream       stream;
 TransactionDomain domain;
 
-<comment>// Create a transaction domain using a domain configuration file</comment>
+<comment>// Create a transaction domain using
+// a domain configuration file</comment>
 stream = new FileInputStream( "domain.xml" )
 try {
     domain = TransactionDomain.createDomain( stream );
@@ -39,7 +40,8 @@ try {
 try {
     domain.recover();
 } catch ( RecoveryException except ) {
-    <comment>// Ignore all errors, they are logged to the console.</comment>
+    <comment>// Ignore all errors, they are logged
+// to the console</comment>
 }
 <comment>// Domain is now active and ready to use</comment>
         </code></p>
@@ -110,17 +112,21 @@ DataSource     dataSource;
 runCtx = RuntimeContext.newRuntimeContext();
 
 <comment>// Bind a JDBC DataSource to the JNDI ENC</comment>
-jndiCtx = runCtx.getEnvContext().createSubcontext( "jdbc" );
-resources = TransactionDomain.getDomain( "myDomain" ).getResources();
+jndiCtx = runCtx.getEnvContext().
+    createSubcontext( "jdbc" );
+resources = TransactionDomain.getDomain( "myDomain" ).
+    getResources();
 dataSource = (DataSource) resources.getResource( "dataSource" );
 jndiCtx.bind( "myDB", dataSource );
 
 . . .
-<comment>// Associate the runtime context with the current thread</comment>
+<comment>// Associate the runtime context with
+// the current thread</comment>
 RuntimeContext.setRuntimeContext( runCtx );
 
 . . .
-<comment>// Dissociate the runtime context with the current thread</comment>
+<comment>// Dissociate the runtime context with
+// the current thread</comment>
 RuntimeContext.unsetRuntimeContext();
 
 . . .

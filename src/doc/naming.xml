@@ -48,7 +48,7 @@
 Hashtable env;
 Conetxt   ctx;
 
-<comment>// Make ctx points to a path within the shared memory space</comment>
+<comment>// Make ctx points to a path within the shared space</comment>
 env = new Hashtable();
 env.put( Context.INITIAL_CONTEXT_FACTORY, 
          "tyrex.naming.MemoryContextFactory" );

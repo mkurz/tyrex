@@ -14,7 +14,9 @@
   <property name="build.doc" value="${build.dir}/doc" />
   <property name="build.javadoc" value="${build.doc}/javadoc" />
   <property name="build.api" value="${build.doc}/api" />
+
   <property name="dist.dir" value="dist" />
+  <property name="lib.dir" value="lib" />
 
   <property file="${source.etc}/VERSION" />
   <property name="build.compiler" value="modern" />
@@ -95,7 +97,7 @@
     
     <!-- IDL Compiler -->
     <java classname="org.openorb.compiler.IdlCompiler" fork="yes">
-    	<arg line="${source}/tests/ots/idl/test.idl -d ${build}/tests" />
+    	<arg line="${source}/tests/ots/idl/test.idl -d ${build.dir}/tests" />
     </java>
 
     <!-- build the java files -->
@@ -240,25 +242,25 @@
   <!-- Build the source distribution -->
   <target name="source" depends="prepare"
           description="Builds the source distribution">
-    <delete  file="${dist}/${archive}-src.tgz" />
-    <delete  file="${dist}/${archive}-src.zip" />
-    <deltree dir="${build}/${archive}" />
+    <delete  file="${dist.dir}/${archive}-src.tgz" />
+    <delete  file="${dist.dir}/${archive}-src.zip" />
+    <deltree dir="${build.dir}/${archive}" />
 
-    <mkdir   dir="${build}/${archive}" />
-    <mkdir   dir="${build}/${archive}/src" />
-    <copydir src="${source}" dest="${build}/${archive}/src"
+    <mkdir   dir="${build.dir}/${archive}" />
+    <mkdir   dir="${build.dir}/${archive}/src" />
+    <copydir src="${source.dir}" dest="${build.dir}/${archive}/src"
              defaultexcludes="true" />
-    <mkdir   dir="${build}/${archive}/lib" />
-    <copydir src="${lib}" dest="${build}/${archive}/lib"
+    <mkdir   dir="${build.dir}/${archive}/lib" />
+    <copydir src="${lib.dir}" dest="${build.dir}/${archive}/lib"
              defaultexcludes="true" />
-    <copydir src="." dest="${build}/${archive}"
+    <copydir src="." dest="${build.dir}/${archive}"
              includes="*.sh,*.bat" />
 
-    <tar     includes="${archive}/**" basedir="${build}"
-             tarfile="${dist}/${archive}-src.tar" />
-    <gzip    src="${dist}/${archive}-src.tar" zipfile="${dist}/${archive}-src.tgz"/>
-    <delete  file="${dist}/${archive}-src.tar" />
-    <zip     zipfile="${dist}/${archive}-src.zip" basedir="${build}"
+    <tar     includes="${archive}/**" basedir="${build.dir}"
+             tarfile="${dist.dir}/${archive}-src.tar" />
+    <gzip    src="${dist.dir}/${archive}-src.tar" zipfile="${dist.dir}/${archive}-src.tgz"/>
+    <delete  file="${dist.dir}/${archive}-src.tar" />
+    <zip     zipfile="${dist.dir}/${archive}-src.zip" basedir="${build.dir}"
              includes="${archive}/**" />
 
   </target>
@@ -271,25 +273,25 @@
   <!-- Build the source distribution -->
   <target name="docs" depends="prepare"
           description="Builds the source distribution">
-    <delete  file="${dist}/${archive}-src.tgz" />
-    <delete  file="${dist}/${archive}-src.zip" />
-    <deltree dir="${build}/${archive}" />
+    <delete  file="${dist.dir}/${archive}-src.tgz" />
+    <delete  file="${dist.dir}/${archive}-src.zip" />
+    <deltree dir="${build.dir}/${archive}" />
 
-    <mkdir   dir="${build}/${archive}" />
-    <mkdir   dir="${build}/${archive}/src" />
-    <copydir src="${source}" dest="${build}/${archive}/src"
+    <mkdir   dir="${build.dir}/${archive}" />
+    <mkdir   dir="${build.dir}/${archive}/src" />
+    <copydir src="${source.dir}" dest="${build.dir}/${archive}/src"
              defaultexcludes="true" />
-    <mkdir   dir="${build}/${archive}/lib" />
-    <copydir src="${lib}" dest="${build}/${archive}/lib"
+    <mkdir   dir="${build.dir}/${archive}/lib" />
+    <copydir src="${lib.dir}" dest="${build.dir}/${archive}/lib"
              defaultexcludes="true" />
-    <copydir src="." dest="${build}/${archive}"
+    <copydir src="." dest="${build.dir}/${archive}"
              includes="*.sh,*.bat" />
 
-    <tar     includes="${archive}/**" basedir="${build}"
-             tarfile="${dist}/${archive}-src.tar" />
-    <gzip    src="${dist}/${archive}-src.tar" zipfile="${dist}/${archive}-src.tgz"/>
-    <delete  file="${dist}/${archive}-src.tar" />
-    <zip     zipfile="${dist}/${archive}-src.zip" basedir="${build}"
+    <tar     includes="${archive}/**" basedir="${build.dir}"
+             tarfile="${dist.dir}/${archive}-src.tar" />
+    <gzip    src="${dist.dir}/${archive}-src.tar" zipfile="${dist.dir}/${archive}-src.tgz"/>
+    <delete  file="${dist.dir}/${archive}-src.tar" />
+    <zip     zipfile="${dist.dir}/${archive}-src.zip" basedir="${build.dir}"
              includes="${archive}/**" />
 
   </target>
@@ -298,27 +300,27 @@
   <!-- Build the tarball including JAR and all dependent packages -->
   <target name="tarball" depends="prepare,jar"
           description="Builds the binary distribution in the dist directory">
-    <delete  file="${dist}/${archive}.tgz" />
-    <delete  file="${dist}/${archive}.zip" />
-    <deltree dir="${build}/${archive}" />
+    <delete  file="${dist.dir}/${archive}.tgz" />
+    <delete  file="${dist.dir}/${archive}.zip" />
+    <deltree dir="${build.dir}/${archive}" />
 
-    <mkdir   dir="${build}/${archive}" />
-    <copydir src="${etc}" dest="${build}/${archive}"
+    <mkdir   dir="${build.dir}/${archive}" />
+    <copydir src="${source.etc}" dest="${build.dir}/${archive}"
              includes="README,LICENSE,CHANGELOG" />
-    <copydir src="${dist}" dest="${build}/${archive}"
+    <copydir src="${dist.dir}" dest="${build.dir}/${archive}"
              includes="${archive}.jar" />
-    <copydir src="${lib}" dest="${build}/${archive}"
-             includes="jdbc-se2.0.jar,jndi.jar,jta1.0.1.jar,jaas.jar,jts.jar,xerces.jar" />
-    <copydir src="${schema}" dest="${build}/${archive}/schema" />
-    <copydir src="${build}/doc" dest="${build}/${archive}/doc" />
-    <deltree dir="${build}/${archive}/doc/javadoc" />
+    <copydir src="${lib.dir}" dest="${build.dir}/${archive}"
+             includes="jdbc-se2.0.jar,jndi.jar,jta1.0.1.jar,jts.jar,ots.jar,xerces.jar" />
+    <copydir src="${source.schema}" dest="${build.dir}/${archive}/schema" />
+    <copydir src="${build.doc}" dest="${build.dir}/${archive}/doc" />
+    <deltree dir="${build.dir}/${archive}/doc/javadoc" />
 
-    <tar     tarfile="${dist}/${archive}.tar" basedir="${build}"
+    <tar     tarfile="${dist}/${archive}.tar" basedir="${build.dir}"
              includes="${archive}/**" excludes="${archive}/*.tar,${archive}/*.zip" />
-    <gzip    src="${dist}/${archive}.tar" zipfile="${dist}/${archive}.tgz" />
-    <delete  file="${dist}/${archive}.tar" />
+    <gzip    src="${dist.dir}/${archive}.tar" zipfile="${dist.dir}/${archive}.tgz" />
+    <delete  file="${dist.dir}/${archive}.tar" />
 
-    <zip     zipfile="${dist}/${archive}.zip" basedir="${build}" 
+    <zip     zipfile="${dist.dir}/${archive}.zip" basedir="${build.dir}" 
              includes="${archive}/**" excludes="${archive}/*.tar,${archive}/*.tgz" />
   </target>
 
