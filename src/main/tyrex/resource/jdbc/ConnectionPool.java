@@ -84,7 +84,7 @@ import tyrex.util.LoggerPrintWriter;
 /**
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.17 $
+ * @version $Revision: 1.18 $
  */
 final class ConnectionPool
     extends PoolMetrics
@@ -221,7 +221,7 @@ final class ConnectionPool
         _poolDataSource = poolDataSource;
         _category = category;
         _txManager= txManager;
-		_reuse = ReuseOptions.REUSE_NO_TRANSACTION_OFF;
+		_reuse = ReuseOptions.REUSE_ON;
 
         try {
             // Clone object to prevent changes by caller from affecting the
