@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionImpl.java,v 1.29 2001/09/21 18:14:45 mohammed Exp $
+ * $Id: TransactionImpl.java,v 1.30 2001/09/21 18:56:39 mohammed Exp $
  */
 
 
@@ -89,7 +89,7 @@ import tyrex.util.Messages;
  * they are added.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.29 $ $Date: 2001/09/21 18:14:45 $
+ * @version $Revision: 1.30 $ $Date: 2001/09/21 18:56:39 $
  * @see XAResourceHolder
  * @see TransactionManagerImpl
  * @see TransactionDomain
@@ -603,8 +603,8 @@ final class TransactionImpl
                 if ( resHolder._xaResource == xaResource ) {
                     if ( resHolder._endFlag == XAResource.TMSUSPEND ) {
                         try {
-                            if (_txDomain._category.isDebugEnabled()) {
-                                _txDomain._category.debug("XAResource.start(XAResource.TMRESUME) " + xaResource + " with xid " + resHolder._xid);    
+                            if (true) {
+                                System.out.println(Thread.currentThread() + "Transaction " + toString() + "XAResource.start(XAResource.TMRESUME) " + xaResource + " with xid " + resHolder._xid);    
                             }
 
                             xaResource.start( resHolder._xid, XAResource.TMRESUME );
@@ -674,8 +674,8 @@ final class TransactionImpl
             // commit/rollback, i.e. it's not removed from the
             // list of enlisted resources.
             try {
-                if (_txDomain._category.isDebugEnabled()) {
-                    _txDomain._category.debug("XAResource.end(XAResource.TMSUSPEND) " + resHolder._xaResource + " with xid " + resHolder._xid);    
+                if (true) {
+                    System.out.println(Thread.currentThread() + "Transaction " + toString() + "XAResource.end(XAResource.TMSUSPEND) " + resHolder._xaResource + " with xid " + resHolder._xid);    
                 }
 
                 xaResource.end( resHolder._xid, XAResource.TMSUSPEND );
@@ -1148,18 +1148,18 @@ final class TransactionImpl
                         // We do not commit/rollback a read-only resource.
                         // If all resources are read only, we can return
                         // a read-only heuristic.
-                        if (_txDomain._category.isDebugEnabled()) {
-                            _txDomain._category.debug("XAResource.prepare called " + resHolder._xaResource + " with xid " + resHolder._xid);    
+                        if (true) {
+                            System.out.println(Thread.currentThread() + "Transaction " + toString() + "XAResource.prepare called " + resHolder._xaResource + " with xid " + resHolder._xid);    
                         }
                         if ( resHolder._xaResource.prepare( resHolder._xid ) == XAResource.XA_RDONLY ) {
-                            if (_txDomain._category.isDebugEnabled()) {
-                            _txDomain._category.debug("XAResource.prepare called " + resHolder._xaResource + " with xid " + resHolder._xid + " voted read-only.");    
+                            if (true) {
+                            System.out.println(Thread.currentThread() + "Transaction " + toString() + "XAResource.prepare called " + resHolder._xaResource + " with xid " + resHolder._xid + " voted read-only.");    
                             }
                             resHolder._readOnly = true;
                         }
                         else {
-                            if (_txDomain._category.isDebugEnabled()) {
-                                _txDomain._category.debug("XAResource.prepare called " + resHolder._xaResource + " with xid " + resHolder._xid + " voted commit.");    
+                            if (true) {
+                                System.out.println(Thread.currentThread() + "Transaction " + toString() + "XAResource.prepare called " + resHolder._xaResource + " with xid " + resHolder._xid + " voted commit.");    
                             }
 
                             ++ committing;
@@ -1201,20 +1201,20 @@ final class TransactionImpl
                         // We do not commit/rollback a read-only resource.
                         // If all resources are read only, we can return
                         // a read-only heuristic.
-                        if (_txDomain._category.isDebugEnabled()) {
-                            _txDomain._category.debug("XAResource.prepare called " + resHolder._xaResource + " with xid " + resHolder._xid);    
+                        if (true) {
+                            System.out.println(Thread.currentThread() + "Transaction " + toString() + "XAResource.prepare called " + resHolder._xaResource + " with xid " + resHolder._xid);    
                         }
 
                         if ( resHolder._xaResource.prepare( resHolder._xid ) == XAResource.XA_RDONLY ) {
-                            if (_txDomain._category.isDebugEnabled()) {
-                                _txDomain._category.debug("XAResource.prepare called " + resHolder._xaResource + " with xid " + resHolder._xid + " voted read-only.");    
+                            if (true) {
+                                System.out.println(Thread.currentThread() + "Transaction " + toString() + "XAResource.prepare called " + resHolder._xaResource + " with xid " + resHolder._xid + " voted read-only.");    
                             }
 
                             resHolder._readOnly = true;
                         }
                         else {
-                            if (_txDomain._category.isDebugEnabled()) {
-                                _txDomain._category.debug("XAResource.prepare called " + resHolder._xaResource + " with xid " + resHolder._xid + " voted commit.");    
+                            if (true) {
+                                System.out.println(Thread.currentThread() + "Transaction " + toString() + "XAResource.prepare called " + resHolder._xaResource + " with xid " + resHolder._xid + " voted commit.");    
                             }
 
                             ++ committing;
@@ -1571,8 +1571,8 @@ final class TransactionImpl
             // list of enlisted resources.
             if ( resHolder._endFlag == XAResource.TMNOFLAGS ) {
                 try {
-                    if (_txDomain._category.isDebugEnabled()) {
-                        _txDomain._category.debug("XAResource.end(XAResource.TMSUSPEND) called " + resHolder._xaResource + " with xid " + resHolder._xid);    
+                    if (true) {
+                        System.out.println(Thread.currentThread() + "Transaction " + toString() + "XAResource.end(XAResource.TMSUSPEND) called " + resHolder._xaResource + " with xid " + resHolder._xid);    
                     }
 
                     resHolder._xaResource.end( resHolder._xid, XAResource.TMSUSPEND );
@@ -1619,8 +1619,8 @@ final class TransactionImpl
             while ( resHolder != null ) {
                 if ( resHolder._endFlag == XAResource.TMSUSPEND ) {
                     try {
-                        if (_txDomain._category.isDebugEnabled()) {
-                            _txDomain._category.debug("XAResource.start(XAResource.TMRESUME) " + resHolder._xaResource + " with xid " + resHolder._xid);    
+                        if (true) {
+                            System.out.println(Thread.currentThread() + "Transaction " + toString() + "XAResource.start(XAResource.TMRESUME) " + resHolder._xaResource + " with xid " + resHolder._xid);    
                         }
 
                         resHolder._xaResource.start( resHolder._xid, XAResource.TMRESUME );
@@ -1762,8 +1762,8 @@ final class TransactionImpl
         resHolder = _enlisted;
         while ( resHolder != null ) {
             try {
-                if (_txDomain._category.isDebugEnabled()) {
-                    _txDomain._category.debug("XAResource.setTransactionTimeout() " + resHolder._xaResource + " with seconds " + seconds);    
+                if (true) {
+                    System.out.println(Thread.currentThread() + "Transaction " + toString() + "XAResource.setTransactionTimeout() " + resHolder._xaResource + " with seconds " + seconds);    
                 }
                 resHolder._xaResource.setTransactionTimeout( seconds );
             } catch ( XAException except  ) {
@@ -1991,8 +1991,8 @@ final class TransactionImpl
             while ( resHolder != null ) {
                 try {
                     if ( ! resHolder._shared ) {
-                        if (_txDomain._category.isDebugEnabled()) {
-                            _txDomain._category.debug("XAResource.forget() " + resHolder._xaResource + " with xid " + resHolder._xid);    
+                        if (true) {
+                            System.out.println(Thread.currentThread() + "Transaction " + toString() + "XAResource.forget() " + resHolder._xaResource + " with xid " + resHolder._xid);    
                         }
                         resHolder._xaResource.forget( resHolder._xid );
                     }
@@ -2011,8 +2011,8 @@ final class TransactionImpl
             while ( resHolder != null ) {
                 try {
                     if ( ! resHolder._shared ) {
-                        if (_txDomain._category.isDebugEnabled()) {
-                            _txDomain._category.debug("XAResource.forget() " + resHolder._xaResource + " with xid " + resHolder._xid);    
+                        if (true) {
+                            System.out.println(Thread.currentThread() + "Transaction " + toString() + "XAResource.forget() " + resHolder._xaResource + " with xid " + resHolder._xid);    
                         }
                         resHolder._xaResource.forget( resHolder._xid );
                     }
@@ -2462,13 +2462,13 @@ final class TransactionImpl
         if ( ( resHolder._endFlag == XAResource.TMNOFLAGS ) || 
              ( resHolder._endFlag == XAResource.TMSUSPEND ) ) {
             if (resHolder._endFlag == XAResource.TMSUSPEND) {
-                if (_txDomain._category.isDebugEnabled()) {
-                    _txDomain._category.debug("XAResource.start(XAResource.TMRESUME) " + resHolder._xaResource + " with xid " + resHolder._xid);    
+                if (true) {
+                    System.out.println(Thread.currentThread() + "Transaction " + toString() + "XAResource.start(XAResource.TMRESUME) " + resHolder._xaResource + " with xid " + resHolder._xid);    
                 }
                 resHolder._xaResource.start( resHolder._xid, XAResource.TMRESUME );
             }
-            if (_txDomain._category.isDebugEnabled()) {
-                _txDomain._category.debug("XAResource.end(XAResource.TMSUCCESS) " + resHolder._xaResource + " with xid " + resHolder._xid);    
+            if (true) {
+                System.out.println(Thread.currentThread() + "Transaction " + toString() + "XAResource.end(XAResource.TMSUCCESS) " + resHolder._xaResource + " with xid " + resHolder._xid);    
             }
             resHolder._xaResource.end( resHolder._xid, XAResource.TMSUCCESS );
             resHolder._endFlag = XAResource.TMSUCCESS;
@@ -2533,8 +2533,8 @@ final class TransactionImpl
                 // Shared resources and read-only resources
                 // are not commited.
                 if ( ! resHolder._shared && ! resHolder._readOnly ) {
-                    if (_txDomain._category.isDebugEnabled()) {
-                        _txDomain._category.debug("XAResource.commit(" + onePhaseCommit + ") " + resHolder._xaResource + " with xid " + resHolder._xid);    
+                    if (true) {
+                        System.out.println(Thread.currentThread() + "Transaction " + toString() + "XAResource.commit(" + onePhaseCommit + ") " + resHolder._xaResource + " with xid " + resHolder._xid);    
                     }
 
                     resHolder._xaResource.commit( resHolder._xid, onePhaseCommit );
@@ -2568,8 +2568,8 @@ final class TransactionImpl
         while ( resHolder != null ) {
             try {
                 if ( ! resHolder._shared && ! resHolder._readOnly ) {
-                    if (_txDomain._category.isDebugEnabled()) {
-                        _txDomain._category.debug("XAResource.rollback() " + resHolder._xaResource + " with xid " + resHolder._xid);    
+                    if (true) {
+                        System.out.println(Thread.currentThread() + "Transaction " + toString() + "XAResource.rollback() " + resHolder._xaResource + " with xid " + resHolder._xid);    
                     }
 
                     resHolder._xaResource.rollback( resHolder._xid );
@@ -2627,22 +2627,22 @@ final class TransactionImpl
                     }
                     
                     if ( differentBranches ) { 
-                        if (_txDomain._category.isDebugEnabled()) {
-                            _txDomain._category.debug("XAResource.start(XAResource.TMNOFLAGS) " + resHolder._xaResource + " with xid " + resHolder._xid);    
+                        if (true) {
+                            System.out.println(Thread.currentThread() + "Transaction " + toString() + "XAResource.start(XAResource.TMNOFLAGS) " + resHolder._xaResource + " with xid " + resHolder._xid);    
                         }
 
                         newResHolder._xaResource.start( newResHolder._xid, XAResource.TMNOFLAGS );
                     } else {
                         if ( XAResource.TMSUSPEND == resHolder._endFlag ) {
-                            if (_txDomain._category.isDebugEnabled()) {
-                                _txDomain._category.debug("XAResource.start(XAResource.TMRESUME) " + resHolder._xaResource + " with xid " + resHolder._xid);    
+                            if (true) {
+                                System.out.println(Thread.currentThread() + "Transaction " + toString() + "XAResource.start(XAResource.TMRESUME) " + resHolder._xaResource + " with xid " + resHolder._xid);    
                             }
 
                             resHolder._xaResource.start( resHolder._xid, XAResource.TMRESUME );
                             resHolder._endFlag = XAResource.TMNOFLAGS;
                         }
-                        if (_txDomain._category.isDebugEnabled()) {
-                            _txDomain._category.debug("XAResource.start(XAResource.TMJOIN) " + resHolder._xaResource + " with xid " + resHolder._xid);    
+                        if (true) {
+                            System.out.println(Thread.currentThread() + "Transaction " + toString() + "XAResource.start(XAResource.TMJOIN) " + resHolder._xaResource + " with xid " + resHolder._xid);    
                         }
 
                         newResHolder._xaResource.start( newResHolder._xid, XAResource.TMJOIN );

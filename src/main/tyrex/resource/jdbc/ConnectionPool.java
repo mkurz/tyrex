@@ -83,7 +83,7 @@ import tyrex.util.LoggerPrintWriter;
 /**
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.9 $
+ * @version $Revision: 1.10 $
  */
 final class ConnectionPool
     extends PoolMetrics
@@ -380,6 +380,8 @@ final class ConnectionPool
         XAResource        xaResource;
         PoolEntry         entry;
 
+		System.out.println(Thread.currentThread() + "Retrieving connection " + toString() + " user " + user + " password " + password);    
+
         if ( _destroyed )
             throw new SQLException( "Connection pool has been destroyed" );
         entry = allocate( user, password );
@@ -388,6 +390,7 @@ final class ConnectionPool
         // the connection is unuseable.
         if ( entry._xaResource != null ) {
             try {
+				System.out.println(Thread.currentThread() + "Enlist connection xa resource " + toString() + " " + entry._xaResource + " in " + _txManager);    
                 _txManager.enlistResource( entry._xaResource );
             } catch ( Exception except ) {
                 release( entry._pooled, false );
@@ -399,6 +402,7 @@ final class ConnectionPool
         // useable and we discard it and try again.
         try {
             connection = entry._pooled.getConnection();
+			System.out.println(Thread.currentThread() + "Retrieving connection " + toString() + " " + connection);    
             return connection;
         } catch ( Exception except ) {
             release( entry._pooled, false );
