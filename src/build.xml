@@ -115,6 +115,13 @@
            classpath="${classpath}" debug="on" deprecation="${deprecation}" 
            excludes="hidden/**/*,jdbc/spi/*,ots/**" />
   </target>
+  
+  <target name="tests-transaction" depends="prepare">
+    <mkdir dir="${build}/tests" />
+    <javac srcdir="${source}/tests/transaction/configuration" destdir="${build}/tests"
+           classpath="${classpath}" debug="on" deprecation="${deprecation}" 
+           />
+  </target>
 
   <!-- Build the test iiop packages -->
   <target name="tests-iiop" depends="prepare">
@@ -216,8 +223,8 @@
               value="Intalio, Inc. (C) 1999-2001. All rights reserved  http://tyrex.exolab.org" />
     <javadoc  sourcepath="${main}" destdir="${build}/doc/javadoc"
               doctitle="Tyrex JavaDoc" windowtitle="Tyrex JavaDoc" bottom="${copyright}"
-              package="true" author="true" version="true" noindex="true"
-              packagenames="tyrex.*" />
+              private="true" author="true" version="true" noindex="true"
+              packagenames="tyrex.client.*, tyrex.concurrency.*, tyrex.conf.*, tyrex.corba.*, tyrex.interceptor.*, tyrex.jdbc.*, tyrex.naming.*, tyrex.recovery.*, tyrex.resource.*,tyrex.server.*,tyrex.tm.*, tyrex.util.*" />
   </target>
 
   <!-- Build the API JavaDocs -->
@@ -229,7 +236,7 @@
     <javadoc  sourcepath="${main}" destdir="${build}/doc/api"
               doctitle="Tyrex API" windowtitle="Tyrex API" bottom="${copyright}"
               public="true" author="true" version="true" noindex="true"
-              packagenames="tyrex.client.*, tyrex.concurrency.*, tyrex.conf.*, tyrex.corba.*, tyrex.interceptor.*, tyrex.jdbc.*, tyrex.naming.*, tyrex.recovery.*, tyrex.resource.*,tyrex.server.*,tyrex.tm.*,tyrex.tools.*, tyrex.util.*" />
+              packagenames="tyrex.client.*, tyrex.concurrency.*, tyrex.conf.*, tyrex.corba.*, tyrex.interceptor.*, tyrex.jdbc.*, tyrex.naming.*, tyrex.recovery.*, tyrex.resource.*,tyrex.server.*,tyrex.tm.*, tyrex.util.*" />
   </target>
 
   <!-- Build the docs, API and full JavaDocs, doc archives -->
