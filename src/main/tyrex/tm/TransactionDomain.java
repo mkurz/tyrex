@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionDomain.java,v 1.22 2001/03/21 04:53:08 arkin Exp $
+ * $Id: TransactionDomain.java,v 1.23 2001/06/26 21:01:13 mohammed Exp $
  */
 
 
@@ -53,11 +53,13 @@ import java.util.StringTokenizer;
 import org.omg.CosTransactions.TransactionFactory;
 import org.xml.sax.InputSource;
 import org.exolab.castor.xml.Unmarshaller;
+import org.exolab.castor.xml.util.ClassDescriptorResolverImpl;
 import org.exolab.castor.mapping.Mapping;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 import javax.transaction.UserTransaction;
 import javax.transaction.xa.Xid;
+import tyrex.resource.castor.ResourceMappingLoader;
 import tyrex.tm.impl.TransactionDomainImpl;
 import tyrex.tm.impl.DomainConfig;
 import tyrex.resource.Resources;
@@ -86,7 +88,7 @@ import tyrex.util.Logger;
  * {@link #terminate terminate}.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.22 $ $Date: 2001/03/21 04:53:08 $
+ * @version $Revision: 1.23 $ $Date: 2001/06/26 21:01:13 $
  */
 public abstract class TransactionDomain
 {
@@ -416,21 +418,33 @@ public abstract class TransactionDomain
     private synchronized static TransactionDomain createDomain( InputSource source, boolean autoRecover )
         throws DomainConfigurationException
     {
-        TransactionDomainImpl nextDomain;
-        TransactionDomainImpl lastDomain;
-        DomainConfig          config;
-        Mapping               mapping;
-        Unmarshaller          unmarshaller;
-        String                domainName;
+        TransactionDomainImpl           nextDomain;
+        TransactionDomainImpl           lastDomain;
+        DomainConfig                    config;
+        Mapping                         mapping;
+        Unmarshaller                    unmarshaller;
+        String                          domainName;
+        ClassDescriptorResolverImpl     resolver;
+        ResourceMappingLoader           mappingLoader;
 
         if ( source == null )
             throw new IllegalArgumentException( "Argument source is null" );
         try {
             mapping = new Mapping();
             mapping.loadMapping( new InputSource( DomainConfig.class.getResourceAsStream( "mapping.xml" ) ) );
-            unmarshaller = new Unmarshaller( (Class) null );
+            
+            unmarshaller = new Unmarshaller( (Class)null );
+
+            resolver = new ClassDescriptorResolverImpl();
+            
+            unmarshaller.setResolver( resolver );
             unmarshaller.setMapping( mapping );
+
+            mappingLoader = new ResourceMappingLoader();
+            mappingLoader.loadMapping( mapping.getRoot(), null );
+            resolver.setMappingLoader( mappingLoader );
             config = (DomainConfig) unmarshaller.unmarshal( source );
+
         } catch ( Exception except ) {
             throw new DomainConfigurationException( except );
         }
