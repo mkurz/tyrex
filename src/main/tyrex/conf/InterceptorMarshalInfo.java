@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: InterceptorMarshalInfo.java,v 1.2 2000/03/08 19:47:38 lipkind Exp $
+ * $Id: InterceptorMarshalInfo.java,v 1.3 2000/03/10 20:38:23 lipkind Exp $
  */
 
 
@@ -62,7 +62,7 @@ import tyrex.connector.TransactionInterceptor;
  * Marshalling information for {@link InterceptorHolder}.
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $ $Date: 2000/03/08 19:47:38 $
+ * @version $Revision: 1.3 $ $Date: 2000/03/10 20:38:23 $
  */
 public class InterceptorMarshalInfo
     extends SimpleMarshalInfo
@@ -86,11 +86,11 @@ public class InterceptorMarshalInfo
 	    if ( "interceptor".equals( desc[ i ].getXMLName() ) ) {
 		SimpleMarshalDescriptor smd;
 
-		smd = new SimpleMarshalDescriptor( Interceptor.class, "interceptor", "param" );
+		smd = new SimpleMarshalDescriptor( TransactionInterceptor.class, "interceptor", "param" );
 		try {
 		    smd.setReadMethod( InterceptorHolder.class.getMethod( "getInterceptor", new Class[ 0 ] ) );
 		    smd.setWriteMethod( InterceptorHolder.class.getMethod( "setInterceptor",
-								  new Class[] { Interceptor.class } ) );
+								  new Class[] { TransactionInterceptor.class } ) );
 		    smd.setCreateMethod( InterceptorHolder.class.getMethod( "createInterceptor",
 								   new Class[ 0 ] ) );
 		} catch ( Exception except ) {

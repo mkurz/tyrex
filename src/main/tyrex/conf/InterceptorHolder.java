@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: InterceptorHolder.java,v 1.2 2000/03/08 19:47:38 lipkind Exp $
+ * $Id: InterceptorHolder.java,v 1.3 2000/03/10 20:38:23 lipkind Exp $
  */
 
 
@@ -55,7 +55,7 @@ import tyrex.util.Logger;
 
 /**
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $ $Date: 2000/03/08 19:47:38 $
+ * @version $Revision: 1.3 $ $Date: 2000/03/10 20:38:23 $
  */
 public class InterceptorHolder
     implements Serializable
@@ -65,7 +65,7 @@ public class InterceptorHolder
     private String       _className;
 
 
-    private Interceptor  _interceptor;
+    private TransactionInterceptor  _interceptor;
 
 
     public String getClassName()
@@ -80,13 +80,13 @@ public class InterceptorHolder
     }
 
 
-    public void setInterceptor( Interceptor interceptor )
+    public void setInterceptor( TransactionInterceptor interceptor )
     {
 	_interceptor = interceptor;
     }
 
 
-    public Interceptor getInterceptor()
+    public TransactionInterceptor getInterceptor()
     {
 	return _interceptor;
     }

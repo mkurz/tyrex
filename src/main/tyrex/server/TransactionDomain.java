@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: TransactionDomain.java,v 1.3 2000/03/08 19:47:09 lipkind Exp $
+ * $Id: TransactionDomain.java,v 1.4 2000/03/10 20:38:34 lipkind Exp $
  */
 
 
@@ -72,7 +72,7 @@ import tyrex.util.Messages;
 /**
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.3 $ $Date: 2000/03/08 19:47:09 $
+ * @version $Revision: 1.4 $ $Date: 2000/03/10 20:38:34 $
  */
 public class TransactionDomain
     implements ResourcePool, RemoteTransactionServer
@@ -129,7 +129,7 @@ public class TransactionDomain
     private ResourceLimits       _limits;
 
 
-    private Interceptor[]        _interceptors;
+    private TransactionInterceptor[]        _interceptors;
 
 
     private boolean              _threadTerminate;
@@ -162,7 +162,7 @@ public class TransactionDomain
 	_poolManager = new ResourcePoolManagerImpl( limits );
 	_poolManager.manage( this, false );
 	_limits = limits;
-	_interceptors = new Interceptor[ 0 ];
+	_interceptors = new TransactionInterceptor[ 0 ];
 	_txManager = new TransactionManagerImpl( this );
 	_userTx = new UserTransactionImpl( _txManager );
     }
@@ -251,29 +251,29 @@ public class TransactionDomain
     }
 
 
-    public synchronized void addInterceptor( Interceptor interceptor )
+    public synchronized void addInterceptor( TransactionInterceptor interceptor )
     {
-	Interceptor[] newInterceptors;
+	TransactionInterceptor[] newInterceptors;
 
 	for ( int i = 0 ; i < _interceptors.length ; ++i ) {
 	    if ( _interceptors[ i ] == interceptor )
 		return;
 	}
-	newInterceptors = new Interceptor[ _interceptors.length + 1 ];
+	newInterceptors = new TransactionInterceptor[ _interceptors.length + 1 ];
 	System.arraycopy( _interceptors, 0, newInterceptors, 0, _interceptors.length );
 	newInterceptors[ _interceptors.length ] = interceptor;
 	_interceptors = newInterceptors;
     }
 
 
-    public synchronized void removeInterceptor( Interceptor interceptor )
+    public synchronized void removeInterceptor( TransactionInterceptor interceptor )
     {
-	Interceptor[] newInterceptors;
+	TransactionInterceptor[] newInterceptors;
 
 	for ( int i = 0 ; i < _interceptors.length ; ++i ) {
 	    if ( _interceptors[ i ] == interceptor ) {
 		_interceptors[ i ] = _interceptors[ _interceptors.length - 1 ];
-		newInterceptors = new Interceptor[ _interceptors.length - 1 ];
+		newInterceptors = new TransactionInterceptor[ _interceptors.length - 1 ];
 		System.arraycopy( _interceptors, 0, newInterceptors, 0, _interceptors.length - 1 );
 		_interceptors = newInterceptors;
 		break;
@@ -282,9 +282,9 @@ public class TransactionDomain
     }
 
 
-    public Interceptor[] listInterceptors()
+    public TransactionInterceptor[] listInterceptors()
     {
-	return (Interceptor[]) _interceptors.clone();
+	return (TransactionInterceptor[]) _interceptors.clone();
     }
 
 
@@ -292,7 +292,7 @@ public class TransactionDomain
         throws SystemException
     {
         return createTransaction( null, null ).getXid().getGlobalTransactionId();
-    }     
+    }
 
 
     /**
@@ -320,7 +320,7 @@ public class TransactionDomain
 
 	// Create a new transaction with a new Xid, or a nested
 	// transaction which is a branch in the parent transaction.
-	if ( parent == null ) 
+	if ( parent == null )
 	    xid = new XidImpl();
 	else
 	    xid = parent.getXid().newBranch();
@@ -577,7 +577,7 @@ public class TransactionDomain
 	    else {
 		try {
 		    Thread[] threads = null;
-		    
+
 		    logMessage( Messages.format( "tyrex.server.timeoutTerminate", xid.toString() ) );
 		    if ( txh.threads != null )
 			threads = (Thread[]) txh.threads.clone();
@@ -597,7 +597,7 @@ public class TransactionDomain
 		    } catch ( Exception except ) {
 			logMessage( Messages.format( "tyrex.server.timeoutTerminateError", xid.toString(), except ) );
 		    }
-		    
+
 		    // Sadly we have no way of checking out whether we
 		    // are in the middle of some important code. This will
 		    // terminate the thread correctly, since the thread is
@@ -728,7 +728,7 @@ public class TransactionDomain
 	    txh = (TransactionHolder) _txTable.get( xid.getGlobalTransactionId() );
 	    if ( txh != null ) {
 		int i = 0;
-		
+
 		try {
 		    for ( i = 0 ; i < _interceptors.length ; ++i ) {
 			_interceptors[ i ].resume( xid, thread );
@@ -745,7 +745,7 @@ public class TransactionDomain
 			// too much, only when two threads share the same
 			// transaction.
 			Thread[] newList;
-			
+
 			newList = new Thread[ txh.threads.length + 1 ];
 			System.arraycopy( txh.threads, 0, newList, 0, txh.threads.length );
 			newList[ txh.threads.length ] = thread;
@@ -761,8 +761,8 @@ public class TransactionDomain
 	    }
 	}
     }
-	
-	
+
+
     /**
      * Called by {@link TransactionImpl#resume} to dissociate the
      * transaction from the thread. If the transaction has only been
@@ -803,7 +803,7 @@ public class TransactionDomain
 		    // too much, only when two threads share the same
 		    // transaction.
 		    Thread[] newList;
-		    
+
 		    for ( int i = 0 ; i < txh.threads.length ; ++i ) {
 			if ( txh.threads[ i ] == thread ) {
 			    txh.threads[ i ] = txh.threads[ txh.threads.length - 1 ];
@@ -970,7 +970,7 @@ public class TransactionDomain
 		terminateTransaction( txh );
 	    } catch ( Exception except ) { }
 	}
-	
+
     }
 
 
@@ -1004,7 +1004,7 @@ public class TransactionDomain
 	while ( true ) {
 	    try {
 		Thread.sleep( _limits.getCheckEvery() * 1000 );
-		
+
 		// Our enumerator is guaranteed to remain valid even if
 		// we just removed the entry we were looking at or some
 		// other thread removed the next entry (that entry will
@@ -1087,14 +1087,14 @@ public class TransactionDomain
      */
     static class TransactionHolder
     {
-	
+
 	/**
 	 * The transaction associated with this thread, or null if
 	 * there is no transaction in progress. Note, a transaction
 	 * might be associated with the thread but inactive.
 	 */
 	TransactionImpl tx;
-	
+
 	/**
 	 * If the transaction is a local transaction it will be
 	 * associated with any number of currently running threads.
@@ -1102,18 +1102,18 @@ public class TransactionDomain
 	 * threads on timeout.
 	 */
 	Thread[]      threads;
-	
+
 	/**
 	 * Indicates when the transaction will timeout as milliseconds
 	 * from its beginning.
 	 */
 	long       timeout;
-	
+
 	/**
 	 * Indicates when the transaction started as current sysem time.
 	 */
 	long       started;
-	
+
     }
 
 
