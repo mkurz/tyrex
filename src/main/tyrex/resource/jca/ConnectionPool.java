@@ -81,7 +81,7 @@ import tyrex.util.LoggerPrintWriter;
 /**
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.7 $
  */
 final class ConnectionPool
     extends PoolMetrics
@@ -402,6 +402,9 @@ final class ConnectionPool
             return connection;
         } catch ( Exception except ) {
             release( entry._managed, false );
+            if (_category.isDebugEnabled()) {
+                _category.debug("Error occured using connection " + entry._managed, except);
+            }
             throw new ResourceAllocationException( "Error occured using connection " + entry._managed + ": " + except );
         }
     }
