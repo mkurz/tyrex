@@ -40,14 +40,17 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionFactoryImpl.java,v 1.8 2001/09/21 19:56:48 mohammed Exp $
+ * $Id: TransactionFactoryImpl.java,v 1.9 2001/09/21 20:52:17 mohammed Exp $
  */
 
 
 package tyrex.tm.impl;
 
-
+import java.util.Hashtable;
+import javax.transaction.InvalidTransactionException;
+import javax.transaction.Synchronization;
 import javax.transaction.SystemException;
+import javax.transaction.TransactionManager;
 import javax.transaction.InvalidTransactionException;
 import org.omg.CORBA.INVALID_TRANSACTION;
 import org.omg.CORBA.TRANSACTION_ROLLEDBACK;
@@ -72,14 +75,14 @@ import org.omg.CosTSPortability.Receiver;
  * of remote transactions.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.8 $ $Date: 2001/09/21 19:56:48 $
+ * @version $Revision: 1.9 $ $Date: 2001/09/21 20:52:17 $
  * @see TransactionImpl
  *
  * Changes 
  *
  * J. Daniel : Changed code to be compliant with CORBA developing rules.
  */
-final class TransactionFactoryImpl
+public final class TransactionFactoryImpl
     extends _TransactionFactoryImplBase
     implements Sender, Receiver
 {
@@ -90,6 +93,10 @@ final class TransactionFactoryImpl
      */
     private final TransactionDomainImpl  _txDomain;
 
+    /**
+     * Hashmap of control strings to domain and transaction
+     */
+    private static final Hashtable _txMap = new Hashtable();
 
     TransactionFactoryImpl( TransactionDomainImpl txDomain )
     {
@@ -99,21 +106,44 @@ final class TransactionFactoryImpl
     }
 
 
+    public static void associate(String ior) 
+        throws InvalidTransactionException, SystemException {
+        Entry entry;
+        
+        entry = (Entry)_txMap.get(ior);
+
+        if (null != entry) {
+            if (null != entry._txManager.getTransaction()) {
+                entry._txManager.suspend();    
+            }
+
+            entry._txManager.resume(entry._tx);
+        }
+        else {
+            System.out.println("TransactionFactoryImpl: Failed to find entry for " + ior);
+        }
+
+    }
+
     public Control create( int timeout )
     {
         TransactionImpl tx;
         Control         control;
+        String key;
         
         // Create a new transaction and return the control
         // interface of that transaction.
         try {
-            //tx = _txDomain.createTransaction( null, timeout );
-            _txDomain.getTransactionManager().begin();
-            tx = (TransactionImpl)_txDomain.getTransactionManager().getTransaction();
-            tx.setTransactionTimeout( timeout );
+            tx = _txDomain.createTransaction( null, timeout );
             control = tx.getControl();
-            if ( _txDomain._orb != null )
-            	_txDomain._orb.connect( control );
+            if ( _txDomain._orb != null ) {
+                _txDomain._orb.connect( control );
+                key = _txDomain._orb.object_to_string( control.get_coordinator() );
+                _txMap.put(key, 
+                           new Entry( _txDomain.getTransactionManager(), tx ));
+                tx.registerSynchronization( new InternalSynchronization( key ) );
+
+            }
             return control;
         } catch ( Exception except ) {
             throw new INVALID_TRANSACTION();
@@ -236,4 +266,31 @@ final class TransactionFactoryImpl
     }
 
 
+    private static class InternalSynchronization
+        implements Synchronization {
+        private final String _key;
+
+        private InternalSynchronization(String key) {
+            _key = key;
+        }
+
+        public void beforeCompletion() {
+    
+        }
+    
+        public void afterCompletion(int status) {
+            _txMap.remove(_key);
+        }
+    }
+
+    private static class Entry {
+        private final TransactionManager _txManager;
+
+        private final TransactionImpl _tx;
+
+        private Entry(TransactionManager txManager, TransactionImpl tx) {
+            _txManager = txManager;
+            _tx = tx;
+        }
+    }
 }
