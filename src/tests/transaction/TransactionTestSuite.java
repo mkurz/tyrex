@@ -3752,7 +3752,7 @@ class TransactionTestSuite
     static private Connection getConnection(XAConnection xaConnection)
         throws SQLException
     {
-        Connection connection = xaConnection.getConnection();
+        /*Connection connection = xaConnection.getConnection();
 
         if (connection.getAutoCommit()) {
             // turn off auto commit
@@ -3760,7 +3760,8 @@ class TransactionTestSuite
         }
         // set the isolation level
         //connection.setTransactionIsolation(Connection.TRANSACTION_READ_UNCOMMITTED);
-        return connection;
+        return connection;*/
+        return xaConnection.getConnection();
     }
     
 
