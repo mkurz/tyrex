@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionDomainImpl.java,v 1.31 2002/04/17 00:53:22 mohammed Exp $
+ * $Id: TransactionDomainImpl.java,v 1.32 2003/11/14 01:36:35 metaboss Exp $
  */
 
 
@@ -48,57 +48,51 @@ package tyrex.tm.impl;
 
 
 import java.io.PrintWriter;
-import java.util.Enumeration;
-import java.util.Properties;
-import java.util.Iterator;
-import java.util.ArrayList;
 import java.lang.reflect.Field;
-import java.security.AccessController;
-import org.apache.log4j.Category;
-import org.omg.CosTransactions.otid_t;
-import org.omg.CosTransactions.PropagationContext;
-import org.omg.CosTransactions.Inactive;
-import org.omg.CosTransactions.TransactionFactory;
-import org.omg.CORBA.ORB;
-import org.omg.CORBA.TSIdentification;
+import java.util.Properties;
+
+import javax.transaction.InvalidTransactionException;
+import javax.transaction.RollbackException;
+import javax.transaction.Status;
+import javax.transaction.SystemException;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 import javax.transaction.UserTransaction;
-import javax.transaction.Status;
-import javax.transaction.SystemException;
-import javax.transaction.RollbackException;
-import javax.transaction.InvalidTransactionException;
-import javax.transaction.xa.Xid;
-import javax.transaction.xa.XAResource;
 import javax.transaction.xa.XAException;
-import tyrex.tm.DomainMetrics;
-import tyrex.tm.Heuristic;
-import tyrex.tm.TransactionDomain;
-import tyrex.tm.TransactionInterceptor;
-import tyrex.tm.TransactionTimeoutException;
-import tyrex.tm.DomainConfigurationException;
-import tyrex.tm.Journal;
-import tyrex.tm.JournalFactory;
-import tyrex.tm.RecoveryException;
-import tyrex.tm.xid.BaseXid;
-import tyrex.tm.xid.XidUtils;
-import tyrex.resource.Resource;
+import javax.transaction.xa.XAResource;
+import javax.transaction.xa.Xid;
+
+import org.apache.log4j.Category;
+import org.omg.CORBA.ORB;
+import org.omg.CORBA.TSIdentification;
+import org.omg.CosTransactions.Inactive;
+import org.omg.CosTransactions.PropagationContext;
+import org.omg.CosTransactions.TransactionFactory;
+import org.omg.CosTransactions.otid_t;
+
 import tyrex.resource.Resources;
-import tyrex.resource.ResourceException;
 import tyrex.services.Clock;
 import tyrex.services.DaemonMaster;
 import tyrex.services.UUID;
-import tyrex.util.Messages;
+import tyrex.tm.DomainConfigurationException;
+import tyrex.tm.DomainMetrics;
+import tyrex.tm.Heuristic;
+import tyrex.tm.Journal;
+import tyrex.tm.JournalFactory;
+import tyrex.tm.RecoveryException;
+import tyrex.tm.TransactionDomain;
+import tyrex.tm.TransactionInterceptor;
+import tyrex.tm.xid.BaseXid;
+import tyrex.tm.xid.XidUtils;
 import tyrex.util.Configuration;
-import tyrex.util.LoggerPrintWriter;
-import tyrex.util.Logger;
+import tyrex.util.Messages;
 
 
 /**
  * Implementation of a transaction domain.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.31 $ $Date: 2002/04/17 00:53:22 $
+ * @version $Revision: 1.32 $ $Date: 2003/11/14 01:36:35 $
  */
 public class TransactionDomainImpl
     extends TransactionDomain
@@ -1195,7 +1189,7 @@ public class TransactionDomainImpl
                 // No transaction to time out, wait forever. Otherwise,
                 // wait until the next transaction times out.
                 clock = Clock.clock();
-                while ( _nextTimeout == 0 || _nextTimeout > clock ) {
+                while ((_state != TERMINATED) && (_nextTimeout == 0 || _nextTimeout > clock) ) {
                     if ( _nextTimeout > clock )
                         wait( _nextTimeout - clock );
                     else
