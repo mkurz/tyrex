@@ -65,6 +65,8 @@ import org.exolab.castor.mapping.MappingException;
 import org.exolab.castor.xml.Unmarshaller;
 import org.exolab.castor.xml.ValidationException;
 import org.exolab.castor.xml.MarshalException;
+import org.exolab.castor.xml.util.DefaultNaming;
+import org.exolab.castor.xml.util.ClassDescriptorResolverImpl;
 import tyrex.tm.TransactionDomain;
 import tyrex.tm.TyrexTransactionManager;
 import tyrex.resource.ResourceConfig;
@@ -80,7 +82,7 @@ import tyrex.util.Logger;
 /**
  * 
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.10 $
+ * @version $Revision: 1.11 $
  */
 public class Connector
     extends ResourceConfig
@@ -94,6 +96,11 @@ public class Connector
      * Empty class array used in setting configuration properties
      */
     private static final Class[] EMPTY_CLASSES = new Class[0];
+
+    /**
+     * The Castor resolver 
+     */
+    private static final ClassDescriptorResolverImpl RESOLVER;
 
     /**
      * The resource, if created.
@@ -111,6 +118,25 @@ public class Connector
      * must be set.
      */
     private MissingConfigurationProperty _missing;
+
+    static {
+        DefaultNaming naming;
+        ClassDescriptorResolverImpl resolver;
+         
+        try {
+            resolver = new ClassDescriptorResolverImpl();
+            naming = new DefaultNaming();
+            naming.setStyle( DefaultNaming.MIXED_CASE_STYLE );
+            resolver.getIntrospector().setNaming( naming );
+        }
+        catch( Exception e ) {
+            Logger.resource.error( "Error in connector. Cannot set Castor resolver.", e );
+
+            resolver = null;
+        }
+
+        RESOLVER = resolver;
+    }
 
     /**
      * Called to set the factory object after it has been configured.
@@ -189,6 +215,7 @@ public class Connector
         DDResourceAdapter       ddAdapter;
         String                  txSupport;
         Mapping                 mapping;
+        Unmarshaller            unmarshaller;
         
         name = _name;
         if ( name == null || name.trim().length() == 0 )
@@ -237,7 +264,15 @@ public class Connector
             
             mapping = new Mapping();
             mapping.loadMapping( new InputSource( Connector.class.getResourceAsStream( "mapping.xml" ) ) );
-            ddConnector = (DDConnector) new Unmarshaller(mapping).unmarshal( new InputSource( getRAInputStream( urls[ 0 ] ) ) );
+            
+            unmarshaller = new Unmarshaller( (Class)null );
+
+            if ( null != RESOLVER ) {
+                unmarshaller.setResolver( RESOLVER );
+            }
+            unmarshaller.setMapping( mapping );
+            
+            ddConnector = (DDConnector) unmarshaller.unmarshal( new InputSource( getRAInputStream( urls[ 0 ] ) ) );
         } catch ( IOException except ) {
             throw new ResourceException( except );
         } catch ( ValidationException except ) {
