@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: XADataSourceTestSuite.java,v 1.2 2001/04/19 17:32:39 jdaniel Exp $
+ * $Id: XADataSourceTestSuite.java,v 1.3 2001/04/24 19:48:00 jdaniel Exp $
  */
 
 
@@ -103,14 +103,29 @@ public class XADataSourceTestSuite
     {
       try
         {        	        
-        	  return tyrex.tm.TransactionDomain.createDomain( config_file );         
+           tyrex.tm.TransactionDomain txDomain = tyrex.tm.TransactionDomain.getDomain( "default" );
+        	  if( txDomain == null ) 
+        	  {
+        	   txDomain = tyrex.tm.TransactionDomain.createDomain( config_file );   
+        	   
+       	   try
+	         {
+		         txDomain.recover();
+	         }
+	         catch ( tyrex.tm.RecoveryException ex )
+	         {
+		         ex.printStackTrace();
+	         }     	          	          	          	            
+           } 
+        	  return txDomain;
         }
         catch ( tyrex.tm.DomainConfigurationException ex )
         {
         	   ex.printStackTrace();
         	   System.exit(0);
-        }
-       return null;
+        }  
+        
+      return null;      
     }
 
     /**

@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Transaction.java,v 1.6 2001/04/19 15:58:49 jdaniel Exp $
+ * $Id: Transaction.java,v 1.7 2001/04/24 19:47:53 jdaniel Exp $
  */
 
 
@@ -255,7 +255,21 @@ public class Transaction
     {
       try
         {        	        
-        	  return tyrex.tm.TransactionDomain.createDomain( config_file );         
+           tyrex.tm.TransactionDomain txDomain = tyrex.tm.TransactionDomain.getDomain( "default" );
+        	  if( txDomain == null ) 
+        	  {
+        	   txDomain = tyrex.tm.TransactionDomain.createDomain( config_file );   
+        	   
+       	   try
+	         {
+		         txDomain.recover();
+	         }
+	         catch ( tyrex.tm.RecoveryException ex )
+	         {
+		         ex.printStackTrace();
+	         }     	          	          	          	            
+           } 
+        	  return txDomain;
         }
         catch ( tyrex.tm.DomainConfigurationException ex )
         {
