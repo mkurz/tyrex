@@ -69,6 +69,12 @@ public final class RunTests
 {
     public static void main (final String args[]) 
     {
+        TestHarness.main((null == args) || (0 == args.length)
+                            ? new String[]{"-execute"} 
+                            : args);
+        /*
+        // Code for running tests without changing policy file - only works
+        // for jdk 1.3
         PermissionCollection permissionCollection = new PermissionCollection()
                                                         {
                                                             private final Enumeration enumeration = new Enumeration()
@@ -120,5 +126,6 @@ public final class RunTests
                                                                      }
                                                                  })
                                         );
+        */
     }
 }
