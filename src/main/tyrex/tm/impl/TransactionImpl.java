@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionImpl.java,v 1.18 2001/04/25 21:53:03 jdaniel Exp $
+ * $Id: TransactionImpl.java,v 1.19 2001/05/10 18:57:09 arkin Exp $
  */
 
 
@@ -88,7 +88,7 @@ import tyrex.util.Messages;
  * they are added.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.18 $ $Date: 2001/04/25 21:53:03 $
+ * @version $Revision: 1.19 $ $Date: 2001/05/10 18:57:09 $
  * @see XAResourceHolder
  * @see TransactionManagerImpl
  * @see TransactionDomain
@@ -1422,9 +1422,6 @@ final class TransactionImpl
         _status = STATUS_ROLLING_BACK;
         _heuristic = Heuristic.READONLY;
         
-        if ( _syncs != null )
-            beforeCompletion();
-        
         if ( _resources != null ) {
             // Tell all the OTS resources to rollback their transaction
             // regardless of state.
@@ -1860,9 +1857,6 @@ final class TransactionImpl
         _status = STATUS_COMMITTING;
         _heuristic = Heuristic.READONLY;
        
-        if ( _syncs != null )
-            beforeCompletion();
-    
         // We always end these resources, even if we made a heuristic
         // decision not to commit this transaction.
         if ( _enlisted != null )
