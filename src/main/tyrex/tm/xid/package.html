@@ -1,0 +1,43 @@
+<!-- $Id: package.html,v 1.1 2001/02/27 00:37:53 arkin Exp $ -->
+<html>
+  <body>
+    <h1><b>Transaction Identifiers</b></h1>
+
+    <dl>
+      <dt><b>Version: </b></dt><dd>$Revision: 1.1 $ $Date: 2001/02/27 00:37:53 $</dd>
+      <dt><b>Author: </b></dt><dd><a href="mailto:arkin@intalio.com">Assaf Arkin</a></dd>
+    </dl>
+
+    <p>Transaction identifiers are abstracted by the <tt>Xid</tt> interface (<tt>javax.transaction.xa.Xid</tt>)
+      which conforms to the Open X/A specification. A transaction identifier consists of a format
+      identifier, a global transaction identifier, and a branch qualifier.</p>
+
+    <p>Transaction identifiers are often converted to and from a string representation. The string
+      representation is used various places where an Xid object cannot be used. All transaction
+      identifiers use the following format: <tt>xid:format-[&lt;global&gt;][-&lt;branch&gt;]</tt>.
+      The prefix is always 'xid' and the format is always 32-bit long. The format identifier,
+      global transaction identifier and branch qualifier are encoded as sequences of hexadeciaml digits.</p>
+    
+    <p>In order to support a string representation, equality test and provide a hash code, all
+      transaction identifiers must be derived from a common implementation. When an <tt>Xid</tt>
+      object is obtained from a remote transaction server, it is imported into an internal
+      implementation that fulfills these requirements.</p>
+
+    <p>{@link tyrex.tm.xid.XidUtils} is a utility class for creating transaction identifiers,
+      importing <tt>Xid</tt> objects, and converting a transaction identifier to/from a string
+      representation.</p>
+
+    <p>{@link tyrex.tm.xid.LocalXid} is an efficient implementation of a local
+      transaction. A local transaction identifier has an empty global transaction identifier and
+      unique branch qualifier.</p>
+
+    <p>{@link tyrex.tm.xid.GlobalXid} is an efficient implementation of a global
+      transaction. Branch transactions created from this transaction identifier are implemented by
+      {@link tyrex.tm.xid.BranchXid}.</p>
+
+    <p>{@link tyrex.tm.xid.ExternalXid} is used for all distributed transactions
+      and branches created externally.</p>
+
+
+  </body>
+</html>

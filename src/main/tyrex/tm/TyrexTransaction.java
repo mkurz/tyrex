@@ -38,25 +38,23 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
+ * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
  *
  */
 
 
 package tyrex.tm;
      
+
 import javax.transaction.HeuristicMixedException;
 import javax.transaction.HeuristicRollbackException;
 import javax.transaction.RollbackException;
 import javax.transaction.SystemException;
 import javax.transaction.Transaction;
 
-///////////////////////////////////////////////////////////////////////////////
-// TyrexTransaction
-///////////////////////////////////////////////////////////////////////////////
 
 /**
- *  JTA extensions for Transactions
+ *  Tyrex extensions for {@link Transactions}.
  *
  * @author <a href="mohammed@intalio.com">Riad Mohammed</a>
  */
@@ -64,76 +62,77 @@ public interface TyrexTransaction
     extends Transaction
 {
 
+
     /**
      * Perform an asynchronous commit on the transaction.
      *
-     * @param callback the object that is registered
-     *      to receive callbacks during the asynchronous
-     *      commit. Can be null.
-     * @throws SystemException if there is a problem
-     *      associating the transaction with the
-     *      new thread.
-     * @throws SecurityException if the current thread is
-     *      not allowed to rollback the transaction.
-     * @throws RollbackException if the transaction has been
-     *      marked for rollback
+     * @param callback The object that is registered to receive callbacks
+     * during the asynchronous commit. May be null.
+     * @throws SystemException A problem occured while associating the
+     * transaction with the new thread.
+     * @throws SecurityException The current thread is not allowed to
+     * rollback the transaction
+     * @throws RollbackException The transaction has been marked for rollback
      */
-    void asyncCommit( AsyncCompletionCallback callback )
+    public void asyncCommit( AsyncCompletionCallback callback )
         throws SystemException, SecurityException, RollbackException;
+
 
     /**
      * Perform an asynchronous rollback on the transaction.
      *
-     * @param callback the object that is registered
-     *      to receive callbacks during the asynchronous
-     *      commit. Can be null.
-     * @throws IllegalStateException if the transaction
-     *      is not in the proper state to be rolled back
-     * @throws SystemException if there is a problem
-     *      associating the transaction with the
-     *      new thread.
-     * @throws SecurityException if the current thread is
-     *      not allowed to rollback the transaction.
+     * @param callback The object that is registered to receive callbacks
+     * during the asynchronous commit. May be null.
+     * @throws IllegalStateException The transaction is not in the proper
+     * state to be rolled back
+     * @throws SystemException A problem occured while associating the
+     * transaction with the new thread.
+     * @throws SecurityException The current thread is not allowed to
+     * rollback the transaction.
      */
-    void asyncRollback( AsyncCompletionCallback callback )
+    public void asyncRollback( AsyncCompletionCallback callback )
         throws IllegalStateException, SystemException, SecurityException;
     
 
     /**
-     * Change the timeout for the transaction's resources 
-     * to the new value. 
+     * Change the timeout for the transaction to the new value. 
      *
      * @param seconds The new timeout in seconds
-     * @see TransactionDomain#setTransactionTimeout
      */
-    void setTransactionTimeout( int seconds );
+    public void setTransactionTimeout( int seconds );
 
 
     /**
-     * Return true if the transaction can be committed
-     * using One-Phase Commit.
+     * Return true if the transaction can be safely committed
+     * using one-phase commit.
      *
-     * @return true if the transaction can be committed
-     *      using One-Phase Commit.
+     * @return True if the transaction can be safely committed
+     * using one-phase commit
      */
-    boolean canUseOnePhaseCommit();
+    public boolean canUseOnePhaseCommit();
 
 
     /**
-     * Perform one-phase commit on the transaction
+     * Perform one-phase commit on the transaction.
      *
-     * @throws RollbackException Thrown to indicate that the transaction has been rolled back rather than committed.
-     * @throws HeuristicMixedException Thrown to indicate that a heuristic decision was made and that some relevant updates have been committed while others have been rolled back.
-     * @throws HeuristicRollbackException Thrown to indicate that a heuristic decision was made and that some relevant updates have been rolled back.
-     * @throws SecurityException Thrown to indicate that the thread is not allowed to commit the transaction.
-     * @throws IllegalStateException Thrown if the current thread is not associated with a transaction.
-     * @throws SystemException Thrown if the transaction manager encounters an unexpected error condition
+     * @throws RollbackException Indicates that the transaction has been
+     * rolled back rather than committed.
+     * @throws HeuristicMixedException A heuristic decision was made and
+     * that some relevant updates have been committed while others have
+     * been rolled back.
+     * @throws HeuristicRollbackException A heuristic decision was made
+     * and that some relevant updates have been rolled back.
+     * @throws SecurityException The thread is not allowed to commit the
+     * transaction.
+     * @throws IllegalStateException The current thread is not associated
+     * with a transaction.
+     * @throws SystemException The transaction manager encountered an
+     * unexpected error condition
      */
-    void onePhaseCommit()
-        throws  RollbackException,
-                HeuristicMixedException,
-                HeuristicRollbackException,
-                SecurityException,
-                IllegalStateException,
-                SystemException;
+    public void onePhaseCommit()
+        throws RollbackException, HeuristicMixedException,
+               HeuristicRollbackException, SecurityException,
+               IllegalStateException, SystemException;
+
+
 }

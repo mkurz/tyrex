@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: EnabledDataSource.java,v 1.15 2001/02/13 00:36:13 mohammed Exp $
+ * $Id: EnabledDataSource.java,v 1.16 2001/02/27 00:34:07 arkin Exp $
  */
 
 
@@ -215,10 +215,6 @@ public class EnabledDataSource
 
         _driverName = createJDBCURL();
         
-        // <--------- LOG ---------->
-       tyrex.recovery.LogWriter.out.open_connection( user, password, "tyrex-driver:" + _driverName );
-        // </----------------------->
-
         if ( null == _driverName ) {
             throw new SQLException ( "The driver name is not set." );
         }

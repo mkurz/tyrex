@@ -1,3 +1,12 @@
-version=0.9.7.0
-build.compiler=classic
+project=tyrex
+version=0.9.8
+title=Tyrex
+
+api.packages=tyrex.tm,tyrex.resource,tyrex.services,tyrex.naming
+all.packages=tyrex.*
+
+vendor.name=Intalio Inc
+vendor.url=http://www.intalio.com
+copyright=Intalio Inc. (C) 2000, 2001. All rights reserved  http://www.intalio.com
+
 

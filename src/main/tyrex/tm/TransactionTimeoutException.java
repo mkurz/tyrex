@@ -38,16 +38,15 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
+ * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionTimeoutException.java,v 1.2 2000/09/08 23:06:13 mohammed Exp $
+ * $Id: TransactionTimeoutException.java,v 1.3 2001/02/27 00:34:07 arkin Exp $
  */
 
 
 package tyrex.tm;
 
 
-import javax.transaction.xa.Xid;
 import tyrex.util.Messages;
 
 
@@ -56,7 +55,7 @@ import tyrex.util.Messages;
  * current transaction has been timed out.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $ $Date: 2000/09/08 23:06:13 $
+ * @version $Revision: 1.3 $ $Date: 2001/02/27 00:34:07 $
  */
 public class TransactionTimeoutException
     extends RuntimeException

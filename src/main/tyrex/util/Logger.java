@@ -38,13 +38,14 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
+ * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Logger.java,v 1.9 2001/02/23 21:42:54 jdaniel Exp $
+ * $Id: Logger.java,v 1.10 2001/02/27 00:34:08 arkin Exp $
  */
 
 
 package tyrex.util;
+
 
 import java.io.OutputStream;
 import java.util.Properties;
@@ -54,35 +55,39 @@ import org.apache.log4j.Category;
 import org.apache.log4j.Appender;
 import org.apache.log4j.FileAppender;
 
+
 /**
- * Simple logging facility. This logger extends <tt>PrintWriter</tt>
- * which is used to trace SQL statements, Castor operations and
- * mapping resolutions.
- * <p>
- * This logger augments <tt>PrintWriter</tt> by adding a prefix to
- * each printed line and optionally a time stamp, enabling easy
- * post-mortem analysis.
  *
  * @author <a href="jdaniel@intalio.com">Jerome DANIEL</a>
- * @version $Revision: 1.9 $ $Date: 2001/02/23 21:42:54 $
+ * @version $Revision: 1.10 $ $Date: 2001/02/27 00:34:08 $
  */
 public class Logger
 {
+
+
     public static final Category conf;
+
     
     public static final Category ots;
+
     
     public static final Category jdbc;
+
     
     public static final Category recovery;
+
     
     public static final Category server;
 
-    public static final Category tm;
+
+    public static final Category tyrex;
+
     
     public static final Category tools;   
+
     
     public static final Appender appender;
+
 
     static {
         PatternLayout layout;
@@ -101,33 +106,18 @@ public class Logger
         jdbc = Category.getInstance( "tyrex.jdbc" );
         recovery = Category.getInstance( "tyrex.recovery" );
         server = Category.getInstance( "tyrex.server" );
-        tm = Category.getInstance( "tyrex.tm" );
+        tyrex = Category.getInstance( "tyrex" );
         tools = Category.getInstance( "tyrex.tools" );
         
-         if ( !tyrex.tm.Tyrex.log() )
-         {        
-            appender = nullAppender;
-            
-            ots.addAppender( nullAppender );
-            conf.addAppender( nullAppender );
-            jdbc.addAppender( nullAppender );
-            recovery.addAppender( nullAppender );
-            server.addAppender( nullAppender );
-            tm.addAppender( nullAppender );
-            tools.addAppender( nullAppender );
-         }
-        else
-        {
-            appender = new FileAppender( layout, System.out );
-            
-            ots.addAppender( appender );
-            conf.addAppender( appender );
-            jdbc.addAppender( appender );
-            recovery.addAppender( appender );
-            server.addAppender( appender );
-            tm.addAppender( appender );
-            tools.addAppender( appender );
-        }
+        appender = new FileAppender( layout, System.out );
+
+        ots.addAppender( appender );
+        conf.addAppender( appender );
+        jdbc.addAppender( appender );
+        recovery.addAppender( appender );
+        server.addAppender( appender );
+        tyrex.addAppender( appender );
+        tools.addAppender( appender );
     }
 
 

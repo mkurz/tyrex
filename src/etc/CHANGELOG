@@ -1,7 +1,56 @@
-Current development
--------------------
+Version 0.9.8  Mar 2, 2000
+--------------------------
+
+- Improved performance and reduced overhead of the transaction manager.
+  Transactions and resources are now more efficiently stored, accessed
+  and discarded to reduce the overhead associated with transaction
+  management.
+
+- Improved Xid management to reduce memory consumption and enable
+  consistent textual representation of Xids. Four Xid implementations
+  are provided for global, branch, local and external Xids.
+
+- Added services package that includes internal clock, UUID generator
+  and daemon master.
+
+- Revised the TransactionDomain design to allow more effective
+  management of multiple transaction domains.
+
+- Added a configuration file (tyrex.config) for controlling the new
+  services and providing alternative location for the resource
+  configuration file.
+
+- The package tyrex.tm has been split in three. The Tyrex extended
+  transaction management interfaces are contained in tyrex.tm, while
+  the implementation has been migrated to tyrex.tm.impl.
+  Xid implementations are located in tyrex.tm.xid.
+
+- TransactionDomain has been changed and the Tyrex class has been
+  removed. Creating and looking up transaction domains is now easier.
+  TransactionDomain provides access to a TransactionManager and
+  UserTransaction, and various administrative tasks.
+
+- Added abstract interface for transaction journaling.
+
+- Added transaction start time to TransactionStatus.
+
+- Clarified the use of enlistResource and delistResource in
+  TyrexTransactionManager as a means to enlist resources in future
+  transactions.
 
 - Fixed a problem in the ResultSet wrapper ( close operation ).
+
+- Moved the interceptor interface to tyrex.tm.
+
+- Provided UUID implementation compliant with the IETF draft and
+  supporting 128-bit universally unique identifiers using the
+  network card address, and a UUID state file.
+
+- Support for RMI transaction propagation has been removed from
+  this release.
+
+- Now using Apache Log4J for error logging and informative messages.
+
 
 Version 0.9.5  April 10, 2000
 -----------------------------
@@ -10,6 +59,7 @@ Version 0.9.5  April 10, 2000
   The interfaces are located in tyrex.concurrency, and the engine in the
   engine package. Automatic dropLocks at end of transaction not yet
   implemented.  
+
 
 Version 0.9.4 February 2 2000
 -----------------------------

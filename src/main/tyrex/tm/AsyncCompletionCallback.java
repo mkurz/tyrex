@@ -38,55 +38,54 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
+ * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
  *
  */
 
 
 package tyrex.tm;
 
-///////////////////////////////////////////////////////////////////////////////
-// AsyncCompletionCallback
-///////////////////////////////////////////////////////////////////////////////
 
 /**
- * This interface registers for callbacks during
- * asynchronous transaction boundaries.
- * @see TyrexTransaction#asyncCommit
- * @see TyrexTransaction#getAsyncCommitRunnable
- * @see TyrexTransactionManager#asyncCommit
- * @see TyrexTransactionManager#getAsyncCommitRunnable
+ * This interface registers for callbacks during asynchronous transaction boundaries.
+ *
+ * @see TyrexTransaction#asyncCommit asyncCommit
+ * @see TyrexTransaction#getAsyncCommitRunnable getAsyncCommitRunnable
+ * @see TyrexTransactionManager#asyncCommit asyncCommit
+ * @see TyrexTransactionManager#getAsyncCommitRunnable getAsyncCommitRunnable
  */
 public interface AsyncCompletionCallback
 {
-    /**
-     * This method is called if an exception occurs during
-     * commit or rollback. If this method is called this 
-     * implies that
-     * {@link #afterCommit is not called}.
-     *
-     * @param transaction the transaction that failed.
-     * @param e the exception that occurred.
-     */
-    void exceptionOccurred(TyrexTransaction transaction, Exception e);
+
 
     /**
-     * This method is called before commit or rollback 
-     * is called on
+     * This method is called if an exception occurs during commit or rollback.
+     * If this method is called this implies that {@link #afterCommit afterCommit}
+     * is not called.
+     *
+     * @param transaction The transaction that failed
+     * @param except The exception that occurred
+     */
+    public void errorOccurred( TyrexTransaction transaction, Exception except );
+
+
+    /**
+     * This method is called before commit or rollback is called on
      * the transaction.
      *
-     * @param transaction the transaction that failed.
+     * @param transaction The transaction that is completing
      */
-    void beforeCompletion(TyrexTransaction transaction);
+    public void beforeCompletion( TyrexTransaction transaction );
+
 
     /**
-     * This method is called after commit or rollback 
-     * has been
-     * completed on the transaction without an 
-     * exception occuring. If an exception
-     * occurs during commit this method is NOT called.
+     * This method is called after commit or rollback has been completed on the
+     * transaction without an exception occuring. If an exception occurs during
+     * commit this method is NOT called.
      *
-     * @param transaction the transaction that failed.
+     * @param transaction The transaction that completed
      */
-    void afterCompletion(TyrexTransaction transaction);
+    public void afterCompletion( TyrexTransaction transaction );
+
+
 }

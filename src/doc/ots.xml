@@ -5,53 +5,53 @@
     <author email="jdaniel@intalio.com">Jerome DANIEL</author>
   </properties>
   <body>
-
+    
     <section title="Introduction">
-        <p>
+      <p>
         This document quickly explains how to configure OpenORB to run Tyrex as an OTS. It also explains
         how to start Tyrex as an OTS server.
-        </p>
+      </p>
     </section>
     
     <section title="How to configure Tyrex to be used as an OTS?">
-    	<p>
-    	Extend your classpath by adding the OpenORB jar file and the 'ots.jar' file provided with the Tyrex distribution. Start the Tyrex build
-    	file by supplying the following argument : <b>iiop</b>. After the build, a jar file named 'tyrex-X.X.X-iiop.jar' is available. Add this
-    	jar file in your classpath.
-    	</p>
+      <p>
+        Extend your classpath by adding the OpenORB jar file and the 'ots.jar' file provided with the
+        Tyrex distribution. Start the Tyrex build file by supplying the following argument : <b>iiop</b>.
+        After the build, a jar file named 'tyrex-X.X.X-iiop.jar' is available. Add this jar file in your classpath.
+      </p>
     </section>
     
     <section title="How to configure OpenORB to run Tyrex ?">
-    	<p>
+      <p>
     	To configure OpenORB, please edit the OpenORB configuration file ( OpenORB.xml ). Defines a new
     	module to describe the OTS :
     	<br/>
     	<code>
-    	&lt;module name="tyrex" initializer="tyrex.corba.Initializer" /&gt;
+          &lt;module name="tyrex" initializer="tyrex.corba.Initializer" /&gt;
     	</code>
     	<br/>
     	Then, define a new profile :
     	<br/>
     	<code>
-    	&lt;profile name="ots" extends="default"&gt;
+          &lt;profile name="ots" extends="default"&gt;
     	  &lt;import module="transaction" /&gt;
-  	&lt;/profile&gt;
+          &lt;/profile&gt;
     	</code>
     	<br/>
-    	When you start a CORBA application that want to use the Tyrex OTS, be sure to use the <t>ots</t> profile. For example,
-    	you can specify from the command line : <b>-ORBProfile=ots</b>
+    	When you start a CORBA application that want to use the Tyrex OTS, be sure to use the <t>ots</t> profile.
+        For example, you can specify from the command line : <b>-ORBProfile=ots</b>
     	<br/>
     	To be able to resolve the 'TransactionService' initial reference, you have to extend the <b>InitRef</b> module, by adding :
     	<br/>
     	<code>
-    	&lt;property name="TransactionService" value="corbaname:rir:#Tyrex/TransactionFactory" /&gt;
+          &lt;property name="TransactionService" value="corbaname:rir:#Tyrex/TransactionFactory" /&gt;
     	</code>
     	<br/>
-    	</p>
+      </p>
     </section>
-        
+    
     <section title="How to start Tyrex as an OTS server ?">
-        <p>
+      <p>
         To start Tyrex as an OTS server, just start the following class :
         <br/>
         <b>java tyrex.corba.OTSServer</b>
@@ -69,24 +69,24 @@
         <br/>
         -recover : this option is used to activate the recovery mechanism. If you start the recovery
         be  sure to use at the same time the '-log' option to specify the log files directory.
-        </p>                      
+      </p>              
     </section>
 
     <section title="Problems">
-        <p>If you encounter problems with the OTS server send a detailed email to 
+      <p>If you encounter problems with the OTS server send a detailed email to 
         <a href="mailto:tyrex-dev@exolab.org">Tyrex Developer's Mailing List</a>.
-        </p>
-        <p>
+      </p>
+      <p>
         The email should contain:
         <ul>
-        <li>A stacktrace if one is available</li>
-        <li>The database used, including version number, if one is used</li>
-        <li>The JDBC driver version number, if one is used</li>
-        <li>Instructions on how to reproduce the problem</li>        
-        <li>Version of OpenORB, and a copy of your OpenORB.xml file</li>
+          <li>A stacktrace if one is available</li>
+          <li>The database used, including version number, if one is used</li>
+          <li>The JDBC driver version number, if one is used</li>
+          <li>Instructions on how to reproduce the problem</li>    
+          <li>Version of OpenORB, and a copy of your OpenORB.xml file</li>
         </ul>
-        </p>
+      </p>
     </section>
-
+    
   </body>
 </document>

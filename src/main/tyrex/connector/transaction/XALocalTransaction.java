@@ -50,7 +50,7 @@ import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 import tyrex.connector.ConnectionException;
 import tyrex.connector.LocalTransaction;
-import tyrex.tm.XidImpl;
+import tyrex.tm.xid.XidUtils;
 
 ///////////////////////////////////////////////////////////////////////////////
 // XALocalTransaction
@@ -110,7 +110,7 @@ public final class XALocalTransaction
             throw new ConnectionException("Transaction in process: Nested transactions are not supported.");
         }
 
-        xid = new XidImpl();
+        xid = XidUtils.newLocal();
 
         try {
             xaResource.start(xid, XAResource.TMNOFLAGS);

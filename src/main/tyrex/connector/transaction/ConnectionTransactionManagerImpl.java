@@ -62,7 +62,6 @@ import tyrex.connector.ConnectionEventListenerAdapter;
 import tyrex.connector.LocalTransaction;
 import tyrex.connector.ManagedConnection;
 import tyrex.connector.ManagedConnectionFactory;
-import tyrex.tm.EnlistedResource;
 import tyrex.tm.TyrexTransactionManager;
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -242,16 +241,9 @@ public class ConnectionTransactionManagerImpl
 
             try {
                 if (canEnlistResources()) {
-                    EnlistedResource enlistedConnection = EnlistedResourceFactory.build(connectionHandle,
-                                                                                        managedConnection,
-                                                                                        this);
-                    if (null != enlistedConnection) {
-                        // add the enlisted resource to the transaction manager
-                        ((TyrexTransactionManager)getTransactionManager()).enlistResource(xaResource, 
-                                                                                          enlistedConnection);
-                        handle = enlistedConnection;
-                        isEnlisted = true;
-                    }
+                    ((TyrexTransactionManager)getTransactionManager()).enlistResource(xaResource );
+                    handle = enlistedConnection;
+                    isEnlisted = true;
                 }
                 if (!isEnlisted && (null != transaction)) {
                     transaction.enlistResource(xaResource);

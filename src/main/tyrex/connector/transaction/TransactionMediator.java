@@ -50,7 +50,7 @@ import javax.transaction.SystemException;
 import javax.transaction.Transaction;
 import javax.transaction.xa.XAResource;
 import tyrex.connector.ManagedConnectionFactory;
-import tyrex.tm.EnlistedResource;
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // ContainerMediator

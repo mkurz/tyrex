@@ -1,0 +1,38 @@
+<!-- $Id: package.html,v 1.1 2001/02/27 00:37:09 arkin Exp $ -->
+<html>
+  <body>
+    <h1><b>Utility Classes</b></h1>
+
+    <dl>
+      <dt><b>Version: </b></dt><dd>$Revision: 1.1 $Date: 2001/02/27 00:37:09 $</dd>
+      <dt><b>Author: </b></dt><dd><a href="mailto:arkin@intalio.com">Assaf Arkin</a></dd>
+    </dl>
+
+
+    <h2>Configuration, Messages and Logging</h2>
+
+    <p>{@link tyrex.util.Configuration} provides basic configuration for Tyrex based on
+      the <tt>tyrex.config</tt> configuration file. Several Tyrex services rely on this
+       configuration file.</p>
+
+    <p>The member variable {@link tyrex.util.Configuration#verbose} determines whether
+       Tyrex should emit verbose information messages, which can be used for troubleshooting
+       purposes. This class also provides access to a random number generator.</p>
+
+    <p>{@link tyrex..util.Logger}.</p>
+
+    <p>{@link tyrex.util.Messages} performs formatting of messages based on the current
+       locale, using a message resource file. This class is often used by exceptions and logging
+       messages to perform formatting based on an actual string contents that is obtained form
+       a resource file, depending on the current locale.</p>
+
+
+    <h2>Misc</h2>
+
+    <p>{@link tyrex.util.FastThreadLocal} is an optimized implementation of {@link java.lang.ThreadLocal}
+       which uses a background thread to remove stale thread entries, doing away with the inefficiencies
+       of {@link java.util.WeakHashMap}.</p>
+
+
+  </body>
+</html>

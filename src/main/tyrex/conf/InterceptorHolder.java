@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: InterceptorHolder.java,v 1.6 2001/02/23 18:58:03 jdaniel Exp $
+ * $Id: InterceptorHolder.java,v 1.7 2001/02/27 00:34:05 arkin Exp $
  */
 
 
@@ -48,14 +48,14 @@ package tyrex.conf;
 
 
 import java.io.Serializable;
-import tyrex.interceptor.TransactionInterceptor;
+import tyrex.tm.TransactionInterceptor;
 import tyrex.util.Messages;
 import tyrex.util.Logger;
 
 
 /**
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.6 $ $Date: 2001/02/23 18:58:03 $
+ * @version $Revision: 1.7 $ $Date: 2001/02/27 00:34:05 $
  */
 public class InterceptorHolder
     implements Serializable

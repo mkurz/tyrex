@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: ConnectionManagerImpl.java,v 1.4 2000/09/08 23:04:44 mohammed Exp $
+ * $Id: ConnectionManagerImpl.java,v 1.5 2001/02/27 00:34:06 arkin Exp $
  */
 
 
@@ -73,7 +73,6 @@ import tyrex.resource.ResourceLimits;
 import tyrex.resource.ResourcePool;
 import tyrex.resource.ResourcePoolManager;
 import tyrex.resource.ResourceTimeoutException;
-import tyrex.tm.EnlistedResource;
 import tyrex.util.ArrayEnumeration;
 import tyrex.util.HashIntTable;
 import tyrex.util.Messages;
@@ -117,7 +116,7 @@ import tyrex.util.Messages;
  *  </ul>
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.4 $ $Date: 2000/09/08 23:04:44 $
+ * @version $Revision: 1.5 $ $Date: 2001/02/27 00:34:06 $
  */
 class ConnectionManagerImpl
     implements ConnectionManager

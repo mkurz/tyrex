@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionServer.java,v 1.7 2001/02/23 19:19:51 jdaniel Exp $
+ * $Id: TransactionServer.java,v 1.8 2001/02/27 00:34:07 arkin Exp $
  */
 
 
@@ -68,7 +68,6 @@ import tyrex.resource.ResourceTimeoutException;
 import tyrex.tm.Heuristic;
 import tyrex.tm.TransactionDomain;
 import tyrex.tm.TyrexPermission;
-import tyrex.tm.XidImpl;
 import tyrex.util.Messages;
 import tyrex.util.Logger;
 
@@ -90,7 +89,7 @@ import tyrex.util.Logger;
  *
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.7 $ $Date: 2001/02/23 19:19:51 $
+ * @version $Revision: 1.8 $ $Date: 2001/02/27 00:34:07 $
  * @see Configure
  * @see Tyrex
  * @see TransactionManagerImpl

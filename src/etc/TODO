@@ -1,10 +1,13 @@
--- Finish interfaces in connector package.
+- Make UserTransactionImpl serializable by looking up
+  the transaction domain upon de-serialization.
 
--- Configuration for logger.
+- Implement shutdown for transaction domain.
 
--- Revised ServerDataSource and EnabledDataSource.
+- Need to validate that both TransactionManager and TransactionFactory
+  provide the proper timeout in seconds.
 
--- Add asynchronous transaction adaptor to perform asynchronous commit/rollback,
-   but synchronous prepare. Must support mixed synchronous/asynchronous
-   transactions in same domain.
+- When creating transaction from pgContext need to get Xid
 
+- OTS requires other mechanism to bypass thread owner check
+
+- Complete recovery sequence

@@ -38,16 +38,15 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
+ * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionStatus.java,v 1.2 2000/09/08 23:06:13 mohammed Exp $
+ * $Id: TransactionStatus.java,v 1.3 2001/02/27 00:34:07 arkin Exp $
  */
 
 
 package tyrex.tm;
 
 
-import java.util.Date;
 import org.omg.CosTransactions.Control;
 import javax.transaction.Transaction;
 import javax.transaction.xa.Xid;
@@ -59,115 +58,81 @@ import javax.transaction.xa.Xid;
  * of the transaction server. This information is only current for
  * the time it was obtained from {@link Tyrex}.
  *
- *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $ $Date: 2000/09/08 23:06:13 $
+ * @version $Revision: 1.3 $ $Date: 2001/02/27 00:34:07 $
  * @see Tyrex
  */
-public final class TransactionStatus
+public abstract class TransactionStatus
 {
 
 
     /**
-     * The transaction for which status information is
-     * provided.
-     */
-    private TransactionImpl  _tx;
-
-
-    /**
-     * The date/time at which the transaction will timeout.
-     */
-    private Date             _timeout;
-
-
-    /**
-     * True if the transaction is associated with one or more threads.
-     */
-    private boolean          _inThread;
-
-
-    TransactionStatus( TransactionImpl tx, long timeout, boolean inThread )
-    {
-	_tx = tx;
-	_timeout = new Date( timeout );
-	_inThread = inThread;
-    }
-
-
-    /**
      * Returns the underlying transaction.
+     *
+     * @return The underlying transaction
      */
-    public Transaction getTransaction()
-    {
-	return _tx;
-    }
+    public abstract Transaction getTransaction();
 
 
     /**
      * Returns the control interface of the underlying transaction.
+     *
+     * @return The control interface
      */
-    public Control getControl()
-    {
-	return _tx.getControl();
-    }
+    public abstract Control getControl();
 
 
     /**
-     * Returns the timeout for the tranasction.
+     * Returns the timeout for the tranasction. This is the system clock
+     * at which the transaction will time out.
+     *
+     * @return The timeout for the tranasction
      */
-    public Date getTimeout()
-    {
-	return _timeout;
-    }
+    public abstract long getTimeout();
+
+
+    /**
+     * Returns the start time of the tranasction.
+     *
+     * @return The start time of the tranasction
+     */
+    public abstract long getStarted();
 
 
     /**
      * Returns the status of the transaction.
      *
+     * @return The status of the transaction
      * @see javax.transaction.Status
      */
-    public int getStatus()
-    {
-	return _tx.getStatus();
-    }
+    public abstract int getStatus();
 
 
     /**
      * Returns the Xid of the transaction.
      *
-     * @see javax.transaction.xa.Xid
+     * @return The Xid of the transaction
      */
-    public Xid getXid()
-    {
-	return _tx.getXid();
-    }
+    public abstract Xid getXid();
 
 
     /**
      * Returns a textual description of all the resources enlisted
      * with this transaction.
+     *
+     * @return A textual description of all the enlisted resources
      */
-    public String[] listResources()
-    {
-	return _tx.listResources();
-    }
+    public abstract String[] listResources();
 
 
     /**
      * Returns true if the transaction is currently associated with
      * any (one or more) threads.
+     *
+     * @return True if the transaction is currently associated with
+     * one or more threads
      */
-    public boolean isInThread()
-    {
-	return _inThread;
-    }
-
-
-    public String toString()
-    {
-	return _tx.toString();
-    }
+    public abstract boolean isInThread();
 
 
 }

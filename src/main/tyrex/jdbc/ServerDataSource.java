@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: ServerDataSource.java,v 1.13 2001/02/23 19:19:24 jdaniel Exp $
+ * $Id: ServerDataSource.java,v 1.14 2001/02/27 00:34:07 arkin Exp $
  */
 
 
@@ -81,7 +81,6 @@ import javax.naming.InitialContext;
 import javax.naming.Name;
 import javax.naming.spi.ObjectFactory;
 import tyrex.naming.ReferenceRefAddr;
-import tyrex.tm.ResourceManager;
 import tyrex.resource.ResourceLimits;
 import tyrex.resource.ResourcePool;
 import tyrex.resource.ResourcePoolManager;
@@ -94,12 +93,11 @@ import tyrex.util.Messages;
 /**
  * This class allows the connections from a JDBC data source
  * (javax.sql.ConnectionPoolDataSource and
- * javax.sql.XADataSource) to be used as 
- * {@link EnlistedResource} and to be pooled in a
+ * javax.sql.XADataSource) to be pooled in a
  * {@link tyrex.resource.ResourcePool}.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.13 $ $Date: 2001/02/23 19:19:24 $
+ * @version $Revision: 1.14 $ $Date: 2001/02/27 00:34:07 $
  *
  * Date         Author          Changes
  * ?            Assaf Arkin     Created  
@@ -229,51 +227,51 @@ public class ServerDataSource
     {
 	ConnectionPoolEntry entry;
 	Connection          conn;
-    int                 retryAttempts = 0;
-    SQLException exception = null;
-
-    while ( ( -1 == _retryAttempts ) ||
-            ( retryAttempts <= _retryAttempts ) ) {
-        // If the connection is unuseable we might detect it
-    	// at this point and attempt to return a different
-    	// connection to the application.
-    	try {
-    	    entry = getPoolEntry( user, password );
-    	} catch ( ResourceTimeoutException except ) {
-    	    // Time out occured waiting for an available connection.
-    	    throw new SQLException( except.getMessage() );
-    	}
-    
-    	try {
-    
-    	    // Check to see if we can produce a connection for
-    	    // the application.
-    	    conn = entry.conn.getConnection();
-    
-    	    // This will delist an XA resource with the transaction
-    	    // manager whether or not we have a transaction.
-    	    // We must return a {@link EnlistedConnection} to the
-    	    // application.
-    	    if ( entry.xaRes != null ) {
-                conn = new EnlistedConnection( conn, entry.xaRes );
+        int                 retryAttempts = 0;
+        SQLException exception = null;
+        
+        while ( ( -1 == _retryAttempts ) ||
+                ( retryAttempts <= _retryAttempts ) ) {
+            // If the connection is unuseable we might detect it
+            // at this point and attempt to return a different
+            // connection to the application.
+            try {
+                entry = getPoolEntry( user, password );
+            } catch ( ResourceTimeoutException except ) {
+                // Time out occured waiting for an available connection.
+                throw new SQLException( except.getMessage() );
             }
-    	    
-    	    // Obtain a new pool entry, add it to the active list and
-    	    // register as a listener on it.
-    	    _active.put( entry.conn, entry );
-    	    entry.conn.addConnectionEventListener( this );
-    	    return conn;
-    	} catch ( SQLException except ) {
-    	    // This is not a problem of creating a new entry,
-    	    // so just try to create a new one.
-            exception = except;
+            
+            try {
+                
+                // Check to see if we can produce a connection for
+                // the application.
+                conn = entry.conn.getConnection();
+                
+                // This will delist an XA resource with the transaction
+                // manager whether or not we have a transaction.
+                // We must return a {@link EnlistedConnection} to the
+                // application.
+                if ( entry.xaRes != null ) {
+                    conn = new EnlistedConnection( conn, entry.xaRes );
+                }
+                
+                // Obtain a new pool entry, add it to the active list and
+                // register as a listener on it.
+                _active.put( entry.conn, entry );
+                entry.conn.addConnectionEventListener( this );
+                return conn;
+            } catch ( SQLException except ) {
+                // This is not a problem of creating a new entry,
+                // so just try to create a new one.
+                exception = except;
+            }
+            ++retryAttempts;
         }
-        ++retryAttempts;
-    }
-    if ( null != exception ) {
-        throw exception;    
-    }
-    throw new SQLException("Failed to get a connection.");
+        if ( null != exception ) {
+            throw exception;    
+        }
+        throw new SQLException("Failed to get a connection.");
     }
 
 
@@ -416,8 +414,9 @@ public class ServerDataSource
 	    // If this is an X/A connection dessociate it from any
 	    // active transaction. If there is a problem, the TM
 	    // will throw an exception at this point.
-	    if ( entry.xaRes != null )
-		ResourceManager.discardResource( entry.xaRes );
+            // !!! This has to be changed to use the Transaction object
+	    // if ( entry.xaRes != null )
+            //	ResourceManager.discardResource( entry.xaRes );
 
 	    // Notify all waiting threads that a new connection can be created.
 	    _poolManager.released();
@@ -506,10 +505,6 @@ public class ServerDataSource
         
 	if ( _dataSource instanceof XADataSource ) 
         {
-            // <--------- LOG ---------->
-            if  ( !(_dataSource instanceof tyrex.jdbc.xa.EnabledDataSource ) )
-                tyrex.recovery.LogWriter.out.open_connection( user, password, _dataSourceName );
-            // </----------------------->
 	    if ( user == null )
 		return ( (XADataSource) _dataSource ).getXAConnection();
 	    else

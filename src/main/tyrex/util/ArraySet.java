@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: ArraySet.java,v 1.2 2000/09/08 23:06:38 mohammed Exp $
+ * $Id: ArraySet.java,v 1.3 2001/02/27 00:34:08 arkin Exp $
  */
 
 
@@ -51,6 +51,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Set;
+
 
 /**
  * Implementation of a simple Set based on an array. Does not

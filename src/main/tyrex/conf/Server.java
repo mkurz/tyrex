@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Server.java,v 1.7 2001/02/23 18:58:03 jdaniel Exp $
+ * $Id: Server.java,v 1.8 2001/02/27 00:34:05 arkin Exp $
  */
 
 
@@ -74,7 +74,7 @@ import tyrex.util.Logger;
  *
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.7 $ $Date: 2001/02/23 18:58:03 $
+ * @version $Revision: 1.8 $ $Date: 2001/02/27 00:34:05 $
  * @see Configure
  * @see LogOption
  * @see PoolManager
@@ -274,7 +274,7 @@ public class Server
     public String getDefault()
     {
 	if ( _default == null || _default.length() == 0 )
-	    _default = TransactionDomain.DefaultDomain;
+	    _default = TransactionDomain.DEFAULT_DOMAIN;
 	return _default;
     }
 

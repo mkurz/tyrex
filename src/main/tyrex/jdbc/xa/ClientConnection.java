@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: ClientConnection.java,v 1.10 2000/12/19 02:21:36 mohammed Exp $
+ * $Id: ClientConnection.java,v 1.11 2001/02/27 00:34:07 arkin Exp $
  */
 
 
@@ -121,7 +121,7 @@ final class ClientConnection
     ClientConnection( XAConnectionImpl xaConn, XADataSourceImpl xaDataSource, int clientId )
     {
 	_xaConn = xaConn;
-    _xaDataSource = xaDataSource;
+        _xaDataSource = xaDataSource;
 	_clientId = clientId;
     }
 
@@ -275,7 +275,7 @@ final class ClientConnection
 	    return _xaConn.getUnderlying( _clientId );
 	} catch ( SQLException except ) {
 	    _xaConn = null;
-        _xaDataSource = null;
+            _xaDataSource = null;
 	    throw except;
 	}
     }

@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: EnlistedConnection.java,v 1.9 2000/12/19 02:21:35 mohammed Exp $
+ * $Id: EnlistedConnection.java,v 1.10 2001/02/27 00:34:07 arkin Exp $
  */
 
 
@@ -54,8 +54,6 @@ import javax.transaction.TransactionManager;
 import javax.transaction.SystemException;
 import javax.transaction.RollbackException;
 import javax.transaction.xa.XAResource;
-import tyrex.tm.ResourceManager;
-import tyrex.tm.EnlistedResource;
 
 
 /**
@@ -82,7 +80,7 @@ import tyrex.tm.EnlistedResource;
  */
 public class EnlistedConnection
     extends AbstractTyrexConnectionImpl
-    implements Connection, EnlistedResource
+    implements Connection
 {
 
 
@@ -98,14 +96,6 @@ public class EnlistedConnection
      * that is registered with the current transaction.
      */
     private XAResource        _xaRes;
-
-
-    /**
-     * True if the connection has been enlisted with the
-     * transaction. Reset with call to {@link #delisted}.
-     */
-    private boolean           _enlisted;
-
 
 
     /**
@@ -125,16 +115,13 @@ public class EnlistedConnection
     {
 	_underlying = underlying;
 	_xaRes = xaRes;
-    
-    enlist();
     }
 
 
     public void setAutoCommit( boolean autoCommit )
         throws SQLException
     {
-    throw new SQLException("SetAutoCommit not supported in enlisted connections.");
-    
+        throw new SQLException("SetAutoCommit not supported in enlisted connections.");
 	//getUnderlying().setAutoCommit( autoCommit );
     }
 
@@ -193,61 +180,6 @@ public class EnlistedConnection
     }
 
 
-    public void delisted()
-    {
-	_enlisted = false;
-    }
-
-
-    /**
-     * Called by the transaction manager to notify the resource
-     * that it had been enlisted in the specified transaction.
-     *
-     * @param tx the transaction that the resource has been 
-     *      enlsited in.
-     */
-    public void enlisted(Transaction tx)
-    {
-    // do nothing
-    }
-
-    
-    /**
-     * Return true if the resource is enlisted in a transaction.
-     * Return false otherwise.
-     *
-     * @return true if the resource is enlisted in a transaction.
-     */
-    public boolean isEnlisted()
-    {
-    return _enlisted;
-    }
-
-
-    /**
-     * Enlist the resource with the {@link tyrex.tm.ResourceManager}
-     *
-     * @throws SQLException if there is a problem enlisting the resource.
-     */
-    private void enlist()
-        throws SQLException
-    {
-        if ( ! _enlisted  ) {
-	    try {
-        // when enlisting in a transaction any work outside of the
-        // transaction is lost
-        _underlying.rollback();
-        
-        ResourceManager.enlistResource( _xaRes, this );
-		_enlisted = true;
-	    } catch ( RollbackException except ) {
-		throw new SQLException( except.getMessage() );
-	    } catch ( SystemException except ) {
-		throw new SQLException( except.toString() );
-	    }
-	    }
-    }
-
     /**
      * Called to retrieve the underlying JDBC connection. Actual JDBC
      * operations are performed against it. Throws an SQLException if
@@ -257,8 +189,6 @@ public class EnlistedConnection
     protected Connection internalGetUnderlyingConnection()
         throws SQLException
     {
-        enlist();
-
 	return _underlying;
     }
 

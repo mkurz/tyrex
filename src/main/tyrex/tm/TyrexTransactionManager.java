@@ -38,7 +38,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
+ * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
  *
  */
 
@@ -51,150 +51,40 @@ import javax.transaction.TransactionManager;
 import javax.transaction.xa.XAResource;
 
 
-///////////////////////////////////////////////////////////////////////////////
-// TyrexTransactionManager
-///////////////////////////////////////////////////////////////////////////////
-
 /**
- * This interface defines methods that allow a
- * transaction manager to be used by a container like
- * an ejb container. It is an extension of 
- * javax.transaction.TransactionManager.
+ * This interface defines methods that allow a transaction manager to
+ * be used by a container like an ejb container. It is an extension of 
+ * {@link javax.transaction.TransactionManager}.
  *
  * @author <a href="mohammed@intalio.com">Riad Mohammed</a>
  */
 public interface TyrexTransactionManager 
     extends TransactionManager
 {
-    /**
-     * Called by a resource to enlist itself with the currently
-     * running transactions. JDBC connections created through
-     * {@link tyrex.jdbc.ServerDataSource} will automatically enlist
-     * themselves with the currently running transactions. If there
-     * is not currently running transaction, the resource will be
-     * enlisted with the current thread and with the transaction
-     * when one is associated with the thread.
-     *
-     * @param xaRes The XA resource
-     */
-    public void enlistResource( XAResource xaRes )
-	    throws SystemException, RollbackException;
-    
-    /**
-     * Called by a resource to delist itself with the currently
-     * running transactions. 
-     *
-     * @param xaRes The XA resource
-     */
-    public void delistResource( XAResource xaRes )
-	    throws SystemException, RollbackException;
-    
-    /**
-     * Called by a resource to delist itself with the currently
-     * running transactions. Equivalent to
-     * calling {link #delistResource(XAResource)} in the current
-     * thread.
-     *
-     * @param xaRes The XA resource
-     * @param thread the thread to delist the resource from
-     */
-    void delistResource( XAResource xaRes, Thread thread )
-	    throws SystemException, RollbackException;
-    
-    /**
-     * Called by a resource to enlist itself with the currently
-     * running transactions. JDBC connections created through
-     * {@link tyrex.jdbc.ServerDataSource} will automatically enlist
-     * themselves with the currently running transactions. If there
-     * is no currently running transaction, the resource will be
-     * enlisted with the current thread and with the transaction
-     * when one is associated with the thread.
-     * <p>
-     * Once enlisted in this manner, the resource will be notified
-     * when it has been delisted, so it may automatically re-enlist
-     * itself upon subsequent use.
-     *
-     * @param xaRes The XA resource
-     * @param enlisted The resource as an enlisted resource
-     */
-    public void enlistResource( XAResource xaRes, EnlistedResource enlisted )
-	    throws SystemException, RollbackException;
-
-    
-    /**
-     * Called by a resource to delist itself with the currently
-     * running transactions. 
-     *
-     * @param xaRes The XA resource
-     * @param enlisted The resource as an enlisted resource
-     */
-    public void delistResource( XAResource xaRes, EnlistedResource enlisted )
-	    throws SystemException, RollbackException;
-    
-    
-    /**
-     * Called by a resource to delist itself with the currently
-     * running transactions. Equivalent to calling 
-     * {link delistResource(XAResource, EnlistedResource)}.
-     *
-     * @param xaRes The XA resource
-     * @param enlisted The resource as an enlisted resource
-     * @param thread the thread to delist the resources from
-     */
-    void delistResource( XAResource xaRes, EnlistedResource enlisted, Thread thread )
-	    throws SystemException, RollbackException;
-    
-    
-    /**
-     * Called by a resource to delist itself with the currently
-     * running transactions when the resource is closed due to
-     * an error. The resource must not be used after this call
-     * is made. Normal closure should never be reported in this
-     * manner. The resource will be delisted when the transaction
-     * terminates or {@link #delistResource} is called.
-     *
-     * @param xaRes The XA resource
-     */
-    public void discardResource( XAResource xaRes );
-    
-
-    /**
-     * Called by a resource to delist itself with the currently
-     * running transactions when the resource is closed due to
-     * an error. The resource must not be used after this call
-     * is made. Normal closure should never be reported in this
-     * manner. The resource will be delisted when the transaction
-     * terminates or {@link #delistResource} is called.
-     *
-     * @param xaRes The XA resource
-     * @param enlisted the resource as an enlisted resource
-     */
-    public void discardResource( XAResource xaRes, EnlistedResource enlisted );
-
-	
-    /**
-     * Must be called by the application server after (or before) this
-     * thread is being used on behalf of a bean. The thread is
-     * associated with a list of resources that are relevant for the
-     * previous invocation, but not the new one. If this method is not
-     * called, memory consumption will simply increase over time.
-     * <p>
-     * If the thread is associated with an active transaction, the
-     * transaction will be rolled back and a {@link RollbackException}
-     * will be thrown.
-     *
-     * @throws RollbackException The thread is still associated
-     *   with an active transaction, the transaction was rolled back
-     */
-    public void recycleThread()
-	    throws RollbackException;
 
 
     /**
-     * Set the timeout for the current transaction.
+     * Called to enlist a resource with the current thread.
+     * The resource will be enlisted in the current transaction
+     * or any future transaction associated with this thread.
      *
-     * @param seconds the number of seconds to set the
-     *      timeout to
+     * @param xaRes The XA resource
      */
-    public void setTransactionTimeout( int seconds );
+    public void enlistResource( XAResource xaResource )
+        throws SystemException, RollbackException;
+
+    
+    /**
+     * Called to delist a resource from the current thread.
+     * The resource will not be enlisted in any future transactions.
+     * The delist flag must be {@link XAResource#TMSUCCESS} or
+     * {@link XAResource#TMFAIL}.
+     *
+     * @param xaRes The XA resource
+     * @param flag The delist flag
+     */
+    public void delistResource( XAResource xaResource, int flag )
+        throws SystemException, RollbackException;
+    
+
 }

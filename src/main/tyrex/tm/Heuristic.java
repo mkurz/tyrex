@@ -38,9 +38,9 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
+ * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Heuristic.java,v 1.3 2000/12/19 02:21:36 mohammed Exp $
+ * $Id: Heuristic.java,v 1.4 2001/02/27 00:34:07 arkin Exp $
  */
 
 
@@ -73,21 +73,20 @@ package tyrex.tm;
  * flags, with certain flags taking precedence over others:
  * <ul>
  * <li>Transaction is read-only only if it's heuristic decision
- * is equal to {@link #ReadOnly}
+ * is equal to {@link #READONLY}
  * <li>Transaction has made a commit decision only if it's heuristic
- * decision is equal to {@link #Commit}
+ * decision is equal to {@link #COMMIT}
  * <li>Transaction has made a rollback decision only if it's heuristic
- * decision is equal to {@link #Rollback}
+ * decision is equal to {@link #ROLLBACK}
  * <li>Transaction has made a mixed decision if it's heuristic value
- * has the {@link #Mixed} flag set, or both the {@link
- * #Commit} and {@link #Rollback} flags set
+ * has the {@link #MIXED} flag set, or both the {@link
+ * #COMMIT} and {@link #ROLLBACK} flags set
  * <li>Transaction has made a hazard decision if it's heuristic value
- * has the {@link #Hazard} flag set
+ * has the {@link #HAZARD} flag set
  * </ul>
  *
- *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.3 $ $Date: 2000/12/19 02:21:36 $
+ * @version $Revision: 1.4 $ $Date: 2001/02/27 00:34:07 $
  * @see Transaction
  * @see TransactionImpl#normalize
  */
@@ -100,7 +99,7 @@ public interface Heuristic
      * read-only resources. A read-only transaction does not need to
      * participate in the second phase.
      */
-    public int ReadOnly = 0x00;
+    public int READONLY       = 0x00;
 
 
     /**
@@ -109,7 +108,7 @@ public interface Heuristic
      * preparation stage and the transaction could be commited in its
      * entirety.
      */
-    public int Commit = 0x01;
+    public int COMMIT         = 0x01;
 
 
     /**
@@ -118,7 +117,7 @@ public interface Heuristic
      * marks this transaction as faulty. The transaction should be
      * rolled back in its entirety.
      */
-    public int Rollback = 0x02;
+    public int ROLLBACK       = 0x02;
 
 
     /**
@@ -126,20 +125,20 @@ public interface Heuristic
      * rolledback, the transaction should be rolled back as much as
      * possible, but could not definitely be rolled back.
      */
-    public int Mixed = 0x04;
+    public int MIXED          = 0x04;
 
 
     /**
      * Indicates that resources have commited, or resources have
      * rolled back, but we don't know what was the exact outcome.
      */
-    public int Hazard = 0x08;
+    public int HAZARD         = 0x08;
 
     
     /**
      * Transaction has been timed out and has been rolled back.
      */
-    public int TimedOut = 0x10;
+    public int TIMEOUT        = 0x10;
 
 
     /**
@@ -147,31 +146,8 @@ public interface Heuristic
      * not ReadOnly, Commit, Rollback, Mixed or Hazard, 
      * occurred during the transaction.
      */
-    public int Other = 0x20;
+    public int OTHER          = 0x20;
 
-
-    /**
-     * Indicates that an unknown exception occurred during the 
-     * transaction.
-     */
-    public int Unknown = 0x30;
-
-
-    /**
-     * Special value to indicate the beginning of a transaction when
-     * interacting with the recovery log.
-     */
-    public int BEGIN_TX = 0x0100;
-
-    /**
-     * Indicates that the resources committed.
-     */
-    public int TX_COMMITTED = 0x0101;
-
-    /**
-     * Indicates that the resources commited.
-     */
-    public int TX_ROLLEDBACK = 0x0102;
 
 }
 

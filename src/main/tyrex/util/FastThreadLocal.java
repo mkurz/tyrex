@@ -38,9 +38,9 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
+ * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: FastThreadLocal.java,v 1.6 2000/09/08 23:06:38 mohammed Exp $
+ * $Id: FastThreadLocal.java,v 1.7 2001/02/27 00:34:08 arkin Exp $
  */
 
 
@@ -127,7 +127,7 @@ package tyrex.util;
  * 
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.6 $ $Date: 2000/09/08 23:06:38 $
+ * @version $Revision: 1.7 $ $Date: 2001/02/27 00:34:08 $
  */
 public class FastThreadLocal
     //extends java.lang.ThreadLocal
@@ -173,7 +173,7 @@ public class FastThreadLocal
     }
 
 
-    public FastThreadLocal( int size)
+    public FastThreadLocal( int size )
     {
 	_table = new Entry[ size ];
 
@@ -181,7 +181,7 @@ public class FastThreadLocal
 	// entries to stale (dead) threads.
 	Thread thread;
 
-	thread = new Thread( this, Messages.message( "tyrex.misc.threadLocalDaemonName" ) );
+	thread = new Thread( this, Messages.message( "tyrex.util.threadLocalDaemonName" ) );
 	thread.setPriority( Thread.MIN_PRIORITY );
 	thread.setDaemon( true );
 	thread.start();
@@ -193,10 +193,10 @@ public class FastThreadLocal
 	Thread thread;
 	int    hash;
 	Entry  entry;
-
+        
 	thread = Thread.currentThread();
 	hash = ( thread.hashCode() & 0x7FFFFFFF ) % _table.length;
-
+        
 	// Lookup the first entry that maps to the has code and
         // continue iterating to the last entry until a matching entry
         // is found. Even if the current entry is removed, we expect
@@ -204,36 +204,36 @@ public class FastThreadLocal
 	entry = _table[ hash ];
 	while ( entry != null && entry.thread != thread )
 	    entry = entry.next;
-
+        
 	if ( entry != null )
 	    return entry.value;
 	else {
 	    // ! Comment the following section if you don't intend to
             // support initialValue !
-
+            
             /*
-	    // If there is no value, we have two options. We can
-	    // simply return null, or we can create a default value
-	    // with initialValue and return it. Since initialValue
-	    // might be costly, if we ever decide to use it, we must
-	    // place even a null value in the table. So either have
-	    // this code, or comment it all and just return null.
-	    // The logic is copied verbatim from get().
-	    entry = new Entry();
-	    entry.value = initialValue();
-	    entry.thread = thread;
-	    
-	    synchronized ( _table ) {
-		entry.next = _table[ hash ];
-		_table[ hash ] = entry;
-	    }
-	    return entry.value;
+              // If there is no value, we have two options. We can
+              // simply return null, or we can create a default value
+              // with initialValue and return it. Since initialValue
+              // might be costly, if we ever decide to use it, we must
+              // place even a null value in the table. So either have
+              // this code, or comment it all and just return null.
+              // The logic is copied verbatim from get().
+              entry = new Entry();
+              entry.value = initialValue();
+              entry.thread = thread;
+              
+              synchronized ( _table ) {
+              entry.next = _table[ hash ];
+              _table[ hash ] = entry;
+              }
+              return entry.value;
 	    */
             return null;
 	}
     }
-
-
+    
+    
     public void set( Object value )
     {
 	Thread thread;
@@ -252,7 +252,7 @@ public class FastThreadLocal
 	    entry.value = value;
 	    return;
 	}
-
+        
 	// No such entry found, so we must create it. Create first to
 	// minimize contention period. (Object creation is such a
 	// length operation)
@@ -296,7 +296,7 @@ public class FastThreadLocal
      * thread will remove stale threads. This code is just here to
      * illustrate how to perform synchronized removal on this table.
      */
-    void remove( Thread thread )
+    public void remove( Thread thread )
     {
 	int   hash;
 	Entry entry;
@@ -305,7 +305,7 @@ public class FastThreadLocal
 	// on behalf of the same thread from two separate threads.
 	synchronized ( thread ) {
 	    hash = ( thread.hashCode() & 0x7FFFFFFF ) % _table.length;
-
+            
 	    // This operation must be synchronized because it messes
 	    // with the entry in the table, and set() likes to mess
 	    // with the same entry.
@@ -320,7 +320,7 @@ public class FastThreadLocal
 		    return;
 		}
 	    }
-
+            
 	    // Not the first entry. We can only remove the next
 	    // entry by changing the next reference on this entry,
 	    // so we have to iterate on this entry to remove the
@@ -370,7 +370,7 @@ public class FastThreadLocal
     {
 	Entry entry;
 	int   i;
-
+        
 	while ( true ) {
 	    // Go to sleep for a while, nothing will happen. This
 	    // process can be speeded up by interrupting the thread.
@@ -378,11 +378,11 @@ public class FastThreadLocal
 	    try {
 		Thread.sleep( _staleTimeout );
 	    } catch ( InterruptedException e ) {  }
-
+            
 	    // Iterate through all the records in the table and see
 	    // which one is stale (the thread is dead) and remove it.
 	    for ( i = 0 ; i < _table.length ; ++i ) {
-
+                
 		// This operation must be synchronized because it
 		// messes with the entry in the table, and set() likes
 		// to mess with the same entry.
@@ -393,7 +393,7 @@ public class FastThreadLocal
 			entry = entry.next;
 		    }
 		}
-
+                
 		// More than one entry in the table - keep going.
 		// No need to synchronized, but keep in mind that
 		// get() expect next to be current, even if the entry
@@ -406,9 +406,9 @@ public class FastThreadLocal
 			    entry = entry.next;
 		    }
 		}
-
+                
 	    }
-
+            
 	}
     }
 
@@ -418,21 +418,21 @@ public class FastThreadLocal
      * (we don't remove on null) and a reference to the next entry in
      * the same table position.
      */
-    static class Entry
+    static private final class Entry
     {
 
-	final Thread  thread;
-
+        final Thread  thread;
+        
 	Object        value;
-
+        
 	Entry         next;
-
+        
         Entry( Object value, Thread thread )
         {
             this.value = value;
             this.thread = thread;
         }
-
+        
         Entry( Object value )
         {
             this.value = value;
