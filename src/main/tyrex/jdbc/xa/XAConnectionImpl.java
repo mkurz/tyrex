@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: XAConnectionImpl.java,v 1.10 2000/09/27 23:06:53 mohammed Exp $
+ * $Id: XAConnectionImpl.java,v 1.11 2000/09/28 01:51:15 mohammed Exp $
  */
 
 
@@ -354,7 +354,7 @@ public final class XAConnectionImpl
     	}
     } finally {
         if ( _underlying != null ) {
-            _resManager.releaseConnection( _underlying, _userName, _password );
+            releaseConnection( _underlying );
             _underlying = null;
         }
     }
@@ -541,7 +541,8 @@ public final class XAConnectionImpl
 		// expect to), we should release that underlying connection
 		// and make it available to the resource manager.
 		if ( _underlying != null ) {
-		    _resManager.releaseConnection( _underlying, _userName, _password );
+            // this should not happen
+		    releaseConnection( _underlying );
 		    _underlying = null;
 		}
 	    } else
@@ -592,7 +593,7 @@ public final class XAConnectionImpl
 			if ( _txConn.conn instanceof TwoPhaseConnection )
 			    ( (TwoPhaseConnection) _txConn.conn ).enableSQLTransactions( true );
 			_txConn.conn.rollback();
-			_resManager.releaseConnection( _txConn.conn, _userName, _password );
+			releaseConnection( _txConn.conn );
 		    } catch ( SQLException except ) {
 			// There is a problem with the underlying
 			// connection, but it was not added to the poll.
@@ -607,7 +608,7 @@ public final class XAConnectionImpl
 		    // Next thing we might be participating in a new
 		    // transaction while the current one is being
 		    // rolled back.
-            _resManager.releaseConnection( _txConn.conn, _userName, _password );
+            //releaseConnection( _txConn.conn );
 		    _txConn = null;
 		}
 	    } else if ( flags == TMSUSPEND ) {
@@ -616,7 +617,7 @@ public final class XAConnectionImpl
 		// right now we have to forget about the transaction
 		// and the underlying connection.
 		--_txConn.count;
-        _resManager.releaseConnection( _txConn.conn, _userName, _password );
+        //releaseConnection( _txConn.conn );
 		_txConn = null;
 	    } else
 		// No other flags supported in end().
@@ -624,6 +625,16 @@ public final class XAConnectionImpl
 	}
     }
 
+
+    /**
+     * Release the specified connection to the resource manager
+     *
+     * @param connection the connection to release
+     */
+    private void releaseConnection( Connection connection )
+    {
+        _resManager.releaseConnection( connection, _userName, _password );
+    }
 
     public synchronized void forget( Xid xid )
 	throws XAException
@@ -638,16 +649,16 @@ public final class XAConnectionImpl
 	    // transaction no longer exists for this or any other
 	    // connection. We might be called multiple times.
 	    txConn = _resManager.setTxConnection( xid, null );
-	    if ( _txConn == txConn )
-		_txConn = null;
 	    if ( txConn != null ) {
 		if ( txConn.conn != null ) {
-		    _resManager.releaseConnection( txConn.conn, _userName, _password );
-		    txConn.conn = null;
+            releaseConnection( txConn.conn );
+            txConn.conn = null;
 		}
 		txConn.xid = null;
 	    }
-	}
+        if ( _txConn == txConn )
+		_txConn = null;
+    }
     }
 
 
@@ -776,7 +787,9 @@ public final class XAConnectionImpl
 			_resManager.getLogWriter().println( "XAConnection: failed to commit a transaction: " + except );
 		    // If we cannot commit the transaction, a heuristic hazard.
 		    throw new XAException( XAException.XA_HEURHAZ );
-		}
+		}  finally {
+		    forget( xid );
+	    }
 	    } else {
 		// 2pc we should have prepared before.
 		if ( ! txConn.prepared )
@@ -826,7 +839,7 @@ public final class XAConnectionImpl
 		// If we cannot commit the transaction, a heuristic tollback.
 		throw new XAException( XAException.XA_RBROLLBACK );
 	    } finally {
-		forget( xid );
+        forget( xid );
 	    }
 	}
     }

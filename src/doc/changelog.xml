@@ -6,13 +6,13 @@
 - Defined Castor mapping file. Ships with updated castor.0.8.8.jar 
   (different from released castor.0.8.8.jar; requires a fix to 
   Castor mapping loader that is in Castor CVS).
-- tyrex.jdbc.ServerDataSource can be bound in a JNDI context with
+- <b>tyrex.jdbc.ServerDataSource</b> can be bound in a JNDI context with
   the underlying data source if the underlying data source implements
-  java.io.Serializable, javax.naming.Referenceable or 
-  javax.naming.Reference.
+  <b>java.io.Serializable</b>, <b>javax.naming.Referenceable</b> or 
+  <b>javax.naming.Reference</b>.
 - Fixed a bug with user transaction.
-- Fixed connection pooling problems with tyrex.jdbc.XADataSourceImpl
-- XAConnections from tyrex.jdbc.XADataSourceImpl can now be retrieved 
+- Fixed connection pooling problems with <b>tyrex.jdbc.XADataSourceImpl</b>
+- XAConnections from <b>tyrex.jdbc.XADataSourceImpl</b> can now be retrieved 
   with a user name and password.
 - Tomcat and Tyrex integration fixed and tested with Tomcat 3.1
     </pre></section>

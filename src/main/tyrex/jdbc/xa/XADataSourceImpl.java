@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: XADataSourceImpl.java,v 1.10 2000/09/27 22:13:42 mohammed Exp $
+ * $Id: XADataSourceImpl.java,v 1.11 2000/09/28 01:51:15 mohammed Exp $
  */
 
 
@@ -330,7 +330,7 @@ public abstract class XADataSourceImpl
     Connection newConnection( String userName, String password )
 	throws SQLException
     {
-	synchronized ( _pool ) {
+    synchronized ( _pool ) {
         // Check in the pool first.
         if ( ! _pool.isEmpty() ) {
             String account = getAccount( userName, password );
