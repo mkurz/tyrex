@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: XAConnectionImpl.java,v 1.6 2001/07/05 22:29:03 mohammed Exp $
+ * $Id: XAConnectionImpl.java,v 1.7 2001/09/21 18:14:23 mohammed Exp $
  */
 
 
@@ -605,9 +605,9 @@ public final class XAConnectionImpl
                 }
                 _txConn = null;
             } else if ( flags == TMSUSPEND ) {
-                _txConn = null;
                 if ( _txConn.count == 0 ) 
                     throw new XAException( XAException.XAER_PROTO );
+				_txConn = null;
             } else
                 // No other flags supported in end().
                 throw new XAException( XAException.XAER_INVAL );
