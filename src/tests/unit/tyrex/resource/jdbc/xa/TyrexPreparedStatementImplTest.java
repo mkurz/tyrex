@@ -40,46 +40,80 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: ResourceJdbcXaSuite.java,v 1.2 2001/10/31 03:06:26 mills Exp $
+ * $Id: TyrexPreparedStatementImplTest.java,v 1.1 2001/10/31 03:06:26 mills Exp $
+ * Date        Author    Changes
+ *
+ * 2001/10/30  Mills     Created
+ *
  */
 
 
 package tyrex.resource.jdbc.xa;
 
+import junit.framework.TestCase;
 import junit.framework.TestSuite;
+
+import java.io.PrintWriter;
 
 
 /**
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.1 $
  */
 
-public class ResourceJdbcXaSuite
+public class TyrexPreparedStatementImplTest extends TestCase
 {
-    public ResourceJdbcXaSuite()
+    private PrintWriter _logger = null;
+
+    public TyrexPreparedStatementImplTest(String name)
     {
-        // Empty.
+        super(name);
     }
 
+    public void setUp()
+    {
+        _logger= new PrintWriter(System.out);
+    }
+
+    public void tearDown()
+    {
+        _logger.flush();
+    }
+
+
+    /**
+     * Comment.
+     *
+     * @result Expected results.
+     */
+
+    public void testPurpose()
+        throws Exception
+    {
+    }
+
+
+    /** Adds a message in the log (except if the log is null)*/
+    private void logMessage(String message)
+    {
+        if (_logger != null)
+        {
+            _logger.println(message);
+        }
+    }
+
+
+    // Compile the test suite.
     public static TestSuite suite()
     {
-        TestSuite suite = new TestSuite("ResourceJdbcXaSuite test harness");
-//        suite.addTest(LocalXidTest.suite());
-        suite.addTest(ClientConnectionTest.suite());
-        suite.addTest(EnabledDataSourceTest.suite());
-        suite.addTest(TxConnectionTest.suite());
-        suite.addTest(TyrexCallableStatementImplTest.suite());
-        suite.addTest(TyrexDatabaseMetaDataImplTest.suite());
-        suite.addTest(TyrexPreparedStatementImplTest.suite());
-        suite.addTest(TyrexResultSetImplTest.suite());
-        suite.addTest(TyrexStatementImplTest.suite());
-        suite.addTest(XAConnectionImplTest.suite());
-        suite.addTest(XADataSourceImplTest.suite());
+        TestSuite suite = new TestSuite(TyrexPreparedStatementImplTest.class);
+        suite.addTest(new TestSuite(TyrexPreparedStatementImpl_TyrexStatementImplImpl.class));
         return suite;
     }
 
 
+    // Allow this test to be run on its own.
     public static void main(String args[])
     {
         tyrex.Unit.runTests(args, suite());

@@ -40,12 +40,13 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Unit.java,v 1.7 2001/09/12 11:17:52 mills Exp $
+ * $Id: Unit.java,v 1.8 2001/10/31 03:06:25 mills Exp $
  */
 
 package tyrex;
 
 import tyrex.naming.NamingSuite;
+import tyrex.resource.ResourceUnit;
 import tyrex.services.ServicesSuite;
 import tyrex.tm.TmUnit;
 import tyrex.util.UtilSuite;
@@ -69,7 +70,7 @@ import java.util.Vector;
  * Main entry class for test cases execution.
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.7 $
+ * @version $Revision: 1.8 $
  */
 
 public class Unit
@@ -121,6 +122,7 @@ public class Unit
     {
         TestSuite suite = new TestSuite("Tyrex Unit Test Harness");
         suite.addTest(NamingSuite.suite());
+        suite.addTest(ResourceUnit.suite());
         suite.addTest(ServicesSuite.suite());
         suite.addTest(TmUnit.suite());
         suite.addTest(UtilSuite.suite());

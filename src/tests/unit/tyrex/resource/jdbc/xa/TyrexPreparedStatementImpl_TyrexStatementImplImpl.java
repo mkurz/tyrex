@@ -40,48 +40,54 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: ResourceJdbcXaSuite.java,v 1.2 2001/10/31 03:06:26 mills Exp $
+ * $Id: TyrexPreparedStatementImpl_TyrexStatementImplImpl.java,v 1.1 2001/10/31 03:06:26 mills Exp $
+ * Date        Author    Changes
+ *
+ * 2001/10/30  Mills     Created
+ *
  */
 
 
 package tyrex.resource.jdbc.xa;
 
+import junit.framework.TestCase;
 import junit.framework.TestSuite;
+
+import java.sql.Statement;
+import java.sql.ResultSet;
+
+import java.io.PrintWriter;
 
 
 /**
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.1 $
  */
 
-public class ResourceJdbcXaSuite
+public class TyrexPreparedStatementImpl_TyrexStatementImplImpl
+    extends TyrexStatementImplTest
 {
-    public ResourceJdbcXaSuite()
+    public TyrexPreparedStatementImpl_TyrexStatementImplImpl(String name)
     {
-        // Empty.
+        super(name);
     }
 
-    public static TestSuite suite()
-    {
-        TestSuite suite = new TestSuite("ResourceJdbcXaSuite test harness");
-//        suite.addTest(LocalXidTest.suite());
-        suite.addTest(ClientConnectionTest.suite());
-        suite.addTest(EnabledDataSourceTest.suite());
-        suite.addTest(TxConnectionTest.suite());
-        suite.addTest(TyrexCallableStatementImplTest.suite());
-        suite.addTest(TyrexDatabaseMetaDataImplTest.suite());
-        suite.addTest(TyrexPreparedStatementImplTest.suite());
-        suite.addTest(TyrexResultSetImplTest.suite());
-        suite.addTest(TyrexStatementImplTest.suite());
-        suite.addTest(XAConnectionImplTest.suite());
-        suite.addTest(XADataSourceImplTest.suite());
-        return suite;
-    }
+    /**
+     * The abstract method for creating an instance of TyrexConnectionTest.
+     */
 
-
-    public static void main(String args[])
+    public TyrexStatementImpl newTyrexStatementImpl()
+        throws Exception
     {
-        tyrex.Unit.runTests(args, suite());
+        EnabledDataSource dataSource = new EnabledDataSource();
+        XAConnectionImpl conn
+            = (XAConnectionImpl) dataSource.getPooledConnection();
+        ClientConnection connection = new ClientConnection(conn, dataSource,
+                                                           0);
+        TyrexResultSetImpl resultSet = new TyrexResultSetImpl(null,
+                                                              connection);
+        Statement statement = resultSet.getStatement();
+        return new TyrexStatementImpl(statement, connection);
     }
 }
