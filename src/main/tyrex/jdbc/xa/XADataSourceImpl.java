@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: XADataSourceImpl.java,v 1.16 2000/10/10 01:02:49 mohammed Exp $
+ * $Id: XADataSourceImpl.java,v 1.17 2000/10/20 00:21:06 mohammed Exp $
  */
 
 
@@ -63,7 +63,7 @@ import javax.sql.ConnectionPoolDataSource;
 import javax.sql.XAConnection;
 import javax.sql.XADataSource;
 import javax.transaction.xa.Xid;
-
+import tyrex.util.BackgroundThread;
 
 
 /**
@@ -103,7 +103,7 @@ public abstract class XADataSourceImpl
      * A background deamon thread terminating connections that have
      * timed out.
      */
-    private transient Thread    _background;
+    private transient BackgroundThread    _background;
 
 
     /**
@@ -169,7 +169,7 @@ public abstract class XADataSourceImpl
 	// Create a background thread that will track transactions
 	// that timeout, abort them and release the underlying
 	// connections to the pool.
-	_background = new Thread( this, "XADataSource Timeout Daemon"  );
+	_background = new BackgroundThread( this, _txTimeout * 1000, "XADataSource Timeout Daemon"  );
 	_background.setPriority( Thread.MIN_PRIORITY );
 	_background.setDaemon( true );
 	_background.start();
@@ -247,11 +247,17 @@ public abstract class XADataSourceImpl
      */
     public final void setTransactionTimeout( int seconds )
     {
+        int oldtxTimeout = _txTimeout;
+
 	if ( seconds <= 0 )
 	    _txTimeout = DEFAULT_TX_TIMEOUT;
 	else
 	    _txTimeout = seconds;
-	_background.interrupt();
+
+        if (oldtxTimeout != _txTimeout) {
+            _background.setWait(_txTimeout * 1000);
+            _background.interrupt();            
+        }
     }
     
 
@@ -463,16 +469,16 @@ public abstract class XADataSourceImpl
     Iterator     iterator;
     int          size;
 
-    while ( true ) {
+    //while ( true ) {
 
         // Go to sleep for the duration of a transaction
         // timeout. This mean transactions will timeout on average
         // at _txTimeout * 1.5.
-        try {
+        /*try {
         Thread.currentThread().sleep( _txTimeout * 1000 );
         } catch ( InterruptedException except ) {
         }
-        
+        */
         if (_pruneFactor > 0) {
             synchronized ( _pool ) {
                 try {
@@ -560,7 +566,7 @@ public abstract class XADataSourceImpl
             
         }
         }
-    	}
+    //	}
     }
 
 
