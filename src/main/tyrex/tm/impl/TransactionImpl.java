@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionImpl.java,v 1.13 2001/03/19 17:39:02 arkin Exp $
+ * $Id: TransactionImpl.java,v 1.14 2001/03/21 00:47:41 arkin Exp $
  */
 
 
@@ -88,7 +88,7 @@ import tyrex.util.Messages;
  * they are added.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.13 $ $Date: 2001/03/19 17:39:02 $
+ * @version $Revision: 1.14 $ $Date: 2001/03/21 00:47:41 $
  * @see XAResourceHolder
  * @see TransactionManagerImpl
  * @see TransactionDomain
@@ -2550,35 +2550,33 @@ final class TransactionImpl
         throws XAException, SystemException
     {
         XAResourceHolder newHolder;
-
-        if ( null != resHolder ) {
-            // Check to see whether we have two resources sharing the same
-            // resource manager, in which case use one Xid for both.
-            try {
-                while ( resHolder != null ) {
-                    if ( resHolder._shared && resHolder._xaResource.isSameRM( xaResource ) ) {
-                        newHolder = new XAResourceHolder( xaResource, resHolder._xid, true );
-                        try {
-                            newHolder._xaResource.start( resHolder._xid, XAResource.TMJOIN );
-                            newHolder._nextHolder = _enlisted;
-                            _enlisted = newHolder;
-                            return true;
-                        } catch ( XAException except ) {
-                            throw except;
-                        } catch ( Exception except ) {
-                            throw new NestedSystemException( except );
-                        }
+        
+        // Check to see whether we have two resources sharing the same
+        // resource manager, in which case use one Xid for both.
+        try {
+            while ( resHolder != null ) {
+                if ( resHolder._xaResource.isSameRM( xaResource ) ) {
+                    newHolder = new XAResourceHolder( xaResource, resHolder._xid, true );
+                    try {
+                        newHolder._xaResource.start( newHolder._xid, XAResource.TMJOIN );
+                        newHolder._nextHolder = _enlisted;
+                        _enlisted = newHolder;
+                        return true;
+                    } catch ( XAException except ) {
+                        throw except;
+                    } catch ( Exception except ) {
+                        throw new NestedSystemException( except );
                     }
-                    resHolder = resHolder._nextHolder;
                 }
-            } catch ( XAException except ) {
-                // if this is an XA exception from the isSameRM 
-                // method call then return it as a system exception
-                if ( ( except.errorCode == XAException.XAER_RMERR ) || 
-                     ( except.errorCode == XAException.XAER_RMFAIL ) )
-                    throw new NestedSystemException( except );    
-                throw except;
+                resHolder = resHolder._nextHolder;
             }
+        } catch ( XAException except ) {
+            // if this is an XA exception from the isSameRM 
+            // method call then return it as a system exception
+            if ( ( except.errorCode == XAException.XAER_RMERR ) || 
+                 ( except.errorCode == XAException.XAER_RMFAIL ) )
+                throw new NestedSystemException( except );    
+            throw except;
         }
         return false;
     }

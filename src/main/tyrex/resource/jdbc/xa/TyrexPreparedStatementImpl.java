@@ -144,7 +144,7 @@ class TyrexPreparedStatementImpl
      * or 0 for SQL statements that return nothing
      * @exception SQLException if a database access error occurs
      */
-    public final int executeUpdate() 
+    public final synchronized int executeUpdate() 
         throws SQLException
     {
         // this method is not synchronized so that
@@ -152,11 +152,9 @@ class TyrexPreparedStatementImpl
 
         PreparedStatement statement;
 
-        synchronized (this) {
-            statement = getPreparedStatement();
-        }
-        
-        return statement.executeUpdate();
+        statement = getPreparedStatement();
+        int result = statement.executeUpdate();
+        return result;
     }
 
     /**
