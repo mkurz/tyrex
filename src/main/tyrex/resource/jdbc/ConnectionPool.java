@@ -84,7 +84,7 @@ import tyrex.util.LoggerPrintWriter;
 /**
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.18 $
+ * @version $Revision: 1.19 $
  */
 final class ConnectionPool
     extends PoolMetrics
@@ -221,8 +221,7 @@ final class ConnectionPool
         _poolDataSource = poolDataSource;
         _category = category;
         _txManager= txManager;
-		_reuse = ReuseOptions.REUSE_ON;
-
+        
         try {
             // Clone object to prevent changes by caller from affecting the
             // behavior of the pool.
@@ -241,6 +240,8 @@ final class ConnectionPool
                 } else
                     _logWriter = null;
             }
+
+            _reuse = _limits.getReuseOption();
             
             // Set the pool table to the optimum size based on the maximum
             // number of connections expected, or a generic size.
@@ -282,7 +283,9 @@ final class ConnectionPool
                               " with initial size " + initial +
                               " and maximum iimit " + maximum );
 
-        DaemonMaster.addDaemon( this, "Connection Pool " + name );
+        if ( 0 != _limits.getMaxRetain() ) {
+            DaemonMaster.addDaemon( this, "Connection Pool " + name );
+        }
     }
 
 
@@ -437,12 +440,19 @@ final class ConnectionPool
         long              clock;
         long              timeout;
         int               maximum;
+        int               matchTriesLimit;
+        int               matchTries;
+        PooledConnection  previouslyMatched;
         
         timeout = _limits.getTimeout() * 1000;
         // We repeat this loop until we either get a connection, or we time out.
         // We will keep getting notified as connections are made available to the
         // pool, or discarded.
         while ( true ) {
+
+            matchTriesLimit = _available;
+            matchTries = 0;
+            previouslyMatched = null;
             
             // If any connections are available we keep trying to match an
             // existing connection. It's possible that a matched connection
@@ -453,14 +463,47 @@ final class ConnectionPool
                 // to create a new one.
                 if ( pooled == null )
                     break;
-                // Pooled connection matched by connector. It is an error
-                // if it returns a reserved connection.
-                entry = reserve( pooled );
+                // Pooled connection matched by connector.
+                entry = getPoolEntry( pooled );
                 if ( entry == null ) {
-                    release( pooled, false );
-                    _category.error( "Connector error: matchPooledConnetions returned an unavailable connection" );
-                } else
-                    return entry;
+                    // this code should not fire unless there is 
+                    // an internal error and we need to break out
+                    // of a potential infinite loop
+                    if ( ( ++matchTries >= matchTriesLimit ) || ( previouslyMatched == pooled ) ) {
+                        _category.error( "Connector internal error: could not find entry for pooled connection " + pooled );
+                        break;
+                    } else {
+                        previouslyMatched = pooled;
+                    }
+                } else {
+                    if ( AVAILABLE == entry._state ) {
+                        entry._state = IN_USE;
+                        _available -= 1;
+                        clock = Clock.clock();
+                        recordUnusedDuration( (int) ( clock - entry._timeStamp ) );
+                        entry._timeStamp = clock;
+                        if ( _category.isDebugEnabled() ) {
+                            _category.debug( "Reusing available physical <" + 
+                                             entry._pooled + "> and xa <" +
+                                             entry._xaResource + ">" );    
+                        }
+                    
+                        return entry;
+                    } else {
+                        if ( _category.isDebugEnabled() ) {
+                            _category.debug( "Matched connection " + entry._pooled + " is not available." );
+                        }
+                        // this code should not fire unless there is 
+                        // an internal error and we need to break out
+                        // of a potential infinite loop
+                        if ( ( ++matchTries >= matchTriesLimit ) || ( previouslyMatched == pooled ) ) {
+                            _category.error( "Connector error: could not find available matched connection" );
+                            break;
+                        } else {
+                            previouslyMatched = pooled;
+                        }
+                    }
+                }
             }
             
             // No matched connections, need to create a new one.
@@ -484,20 +527,25 @@ final class ConnectionPool
             // If timeout is zero, we throw an exception. Otherwise,
             // we go to sleep until timeout occurs or until we are
             // able to create a new connection.
-            if ( timeout <= 0 )
+            if ( timeout < 0 )
                 throw new SQLException( "Cannot allocate new connection for " +
                                         _name + ": reached limit of " +
                                         maximum + " connections" );
-            clock = Clock.clock();
             try {
-                wait ( timeout );
-                timeout -= Clock.clock() - clock;
+                if ( timeout == 0 ) {
+                    wait ();    
+                }
+                else {
+                    clock = Clock.clock();
+                    wait ( timeout );
+                    timeout -= Clock.clock() - clock;
+                }
             } catch ( InterruptedException except ) {
                 // If we were interrupted (asked to stop), we always
                 // report a timeout.
-                timeout = 0;
+                timeout = -1;
             }
-            if ( timeout <= 0 )
+            if ( timeout < 0 )
                 throw new SQLException( "Cannot allocate new connection for " +
                                         _name + ": reached limit of " +
                                         maximum + " connections" );
@@ -511,25 +559,24 @@ final class ConnectionPool
         throws SQLException
     {
         ClassLoader      loader;
-        PooledConnection connection;
         Thread           thread;
         
         thread = Thread.currentThread();
         loader = thread.getContextClassLoader();
         thread.setContextClassLoader( _classLoader );
-        if ( _xaDataSource != null ) {
+        try {
+            if ( _xaDataSource != null ) {
+                if ( user != null )
+                    return _xaDataSource.getXAConnection( user, password );
+                return _xaDataSource.getXAConnection();
+            } 
+            
             if ( user != null )
-                connection = _xaDataSource.getXAConnection( user, password );
-            else
-                connection = _xaDataSource.getXAConnection();
-        } else {
-            if ( user != null )
-                connection = _poolDataSource.getPooledConnection( user, password );
-            else
-                connection = _poolDataSource.getPooledConnection();
+                return _poolDataSource.getPooledConnection( user, password );
+            return _poolDataSource.getPooledConnection();
+        } finally {
+            thread.setContextClassLoader( loader );
         }
-        thread.setContextClassLoader( loader );
-        return connection;
     }
 
 
@@ -694,41 +741,22 @@ final class ConnectionPool
     }
 
 
-    /**
-     * Reserves a connection. This method attempts to reserve a connection,
-     * such that it is no longer available from the pool. If the connection
-     * can be reserved, it is returned. If the connection does not exist
-     * in the pool, or is already reserved, this method returns null.
+     /**
+     * Return the pool entry for the pooled connection. If the 
+     * connection does not exist this method returns null.
      *
-     * @param pooled The pooled connection to reserve
-     * @return The connection entry if reserved, or null
+     * @param pooled The pooled connection (required)
+     * @return The connection entry or null
      */
-    private synchronized PoolEntry reserve( PooledConnection pooled )
+    private synchronized PoolEntry getPoolEntry( PooledConnection pooled )
     {
         PoolEntry entry;
-        int       hashCode;
-        int       index;
-        long      clock;
         
-        if ( pooled == null )
-            return null;
-        hashCode = pooled.hashCode();
-        index = ( hashCode & 0x7FFFFFFF ) % _pool.length;
-        entry = _pool[ index ];
-        while ( entry != null && entry._hashCode != hashCode &&
-                ! entry._pooled.equals( pooled ) )
+        entry = _pool[ ( pooled.hashCode() & 0x7FFFFFFF ) % _pool.length ];
+        while ( entry != null && entry._pooled != pooled )
             entry = entry._nextEntry;
-        if ( entry != null && ( AVAILABLE == entry._state ) ) {
-            entry._state = IN_USE;
-            _available -= 1;
-            clock = Clock.clock();
-            recordUnusedDuration( (int) ( clock - entry._timeStamp ) );
-            entry._timeStamp = clock;
-            if ( _logWriter != null )
-                _logWriter.println( "Reusing connection " + entry._pooled );
-            return entry;
-        }
-        return null;
+        
+        return entry;
     }
 
 
@@ -1047,8 +1075,17 @@ final class ConnectionPool
 
         // Without maxRetain we do not attempt to expire connections.
         maxRetain = _limits.getMaxRetain();
-        if ( maxRetain == 0 )
+        if ( maxRetain == 0 ) {
+            _nextExpiration = 0;
             return 0;
+        }
+
+        // There aren't enough connections then don't expire
+        if ( _available <= _limits.getMinimum() ) {
+            _nextExpiration = 0;
+            return 0;    
+        }
+        
         maxRetain = maxRetain * 1000;
         // We don't enter the loop if no connection is subject to expire.
         // We know a connection is about to expire if the system clock
