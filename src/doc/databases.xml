@@ -13,14 +13,14 @@
     <section title="Oracle">
       <p><b>Tested Versions</b>
         <ul>
-          <li>Oracle 8.1.6</li>
-          <li>Oracle 8.1.7</li>
-          <li>Oracle 9.0.1</li>
+          <li>Oracle 8.1.7 with Oracle 8.1.7 JDBC driver</li>
+          <li>Oracle 9.0.1 with Oracle 9.0.1 JDBC driver</li>
         </ul>
       </p>
         
       <p><b>Notes</b>
-        <p>Oracle 8.1.7 and above is recommended for XA support.
+        <p>Oracle 8.1.7 and above is recommended for XA support. Oracle 8.1.6 has not been tested recently.<BR/>
+        
           Tyrex provides a workaround (<b><api>tyrex.tm.impl.OracleXAResourceHelper</api></b>) 
           for known Oracle XA issues:
           <ul>
@@ -53,24 +53,23 @@
     <section title="Sybase">
       <p><b>Tested Versions</b>
         <ul>
-          <li>Sybase 12.0</li>
-          <li>Sybase 12.5</li>
+          <li>Sybase 12.0 with Sybase JConnect 5.2 and 5.5 drivers</li>
+          <li>Sybase 12.5 with Sybase JConnect 5.2 and 5.5 drivers</li>
         </ul>
       </p>
       
-      <p><b>Notes</b>
-        <p></p>
+      <p><b>Issues</b>
+        <ul>
+          <li>The database hangs when the XA resource is delisted using 
+            <b>javax.transaction.xa.XAResource#TMFAIL</b></li>
+        </ul> 
       </p>
+      
     </section>
     
     <section title="DB2">
-      <p><b>Tested Versions</b>
-        <ul>
-          <li>DB2 7.1</li>
-        </ul>
-      </p>
-      
       <p><b>Notes</b>
+      <p>DB2 7.1 has not been tested recently</p>
       <p>
         The IBM app driver, that is type 2, provides XA support.
         There a bug in pooling mechanism that causes a NullpointerException when the logical connection is closed.
@@ -79,12 +78,17 @@
     </section>
     
     <section title="Informix">
+      <p><b>Tested Versions</b>
+        <ul>
+          <li>Unknown database version with JDBC 2.21 driver</li>
+        </ul>
+      </p>
       <p><b>Notes</b>
         <p>Thanks to Matias Salvador [mhs@sisa.com.ar] for Informix testing</p>
         <p>Tyrex provides a workaround (<b><api>tyrex.tm.impl.InformixXAResourceHelper</api></b>) 
           for known Informix XA issues:
           <ul>
-            <li>XAResource.start(XAResource.TMJOIN) has problems with JDBC driver (Version 2.21)</li>
+            <li>XAResource.start(XAResource.TMJOIN) has problems with JDBC 2.21 driver</li>
           </ul>
         </p>
       </p>                  
@@ -97,13 +101,9 @@
     </section>
     
     <section title="Cloudscape">
-      <p><b>Tested Versions</b>
-        <ul>
-          <li>Cloudscape 3.5</li>
-        </ul>
-      </p>
       
       <p><b>Notes</b>
+        <p>Cloudscape 3.5 has not been tested recently</p>
         <p>Tyrex provides a workaround (<b><api>tyrex.tm.impl.InformixXAResourceHelper</api></b>) 
           for known Informix XA issues:
           <ul>

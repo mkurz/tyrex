@@ -9,7 +9,6 @@
 
   <contributor type="Committer">
     <name surname="Arkin" given="Assaf"/>
-    <email/>
     <company id="intalio"/>
     <description>
       Most of the code released in Tyrex has been developed by Assaf.
@@ -21,16 +20,17 @@
     <name surname="Mohammed" given="Riad"/>
     <email>mohammed@intalio.com</email>
     <company id="intalio"/>
-    <description>	
+    <description>
+     The rest of the code	released in Tyrex has been developed by Riad.
+     Any feedback, money etc should be directed to Riad :-).
     </description>
   </contributor>
 
 
   <contributor type="Committer">
     <name surname="Daniel" given="Jerome"/>
-    <email/>
-    <company id="intalio"/>
     <description>
+    Jerome worked on the OTS part of Tyrex.
     </description>
   </contributor>
 
