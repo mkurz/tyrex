@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionImpl.java,v 1.16 2001/03/21 20:02:48 arkin Exp $
+ * $Id: TransactionImpl.java,v 1.17 2001/03/23 23:50:02 arkin Exp $
  */
 
 
@@ -88,7 +88,7 @@ import tyrex.util.Messages;
  * they are added.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.16 $ $Date: 2001/03/21 20:02:48 $
+ * @version $Revision: 1.17 $ $Date: 2001/03/23 23:50:02 $
  * @see XAResourceHolder
  * @see TransactionManagerImpl
  * @see TransactionDomain
@@ -504,19 +504,16 @@ final class TransactionImpl
         throws  RollbackException, HeuristicMixedException, HeuristicRollbackException,
                 SecurityException, SystemException
     {
-        // Proper notification for transactions that timed out.
-        if ( _timedOut ) {
+        if ( _status == STATUS_MARKED_ROLLBACK ) {
+            // Status was changed to rollback or an error occured,
+            // either case we have a heuristic decision to rollback.
             try {
-                forget( Heuristic.ROLLBACK );
-            } catch ( IllegalStateException except ) {
-
-                _txDomain._category.error( "Internal error", except );
-            }
-            if ( _parent != null )
-                _parent.unregisterResource( new ResourceImpl( this ) );
-            throw new RollbackException( Messages.message( "tyrex.tx.timedOut" ) );
+                rollback();
+            } catch ( Exception except ) { }
+            throw new RollbackException( Messages.message( "tyrex.tx.rolledback" ) );
         }
-        
+        if ( _status == STATUS_ROLLEDBACK || _status == STATUS_ROLLING_BACK )
+            throw new RollbackException( Messages.message( "tyrex.tx.rolledback" ) );
         // If this is a subtransaction, it cannot commit directly,
         // only once the parent transaction commits through the
         // {@link #internalCommit} call. We simply do nothing after
@@ -531,14 +528,11 @@ final class TransactionImpl
         throws IllegalStateException, SystemException
     {
         // Perform the rollback, pass IllegalStateException to
-        // the caller, ignore the returned heuristics, do nothing
-        // if already timed out (except forget).
+        // the caller, ignore the returned heuristics.
         try {
-            if ( ! _timedOut ) {
-                _txDomain.notifyRollback( this );
-                internalRollback();
-            }
+            internalRollback();
         } finally {
+            _txDomain.notifyRollback( this );
             // The transaction will now tell all it's resources to
             // forget about the transaction and will release all
             // held resources. Also notifies all the synchronization
@@ -780,19 +774,6 @@ final class TransactionImpl
     {
         Thread thread;
         
-        // Proper notification for transactions that timed out.
-        if ( _timedOut ) {
-            try {
-                forget( Heuristic.ROLLBACK );
-            } catch ( IllegalStateException except ) {
-
-                _txDomain._category.error( "Internal error", except );
-            }
-            if ( _parent != null )
-                _parent.unregisterResource( new ResourceImpl( this ) );
-            throw new RollbackException( Messages.message( "tyrex.tx.timedOut" ) );
-        }
-
         // Dissociated the tranaction from the current thread,
         // before embarking on asynchronous commit.
         suspendTransaction();
@@ -907,19 +888,16 @@ final class TransactionImpl
                HeuristicRollbackException, SecurityException,
                IllegalStateException, SystemException
     {
-        // Proper notification for transactions that timed out.
-        if ( _timedOut ) {
+        if ( _status == STATUS_MARKED_ROLLBACK ) {
+            // Status was changed to rollback or an error occured,
+            // either case we have a heuristic decision to rollback.
             try {
-                forget( Heuristic.ROLLBACK );
-            } catch ( IllegalStateException except ) {
-
-                _txDomain._category.error( "Internal error", except );
-            }
-            if ( _parent != null )
-                _parent.unregisterResource( new ResourceImpl( this ) );
-            throw new RollbackException( Messages.message( "tyrex.tx.timedOut" ) );
+                rollback();
+            } catch ( Exception except ) { }
+            throw new RollbackException( Messages.message( "tyrex.tx.rolledback" ) );
         }
-        
+        if ( _status == STATUS_ROLLEDBACK || _status == STATUS_ROLLING_BACK )
+            throw new RollbackException( Messages.message( "tyrex.tx.rolledback" ) );
         // If this is a subtransaction, it cannot commit directly,
         // only once the parent transaction commits through the
         // {@link #internalCommit} call. We simply do nothing after
@@ -1279,7 +1257,7 @@ final class TransactionImpl
         // is still remembered.
         if ( _status == STATUS_COMMITTED || _status == STATUS_ROLLEDBACK )
             return;
-        
+
         // We should never reach this state unless transaction has been
         // prepared first.
         if ( ( !onePhaseCommit && ( _status != STATUS_PREPARED ) ) ||
@@ -1744,9 +1722,9 @@ final class TransactionImpl
         if ( ! _timedOut ) {
             // Let the rollback mechanism know that the transaction has failed.
             _timedOut = true;
-            _txDomain.notifyRollback( this );
-            // Perform the rollback, ignore the returned heuristics.
-            internalRollback();
+            try {
+                rollback();
+            } catch ( Exception except ) { }
         }
     }
     

@@ -20,8 +20,6 @@ Version 0.9.8  Mar 12, 2000
 
 - New transaction domain configuration file.
 
-- New and improved lock service available in tyrex.lock.
-
 - Improved Xid management to reduce memory consumption and enable
   consistent textual representation of Xids. Four Xid implementations
   are provided for global, branch, local and external Xids.

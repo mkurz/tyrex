@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionDomainImpl.java,v 1.25 2001/03/21 20:02:48 arkin Exp $
+ * $Id: TransactionDomainImpl.java,v 1.26 2001/03/23 23:50:02 arkin Exp $
  */
 
 
@@ -96,7 +96,7 @@ import tyrex.util.LoggerPrintWriter;
  * Implementation of a transaction domain.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.25 $ $Date: 2001/03/21 20:02:48 $
+ * @version $Revision: 1.26 $ $Date: 2001/03/23 23:50:02 $
  */
 public class TransactionDomainImpl
     extends TransactionDomain
@@ -1172,6 +1172,7 @@ public class TransactionDomainImpl
     public synchronized void run()
     {
         TransactionImpl entry;
+        TransactionImpl next;
         long            nextTimeout;
         long            clock;
 
@@ -1198,8 +1199,9 @@ public class TransactionDomainImpl
                     for ( int i = _hashTable.length ; i-- > 0 ; ) {
                         entry = _hashTable[ i ];
                         while ( entry != null ) {
+                            next = entry._nextEntry;;
                             entry.timedOut();
-                            entry = entry._nextEntry;
+                            entry = next;
                         }
                     }
                     DaemonMaster.removeDaemon( this );

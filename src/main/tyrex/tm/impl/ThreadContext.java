@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: ThreadContext.java,v 1.6 2001/03/23 03:57:48 arkin Exp $
+ * $Id: ThreadContext.java,v 1.7 2001/03/23 23:50:02 arkin Exp $
  */
 
 
@@ -56,7 +56,6 @@ import tyrex.tm.RuntimeContext;
 import tyrex.naming.MemoryContext;
 import tyrex.naming.MemoryContextFactory;
 import tyrex.naming.MemoryBinding;
-import tyrex.lock.LockOwner;
 import tyrex.util.FastThreadLocal;
 
 
@@ -64,7 +63,7 @@ import tyrex.util.FastThreadLocal;
  * Implementation of {@link RuntimeContext}.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.6 $ $Date: 2001/03/23 03:57:48 $
+ * @version $Revision: 1.7 $ $Date: 2001/03/23 23:50:02 $
  */
 public class ThreadContext
     extends RuntimeContext
@@ -94,9 +93,6 @@ public class ThreadContext
     private final MemoryBinding     _bindings;
 
 
-    private final LockOwner         _lockOwner;
-
-
     private static ThreadEntry[]    _table;
 
 
@@ -121,7 +117,6 @@ public class ThreadContext
     {
         _bindings = new MemoryBinding();
         _subject = subject;
-        _lockOwner = new ThreadLockOwner();
     }
 
 
@@ -139,7 +134,6 @@ public class ThreadContext
                 throw new NamingException( "The context is not a root context" );
         }
         _subject = subject;
-        _lockOwner = new ThreadLockOwner();
     }
 
 
@@ -346,12 +340,6 @@ public class ThreadContext
     }
 
 
-    public LockOwner getLockOwner()
-    {
-        return _lockOwner;
-    }
-
-
     /**
      * Adds an XA resource to the association list.
      */
@@ -476,32 +464,6 @@ public class ThreadContext
                 _previous = previous;
                 _nextEntry = previous._nextEntry;
             }
-        }
-
-
-    }
-
-
-    static private class ThreadLockOwner
-        extends LockOwner
-    {
-
-
-        public boolean isParentOf( LockOwner requesting )
-        {
-            return ( requesting == this );
-        }
-
-
-        public String getIdentifier()
-        {
-            return null;
-        }
-
-
-        public Object getActualOwner()
-        {
-            return Thread.currentThread();
         }
 
 

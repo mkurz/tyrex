@@ -6,27 +6,3 @@ Before 0.9.8 release
 
 - Need to validate that both TransactionManager and TransactionFactory
   provide the proper timeout in seconds.
-
-- Allow a driver/connector to be loaded in a specified class path
-
-- Configuration file for Log4J
-
-- Add reference to Log4J documentation in library
-
-- Set time-out on XA resource enlisted in transaction
-
-- Update to new structure of domain configuration file
-
-- Make sure XA resource is added to ThreadContext when enlisted in transaction(manager)
-
-
-Under consideration for version 0.9.9
--------------------------------------
-
-- Add ThreadPool implementation with ThreadPoolMetrics for statistics (including average
-  execution time, average block time, block/unblock ratio)
-
-- ThreadPool to use Runnable but add stop() method
-
-- Have all asynch transactions complete in background thread of TransactionDomain
-
