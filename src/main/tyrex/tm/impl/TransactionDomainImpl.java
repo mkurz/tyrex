@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionDomainImpl.java,v 1.30 2001/10/18 00:43:03 mohammed Exp $
+ * $Id: TransactionDomainImpl.java,v 1.31 2002/04/17 00:53:22 mohammed Exp $
  */
 
 
@@ -98,7 +98,7 @@ import tyrex.util.Logger;
  * Implementation of a transaction domain.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.30 $ $Date: 2001/10/18 00:43:03 $
+ * @version $Revision: 1.31 $ $Date: 2002/04/17 00:53:22 $
  */
 public class TransactionDomainImpl
     extends TransactionDomain
@@ -298,6 +298,7 @@ public class TransactionDomainImpl
         setTransactionTimeout( config.getTimeout() );
         _waitNew = config.getWaitNew() * 1000;
 
+        /*
         factoryName = config.getJournalFactory();
         if ( factoryName != null && factoryName.trim().length() != 0 ) {
             factoryName = factoryName.trim();
@@ -311,7 +312,7 @@ public class TransactionDomainImpl
             } catch ( SystemException except ) {
                 throw new DomainConfigurationException( except );
             }
-        } else
+        } else*/
             _journal = null;
 
         _interceptors = new TransactionInterceptor[ 0 ];
@@ -447,8 +448,15 @@ public class TransactionDomainImpl
         return _state;
     }
 
-
     public synchronized void recover()
+        throws RecoveryException
+    {
+        if ( _state == READY ) {
+            _state = ACTIVE;
+        }
+    }
+
+    /*public synchronized void recover()
         throws RecoveryException
     {
         ArrayList         array;
@@ -493,7 +501,7 @@ public class TransactionDomainImpl
                 throw errors;
             }
         }
-    }
+    } */
 
 
     //----------------------------------------------------------------

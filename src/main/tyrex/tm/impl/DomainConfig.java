@@ -57,7 +57,7 @@ import tyrex.resource.Resources;
  * file and used to construct a new transaction domain.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.8 $ $Date: 2001/03/21 04:53:08 $
+ * @version $Revision: 1.9 $ $Date: 2002/04/17 00:53:22 $
  */
 public final class DomainConfig
 {
@@ -120,7 +120,7 @@ public final class DomainConfig
     /**
      * Name of the transaction journal factory.
      */
-    private String              _journalFactory;
+    //private String              _journalFactory;
 
 
     /**
@@ -266,10 +266,10 @@ public final class DomainConfig
      *
      * @return The class name of the transaction journal factory
      */
-    public String getJournalFactory()
+    /*public String getJournalFactory()
     {
         return _journalFactory;
-    }
+    }*/
 
 
     /**
@@ -280,10 +280,10 @@ public final class DomainConfig
      *
      * @param factory The class name of the transaction journal factory
      */
-    public void setJournalFactory( String factory )
+    /*public void setJournalFactory( String factory )
     {
         _journalFactory = factory;
-    }
+    }*/
 
 
     /**
