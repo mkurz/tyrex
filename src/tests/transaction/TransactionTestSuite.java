@@ -62,11 +62,11 @@ import javax.transaction.TransactionManager;
 import javax.transaction.xa.XAResource;
 
 import junit.framework.*;
-import org.exolab.testing.Timing;
+//import org.exolab.testing.Timing;
 
 import transaction.configuration.Performance;
-import tyrex.tm.AsyncCompletionCallback;
-import tyrex.tm.Tyrex;
+//import tyrex.tm.AsyncCompletionCallback;
+//import tyrex.tm.Tyrex;
 import tyrex.tm.TyrexTransaction;
 
 import tests.VerboseStream;
@@ -264,15 +264,22 @@ class TransactionTestSuite
     private static final Class[] TEST_CLASS_PARAMETER_TYPES = new Class[]{DataSourceGroupEntry.class};
     
     /**
+     * The transaction domain
+     */
+    private static tyrex.tm.TransactionDomain _txDomain = null;
+    
+    /**
      * Verbose stream replacing the one from JTF
      */
     public static tests.VerboseStream stream;   
 
-    public TransactionTestSuite(String name, ArrayList groups, VerboseStream theStream)  //The database entry groups
+    public TransactionTestSuite(String name, ArrayList groups, VerboseStream theStream, tyrex.tm.TransactionDomain txDomain )  //The database entry groups
     {
         super( name );
         
         stream = theStream;
+        
+        _txDomain = txDomain;
         
         Constructor[] constructors;
     
@@ -450,7 +457,7 @@ class TransactionTestSuite
                 try {
                     
                     // get the transaction manager
-                    transactionManager = Tyrex.getTransactionManager();
+                    transactionManager = _txDomain.getTransactionManager();
                 } 
                 catch (Exception e) {
                     fail("Error: Failed to get transaction manager");
@@ -521,7 +528,7 @@ class TransactionTestSuite
                     
                     // get the transaction manager
                     
-                    transactionManager = Tyrex.getTransactionManager();
+                    transactionManager = _txDomain.getTransactionManager();
                     
                 } 
                 catch (Exception e) {
@@ -592,7 +599,7 @@ class TransactionTestSuite
                 try {
                     
                     // get the transaction manager
-                    transactionManager = Tyrex.getTransactionManager();
+                    transactionManager = _txDomain.getTransactionManager();
                 } 
                 catch (Exception e) {
                     fail( "Error: Failed to get transaction manager " );
@@ -661,7 +668,7 @@ class TransactionTestSuite
                 try {
                     
                     // get the transaction manager
-                    transactionManager = Tyrex.getTransactionManager();
+                    transactionManager = _txDomain.getTransactionManager();
                 } 
                 catch (Exception e) {
                     e.printStackTrace();
@@ -736,7 +743,7 @@ class TransactionTestSuite
                 try {
                     
                     // get the transaction manager
-                    transactionManager = Tyrex.getTransactionManager();
+                    transactionManager = _txDomain.getTransactionManager();
                 } 
                 catch (Exception e) {
                     e.printStackTrace();
@@ -803,7 +810,7 @@ class TransactionTestSuite
                 try {
                     
                     // get the transaction manager
-                    transactionManager = Tyrex.getTransactionManager();
+                    transactionManager = _txDomain.getTransactionManager();
                 } 
                 catch (Exception e) {
                     e.printStackTrace();
@@ -871,7 +878,7 @@ class TransactionTestSuite
                 try {
                     
                     // get the transaction manager
-                    transactionManager = Tyrex.getTransactionManager();
+                    transactionManager = _txDomain.getTransactionManager();
                 } 
                 catch (Exception e) {
                     e.printStackTrace();
@@ -938,7 +945,7 @@ class TransactionTestSuite
                 try {
                     
                     // get the transaction manager
-                    transactionManager = Tyrex.getTransactionManager();
+                    transactionManager = _txDomain.getTransactionManager();
                 } 
                 catch (Exception e) {
                     e.printStackTrace();
@@ -1007,7 +1014,7 @@ class TransactionTestSuite
                 try {
                     
                     // get the transaction manager
-                    transactionManager = Tyrex.getTransactionManager();
+                    transactionManager = _txDomain.getTransactionManager();
                 } 
                 catch (Exception e) {
                     e.printStackTrace();
@@ -1077,7 +1084,7 @@ class TransactionTestSuite
                 try {
                     
                     // get the transaction manager
-                    transactionManager = Tyrex.getTransactionManager();
+                    transactionManager = _txDomain.getTransactionManager();
                 } 
                 catch (Exception e) {
                     e.printStackTrace();
@@ -1152,7 +1159,7 @@ class TransactionTestSuite
                 try {
                     
                     // get the transaction manager
-                    transactionManager = Tyrex.getTransactionManager();
+                    transactionManager = _txDomain.getTransactionManager();
                 } 
                 catch (Exception e) {
                     e.printStackTrace();
@@ -1227,7 +1234,7 @@ class TransactionTestSuite
                 try {
                     
                     // get the transaction manager
-                    transactionManager = Tyrex.getTransactionManager();
+                    transactionManager = _txDomain.getTransactionManager();
                 } 
                 catch (Exception e) {
                     e.printStackTrace();
@@ -1296,7 +1303,7 @@ class TransactionTestSuite
                 try {
                     
                     // get the transaction manager
-                    transactionManager = Tyrex.getTransactionManager();
+                    transactionManager = _txDomain.getTransactionManager();
                 } 
                 catch (Exception e) {
                     e.printStackTrace();
@@ -1324,146 +1331,7 @@ class TransactionTestSuite
             }
         }
     }
-
-
-    /**
-     * Test asynchronous commit
-     */
-    static class TestAsyncCommit
-        extends TestCase {
-        
-        /**
-         * The group
-         */
-        private final DataSourceGroupEntry _group;
-
-        /**
-         * The name
-         */
-        static final String NAME = "Commit asynchronously";
-
-        /**
-         * Create the TestAsyncCommit
-         *
-         *
-         *
-         * @param group the group (required)
-         */
-        TestAsyncCommit(DataSourceGroupEntry group){
-            
-            super("[" + group.getGroupName() + "] " + NAME);
-
-            if (null == group) {
-                throw new IllegalArgumentException("The argument 'group' is null.");
-            }
-
-            _group = group;
-        }
-
-        public void runTest()
-        {
-            TransactionManager transactionManager = null;
-            
-            try {
-                try {
-                    
-                    // get the transaction manager
-                    transactionManager = Tyrex.getTransactionManager();
-                } 
-                catch (Exception e) {
-                    e.printStackTrace();
-                    fail("Error: Failed to get transaction manager");
-                }
-                
-                try {
-                    if (!testAsynchronousTransaction(transactionManager, _group, stream, true)) {
-                        fail("Error: Failed to commit asynchronously");
-                    }
-                } 
-                catch (Exception e) {
-                    e.printStackTrace();
-                    fail("Error: Failed to commit asynchronously");
-                  
-                }
-                
-                return;
-            }
-            catch(Exception e) {
-                e.printStackTrace();
-                fail(e.toString());
-            }
-        }
-    }
-
-
-    /**
-     * Test asynchronous rollback
-     */
-    static class TestAsyncRollback
-        extends TestCase {
-        
-        /**
-         * The group
-         */
-        private final DataSourceGroupEntry _group;
-
-        /**
-         * The name
-         */
-        static final String NAME = "Rollback asynchronously";
-
-        /**
-         * Create the TestAsyncRollback
-         *
-         *
-         *
-         * @param group the group (required)
-         */
-        TestAsyncRollback(DataSourceGroupEntry group) {
-            
-            super("[" + group.getGroupName() + "] " + NAME);
-
-            if (null == group) {
-                throw new IllegalArgumentException("The argument 'group' is null.");
-            }
-
-            _group = group;
-        }
-
-        public void runTest()
-        {
-            TransactionManager transactionManager = null;
-            
-            try {
-                try {
-                    
-                    // get the transaction manager
-                    transactionManager = Tyrex.getTransactionManager();
-                } 
-                catch (Exception e) {
-                    e.printStackTrace();
-                    fail("Error: Failed to get transaction manager");
-                }
-                
-                try {
-                    if (!testAsynchronousTransaction(transactionManager, _group, stream, false)) {
-                        fail("Error: Failed to rollback asynchronously");
-                    }
-                } 
-                catch (Exception e) {
-                    e.printStackTrace();
-                    fail("Error: Failed to rollback asynchronously");
-                  
-                }
-                
-                return;
-            }
-            catch(Exception e) {
-                e.printStackTrace();
-                fail(e.toString());
-            }
-        }
-    }
+    
 
 
     /**
@@ -1508,7 +1376,7 @@ class TransactionTestSuite
                 try {
                     
                     // get the transaction manager
-                    transactionManager = Tyrex.getTransactionManager();
+                    transactionManager = _txDomain.getTransactionManager();
                 } 
                 catch (Exception e) {
                     e.printStackTrace();
@@ -1578,7 +1446,7 @@ class TransactionTestSuite
                 try {
                     
                     // get the transaction manager
-                    transactionManager = Tyrex.getTransactionManager();
+                    transactionManager = _txDomain.getTransactionManager();
                 } 
                 catch (Exception e) {
                     e.printStackTrace();
@@ -1649,7 +1517,7 @@ class TransactionTestSuite
                 try {
                     
                     // get the transaction manager
-                    transactionManager = Tyrex.getTransactionManager();
+                    transactionManager = _txDomain.getTransactionManager();
                 } 
                 catch (Exception e) {
                     e.printStackTrace();
@@ -1720,7 +1588,7 @@ class TransactionTestSuite
                 try {
                     
                     // get the transaction manager
-                    transactionManager = Tyrex.getTransactionManager();
+                    transactionManager = _txDomain.getTransactionManager();
                 } 
                 catch (Exception e) {
                     e.printStackTrace();
@@ -1791,7 +1659,7 @@ class TransactionTestSuite
                 try {
                     
                     // get the transaction manager
-                    transactionManager = Tyrex.getTransactionManager();
+                    transactionManager = _txDomain.getTransactionManager();
                 } 
                 catch (Exception e) {
                     e.printStackTrace();
@@ -1863,7 +1731,7 @@ class TransactionTestSuite
                 try {
                     
                     // get the transaction manager
-                    transactionManager = Tyrex.getTransactionManager();
+                    transactionManager = _txDomain.getTransactionManager();
                 } 
                 catch (Exception e) {
                     e.printStackTrace();
@@ -1935,7 +1803,7 @@ class TransactionTestSuite
                 try {
                     
                     // get the transaction manager
-                    transactionManager = Tyrex.getTransactionManager();
+                    transactionManager = _txDomain.getTransactionManager();
                 } 
                 catch (Exception e) {
                     e.printStackTrace();
@@ -2008,7 +1876,7 @@ class TransactionTestSuite
                 try {
                     
                     // get the transaction manager
-                    transactionManager = Tyrex.getTransactionManager();
+                    transactionManager = _txDomain.getTransactionManager();
                 } 
                 catch (Exception e) {
                     e.printStackTrace();
@@ -2087,7 +1955,7 @@ class TransactionTestSuite
                 try {
                     
                     // get the transaction manager
-                    transactionManager = Tyrex.getTransactionManager();
+                    transactionManager = _txDomain.getTransactionManager();
                 } 
                 catch (Exception e) {
                     e.printStackTrace();
@@ -2174,7 +2042,7 @@ class TransactionTestSuite
                 try {
                     
                     // get the transaction manager
-                    transactionManager = Tyrex.getTransactionManager();
+                    transactionManager = _txDomain.getTransactionManager();
                 } 
                 catch (Exception e) {
                     fail("Error: Failed to get transaction manager");
@@ -2182,10 +2050,7 @@ class TransactionTestSuite
                 }
                 
                 try {
-                    if (!performance(transactionManager, _group, stream, TWO_PHASE_COMMIT_PERFORMANCE_TEST)) {
-                        fail("Error: Performance two-phase commit failed");
-    
-                    }
+                    performance(transactionManager, _group, stream, TWO_PHASE_COMMIT_PERFORMANCE_TEST);                        
                 } 
                 catch (Exception e) {
                     fail("Error: Performance two-phase commit failed");
@@ -2245,7 +2110,7 @@ class TransactionTestSuite
                 try {
                     
                     // get the transaction manager
-                    transactionManager = Tyrex.getTransactionManager();
+                    transactionManager = _txDomain.getTransactionManager();
                 } 
                 catch (Exception e) {
                     fail("Error: Failed to get transaction manager");
@@ -2253,10 +2118,7 @@ class TransactionTestSuite
                 }
                 
                 try {
-                    if (!performance(transactionManager, _group, stream, ONE_PHASE_COMMIT_PERFORMANCE_TEST)) {
-                        fail("Error: Performance one-phase commit failed");
-    
-                    }
+                    performance(transactionManager, _group, stream, ONE_PHASE_COMMIT_PERFORMANCE_TEST);
                 } 
                 catch (Exception e) {
                     fail("Error: Performance one-phase commit failed");
@@ -2317,7 +2179,7 @@ class TransactionTestSuite
                 try {
                     
                     // get the transaction manager
-                    transactionManager = Tyrex.getTransactionManager();
+                    transactionManager = _txDomain.getTransactionManager();
                 } 
                 catch (Exception e) {
                     fail("Error: Failed to get transaction manager");
@@ -2325,10 +2187,7 @@ class TransactionTestSuite
                 }
                 
                 try {
-                    if (!performance(transactionManager, _group, stream, ROLLBACK_PERFORMANCE_TEST)) {
-                        fail("Error: Performance rollback failed");
-          
-                    }
+                    performance(transactionManager, _group, stream, ROLLBACK_PERFORMANCE_TEST);
                 } 
                 catch (Exception e) {
                     fail("Error: Performance rollback failed");
@@ -3303,7 +3162,7 @@ class TransactionTestSuite
         Statement stmt;
 
         // get the transaction manager
-        transactionManager = Tyrex.getTransactionManager();
+        transactionManager = _txDomain.getTransactionManager();
         
         transactionManager.begin();
 
@@ -3623,7 +3482,7 @@ class TransactionTestSuite
         Entry entry;
         Connection connection;
         int i;
-        Timing timing;
+        //Timing timing;
         String transactionType;
         int rate;
         int counter;
@@ -3638,8 +3497,8 @@ class TransactionTestSuite
                                 : "rollback"));
 
         stream.writeVerbose("Performance: " + transactionType + " begin:");
-        timing = new Timing("Performance: " + transactionType);
-	timing.start();
+        //timing = new Timing("Performance: " + transactionType);
+	//timing.start();
 
         entries = getEntries(group, false, stream);
         numberOfEntries = entries.size();
@@ -3677,12 +3536,13 @@ class TransactionTestSuite
             }
         }
 
-        timing.stop();
-        timing.count(counter);
-        stream.writeVerbose(timing.report());
+        //timing.stop();
+        //timing.count(counter);
+        //stream.writeVerbose(timing.report());
         stream.writeVerbose("Minimum number of transactions expected: " + rate );
         stream.writeVerbose("Performance: " +  transactionType + " end");
-        return rate <= timing.perMinute();
+        //return rate <= timing.perMinute();
+        return true;
     }
     
     
@@ -3862,103 +3722,6 @@ class TransactionTestSuite
         // set the isolation level
         //connection.setTransactionIsolation(Connection.TRANSACTION_READ_UNCOMMITTED);
         return connection;
-    }
-
-    /**
-     * Test asynchronous transactions
-     *
-     * @param transactionManager the transaction manager
-     * @param group the group
-     * @param stream the logging stream
-     * @param commit True if asynchronous commit is tested.
-     *      False is asynchronous rollback is tested.
-     * @return True if the test was successful. Return false otherwise.
-     * @throws Exception if there is an error with the test.
-     * @see Entry
-     */
-    static private boolean testAsynchronousTransaction(TransactionManager transactionManager, 
-                                                       DataSourceGroupEntry group,
-                                                       VerboseStream stream,
-                                                       boolean commit)
-        throws Exception
-    {
-        Entry entry;
-        ArrayList entries;
-        String testType;
-        String value;
-        final Object lock = new Object();
-        // a way to get any exceptions thrown by the async commit
-        final Exception[] exception = new Exception[1];
-
-        testType = (commit ? "commit" : "rollback");
-        
-        stream.writeVerbose("Test asynchronous " + testType);
-
-        value = null;
-
-        entries = getEntries(group, false, stream);
-
-        insert(entries, stream);
-                
-        try {
-            transactionManager.begin();
-    
-            for (int i = 0; i < entries.size(); ++i) {
-                entry = (Entry)entries.get(i);
-    
-                if (commit) {
-                    entry._value += "new";
-                    value = entry._value;
-                } 
-                else {
-                    value = entry._value + "new";
-                }
-    
-                if (!update( transactionManager, entry, value, stream)) {
-                    return false;
-                }
-            }
-    
-            synchronized (lock) {
-                AsyncCompletionCallback callback = new AsyncCompletionCallback()
-                                                        {
-                                                            public void exceptionOccurred(TyrexTransaction transaction, Exception e) {
-                                                                exception[0] = e;
-                                                                synchronized (lock) {
-                                                                    lock.notify();
-                                                                }
-                                                            }
-                                                            
-                                                            public void beforeCompletion(TyrexTransaction transaction) {
-    
-                                                            }
-                                                            
-                                                            public void afterCompletion(TyrexTransaction transaction) {
-                                                                synchronized (lock) {
-                                                                    lock.notifyAll();
-                                                                }
-                                                            }
-                                                        };
-    
-                TyrexTransaction transaction = (TyrexTransaction)transactionManager.getTransaction();
-    
-                if (commit) {
-                    transaction.asyncCommit(callback);
-                } 
-                else {
-                    transaction.asyncRollback(callback);
-                }
-                lock.wait();
-            }
-    
-            if (null != exception[0]) {
-                throw exception[0];    
-            }
-            return checkValues(entries, stream);    
-        }
-        finally {
-            close(entries);
-        }
     }
     
 

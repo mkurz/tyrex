@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Transaction.java,v 1.5 2001/02/23 17:17:42 omodica Exp $
+ * $Id: Transaction.java,v 1.6 2001/04/19 15:58:49 jdaniel Exp $
  */
 
 
@@ -79,8 +79,8 @@ import transaction.configuration.Configuration;
 import transaction.configuration.Datasource;
 import transaction.configuration.Performance;
 import transaction.configuration.types.Type;
-import tyrex.jdbc.xa.EnabledDataSource;
-import tyrex.tm.Tyrex;
+import tyrex.resource.jdbc.xa.EnabledDataSource;
+//import tyrex.tm.Tyrex;
 import tyrex.tm.TyrexTransaction;
 
 /**
@@ -206,20 +206,28 @@ public class Transaction
      * The name of the value column in the test tables
      */
     static final String VALUE_COLUMN_NAME = "value";
+    
+    /**
+     * Transaction domain
+     */
+    private static tyrex.tm.TransactionDomain _txDomain = null;
 
     /**
      * The database entry groups
      */
     private ArrayList _groups;
 
-    public Transaction( String name )
+    public Transaction( String name, String config_file )
     {
         super();
                 
         try {
+         
+         _txDomain = createTransactionDomain( config_file );
+         
          _groups = getDataSourceGroups();
          
-         TransactionTestSuite trans = new TransactionTestSuite("Transaction Test Suite", _groups, new tests.VerboseStream()); 
+         TransactionTestSuite trans = new TransactionTestSuite("Transaction Test Suite", _groups, new tests.VerboseStream(), _txDomain ); 
          
          // add the initializer test
          addTest( new TestInitializer(this) );
@@ -238,6 +246,24 @@ public class Transaction
             e.printStackTrace();
 
         }  
+    }
+    
+    /**
+     * Creates a transaction domain
+     */
+    private tyrex.tm.TransactionDomain createTransactionDomain( String config_file )    
+    {
+      try
+        {        	        
+        	  return tyrex.tm.TransactionDomain.createDomain( config_file );         
+        }
+        catch ( tyrex.tm.DomainConfigurationException ex )
+        {
+        	   ex.printStackTrace();
+        	   System.exit(0);
+        }  
+        
+      return null;      
     }
     
     /**
@@ -359,7 +385,7 @@ public class Transaction
             connection = null;
             statement = null;
     
-            transactionManager = Tyrex.getTransactionManager();
+            transactionManager = _txDomain.getTransactionManager();
                 
             // make sure we're not in a stray trnasaction
             try {
@@ -767,9 +793,9 @@ public class Transaction
         catch(Exception exception) {
             exception.printStackTrace();
         }*/
-        TestSuite main = new Transaction( "Transaction Test");
+      //  TestSuite main = new Transaction( "Transaction Test");
         
-        junit.textui.TestRunner.run(main);
+        //junit.textui.TestRunner.run(main);
     }
     
 }
