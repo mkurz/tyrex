@@ -40,88 +40,64 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Unit.java,v 1.3 2001/08/23 10:11:11 mills Exp $
+ * $Id: ArrayEnumeration_EnumerationImpl.java,v 1.1 2001/08/23 10:11:12 mills Exp $
  */
 
-package tyrex;
-
-import tyrex.naming.NamingSuite;
-import tyrex.util.UtilSuite;
-
-import junit.framework.*;
-
-import java.io.IOException;
-import java.io.File;
-import java.io.FileReader;
-import java.io.OutputStream;
-import java.io.PrintWriter;
-import java.io.StringReader;
-import java.io.FileInputStream;
+package tyrex.util;
 
 import java.util.Enumeration;
-import java.util.Properties;
-import java.util.Vector;
+
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
+
+import java.io.PrintWriter;
 
 
 /**
- * Main entry class for test cases execution.
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.1 $
  */
 
-public class Unit
+public class ArrayEnumeration_EnumerationImpl extends EnumerationTest
 {
-    public static void runTests(String args[], TestSuite suite)
+    public ArrayEnumeration_EnumerationImpl(String name)
     {
-        Class[] classes = new Class[1];
-        classes[0] = Test.class;
-        java.lang.reflect.Method method = null;
-        try
-        {
-            if (args.length == 1)
-            {
-                try
-                {
-                    Class cls = Class.forName(args[0]);
-                    method = cls.getMethod("run", classes);
-                }
-                catch (ClassNotFoundException e)
-                {
-                    // OK, runner not found.  The default will be used.
-                    System.out.println("Couldn't find different runner.");
-                }
-            }
-            if (method == null)
-            {
-                method = junit.textui.TestRunner.class
-                    .getMethod("run", classes);
-            }
-            Object[] methodArgs = new Object[1];
-            methodArgs[0] = suite;
-            method.invoke(null, methodArgs);
-        }
-        catch (Exception e)
-        {
-            // OK, just don't run the tests.
-            System.out.println("Failure to run tests.");
-            e.printStackTrace();
-            System.exit(1);
-        }
+        super(name);
+    }
+
+    /**
+     * The method for creating an instance of Enumeration.
+     */
+
+    public Enumeration newEnumeration()
+        throws Exception
+    {
+        Integer[] nums = new Integer[3];
+        nums[0] = new Integer(1);
+        nums[1] = new Integer(2);
+        nums[2] = new Integer(3);
+        return (Enumeration) new ArrayEnumeration(nums);
     }
 
 
-    public static TestSuite suite()
+    /**
+     * The method for creating an empty instance of Enumeration.
+     */
+
+    public Enumeration newEmptyEnumeration()
+        throws Exception
     {
-        TestSuite suite = new TestSuite("Tyrex Unit Test Harness");
-        suite.addTest(NamingSuite.suite());
-        suite.addTest(UtilSuite.suite());
-        return suite;
+        return (Enumeration) new ArrayEnumeration(null);
     }
 
 
-    public static void main(String args[])
+    /**
+     * Get the specified value.
+     */
+
+    public Object getValue(int index)
     {
-        runTests(args, Unit.suite());
+        return new Integer(index + 1);
     }
 }
