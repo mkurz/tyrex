@@ -40,23 +40,24 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Logger.java,v 1.18 2001/10/24 22:39:04 mohammed Exp $
+ * $Id: Logger.java,v 1.19 2002/04/17 01:09:58 mohammed Exp $
  */
 
 
 package tyrex.util;
 
 import java.io.OutputStream;
-import org.apache.log4j.PatternLayout;
+import java.lang.reflect.Constructor;
+import org.apache.log4j.Appender;
+import org.apache.log4j.Layout;
 import org.apache.log4j.Category;
-import org.apache.log4j.FileAppender;
+import org.apache.log4j.PatternLayout;
 import org.apache.log4j.Priority;
-//import org.apache.log4j.WriterAppender;
 
 /**
  *
  * @author <a href="jdaniel@intalio.com">Jerome DANIEL</a>
- * @version $Revision: 1.18 $ $Date: 2001/10/24 22:39:04 $
+ * @version $Revision: 1.19 $ $Date: 2002/04/17 01:09:58 $
  */
 public class Logger
 {
@@ -78,25 +79,30 @@ public class Logger
 
 
     static {
+        Appender appender;
         tyrex = Category.getInstance( "tyrex" );
 
-        // add an appender to tyrex if necessary
-        /*
-        if ( ! tyrex.getHierarchy().getRoot().getAllAppenders().hasMoreElements() ) {
-            if ( ! Configuration.getBoolean( Configuration.PROPERTY_LOG_CONSOLE ) )  
-                tyrex.addAppender( new WriterAppender( new PatternLayout( "%d{dd MMM yyyy HH:mm:ss}:%c:%p %m%n" ), new DevNull() ) );
-            else {
-                tyrex.addAppender( new WriterAppender( new PatternLayout( "%d{dd MMM yyyy HH:mm:ss}:%c:%p %m%n" ), System.out ) );
-                if ( ! Configuration.getBoolean( Configuration.PROPERTY_LOG_VERBOSE ) )  
-                    tyrex.getHierarchy().disableDebug();
-            }
-        }
-        */
         if ( ! tyrex.getAllAppenders().hasMoreElements() ) {
-            if ( ! Configuration.getBoolean( Configuration.PROPERTY_LOG_CONSOLE ) )  
-                tyrex.addAppender( new FileAppender( new PatternLayout( "%d{dd MMM yyyy HH:mm:ss}:%c:%p %m%n" ), new DevNull() ) );
+            if ( ! Configuration.getBoolean( Configuration.PROPERTY_LOG_CONSOLE ) )  {
+                appender = appenderTo( new DevNull() );
+
+                if ( null == appender ) {
+                    System.out.println("Unable resolve log4j appender");
+                }
+                else {
+                    tyrex.addAppender( appender );
+                }
+            }
             else {
-                tyrex.addAppender( new FileAppender( new PatternLayout( "%d{dd MMM yyyy HH:mm:ss}:%c:%p %m%n" ), System.out ) );
+                appender = appenderTo( System.out );
+
+                if ( null == appender ) {
+                    System.out.println("Unable resolve log4j appender");
+                }
+                else {
+                    tyrex.addAppender( appender );
+                }
+                
                 if ( ! Configuration.getBoolean( Configuration.PROPERTY_LOG_VERBOSE ) )  
                     tyrex.setPriority(Priority.INFO);
                 else
@@ -108,10 +114,39 @@ public class Logger
         ots = Category.getInstance( "tyrex.ots" );
         security = Category.getInstance( "tyrex.security" );
         castor = Category.getInstance( "tyrex.resource.castor" );
-
-        //tyrex.getDefaultHierarchy().getRoot().removeAllAppenders();
-        //tyrex.addAppender( new FileAppender( new PatternLayout( "" ), new DevNull() ) );
     }
+
+    /**
+     * Create an appender for an output stream using Reflection.  The problem
+     * is that the API to do this changed from log4j 1.0 to 1.2 (with 1.1
+     * supporting both syntaxes).
+     *
+     * @author Sam Ruby (rubys@us.ibm.com)
+     */
+    static private Appender appenderTo (OutputStream os) {
+        Layout layout = new PatternLayout( "%d{dd MMM yyyy HH:mm:ss}:%c:%p %m%n" ) ;
+        Class[] sig = new Class[] { Layout.class, OutputStream.class } ;
+
+        // try log4j 1.1 +
+        try {
+            Class cls = Class.forName( "org.apache.log4j.WriterAppender" ) ;
+            Constructor c = cls.getDeclaredConstructor( sig ) ;
+            return (Appender) c.newInstance( new Object[] {layout, os} ) ;
+        } catch (Exception e) {
+        }
+
+        // try log4j 1.1 -
+        try {
+            Class cls = Class.forName( "org.apache.log4j.FileAppender" ) ;
+            Constructor c = cls.getDeclaredConstructor( sig ) ;
+            return (Appender) c.newInstance( new Object[] {layout, os} ) ;
+        } catch (Exception e) {
+        }
+
+        // wtf?
+        return null;
+    }
+
 
     static private class DevNull
         extends OutputStream
