@@ -24,8 +24,10 @@
   </links>
 
   <menu name="API">
-    <item name="JavaDoc" href="javadoc/overview-summary.html"/>
+    <item name="API" href="api/overview-summary.html"/>
+    <item name="JNDI provider" href="naming.xml"/>
     <item name="TP Monitoring" href="tpmonitor.xml"/>
+    <item name="JavaDoc" href="javadoc/overview-summary.html"/>
   </menu>
 
   <notice>

@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: EnvContext.java,v 1.2 2000/04/12 00:47:04 arkin Exp $
+ * $Id: EnvContext.java,v 1.3 2000/04/12 02:37:16 arkin Exp $
  */
 
 
@@ -92,7 +92,7 @@ import tyrex.util.FastThreadLocal;
  * assigned to any number of threads.
  * <p>
  * {@link #setEnvContext} may be called for each new context on the same
- * threads, and must be balanced with calls to {@link #unsetEnvContext}.
+ * thread, and must be balanced with a call to {@link #unsetEnvContext}.
  * The ENC state is undefined outside the boundaries of these methods
  * calles, and any attempt to use it will likley result in an error.
  * <p>
@@ -125,7 +125,7 @@ import tyrex.util.FastThreadLocal;
  * </pre>
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $ $Date: 2000/04/12 00:47:04 $
+ * @version $Revision: 1.3 $ $Date: 2000/04/12 02:37:16 $
  */
 public final class EnvContext
     implements Context, Serializable

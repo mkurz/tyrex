@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: MemoryContext.java,v 1.2 2000/04/12 00:47:04 arkin Exp $
+ * $Id: MemoryContext.java,v 1.3 2000/04/12 02:37:16 arkin Exp $
  */
 
 
@@ -76,20 +76,20 @@ import javax.naming.ContextNotEmptyException;
  * services and configuration objects.
  * <p>
  * An instance of {@link MemoryContext} constructed with no environment
- * attribute will use it's own tree of bindings. Such a tree is no
- * accessible except through context created from the original context,
+ * attribute will use it's namespace and serve as the root of that namespace.
+ * Such a namespace is no accessible except through the creating context,
  * and is garbage collected when all such contexts are no longer
  * referenced. If necessary the root context can be duplicated using
  * <tt>lookup( "" )</tt>.
  * <p>
- * If the environment attribute {@link Context.PROVIDER_URL} is used,
- * the context will reference a node in a tree shared by all such
+ * If the environment attribute {@link Context.PROVIDER_URL} is set,
+ * the context will reference a node in a namespace shared by all such
  * contexts. That tree is statically held in memory for the life time
  * of the virtual machine.
  *
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $ $Date: 2000/04/12 00:47:04 $
+ * @version $Revision: 1.3 $ $Date: 2000/04/12 02:37:16 $
  * @see MemoryContextFactory
  */
 public final class MemoryContext
@@ -102,7 +102,7 @@ public final class MemoryContext
      * must be a string equal to <tt>true</tt>. Once the context has
      * been set read-only, it cannot be reset to read-write.
      */
-    public static final String ReadOnly = "tyrex.naming.read.only";
+    public static final String ReadOnly = "readOnly";
 
 
     /**

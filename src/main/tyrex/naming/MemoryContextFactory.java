@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: MemoryContextFactory.java,v 1.1 2000/04/11 20:25:13 arkin Exp $
+ * $Id: MemoryContextFactory.java,v 1.2 2000/04/12 02:37:16 arkin Exp $
  */
 
 
@@ -61,7 +61,7 @@ import javax.naming.spi.InitialContextFactory;
 /**
  * Implements a context factory for {@link MemoryContext}. When set properly
  * {@link javax.naming.InitialContext} will return a {@link
- * MemoryContext} referencing the named path in the memory model.
+ * MemoryContext} referencing the named path in the shared memory space.
  * <p>
  * To use this context factory the JNDI properties file must include
  * the following properties:
@@ -76,7 +76,7 @@ import javax.naming.spi.InitialContextFactory;
  * 
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2000/04/11 20:25:13 $
+ * @version $Revision: 1.2 $ $Date: 2000/04/12 02:37:16 $
  * @see MemoryContext
  * @see JavaContext
  */
