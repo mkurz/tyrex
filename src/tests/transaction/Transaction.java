@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Transaction.java,v 1.1 2001/02/16 23:47:54 mohammed Exp $
+ * $Id: Transaction.java,v 1.2 2001/02/16 23:59:52 mohammed Exp $
  */
 
 
@@ -89,6 +89,20 @@ import tyrex.tm.TyrexTransaction;
  * behaviour and that the databases have the correct data
  * at all times. There is overlap between the some
  * of the tests.
+ * <P>
+ * The configuration for the transaction test is specified via
+ * an xml file.
+ * Look for the configuration file according to the following criteria:
+ * <UL>
+ * <LI>First look at the java property {@link #CONFIGURATION_FILE_PROPERTY}
+ * <LI>Then look for the configuration file as a resource
+ * <LI>Then look for the configuration file in working directory
+ * <LI>Then look for the configuration file in the home directory
+ * <LI>Then look for the configuration file in the java directory
+ * <LI>Then throw exception that the configuration cannot be found
+ * </UL>
+ * <P>
+ * The tests are:
  * <UL>
  * <LI> Test two-phase commit and that the status is correct
  *      throughout the commit lifecycle.
@@ -157,7 +171,8 @@ import tyrex.tm.TyrexTransaction;
  *      must be marked for rollback
  * <LI> Test that one phase commit optimization applies to XA 
  *      resources with the same resource manager.
- * <LI> Test performance for commits.
+ * <LI> Test performance for two-phase commit..
+ * <LI> Test performance for one-phase commit.
  * <LI> Test performance for rollbacks.            
  * </UL>
  *
@@ -166,6 +181,14 @@ import tyrex.tm.TyrexTransaction;
 public class Transaction
     extends CWTestCategory
 {
+    /**
+     * The property defining the configuration file.
+     * <P>
+     * The configuration file can be specified in as a java property 
+     * java -tyrex.test.transaction.configuration=conf.xml
+     */
+    public static final String CONFIGURATION_FILE_PROPERTY = "tyrex.test.transaction.configuration";
+
     /**
      * The name of the configuration file
      */
@@ -337,7 +360,8 @@ public class Transaction
      * <P>
      * Look for the configuration file according to the following criteria:
      * <UL>
-     * <LI>First look for the configuration file as a resource
+     * <LI>First look at the java property {@link #CONFIGURATION_FILE_PROPERTY}
+     * <LI>Then look for the configuration file as a resource
      * <LI>Then look for the configuration file in working directory
      * <LI>Then look for the configuration file in the home directory
      * <LI>Then look for the configuration file in the java directory
@@ -351,8 +375,18 @@ public class Transaction
         throws FileNotFoundException {
         File file;
         InputStream inputStream;
+        String property;
 
-        // first look for the resource
+        // first look at the property
+        property = System.getProperty(CONFIGURATION_FILE_PROPERTY);
+        if (null != property) {
+            file = new File(property);
+
+            if (file.exists()) {
+                return new FileReader(file);    
+            }
+        }
+
         inputStream = Transaction.class.getResourceAsStream(CONFIGURATION_FILE);
 
         if (null != inputStream) {
