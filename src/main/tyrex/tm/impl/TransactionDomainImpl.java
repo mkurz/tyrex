@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionDomainImpl.java,v 1.29 2001/09/21 18:14:45 mohammed Exp $
+ * $Id: TransactionDomainImpl.java,v 1.30 2001/10/18 00:43:03 mohammed Exp $
  */
 
 
@@ -87,6 +87,7 @@ import tyrex.resource.Resources;
 import tyrex.resource.ResourceException;
 import tyrex.services.Clock;
 import tyrex.services.DaemonMaster;
+import tyrex.services.UUID;
 import tyrex.util.Messages;
 import tyrex.util.Configuration;
 import tyrex.util.LoggerPrintWriter;
@@ -97,7 +98,7 @@ import tyrex.util.Logger;
  * Implementation of a transaction domain.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.29 $ $Date: 2001/09/21 18:14:45 $
+ * @version $Revision: 1.30 $ $Date: 2001/10/18 00:43:03 $
  */
 public class TransactionDomainImpl
     extends TransactionDomain
@@ -1418,6 +1419,7 @@ public class TransactionDomainImpl
         TransactionImpl tx;
         Xid             xid;
         Xid[]           xids = null;
+        byte[]         uuid;
 
         for ( int i = resources.length ; i-- > 0 ; ) {
             try {
@@ -1435,14 +1437,36 @@ public class TransactionDomainImpl
                         xid = XidUtils.importXid( xid.getFormatId(), xid.getGlobalTransactionId(), null );
                         tx = (TransactionImpl) findTransaction( xid );
                         if ( tx == null ) {
-                            // No such transaction in the journal, we have no
-                            // heuristic decision, and so we request that the
-                            // TM commit, but we are not interested in the
-                            // result.
+                            // We don't recall this transaction from the journal,
+                            // perhaps because we didn't manage it. To determine
+                            // if we initiated this transaction:
+                            // - The branch qualifier must contain a UUID for this
+                            //   server (nested and OTS re-created transaction)
+                            // - The branch qualifier is empty and the global
+                            //   transaction identifier contains a UUID for this
+                            //   server (top-level transaction)
+                            uuid = xid.getBranchQualifier();
+                            if ( ( uuid == null ) ||
+                                 ( 0 == uuid.length ) ) {
+                                uuid = xid.getGlobalTransactionId();
+                                if ( uuid == null || ! UUID.isLocal( uuid ) ) {
+                                    continue;
+                                }
+                            } else if ( ! UUID.isLocal( uuid ) ) {
+                                continue;
+                            }
+                            // No recollection of the transaction, ask the resource
+                            // manager to roll it back.
+    
                             try {
-                                resources[ i ].commit( xid, true );
+                                resources[ i ].rollback( xid );
                             } catch ( XAException except ) {
                                 recoveryError( new RecoveryException( Util.getXAException( except ) ) );
+                                // Assuming a heuristic decision occured.
+                                try {
+                                    resources[ i ].forget( xid );
+                                } catch ( Exception except2 ) {
+                                }
                             }
                         } else {
                             // We have a transaction, we enlist the resource
