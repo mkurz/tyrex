@@ -75,7 +75,7 @@ public final class ResourceMappingLoader
 	/**
 	 * Logging category
 	 */
-	static final Category CATEGORY = Category.getInstance("tyrex.resource.castor");
+	static final Category CATEGORY = tyrex.util.Logger.castor; //Category.getInstance("tyrex.resource.castor");
 
 	/**
 	 * The new class to create a class descriptor for
@@ -88,7 +88,7 @@ public final class ResourceMappingLoader
     public ResourceMappingLoader()
         throws MappingException {
         super(null, null);
-
+   CATEGORY.setPriority(org.apache.log4j.Priority.ERROR );
 		_newClass = null;
     }
     
