@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: LogWriter.java,v 1.1 2001/01/11 23:26:33 jdaniel Exp $
+ * $Id: LogWriter.java,v 1.2 2001/02/02 21:08:44 jdaniel Exp $
  *
  * Date         Author  Changes
  * 1/5/2001     J.Daniel    First implementation.
@@ -81,7 +81,7 @@ public class LogWriter
 	/**
 	 * An external access to writer
 	 */
-	public static LogWriter out;
+	public static LogWriter out = new LogWriter( null, null, false, false );
 	
 	/**
 	 * Reference to the output stream
