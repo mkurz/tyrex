@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: JavaContext.java,v 1.3 2000/09/08 23:05:19 mohammed Exp $
+ * $Id: JavaContext.java,v 1.4 2000/12/05 01:00:06 mohammed Exp $
  */
 
 
@@ -76,7 +76,7 @@ import tyrex.naming.MemoryContext;
  * the URL part of a name lookup.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.3 $ $Date: 2000/09/08 23:05:19 $
+ * @version $Revision: 1.4 $ $Date: 2000/12/05 01:00:06 $
  */
 public final class JavaContext
     implements Context, Serializable
@@ -171,7 +171,7 @@ public final class JavaContext
 	if ( ! name.startsWith( JavaURL ) )
 	    throw new NamingException( "Internal error: context not accessed as java JavaURL" );
 	ctx = new EnvContext( _env );
-	return ctx.lookup( name.substring( JavaURLLength ) );
+	return ctx.lookupLink( name.substring( JavaURLLength ) );
     }
 
 
@@ -366,7 +366,7 @@ public final class JavaContext
     public Name composeName( Name name, Name prefix )
 	throws NamingException
     {
-	prefix = (Name) name.clone();
+	prefix = (Name) prefix.clone();
 	return prefix.addAll( name );
     }
 
