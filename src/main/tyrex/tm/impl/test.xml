@@ -1,3 +1,24 @@
 <domain>
   <name>default</name>
+  <resources>
+    <dataSource>
+      <name>sybase</name>
+      <jar>jconnect_5.2.jar</jar>
+      <class>tyrex.resource.jdbc.xa.EnabledDataSource</class>
+      <config>
+        <driverClassName>com.sybase.jdbc2.jdbc.SybDriver</driverClassName>
+        <driverName>jdbc:sybase:Tds:arkin:4100</driverName>
+        <user>n3</user>
+        <password>intalio</password>
+      </config>
+      <limits>
+        <maximum>50</maximum>
+        <minimum>5</minimum>
+        <initial>5</initial>
+        <maxRetain>300</maxRetain>
+        <timeout>10</timeout>
+        <trace>true</trace>
+      </limits>
+    </dataSource>
+  </resources>
 </domain>

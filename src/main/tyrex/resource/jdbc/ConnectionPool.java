@@ -66,6 +66,7 @@ import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 import javax.transaction.Status;
 import javax.transaction.RollbackException;
+import javax.transaction.SystemException;
 import javax.transaction.xa.Xid;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.XAException;
@@ -82,7 +83,7 @@ import tyrex.util.LoggerPrintWriter;
 /**
  *
  * @author <a href="jdaniel@intalio.com">Jerome Daniel</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 final class ConnectionPool
     implements Resource, DataSource, ConnectionEventListener
@@ -168,7 +169,7 @@ final class ConnectionPool
                     XADataSource xaDataSource,
                     ConnectionPoolDataSource poolDataSource,
                     TyrexTransactionManager txManager, Category category )
-        throws SQLException
+        throws SystemException
     {
         PooledConnection         pooled = null;
 
@@ -191,47 +192,51 @@ final class ConnectionPool
         _logWriter = new LoggerPrintWriter( _category, null );
         _txManager= txManager;
 
-        // Clone object to prevent changes by caller from affecting the
-        // behavior of the pool.
-        if ( limits == null )
-            _limits = new ResourceLimits();
-        else {
-            _limits = (ResourceLimits) limits.clone();
-            if ( _limits.getTrace() ) {
-                if ( _xaDataSource != null )
-                    _xaDataSource.setLogWriter( _logWriter );
-                else
-                    _poolDataSource.setLogWriter( _logWriter );
+        try {
+            // Clone object to prevent changes by caller from affecting the
+            // behavior of the pool.
+            if ( limits == null )
+                _limits = new ResourceLimits();
+            else {
+                _limits = (ResourceLimits) limits.clone();
+                if ( _limits.getTrace() ) {
+                    if ( _xaDataSource != null )
+                        _xaDataSource.setLogWriter( _logWriter );
+                    else
+                        _poolDataSource.setLogWriter( _logWriter );
+                }
             }
-        }
-
-        // Set the pool table to the optimum size based on the maximum
-        // number of connections expected, or a generic size.
-        if ( _limits.getMaximum() > 0 )
-            _pool = new PoolEntry[ Primes.nextPrime( _limits.getMaximum() ) ];
-        else
-            _pool = new PoolEntry[ TABLE_SIZE ];
-
-        // We need at least one pooled connection to obtain the
-        // connection meta data and XA resource for recovery.
-        // An exception occurs if we cannot create this connection,
-        // or we can't get the XA resource.
-        pooled = createPooledConnection( null, null );
-        if ( _xaDataSource != null ) {
-            if ( pooled instanceof XAConnection )
-                _xaResource = ( (XAConnection) pooled ).getXAResource();
+            
+            // Set the pool table to the optimum size based on the maximum
+            // number of connections expected, or a generic size.
+            if ( _limits.getMaximum() > 0 )
+                _pool = new PoolEntry[ Primes.nextPrime( _limits.getMaximum() ) ];
             else
-                throw new SQLException( "Connection of type " + pooled.getClass().getName() +
-                                        " does not support XA transactions" );
-        } else
-            _xaResource = null;
-        allocate( pooled, null, null, false );
-
-        // Allocate as many connection as specified for the initial size
-        // (excluding the one we always create before we reach this point).
-        for ( int i = _limits.getInitial() - 1 ; i-- > 0 ; ) {
+                _pool = new PoolEntry[ TABLE_SIZE ];
+            
+            // We need at least one pooled connection to obtain the
+            // connection meta data and XA resource for recovery.
+            // An exception occurs if we cannot create this connection,
+            // or we can't get the XA resource.
             pooled = createPooledConnection( null, null );
+            if ( _xaDataSource != null ) {
+                if ( pooled instanceof XAConnection )
+                    _xaResource = ( (XAConnection) pooled ).getXAResource();
+                else
+                    throw new SystemException( "Connection of type " + pooled.getClass().getName() +
+                                               " does not support XA transactions" );
+            } else
+                _xaResource = null;
             allocate( pooled, null, null, false );
+            
+            // Allocate as many connection as specified for the initial size
+            // (excluding the one we always create before we reach this point).
+            for ( int i = _limits.getInitial() - 1 ; i-- > 0 ; ) {
+                pooled = createPooledConnection( null, null );
+                allocate( pooled, null, null, false );
+            }
+        } catch ( SQLException except ) {
+            throw new SystemException( except.toString() );
         }
         _category.info( "Created connection pool for data source " + name +
                         " with initial size " + _limits.getInitial() +
@@ -257,13 +262,9 @@ final class ConnectionPool
     }
 
     
-    public Xid[] recover( int flags )
-        throws XAException
+    public XAResource getXAResource()
     {
-        if ( _xaResource == null )
-            return new Xid[ 0 ];
-        else
-            return _xaResource.recover( flags );
+        return _xaResource;
     }
 
 

@@ -47,13 +47,14 @@ package tyrex.resource;
 
 
 import java.io.Serializable;
+import javax.transaction.SystemException;
 import tyrex.tm.TransactionDomain;
 
 
 /**
  * 
  * @author <a href="jdaniel@intalio.com">Jerome Daniel</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  */
 public abstract class BaseConfiguration
     implements Serializable
@@ -94,17 +95,6 @@ public abstract class BaseConfiguration
      * The configured resource manager factory.
      */
     private Object               _factory;
-
-
-    /**
-     * The transaction domain for which this configuration is loaded.
-     */
-    private TransactionDomain    _txDomain;
-
-
-    public BaseConfiguration()
-    {
-    }
 
 
     /**
@@ -243,16 +233,8 @@ public abstract class BaseConfiguration
         throws Exception;
 
 
-    public TransactionDomain getTransactionDomain()
-    {
-        return _txDomain;
-    }
-
-
-    public void setTransactionDomain( TransactionDomain txDomain )
-    {
-        _txDomain = txDomain;
-    }
+    public abstract Resource createResource( TransactionDomain txDomain )
+        throws SystemException;
 
 
 }

@@ -40,7 +40,7 @@
  *
  * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Logger.java,v 1.10 2001/02/27 00:34:08 arkin Exp $
+ * $Id: Logger.java,v 1.11 2001/03/02 23:06:55 arkin Exp $
  */
 
 
@@ -59,12 +59,12 @@ import org.apache.log4j.FileAppender;
 /**
  *
  * @author <a href="jdaniel@intalio.com">Jerome DANIEL</a>
- * @version $Revision: 1.10 $ $Date: 2001/02/27 00:34:08 $
+ * @version $Revision: 1.11 $ $Date: 2001/03/02 23:06:55 $
  */
 public class Logger
 {
 
-
+    /*
     public static final Category conf;
 
     
@@ -80,13 +80,19 @@ public class Logger
     public static final Category server;
 
 
-    public static final Category tyrex;
-
-    
     public static final Category tools;   
+    */
 
     
     public static final Appender appender;
+
+
+
+    public static final Category tyrex;
+
+
+    public static final Category resource;
+    
 
 
     static {
@@ -101,23 +107,20 @@ public class Logger
         
         nullAppender = new FileAppender( new PatternLayout(""), new DevNull() );
 
-        ots = Category.getInstance( "tyrex.ots" );        
-        conf = Category.getInstance( "tyrex.conf" );
-        jdbc = Category.getInstance( "tyrex.jdbc" );
-        recovery = Category.getInstance( "tyrex.recovery" );
-        server = Category.getInstance( "tyrex.server" );
         tyrex = Category.getInstance( "tyrex" );
-        tools = Category.getInstance( "tyrex.tools" );
+        resource = Category.getInstance( "tyrex.resource" );
         
         appender = new FileAppender( layout, System.out );
 
+        /*
         ots.addAppender( appender );
         conf.addAppender( appender );
         jdbc.addAppender( appender );
         recovery.addAppender( appender );
         server.addAppender( appender );
+        */
         tyrex.addAppender( appender );
-        tools.addAppender( appender );
+        resource.addAppender( appender );
     }
 
 

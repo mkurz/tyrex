@@ -40,7 +40,7 @@
  *
  * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionDomainImpl.java,v 1.4 2001/03/02 20:43:26 arkin Exp $
+ * $Id: TransactionDomainImpl.java,v 1.5 2001/03/02 23:06:54 arkin Exp $
  */
 
 
@@ -50,6 +50,7 @@ package tyrex.tm.impl;
 import java.io.PrintWriter;
 import java.util.Enumeration;
 import java.util.Properties;
+import java.util.Iterator;
 import java.security.AccessController;
 import org.apache.log4j.Category;
 import org.omg.CosTransactions.PropagationContext;
@@ -76,9 +77,10 @@ import tyrex.tm.TransactionStatus;
 import tyrex.tm.TransactionTimeoutException;
 import tyrex.tm.journal.Journal;
 import tyrex.tm.journal.JournalFactory;
-import tyrex.tm.conf.DomainConfig;
 import tyrex.tm.xid.BaseXid;
 import tyrex.tm.xid.XidUtils;
+import tyrex.resource.Resource;
+import tyrex.resource.Resources;
 import tyrex.services.Clock;
 import tyrex.util.Messages;
 import tyrex.util.Configuration;
@@ -93,7 +95,7 @@ import tyrex.util.Configuration;
  * domain.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.4 $ $Date: 2001/03/02 20:43:26 $
+ * @version $Revision: 1.5 $ $Date: 2001/03/02 23:06:54 $
  */
 public class TransactionDomainImpl
     extends TransactionDomain
@@ -242,6 +244,8 @@ public class TransactionDomainImpl
         String         domainName;
         JournalFactory factory;
         String         factoryName;
+        Resource[]     resources;
+        XAResource[]   xaResources;
 
         if ( config == null )
             throw new IllegalArgumentException( "Argument config is null" );
@@ -251,6 +255,7 @@ public class TransactionDomainImpl
 	_domainName = domainName.trim();
         _maximum = config.getMaximum();
         _txTimeout = config.getTimeout();
+
         if ( config.getJournaling() ) {
             // Throws SystemException if failed to open journal
             factoryName = Configuration.getProperty( Configuration.PROPERTY_JOURNAL_FACTORY );
@@ -275,8 +280,18 @@ public class TransactionDomainImpl
         _hashTable = new TransactionImpl[ TABLE_SIZE ];
         _metrics = new DomainMetrics();
 
+        // Obtain all the resources. We need to have the transaction manager
+        // set up first for the purpose of creating connection pools.
+        if ( config.getResources() != null ) {
+            resources = config.getResources().createResources( this );
+            xaResources = new XAResource[ resources.length ];
+            for ( int i = 0 ; i < resources.length ; ++i )
+                xaResources[ i ] = resources[ i ].getXAResource();
+        } else
+            xaResources = null;
+        
         // Obtain a transaction journal with the domain name.
-        // recover( _journal, ( config == null ? null : config.getRecoveryResources() ) );
+        recover( _journal, xaResources );
 
         // starts the background thread
         _background = new Thread( this, "Transaction Domain " + _domainName );

@@ -46,14 +46,13 @@
 package tyrex.resource;
 
 
-import javax.transaction.xa.Xid;
-import javax.transaction.xa.XAException;
+import javax.transaction.xa.XAResource;
 
 
 /**
  *
  * @author <a href="jdaniel@intalio.com">Jerome Daniel</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 public interface Resource
 {
@@ -79,14 +78,13 @@ public interface Resource
 
 
     /**
-     * This method is used during recovery from an XA resource. If the
-     * resource manager does not support the XA interface, it returns an
-     * empty array of Xids.
+     * Returns the XA resource interface. The XA resource is used to manage
+     * transaction enlistment and recovery of the resource. This method returns
+     * null if the resource does not support XA transactions.
      *
-     * @see XAResource.recover()
+     * @return The XA resource interface
      */
-    public abstract Xid[] recover( int flags )
-        throws XAException;
+    public abstract XAResource getXAResource();
 
     
 }

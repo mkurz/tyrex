@@ -43,18 +43,19 @@
  */
 
 
-package tyrex.tm.conf;
+package tyrex.tm.impl;
 
 
 import javax.transaction.SystemException;
 import tyrex.tm.TransactionDomain;
 import tyrex.tm.impl.TransactionDomainImpl;
+import tyrex.resource.Resources;
 
 
 /**
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2001/03/02 20:44:22 $
+ * @version $Revision: 1.1 $ $Date: 2001/03/02 23:07:49 $
  */
 public final class DomainConfig
 {
@@ -84,6 +85,9 @@ public final class DomainConfig
 
 
     private TransactionDomain   _txDomain;
+
+
+    private Resources           _resources;
 
 
     public String getName()
@@ -144,6 +148,18 @@ public final class DomainConfig
         if ( _txDomain == null )
             _txDomain = new TransactionDomainImpl( this );
         return _txDomain;
+    }
+
+
+    public Resources getResources()
+    {
+        return _resources;
+    }
+
+
+    public void setResources( Resources resources )
+    {
+        _resources = resources;
     }
 
 

@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: XADataSourceImpl.java,v 1.1 2001/03/02 19:02:08 arkin Exp $
+ * $Id: XADataSourceImpl.java,v 1.2 2001/03/02 23:06:53 arkin Exp $
  */
 
 
@@ -391,7 +391,7 @@ public abstract class XADataSourceImpl
 	    if ( txConn.conn != null && txConn.prepared )
 		list.add( txConn.xid );
 	}
-	return (Xid[]) list.toArray();
+	return (Xid[]) list.toArray( new Xid[ list.size() ] );
     }
 
 

@@ -51,21 +51,22 @@ import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.StringTokenizer;
-import java.sql.SQLException;
 import javax.sql.DataSource;
 import javax.sql.XADataSource;
 import javax.sql.ConnectionPoolDataSource;
 import org.apache.log4j.Category;
+import javax.transaction.SystemException;
 import tyrex.tm.TransactionDomain;
 import tyrex.tm.TyrexTransactionManager;
 import tyrex.resource.BaseConfiguration;
 import tyrex.resource.Resource;
+import tyrex.util.Logger;
 
 
 /**
  * 
  * @author <a href="jdaniel@intalio.com">Jerome Daniel</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 public class DataSourceConfig
     extends BaseConfiguration
@@ -103,19 +104,19 @@ public class DataSourceConfig
 
 
     public Object createFactory()
-        throws Exception
+        throws SystemException
     {
         try {
             return createFactory_();
-        } catch ( Exception except ) {
-            Category.getInstance( DataSourceManager.LOG4J_CATEGORY ).error( "Error", except );
-            throw new Exception( except.toString() );
+        } catch ( SystemException except ) {
+            Logger.resource.error( "Error", except );
+            throw except;
         }
     }
 
 
     public Object createFactory_()
-        throws SQLException
+        throws SystemException
     {
         String                  name;
         String                  jarName;
@@ -128,22 +129,16 @@ public class DataSourceConfig
         Object                  object;
         String                  paths;
         ClassLoader             classLoader;
-        TransactionDomain       txDomain;
-        TyrexTransactionManager txManager;
 
         name = super.getName();
         if ( name == null || name.trim().length() == 0 )
-            throw new SQLException( "The configuration element is missing the resource manager name" );
+            throw new SystemException( "The configuration element is missing the resource manager name" );
         jarName = super.getJAR();
         if ( jarName == null || jarName.trim().length() == 0 )
-            throw new SQLException( "The configuration element is missing the JAR name" );
+            throw new SystemException( "The configuration element is missing the JAR name" );
         className = _className;
         if ( className == null || className.trim().length() == 0 )
-            throw new SQLException( "The configuration element is missing the data source class name" );
-        txDomain = super.getTransactionDomain();
-        if ( txDomain == null )
-            throw new SQLException( "The configuration was not loaded from a transaction domain" );
-        txManager = (TyrexTransactionManager) txDomain.getTransactionManager();
+            throw new SystemException( "The configuration element is missing the data source class name" );
 
         // Obtain the JAR file and use the paths to create
         // a list of URLs for the class loader.
@@ -169,7 +164,7 @@ public class DataSourceConfig
             } else
                 urls = new URL[] { url };
         } catch ( IOException except ) {
-            throw new SQLException( except.toString() );
+            throw new SystemException( except.toString() );
         }
             
         // Create a new URL class loader for the data source.
@@ -180,65 +175,49 @@ public class DataSourceConfig
             cls = classLoader.loadClass( className );
             object = cls.newInstance();
         } catch ( Exception except ) {
-            throw new SQLException( except.toString() );
+            throw new SystemException( except.toString() );
         }
 
         if ( object instanceof DataSource )
             return object;
         else
-            throw new SQLException( "Data source is not of type DataSource, XADataSource or ConnectionPoolDataSource" );
+            throw new SystemException( "Data source is not of type DataSource, XADataSource or ConnectionPoolDataSource" );
 
     }
 
 
-    public DataSource getDataSource()
-        throws SQLException
+    public Resource createResource( TransactionDomain txDomain )
+        throws SystemException
     {
         String                  name;
-        Object                  factory;
-        TransactionDomain       txDomain;
+        Object                  resource;
         TyrexTransactionManager txManager;
 
         name = super.getName();
         if ( name == null || name.trim().length() == 0 )
-            throw new SQLException( "The configuration element is missing the resource manager name" );
-        txDomain = super.getTransactionDomain();
+            throw new SystemException( "The configuration element is missing the resource manager name" );
         if ( txDomain == null )
-            throw new SQLException( "The configuration was not loaded from a transaction domain" );
+            throw new SystemException( "The configuration was not loaded from a transaction domain" );
         txManager = (TyrexTransactionManager) txDomain.getTransactionManager();
 
-        factory = getFactory();
-        if ( factory == null )
-            throw new SQLException( "No data source configured" );
-        if ( factory instanceof ConnectionPool )
-            return (DataSource) factory;
-        if ( factory instanceof XADataSource ) {
-            factory = new ConnectionPool( name, super.getLimits(), (XADataSource) factory, null,
-                                          txManager, Category.getInstance( DataSourceManager.LOG4J_CATEGORY + "." + name ) );
-            setFactory( factory );
-            return (DataSource) factory;
-        } else if ( factory instanceof ConnectionPoolDataSource ) {
-            factory = new ConnectionPool( name, super.getLimits(), null, (ConnectionPoolDataSource) factory,
-                                          txManager, Category.getInstance( DataSourceManager.LOG4J_CATEGORY + "." + name ) );
-            setFactory( factory );
-            return (DataSource) factory;
-        } else if ( factory instanceof DataSource )
-            return (DataSource) factory;
-        else
-            throw new SQLException( "Data source is not of type DataSource, XADataSource or ConnectionPoolDataSource" );
-    }
-
-
-    public Resource getResource()
-        throws SQLException
-    {
-        DataSource dataSource;
-
-        dataSource = getDataSource();
-        if ( dataSource instanceof Resource )
-            return (Resource) dataSource;
-        else
-            return null;
+        resource = getFactory();
+        if ( resource == null )
+            throw new SystemException( "No data source configured" );
+        if ( resource instanceof Resource )
+            return (Resource) resource;
+        if ( resource instanceof XADataSource ) {
+            resource = new ConnectionPool( name, super.getLimits(), (XADataSource) resource, null,
+                                           txManager, Category.getInstance( Logger.resource.getName() + "." + name ) );
+            setFactory( resource );
+            return (Resource) resource;
+        } else if ( resource instanceof ConnectionPoolDataSource ) {
+            resource = new ConnectionPool( name, super.getLimits(), null, (ConnectionPoolDataSource) resource,
+                                           txManager, Category.getInstance( Logger.resource.getName() + "." + name ) );
+            setFactory( resource );
+            return (Resource) resource;
+            // !!!! Need to handle DataSource here
+        } else
+            throw new SystemException( "Data source is not of type DataSource, XADataSource or ConnectionPoolDataSource" );
     }
 
 
