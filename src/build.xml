@@ -266,7 +266,7 @@
     
     <mkdir dir="${build.doc}" />
     <style basedir="${source.doc}" destdir="${build.doc}"
-           style="style/exolab.xsl" processor="xslp">
+           style="style/exolab.xsl" processor="trax">
       <include name="**.xml" />
       <exclude name="style/**" />
       <exclude name="project.xml" />
@@ -275,6 +275,7 @@
     <copy todir="${build.doc}">
       <fileset dir="${source.doc}">
         <include name="document.dtd" />
+        <include name="license.txt" />
         <include name="images/**" />
         <include name="spec/**" />
       </fileset>
@@ -393,7 +394,7 @@
     <copydir src="${dist.dir}" dest="${build.dir}/${archive}"
              includes="${archive}-iiop.jar" />
     <copydir src="${lib.dir}" dest="${build.dir}/${archive}"
-             includes="jdbc-se2.0.jar,jndi.jar,jta_1.0.1.jar,jts.jar,ots-jts_1.0.jar,xerces-J_1.4.0.jar" />
+             includes="jdbc2_0-stdext.jar,jta_1.0.1.jar,castor-0.9.2.jar,ots-jts_1.0.jar,log4J_1.2.8.jar,sax_jbwsdp_1.1.jar,xercesImpl_jbwsdp_1.1.jar,jaas_1.0.01.jar,connector_1.0.jar"/>
     <copydir src="${source.schema}" dest="${build.dir}/${archive}/schema" />
     <copydir src="${build.doc}" dest="${build.dir}/${archive}/doc" />
     <deltree dir="${build.dir}/${archive}/doc/javadoc" />
