@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: XidUtilsTest.java,v 1.2 2001/09/08 05:05:31 mills Exp $
+ * $Id: XidUtilsTest.java,v 1.3 2001/09/08 07:44:57 mills Exp $
  */
 
 
@@ -56,7 +56,7 @@ import junit.framework.TestSuite;
 /**
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  */
 
 
@@ -129,6 +129,170 @@ public class XidUtilsTest extends TestCase
                != 0);
         assert("Uniqueness", globalId.toString().compareTo(branchId.toString())
                != 0);
+    }
+
+
+    /**
+     * <p>Bounds tests.  Ensure that illegal values result in the
+     * correct exceptions being thrown.</p>
+     *
+     * @result */
+
+    public void testBounds()
+        throws Exception
+    {
+        try
+        {
+            XidUtils.importXid(null);
+            fail("Expected an exception to have been raised.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            // Expected - java.lang.IllegalArgumentException.
+        }
+        try
+        {
+            XidUtils.newBranch(null);
+            fail("Expected an exception to have been raised.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            // Expected - java.lang.IllegalArgumentException.
+        }
+        try
+        {
+            XidUtils.isLocal(null);
+            fail("Expected an exception to have been raised.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            // Expected - java.lang.IllegalArgumentException.
+        }
+        try
+        {
+            XidUtils.isGlobal(null);
+            fail("Expected an exception to have been raised.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            // Expected - java.lang.IllegalArgumentException.
+        }
+        try
+        {
+            XidUtils.isBranch(null);
+            fail("Expected an exception to have been raised.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            // Expected - java.lang.IllegalArgumentException.
+        }
+        try
+        {
+            XidUtils.toString(null);
+            fail("Expected an exception to have been raised.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            // Expected - java.lang.IllegalArgumentException.
+        }
+        try
+        {
+            XidUtils.parse(null);
+            fail("Expected an exception to have been raised.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            // Expected - java.lang.IllegalArgumentException.
+        }
+        try
+        {
+            XidUtils.parse("sjfhjdhf");
+            fail("Expected an exception to have been raised.");
+        }
+        catch (InvalidXidException e)
+        {
+            // Expected - tyrex.tm.xid.InvalidXidException
+            // tyrex.util.idInvalidPrefix.
+        }
+        try
+        {
+            XidUtils.parse(XidUtils.XID_PREFIX + "b");
+            fail("Expected an exception to have been raised.");
+        }
+        catch (InvalidXidException e)
+        {
+            // Expected - tyrex.tm.xid.InvalidXidException
+            // tyrex.util.idInvalidOddDigits.
+        }
+        try
+        {
+            XidUtils.parse(XidUtils.XID_PREFIX + "ff-63");
+            fail("Expected an exception to have been raised.");
+        }
+        catch (InvalidXidException e)
+        {
+            // Expected - tyrex.tm.xid.InvalidXidException "Null
+            // transaction".
+        }
+        try
+        {
+            XidUtils.parse(XidUtils.XID_PREFIX);
+            fail("Expected an exception to have been raised.");
+        }
+        catch (InvalidXidException e)
+        {
+            // Expected - tyrex.tm.xid.InvalidXidException "Missing global".
+        }
+        try
+        {
+            XidUtils.parse(XidUtils.XID_PREFIX + "41-1a3bcbc51a3bcbc51a3bcbc51a3bcbc51a3bcbc51a3bcbc51a3bcbc51a3bcbc51a3bcbc51a3bcbc51a3bcbc51a3bcbc51a3bcbc51a3bcbc51a3bcbc51a3bcbc51a3bcbc51a3bcbc51a3bcbc51a3bcbc51a3bcbc51a3bcbc51a3bcbc51a3bcbc5-45");
+            fail("Expected an exception to have been raised.");
+        }
+        catch (InvalidXidException e)
+        {
+            // Expected - tyrex.tm.xid.InvalidXidException "exceeded
+            // maximum".
+        }
+        try
+        {
+            XidUtils.parse(XidUtils.XID_PREFIX + "41-1abcbc5");
+            fail("Expected an exception to have been raised.");
+        }
+        catch (InvalidXidException e)
+        {
+            // Expected - tyrex.tm.xid.InvalidXidException
+            // tyrex.util.idInvalidOddDigits.
+        }
+        try
+        {
+            XidUtils.parse(XidUtils.XID_PREFIX + "41-1a-3bcbc51a3bcbc51a3bcbc51a3bcbc51a3bcbc51a3bcbc51a3bcbc51a3bcbc51a3bcbc51a3bcbc51a3bcbc51a3bcbc51a3bcbc51a3bcbc51a3bcbc51a3bcbc51a3bcbc51a3bcbc51a3bcbc51a3bcbc51a3bcbc51a3bcbc51a3bcbc51a3bcbc5");
+            fail("Expected an exception to have been raised.");
+        }
+        catch (InvalidXidException e)
+        {
+            // Expected - tyrex.tm.xid.InvalidXidException "Branch
+            // qualifier exceeding maximum".
+        }
+        try
+        {
+            XidUtils.parse(XidUtils.XID_PREFIX + "41-1a-3bc");
+            fail("Expected an exception to have been raised.");
+        }
+        catch (InvalidXidException e)
+        {
+            // Expected - tyrex.tm.xid.InvalidXidException
+            // tyrex.util.idInvalidOddDigits.
+        }
+        try
+        {
+            XidUtils.parse(XidUtils.XID_PREFIX + "gh");
+            fail("Expected an exception to have been raised.");
+        }
+        catch (InvalidXidException e)
+        {
+            // Expected - tyrex.tm.xid.InvalidXidException
+            // tyrex.util.idInvalidCharacter.
+        }
     }
 
 
