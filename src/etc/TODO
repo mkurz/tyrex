@@ -4,8 +4,6 @@
 - Need to validate that both TransactionManager and TransactionFactory
   provide the proper timeout in seconds.
 
-- OTS requires other mechanism to bypass thread owner check
-
 - Implement shutdown for transaction domain and connection pool
 
 - Add ThreadPool implementation with ThreadPoolMetrics for statistics (including average
@@ -15,4 +13,3 @@
 
 - Have all asynch transactions complete in background thread of TransactionDomain
 
-- Revise src/doc/library.xml

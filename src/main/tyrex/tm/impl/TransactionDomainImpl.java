@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionDomainImpl.java,v 1.16 2001/03/16 03:38:28 arkin Exp $
+ * $Id: TransactionDomainImpl.java,v 1.17 2001/03/16 19:30:02 arkin Exp $
  */
 
 
@@ -96,7 +96,7 @@ import tyrex.util.Configuration;
  * Implementation of a transaction domain.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.16 $ $Date: 2001/03/16 03:38:28 $
+ * @version $Revision: 1.17 $ $Date: 2001/03/16 19:30:02 $
  */
 public class TransactionDomainImpl
     extends TransactionDomain
@@ -169,6 +169,14 @@ public class TransactionDomainImpl
      * if no CORBA ORB is used.
      */
     protected ORB                          _orb;
+
+
+    /**
+     * Field to access the branch qualifier length member variable of <tt>otid_t</tt>,
+     * which is named differently in the Sun JTS and OMG OTS IDLs.
+     */
+    private Field                          _bqualField;
+
 
 
     /**
@@ -662,7 +670,6 @@ public class TransactionDomainImpl
         long            timeout;
         otid_t          otid;
         Class           otidClass;
-        Field           bqualField;
         int             bqualLength;
 
         if ( pgContext == null )
@@ -675,25 +682,27 @@ public class TransactionDomainImpl
 
         otid = pgContext.current.otid;
         otidClass = otid.getClass();
-        try {
-            // Get the otid_t field for OTS
-            bqualField = otidClass.getField( "bqual_length" );
-        } catch ( NoSuchFieldException except ) {
+        if ( _bqualField == null ) {
             try {
-                // Get the otid_t field for JTS
-                bqualField = otidClass.getField( "bequal_length" );
-            } catch ( NoSuchFieldException except2 ) {
-                throw new NestedSystemException( except2 );
-            } catch ( SecurityException except2 ) { 
-                throw new NestedSystemException( except2 );
-            } 
-        } catch ( SecurityException except ) { 
-            throw new NestedSystemException( except );
+                // Get the otid_t field for OTS
+                _bqualField = otidClass.getField( "bqual_length" );
+            } catch ( NoSuchFieldException except ) {
+                try {
+                    // Get the otid_t field for JTS
+                    _bqualField = otidClass.getField( "bequal_length" );
+                } catch ( NoSuchFieldException except2 ) {
+                    throw new NestedSystemException( except2 );
+                } catch ( SecurityException except2 ) { 
+                    throw new NestedSystemException( except2 );
+                } 
+            } catch ( SecurityException except ) { 
+                throw new NestedSystemException( except );
+            }
         }
 
         // Get the bqual field length using introspection.
         try {
-            bqualLength = bqualField.getInt( otid );
+            bqualLength = _bqualField.getInt( otid );
         } catch ( IllegalAccessException except ) {
             throw new NestedSystemException( except );
         } catch ( IllegalArgumentException except ) {
