@@ -49,6 +49,8 @@ Version 0.9.8  Mar 2, 2000
 - Support for RMI transaction propagation has been removed from
   this release.
 
+- EnabledDataSource has been moved to tyrex.resource.jdbc.xa.
+
 - Now using Apache Log4J for error logging and informative messages.
 
 
