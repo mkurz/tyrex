@@ -46,53 +46,55 @@
 package tyrex.resource;
 
 
-import javax.transaction.SystemException;
 import tyrex.tm.TransactionDomain;
 
 
 /**
+ * Base class for a resource configuration. Different resource implementations
+ * extend this class with additional methods for configuring and creating a
+ * resource.
  * 
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.1 $
  */
-public abstract class BaseConfiguration
+public abstract class ResourceConfig
 {
 
 
     /**
      * The resource name.
      */
-    private String               _name;
+    protected String               _name;
 
 
     /**
      * The JAR file name.
      */
-    private String               _jar;
+    protected String               _jar;
 
 
     /**
      * Additional class paths for dependent files.
      */
-    private String               _paths;
+    protected String               _paths;
 
 
     /**
      * The connection pool resource limits.
      */
-    private ResourceLimits       _limits;
+    protected ResourceLimits       _limits;
 
 
     /**
      * True if two-phase commit is supported.
      */
-    private boolean              _twoPhase = true;
+    protected boolean              _twoPhase = true;
 
 
     /**
      * The configured resource manager factory.
      */
-    private Object               _factory;
+    protected Object               _factory;
 
 
     /**
@@ -215,24 +217,54 @@ public abstract class BaseConfiguration
     }
 
 
-    public Object getFactory()
-    {
-        return _factory;
-    }
-
-
+    /**
+     * Called to set the factory object after it has been configured.
+     *
+     * @param factory The factory object
+     */
     public void setFactory( Object factory )
     {
         _factory = factory;
     }
 
 
+    /**
+     * Called to return the factory object.
+     *
+     * @return The factory object
+     */
+    public Object getFactory()
+    {
+        return _factory;
+    }
+
+
+    /**
+     * Called to create a new factory object for the purpose of
+     * configuring it. This method will return a factory object that
+     * will be configured from the resource configuration file, before
+     * being added to this object with a subsequent call to {@link
+     * #setFactory setFactory}.
+     *
+     * @return The factory object (never null)
+     * @throws ResourceException An error occured while attempting
+     * to create a new factory
+     */
     public abstract Object createFactory()
-        throws Exception;
+        throws ResourceException;
 
 
+    /**
+     * Called to create a new resource from this resource configuration.
+     *
+     * @param txDomain The transaction domain in which the resource will
+     * be used
+     * @return The resource
+     * @throws ResourceException An error occured while attempting to
+     * create the resource
+     */
     public abstract Resource createResource( TransactionDomain txDomain )
-        throws SystemException;
+        throws ResourceException;
 
 
 }

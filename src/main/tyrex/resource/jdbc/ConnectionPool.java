@@ -66,7 +66,6 @@ import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 import javax.transaction.Status;
 import javax.transaction.RollbackException;
-import javax.transaction.SystemException;
 import javax.transaction.xa.Xid;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.XAException;
@@ -74,6 +73,7 @@ import tyrex.tm.TyrexTransactionManager;
 import tyrex.resource.ResourceLimits;
 import tyrex.resource.PoolMetrics;
 import tyrex.resource.Resource;
+import tyrex.resource.ResourceException;
 import tyrex.services.Clock;
 import tyrex.util.Primes;
 import tyrex.util.Configuration;
@@ -83,7 +83,7 @@ import tyrex.util.LoggerPrintWriter;
 /**
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  */
 final class ConnectionPool
     implements Resource, DataSource, ConnectionEventListener
@@ -169,7 +169,7 @@ final class ConnectionPool
                     XADataSource xaDataSource,
                     ConnectionPoolDataSource poolDataSource,
                     TyrexTransactionManager txManager, Category category )
-        throws SystemException
+        throws ResourceException
     {
         PooledConnection         pooled = null;
 
@@ -223,8 +223,8 @@ final class ConnectionPool
                 if ( pooled instanceof XAConnection )
                     _xaResource = ( (XAConnection) pooled ).getXAResource();
                 else
-                    throw new SystemException( "Connection of type " + pooled.getClass().getName() +
-                                               " does not support XA transactions" );
+                    throw new ResourceException( "Connection of type " + pooled.getClass().getName() +
+                                                 " does not support XA transactions" );
             } else
                 _xaResource = null;
             allocate( pooled, null, null, false );
@@ -236,7 +236,7 @@ final class ConnectionPool
                 allocate( pooled, null, null, false );
             }
         } catch ( SQLException except ) {
-            throw new SystemException( except.toString() );
+            throw new ResourceException( except.toString() );
         }
         _category.info( "Created connection pool for data source " + name +
                         " with initial size " + _limits.getInitial() +
@@ -256,6 +256,12 @@ final class ConnectionPool
     }
 
 
+    public Class getClientFactoryClass()
+    {
+        return DataSource.class;
+    }
+
+
     public String toString()
     {
         return _name;
@@ -265,6 +271,11 @@ final class ConnectionPool
     public XAResource getXAResource()
     {
         return _xaResource;
+    }
+
+
+    public void destroy()
+    {
     }
 
 

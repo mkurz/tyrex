@@ -47,7 +47,10 @@ package tyrex.resource;
 
 
 /**
- *
+ * Represents limits placed on a resource. The limits are read from
+ * the resource configuration file and apply to the connection pool.
+ * <p>
+ * The following XML elements are used to specify the resource limits:
  * <ul>
  * <li><tt>maximum</tt> The maximum number of connections supported,
  * zero if no limit is placed on the connection pool.</li>
@@ -63,15 +66,22 @@ package tyrex.resource;
  * </ul>
  * 
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.8 $
+ * @version $Revision: 1.9 $
  */
 public final class ResourceLimits
 {
 
 
+    /**
+     * Value representing no limit. Used for the maximum pool size and
+     * maximum retain time.
+     */
     public static final int  NO_LIMIT = 0;
 
 
+    /**
+     * Valued representing no timeout.
+     */
     public static final int  NO_TIMEOUT = 0;
 
 

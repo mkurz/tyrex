@@ -48,29 +48,56 @@ package tyrex.resource;
 
 import java.util.HashMap;
 import java.util.Iterator;
-import javax.transaction.SystemException;
 import tyrex.tm.TransactionDomain;
-import tyrex.resource.jdbc.DataSourceConfig;
 
 
 /**
+ * Represents a collection of installed resources. Resources are
+ * obtained from this collection by the name with which they were
+ * installed.
+ * <p>
+ * The method {@link #addConfiguration addConfiguration} is called
+ * to install a new resource configuration. The method {@link
+ * #setTransactionDomain setTransactionDomain} is called to set the
+ * transaction domain. The transaction domain is required to create
+ * a {@link Resource} object from a {@link ResourceConfig} object.
+ * <p>
+ * The deployment process uses the methods {@link #addConfiguration
+ * addConfiguration} and {@link #listConfigurations listConfigurations}
+ * to add and list resource configurations.
+ * <p>
+ * The application server uses the methods {@link #listResources} and
+ * {@link #getResource} to obtain resources and make the client
+ * connection factory available to the application.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  */
 public class Resources
 {
 
 
+    /**
+     * A collection of resource configurations using the name as key.
+     */
     private final HashMap      _config;
 
 
+    /**
+     * A collection of resources using the name as key.
+     */
     private final HashMap      _resources;
 
 
+    /**
+     * The transaction domain, may be null.
+     */
     private TransactionDomain  _txDomain;
 
 
+    /**
+     * Default constructor.
+     */
     public Resources()
     {
         _resources = new HashMap();
@@ -78,47 +105,46 @@ public class Resources
     }
 
 
-    public synchronized void addConfiguration( BaseConfiguration config )
-        throws SystemException
+    /**
+     * Sets the transaction domain for this resource list. This method must
+     * be called before calling {@link #getResource}.
+     *
+     * @param txDomain The transaction domain
+     */
+    public void setTransactionDomain( TransactionDomain txDomain )
+    {
+        _txDomain = txDomain;
+    }
+
+
+    /**
+     * Adds a resource configuration. Once added, the resource can be
+     * obtained with a subsequent call to {@link #getResource}.
+     *
+     * @param config The resource configuration
+     * @throws ResourceException A resource with this name already installed
+     */
+    public synchronized void addConfiguration( ResourceConfig config )
+        throws ResourceException
     {
         if ( config == null )
             throw new IllegalArgumentException( "Argument config is null" );
         if ( _config.containsKey( config.getName() ) )
-            throw new SystemException( "A resource with the name " + config.getName() + " already installed" );
+            throw new ResourceException( "A resource with the name " + config.getName() + " already installed" );
         _config.put( config.getName(), config );
     }
 
 
-    public synchronized Iterator getConfiguration()
+    /**
+     * Returns all the resource configurations. Returns an iterator
+     * of {@link ResourceConfig} objects that specify the configuration
+     * of each resource.
+     *
+     * @return All the resource configurations
+     */
+    public Iterator listConfigurations()
     {
-        return _config.entrySet().iterator();
-    }
-
-
-    public synchronized Resource[] createResources( TransactionDomain txDomain )
-        throws SystemException
-    {
-        Iterator          iterator;
-        String            name;
-        BaseConfiguration config;
-        Resource[]        resources;
-        Object            object;
-
-        if ( txDomain == null )
-            throw new IllegalArgumentException( "Argument txDomain is null" );
-        iterator = _config.keySet().iterator();
-        while ( iterator.hasNext() ) {
-            name = (String) iterator.next();
-            if ( ! _resources.containsKey( name ) ) {
-                config = (BaseConfiguration) _config.get( name );
-                _resources.put( name, config.createResource( txDomain ) );
-            }
-        }
-        resources = new Resource[ _resources.size() ];
-        iterator = _resources.values().iterator();
-        for ( int i = 0 ; i < resources.length ; ++i )
-            resources[ i ] = (Resource) iterator.next();
-        return resources;
+        return _config.values().iterator();
     }
 
 
@@ -145,24 +171,63 @@ public class Resources
      */
     public Iterator listResources()
     {
-        return _resources.keySet().iterator();
+        return _config.keySet().iterator();
     }
 
 
     /**
-     * Returns the named resource.
+     * Returns the named resource. The resource must have been installed
+     * with a previous call to {@link #addConfiguration addConfiguration}
+     * and the transaction domain must have been set up for this method
+     * to succeed. It is possible that this method will not be able to
+     * create the specified resource.
      *
      * @param name The resource name
      * @return The resource, null if no such resource installed
+     * @throws ResourceException An error occured while attempting
+     * to create this resource
      */
-    public Resource getResource( String name )
+    public synchronized Resource getResource( String name )
+        throws ResourceException
+    {
+        ResourceConfig    config;
+        Resource          resource;
+        TransactionDomain txDomain;
+
+        if ( name == null )
+            throw new IllegalArgumentException( "Argument name is null" );
+        resource = (Resource) _resources.get( name );
+        if ( resource == null ) {
+            config = (ResourceConfig) _config.get( name );
+            if ( config == null )
+                return null;
+            txDomain = _txDomain;
+            if ( txDomain == null )
+                throw new ResourceException( "Must call setTransactionDomain() before calling getResource()" );
+            resource = config.createResource( txDomain );
+            _resources.put( name, resource );
+        }
+        return resource;
+    }
+
+
+    /**
+     * Removes a resource. After return from this method, the resource
+     * is no longer available and its client connection factory is no
+     * longer useable.
+     *
+     * @param name The resource name
+     */
+    public synchronized void removeResource( String name )
     {
         Resource resource;
 
         if ( name == null )
             throw new IllegalArgumentException( "Argument name is null" );
-        resource = (Resource) _resources.get( name );
-        return resource;
+        _config.remove( name );
+        resource = (Resource) _resources.remove( name );
+        if ( resource != null )
+            resource.destroy();
     }
 
     

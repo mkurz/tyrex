@@ -40,76 +40,60 @@
  *
  * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
  *
+ * $Id: ResourceException.java,v 1.1 2001/03/03 04:30:53 arkin Exp $
  */
 
 
 package tyrex.resource;
 
 
-import javax.transaction.xa.XAResource;
+import tyrex.util.NestedException;
 
 
 /**
- * Represents an installed resource.
- * <p>
- * An installed resource has a client factory that is made available to
- * the application, typically for JNDI, allowing it to create new
- * connections. The client factory type depends on the type of resource
- * in use.
- * <p>
- * An installed resource has a connection pool that manages utilization
- * of the resource. The connection pool metrics can be obtained from
- * {@link #getPoolMetrics}.
+ * A general exception associated with resource management.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.1 $
  */
-public interface Resource
+public class ResourceException
+    extends NestedException
 {
 
 
     /**
-     * Returns the pool metrics. The pool metrics object can be used to
-     * collect statistical information about the connection pool.
+     * Construct a new exception with the specified message.
      *
-     * @return The pool metrics
+     * @param message The message text
      */
-    public abstract PoolMetrics getPoolMetrics();
+    public ResourceException( String message )
+    {
+        super( message );
+    }
 
 
     /**
-     * Returns the client connection factory. The client connection factory
-     * is enlisted in the JNDI environment naming context for access by
-     * the application.
+     * Construct a new exception based on an underlying exception.
      *
-     * @return The client connection factory
+     * @param except The underlying exception
      */
-    public abstract Object getClientFactory();
+    public ResourceException( Exception except )
+    {
+        super( except );
+    }
 
 
     /**
-     * Returns the client connection factory class. This the class or
-     * interface that a client connection factory would implement.
+     * Construct a new exception based on an underlying exception.
      *
-     * @return The client connection factory class
+     * @param message The message text
+     * @param except The underlying exception
      */
-    public abstract Class getClientFactoryClass();
+    public ResourceException( String message, Exception except )
+    {
+        super( message, except );
+    }
 
 
-    /**
-     * Returns the XA resource interface. The XA resource is used to manage
-     * transaction enlistment and recovery of the resource. This method returns
-     * null if the resource does not support XA transactions.
-     *
-     * @return The XA resource interface
-     */
-    public abstract XAResource getXAResource();
-
-
-    /**
-     * Called to destory the resource once it is no longer in use.
-     */
-    public abstract void destroy();
-
-    
 }
+

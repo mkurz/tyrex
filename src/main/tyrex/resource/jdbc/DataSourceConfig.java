@@ -55,21 +55,23 @@ import javax.sql.DataSource;
 import javax.sql.XADataSource;
 import javax.sql.ConnectionPoolDataSource;
 import org.apache.log4j.Category;
-import javax.transaction.SystemException;
+import javax.transaction.xa.XAResource;
 import tyrex.tm.TransactionDomain;
 import tyrex.tm.TyrexTransactionManager;
-import tyrex.resource.BaseConfiguration;
+import tyrex.resource.ResourceConfig;
 import tyrex.resource.Resource;
+import tyrex.resource.ResourceException;
+import tyrex.resource.PoolMetrics;
 import tyrex.util.Logger;
 
 
 /**
  * 
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  */
 public class DataSourceConfig
-    extends BaseConfiguration
+    extends ResourceConfig
 {
 
 
@@ -77,6 +79,12 @@ public class DataSourceConfig
      * The data source class.
      */
     private String                  _className;
+
+
+    /**
+     * The resource, if created.
+     */
+    private Resource                _resource;
 
 
     /**
@@ -104,11 +112,11 @@ public class DataSourceConfig
 
 
     public Object createFactory()
-        throws SystemException
+        throws ResourceException
     {
         try {
             return createFactory_();
-        } catch ( SystemException except ) {
+        } catch ( ResourceException except ) {
             Logger.resource.error( "Error", except );
             throw except;
         }
@@ -116,7 +124,7 @@ public class DataSourceConfig
 
 
     public Object createFactory_()
-        throws SystemException
+        throws ResourceException
     {
         String                  name;
         String                  jarName;
@@ -130,15 +138,15 @@ public class DataSourceConfig
         String                  paths;
         ClassLoader             classLoader;
 
-        name = super.getName();
+        name = _name;
         if ( name == null || name.trim().length() == 0 )
-            throw new SystemException( "The configuration element is missing the resource manager name" );
-        jarName = super.getJAR();
+            throw new ResourceException( "The configuration element is missing the resource manager name" );
+        jarName = _jar;
         if ( jarName == null || jarName.trim().length() == 0 )
-            throw new SystemException( "The configuration element is missing the JAR name" );
+            throw new ResourceException( "The configuration element is missing the JAR name" );
         className = _className;
         if ( className == null || className.trim().length() == 0 )
-            throw new SystemException( "The configuration element is missing the data source class name" );
+            throw new ResourceException( "The configuration element is missing the data source class name" );
 
         // Obtain the JAR file and use the paths to create
         // a list of URLs for the class loader.
@@ -148,7 +156,7 @@ public class DataSourceConfig
                 url = file.toURL();
             else
                 url = new URL( jarName );
-            paths = super.getPaths();
+            paths = _paths;
             if ( paths != null && paths.length() > 0 ) {
                 tokenizer = new StringTokenizer( paths, ":; " );
                 urls = new URL[ tokenizer.countTokens() + 1 ];
@@ -164,7 +172,7 @@ public class DataSourceConfig
             } else
                 urls = new URL[] { url };
         } catch ( IOException except ) {
-            throw new SystemException( except.toString() );
+            throw new ResourceException( except );
         }
             
         // Create a new URL class loader for the data source.
@@ -175,49 +183,100 @@ public class DataSourceConfig
             cls = classLoader.loadClass( className );
             object = cls.newInstance();
         } catch ( Exception except ) {
-            throw new SystemException( except.toString() );
+            throw new ResourceException( except );
         }
 
         if ( object instanceof DataSource )
             return object;
         else
-            throw new SystemException( "Data source is not of type DataSource, XADataSource or ConnectionPoolDataSource" );
+            throw new ResourceException( "Data source is not of type DataSource, XADataSource or ConnectionPoolDataSource" );
 
     }
 
 
-    public Resource createResource( TransactionDomain txDomain )
-        throws SystemException
+    public synchronized Resource createResource( TransactionDomain txDomain )
+        throws ResourceException
     {
         String                  name;
-        Object                  resource;
+        Object                  factory;
         TyrexTransactionManager txManager;
 
-        name = super.getName();
+        name = _name;
         if ( name == null || name.trim().length() == 0 )
-            throw new SystemException( "The configuration element is missing the resource manager name" );
+            throw new ResourceException( "The configuration element is missing the resource manager name" );
         if ( txDomain == null )
-            throw new SystemException( "The configuration was not loaded from a transaction domain" );
+            throw new ResourceException( "The configuration was not loaded from a transaction domain" );
         txManager = (TyrexTransactionManager) txDomain.getTransactionManager();
 
-        resource = getFactory();
-        if ( resource == null )
-            throw new SystemException( "No data source configured" );
-        if ( resource instanceof Resource )
-            return (Resource) resource;
-        if ( resource instanceof XADataSource ) {
-            resource = new ConnectionPool( name, super.getLimits(), (XADataSource) resource, null,
+        if ( _resource != null )
+            return _resource;
+        factory = _factory;
+        if ( factory == null )
+            throw new ResourceException( "No data source configured" );
+        if ( factory instanceof XADataSource ) {
+            _resource = new ConnectionPool( name, super.getLimits(), (XADataSource) factory, null,
                                            txManager, Category.getInstance( Logger.resource.getName() + "." + name ) );
-            setFactory( resource );
-            return (Resource) resource;
-        } else if ( resource instanceof ConnectionPoolDataSource ) {
-            resource = new ConnectionPool( name, super.getLimits(), null, (ConnectionPoolDataSource) resource,
+            return _resource;
+        } else if ( factory instanceof ConnectionPoolDataSource ) {
+            _resource = new ConnectionPool( name, super.getLimits(), null, (ConnectionPoolDataSource) factory,
                                            txManager, Category.getInstance( Logger.resource.getName() + "." + name ) );
-            setFactory( resource );
-            return (Resource) resource;
-            // !!!! Need to handle DataSource here
+            return _resource;
+        } else if ( factory instanceof DataSource ) {
+            _resource = new DataSourceResource( (DataSource) factory );
+            return _resource;
         } else
-            throw new SystemException( "Data source is not of type DataSource, XADataSource or ConnectionPoolDataSource" );
+            throw new ResourceException( "Data source is not of type DataSource, XADataSource or ConnectionPoolDataSource" );
+    }
+
+
+    
+    private static final class DataSourceResource
+        implements Resource
+    {
+
+
+        private final PoolMetrics  _metrics;
+
+
+        private final DataSource   _dataSource;
+
+
+        DataSourceResource( DataSource dataSource )
+        {
+            _metrics = new PoolMetrics();
+            _dataSource = dataSource;
+        }
+
+
+        public PoolMetrics getPoolMetrics()
+        {
+            return _metrics;
+        }
+
+
+        public Object getClientFactory()
+        {
+            return _dataSource;
+        }
+
+
+        public Class getClientFactoryClass()
+        {
+            return DataSource.class;
+        }
+
+
+        public XAResource getXAResource()
+        {
+            return null;
+        }
+
+
+        public void destroy()
+        {
+        }
+
+
     }
 
 
