@@ -40,7 +40,7 @@
  *
  * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionDomainImpl.java,v 1.1 2001/02/27 00:37:52 arkin Exp $
+ * $Id: TransactionDomainImpl.java,v 1.2 2001/03/02 03:24:27 arkin Exp $
  */
 
 
@@ -74,11 +74,6 @@ import tyrex.tm.TransactionJournal;
 import tyrex.tm.TransactionTimeoutException;
 import tyrex.tm.xid.BaseXid;
 import tyrex.tm.xid.XidUtils;
-import tyrex.resource.ResourcePool;
-import tyrex.resource.ResourcePoolManager;
-import tyrex.resource.ResourcePoolManagerImpl;
-import tyrex.resource.ResourceLimits;
-import tyrex.resource.ResourceTimeoutException;
 import tyrex.server.RemoteTransactionServer;
 import tyrex.services.Clock;
 import tyrex.util.Messages;
@@ -94,11 +89,11 @@ import tyrex.util.Configuration;
  * domain.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2001/02/27 00:37:52 $
+ * @version $Revision: 1.2 $ $Date: 2001/03/02 03:24:27 $
  */
 public class TransactionDomainImpl
     extends TransactionDomain
-    implements ResourcePool, Runnable
+    implements Runnable
 {
 
 
@@ -170,19 +165,6 @@ public class TransactionDomainImpl
 
 
     /**
-     * Resource pool managed it used to limit the number of open
-     * transactions.
-     */
-    private final ResourcePoolManager      _poolManager;
-    
-
-    /**
-     * The resource limits associated with the pool manager.
-     */
-    private final ResourceLimits           _limits;
-
-
-    /**
      * The default timeout for all transactions, in seconds.
      */
     private int                            _txTimeout = DEFAULT_TIMEOUT;
@@ -233,6 +215,12 @@ public class TransactionDomainImpl
 
 
     /**
+     * The maximum number of concurrent transactions supported.
+     */
+    private final int                      _maximum;
+
+
+    /**
      * Constructs a new transaction domain.
      *
      * @param domainName The transaction domain name
@@ -245,14 +233,12 @@ public class TransactionDomainImpl
         if ( domainName == null || domainName.trim().length() == 0 )
             throw new IllegalArgumentException( "Argument domainName is null or an empty string" );
 	_domainName = domainName;
-	_poolManager = new ResourcePoolManagerImpl( config == null ? null : config.getResourceLimits() );
-	_poolManager.manage( this, false );
-	_limits = _poolManager.getResourceLimits();
 	_interceptors = new TransactionInterceptor[ 0 ];
 	_txManager = new TransactionManagerImpl( this );
 	_userTx = new UserTransactionImpl( _txManager );
         _txFactory = new TransactionFactoryImpl( this );
         _orb = ( config == null ? null : config.getORB() );
+        _maximum = ( config == null ? 0 : config.getMaximum() );
         _category = Category.getInstance( "tyrex." + _domainName );
         _hashTable = new TransactionImpl[ TABLE_SIZE ];
 
@@ -295,12 +281,6 @@ public class TransactionDomainImpl
         return _txFactory;
     }
 
-
-    public ResourceLimits getResourceLimits()
-    {
-	return _limits;
-    }
-    
 
     public void setThreadTerminate( boolean terminate )
     {
@@ -482,10 +462,9 @@ public class TransactionDomainImpl
             _hashTable[ index ] = entry._nextEntry;
             terminateThreads( entry );
             --_txCount;
-            // We notify the pool managed the a resource has been
-            // released so threads waiting to create a new transaction
-            // might proceed.
-            _poolManager.released();
+            // We notify any blocking thread that it's able to create
+            // a new transaction.
+            notify();
             return;
         } else {
             next = entry._nextEntry;
@@ -494,10 +473,9 @@ public class TransactionDomainImpl
                     entry._nextEntry = next._nextEntry;
                     terminateThreads( next );
                     --_txCount;
-                        // We notify the pool managed the a resource has been
-                    // released so threads waiting to create a new transaction
-                    // might proceed.
-                    _poolManager.released();
+                    // We notify any blocking thread that it's able to create
+                    // a new transaction.
+                    notify();
                     return;
                 }
                 entry = next;
@@ -612,34 +590,23 @@ public class TransactionDomainImpl
     	if ( parent != null )
     	    return newTx;
     
-    	synchronized ( _poolManager ) {
-    	    // Ask the pool manager whether we can create this new
-    	    // transaction before we register it. (A non-registered
-    	    // transaction does not consume resources)
-    	    // At this point we might get a SystemException.
-    	    try {
-                _poolManager.canCreateNew();
-    	    } catch ( ResourceTimeoutException except ) {
-                throw new SystemException( Messages.message( "tyrex.server.txCreateExceedsQuota" ) );
-    	    }
-    	    for ( int i = 0 ; i < _interceptors.length ; ++i ) {
-    		try {
-    		    _interceptors[ i ].begin( xid );
-    		} catch ( Throwable thrw ) {
-                    _category.error( "Interceptor " + _interceptors[ i ] + " reported error", thrw );
-    		}
-    	    }
-            
-    	    // If we were requested to activate the transaction,
-    	    // ask the pool manager whether we can activate it,
-    	    // then associate it with the current thread.
-    	    if ( thread != null ) {
-                try {
-                    _poolManager.canActivate();
-                } catch ( ResourceTimeoutException except ) {
-                    throw new SystemException( Messages.message( "tyrex.server.txActiveExceedsQuota" ) );
-                }
+        synchronized ( this ) {
+            // Block if exceeded maximum number of transactions allowed.
+            // At this point we might get a SystemException.
+            canCreateNew();
 
+            for ( int i = 0 ; i < _interceptors.length ; ++i ) {
+                try {
+                    _interceptors[ i ].begin( xid );
+                } catch ( Throwable thrw ) {
+                    _category.error( "Interceptor " + _interceptors[ i ] + " reported error", thrw );
+                }
+            }
+        
+            // If we were requested to activate the transaction,
+            // ask the pool manager whether we can activate it,
+            // then associate it with the current thread.
+            if ( thread != null ) {
                 for ( int i = _interceptors.length ; i-- > 0 ; ) {
                     try {
                         _interceptors[ i ].resume( xid, thread );
@@ -658,11 +625,9 @@ public class TransactionDomainImpl
                     }
                 }
                 if ( thread != null )
-    		    newTx._threads = new Thread[] { thread };
-    	    }
-        }
-
-        synchronized ( this ) {
+                    newTx._threads = new Thread[] { thread };
+            }
+            
             index = ( hashCode & 0x7FFFFFFF ) % _hashTable.length;
             entry = _hashTable[ index ];
             if ( entry == null )
@@ -677,15 +642,17 @@ public class TransactionDomainImpl
                 }
                 entry._nextEntry = newTx;
             }
-            // If this transaction times out before any other transaction,
-            // need to wakeup the background thread so it can update its
-            // transaction timeout. Background thread is synchronizing on
-            // hash table.
+            ++_txCount;
+        }
+        
+        // If this transaction times out before any other transaction,
+        // need to wakeup the background thread so it can update its
+        // transaction timeout.
+        synchronized ( _background ) {
             if ( _nextTimeout == 0 || _nextTimeout > timeout ) {
                 _nextTimeout = timeout;
-                notify();
+                _background.notify();
             }
-            ++_txCount;
         }
     	return newTx;
     }
@@ -737,26 +704,19 @@ public class TransactionDomainImpl
         hashCode = xid.hashCode();
         timeout = newTx._timeout;
 
-	synchronized ( _poolManager ) {
-	    // Ask the pool manager whether we can create this new
-	    // transaction before we register it. (A non-registered
-	    // transaction does not consume resources)
-	    // At this point we might get a SystemException.
-	    try {
-		_poolManager.canCreateNew();
-	    } catch ( ResourceTimeoutException except ) {
-		throw new SystemException( Messages.message( "tyrex.server.txCreateExceedsQuota" ) );
-	    }
-    	    for ( int i = 0 ; i < _interceptors.length ; ++i ) {
-    		try {
-    		    _interceptors[ i ].begin( xid );
-    		} catch ( Throwable thrw ) {
-                    _category.error( "Interceptor " + _interceptors[ i ] + " reported error", thrw );
-    		}
-    	    }
-	}
-    
         synchronized ( this ) {
+            // Block if exceeded maximum number of transactions allowed.
+            // At this point we might get a SystemException.
+            canCreateNew();
+            
+            for ( int i = 0 ; i < _interceptors.length ; ++i ) {
+                try {
+                    _interceptors[ i ].begin( xid );
+                } catch ( Throwable thrw ) {
+                    _category.error( "Interceptor " + _interceptors[ i ] + " reported error", thrw );
+                }
+            }
+        
             index = ( hashCode & 0x7FFFFFFF ) % _hashTable.length;
             entry = _hashTable[ index ];
             if ( entry == null )
@@ -771,15 +731,17 @@ public class TransactionDomainImpl
                 }
                 entry._nextEntry = newTx;
             }
-            // If this transaction times out before any other transaction,
-            // need to wakeup the background thread so it can update its
-            // transaction timeout. Background thread is synchronizing on
-            // hash table.
+            ++_txCount;
+        }
+
+        // If this transaction times out before any other transaction,
+        // need to wakeup the background thread so it can update its
+        // transaction timeout.
+        synchronized ( _background ) {
             if ( _nextTimeout == 0 || _nextTimeout > timeout ) {
                 _nextTimeout = timeout;
-                notify();
+                _background.notify();
             }
-            ++_txCount;
         }
     	return newTx;
     }
@@ -833,30 +795,29 @@ public class TransactionDomainImpl
                     return;
             }
             --_txCount;
-        }
 
-        // If we reach this point, entry points to the transaction we
-        // just removed.
-        threads = entry._threads;
-        if ( threads != null && threads.length > 0 ) {
-            for ( int i = threads.length ; i-- > 0 ; ) {
-                if ( threads[ i ]  != null ) {
-                    for ( int j = _interceptors.length ; j-- > 0 ; ) {
-                        try {
-                            _interceptors[ j ].suspend( xid, threads[ i ] );
-                        } catch ( Throwable thrw ) {
-                            _category.error( "Interceptor " + _interceptors[ i ] + " reported error", thrw );
+            // If we reach this point, entry points to the transaction we
+            // just removed.
+            threads = entry._threads;
+            if ( threads != null && threads.length > 0 ) {
+                for ( int i = threads.length ; i-- > 0 ; ) {
+                    if ( threads[ i ]  != null ) {
+                        for ( int j = _interceptors.length ; j-- > 0 ; ) {
+                            try {
+                                _interceptors[ j ].suspend( xid, threads[ i ] );
+                            } catch ( Throwable thrw ) {
+                                _category.error( "Interceptor " + _interceptors[ i ] + " reported error", thrw );
+                            }
                         }
                     }
                 }
+                entry._threads = null;
             }
-            entry._threads = null;
-        }
 
-	// We notify the pool managed the a resource has been
-	// released so threads waiting to create a new transaction
-	// might proceed.
-	_poolManager.released();
+            // We notify any blocking thread that it's able to create
+            // a new transaction.
+            notify();
+        }
     }
 
 
@@ -886,7 +847,7 @@ public class TransactionDomainImpl
         // Synchronization is required to block background thread from
         // attempting to time out the transaction while we process it,
         // and so we can notify it of the next timeout.
-        synchronized ( this ) {
+        synchronized ( _background ) {
             // Timeout is never set back.
             newTimeout = tx._started + timeout * 1000;
             if ( newTimeout > tx._timeout ) {
@@ -898,7 +859,7 @@ public class TransactionDomainImpl
                 // hash table.
                 if ( _nextTimeout == 0 || _nextTimeout > newTimeout ) {
                     _nextTimeout = newTimeout;
-                    notify();
+                    _background.notify();
                 }
             }
 	}
@@ -923,16 +884,12 @@ public class TransactionDomainImpl
      * the transaction with the thread. This will allow us to terminate
      * the thread when the transaction times out. If the transaction
      * has not been associated with any thread before, it now becomes
-     * active. We ask the pool manager whether we can activate the
-     * transaction and if a timeout occurs, we throw a system exception.
+     * active.
      *
      * @param tx The transaction
      * @param thread The thread to associate with the transaction
-     * @throws SystemException The pool manager does not allow us to
-     *  active the transaction
      */
     protected void enlistThread( TransactionImpl tx, Thread thread )
-        throws SystemException
     {
         Xid       xid;
         Thread[]  threads;
@@ -965,9 +922,6 @@ public class TransactionDomainImpl
                 
             threads = tx._threads;
             if ( threads == null ) {
-                // We ask the pool manager whether we can activate
-                // another transaction. If we cannot, a timeout
-                // exception will cause us to throw a system exception.
                 tx._threads = new Thread[] { thread };
             } else {
                 // Make sure we do not associate the same thread twice.
@@ -1129,12 +1083,46 @@ public class TransactionDomainImpl
 
 
     /**
+     * Called to determine whether a new transaction can be created.
+     * If we reached the maximum number of transactions allowed, this
+     * method will block until we are able to create a new transaction,
+     * or a timeout occured. This method must be called from a
+     * synchronization block.
+     *
+     * @throws SystemException Timeout occured waiting to create a new
+     * transaction
+     */
+    private void canCreateNew()
+        throws SystemException
+    {
+        long clock;
+        long timeout;
+
+        if ( _maximum == 0 || _txCount < _maximum )
+            return;
+        clock = Clock.clock();
+        timeout = clock + 6000;
+        try {
+            while ( clock < timeout ) {
+                wait( timeout - clock );
+                if ( _maximum == 0 || _txCount < _maximum )
+                    return;
+                clock = Clock.clock();
+            }
+        } catch ( InterruptedException except ) { }
+        throw new SystemException( Messages.message( "tyrex.server.txCreateExceedsQuota" ) );
+    }
+
+
+    /**
      * Background thread that looks for transactions that have timed
      * out and terminates them. Will be running in a low priority for
      * as long as the server is active, monitoring the transaction
      * table and terminating threads in progress.
      * <p>
-     * This thread is terminated by interrupting it.
+     * This thread is terminated by interrupting it. This thread
+     * synchronizes on itself (thread instance) to be notified of
+     * a changed in the next timeout.
      */
     public void run()
     {
@@ -1148,49 +1136,54 @@ public class TransactionDomainImpl
                 // We synchronize to be notified when the timeout of any
                 // transaction changes on the hashtable object, and we will
                 // need to remove records from the hashtable.
-                synchronized ( this ) {
+                synchronized ( _background ) {
                     // No transaction to time out, wait forever. Otherwise,
                     // wait until the next transaction times out.
                     if ( _nextTimeout == 0 ) {
-                        wait();
+                        _background.wait();
                         clock = Clock.clock();
                     } else {
                         clock = Clock.clock();
                         if ( _nextTimeout > clock ) {
-                            wait( _nextTimeout - clock );
+                            _background.wait( _nextTimeout - clock );
                             clock = Clock.clock();
                         }
-                    }
 
-                    if ( _nextTimeout <= clock ) {
-                        nextTimeout = 0;
-                        for ( int i = _hashTable.length ; i-- > 0 ; ) {
-                            entry = _hashTable[ i ];
-                            while ( entry != null ) {
-                                if ( entry._timeout <= clock ) {
-                                    _hashTable[ i ] = entry._nextEntry;
-                                    terminateThreads( entry );
+                        // We synchronize to be able to traverse the transaction
+                        // hash table. At this point we synchronize on both
+                        // background thread and domain. !!! May need to reconsider.
+                        synchronized ( this ) {
+                            if ( _nextTimeout <= clock ) {
+                                nextTimeout = 0;
+                                for ( int i = _hashTable.length ; i-- > 0 ; ) {
                                     entry = _hashTable[ i ];
-                                } else if ( nextTimeout == 0 || nextTimeout > entry._timeout )
-                                    nextTimeout = entry._timeout;
-                            }
-                            if ( entry != null ) {
-                                next = entry._nextEntry;
-                                while ( next != null ) {
-                                    if ( entry._timeout <= clock ) {
-                                        entry._nextEntry = next._nextEntry;
-                                        terminateThreads( next );
-                                        next = next._nextEntry;
-                                    } else {
-                                        if ( nextTimeout == 0 || nextTimeout > next._timeout )
-                                            nextTimeout = next._timeout;
-                                        entry = next;
-                                        next = next._nextEntry;
+                                    while ( entry != null ) {
+                                        if ( entry._timeout <= clock ) {
+                                            _hashTable[ i ] = entry._nextEntry;
+                                            terminateThreads( entry );
+                                            entry = _hashTable[ i ];
+                                        } else if ( nextTimeout == 0 || nextTimeout > entry._timeout )
+                                            nextTimeout = entry._timeout;
+                                    }
+                                    if ( entry != null ) {
+                                        next = entry._nextEntry;
+                                        while ( next != null ) {
+                                            if ( entry._timeout <= clock ) {
+                                                entry._nextEntry = next._nextEntry;
+                                                terminateThreads( next );
+                                                next = next._nextEntry;
+                                            } else {
+                                                if ( nextTimeout == 0 || nextTimeout > next._timeout )
+                                                    nextTimeout = next._timeout;
+                                                entry = next;
+                                                next = next._nextEntry;
+                                            }
+                                        }
                                     }
                                 }
+                                _nextTimeout = nextTimeout;
                             }
                         }
-                        _nextTimeout = nextTimeout;
                     }
 		}
 	    } catch ( InterruptedException except ) {
@@ -1415,29 +1408,6 @@ public class TransactionDomainImpl
                     }
                 }
         }
-    }
-
-
-    //----------------------------------------------------------------------
-    // ResourcePool methods
-    //----------------------------------------------------------------------
-
-
-    public int getActiveCount()
-    {
-	return _txCount;
-    }
-
-
-    public int getPooledCount()
-    {
-	return 0; // There is no transaction pool
-    }
-
-
-    public void releasePooled( int count )
-    {
-	// Do nothing. There is no transaction pool
     }
 
 

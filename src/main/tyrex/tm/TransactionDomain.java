@@ -40,7 +40,7 @@
  *
  * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionDomain.java,v 1.6 2001/03/01 20:10:19 arkin Exp $
+ * $Id: TransactionDomain.java,v 1.7 2001/03/02 03:24:27 arkin Exp $
  */
 
 
@@ -57,7 +57,6 @@ import javax.transaction.UserTransaction;
 import javax.transaction.SystemException;
 import javax.transaction.InvalidTransactionException;
 import javax.transaction.xa.Xid;
-import tyrex.resource.ResourceLimits;
 import tyrex.tm.impl.TransactionDomainImpl;
 
 
@@ -70,7 +69,7 @@ import tyrex.tm.impl.TransactionDomainImpl;
  * domain.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.6 $ $Date: 2001/03/01 20:10:19 $
+ * @version $Revision: 1.7 $ $Date: 2001/03/02 03:24:27 $
  */
 public abstract class TransactionDomain
 {
@@ -172,18 +171,6 @@ public abstract class TransactionDomain
      */
     public abstract TransactionFactory getTransactionFactory();
 
-
-    /**
-     * Returns the resource limits associated with this transaction domain.
-     * The resource limits dictate the maximum number of transactions that
-     * can be opened at once, the default timeout for each transaction,
-     * and other resource properties.
-     *
-     * @return The resource limits assocaited with this transaction domain
-
-     */
-    public abstract ResourceLimits getResourceLimits();
-    
 
     /**
      * Sets the default timeout for all transactions created from this

@@ -61,8 +61,7 @@
            debug="off"
            excludes="tyrex/corba/*"
            includes="tyrex/tm/**,tyrex/util/**,tyrex/services/*,
-                     tyrex/resource/**,tyrex/conf/**,tyrex/naming/**,
-                     tyrex/jdbc/**"
+                     tyrex/resource/**,tyrex/naming/**"
            deprecation="${deprecation}">
     </javac>
     

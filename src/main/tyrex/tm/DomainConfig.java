@@ -54,9 +54,9 @@ import tyrex.resource.ResourceLimits;
 /**
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2001/02/27 00:37:09 $
+ * @version $Revision: 1.2 $ $Date: 2001/03/02 03:24:27 $
  */
-public class DomainConfig
+public final  class DomainConfig
 {
 
 
@@ -69,7 +69,10 @@ public class DomainConfig
     private XAResource[]        _resources;
 
 
-    private ResourceLimits      _limits;
+    /**
+     * The maximum number of transactions allowed.
+     */
+    private int                  _maximum;
 
 
     public void setORB( ORB orb )
@@ -108,15 +111,17 @@ public class DomainConfig
     }
 
 
-    public ResourceLimits getResourceLimits()
+    public int getMaximum()
     {
-        return _limits;
+        return _maximum;
     }
 
 
-    public void setResourceLimits( ResourceLimits limits )
+    public void setMaximum( int maximum )
     {
-        _limits = limits;
+        if ( maximum < 0 )
+            maximum = 0;
+        _maximum = maximum;
     }
 
 
