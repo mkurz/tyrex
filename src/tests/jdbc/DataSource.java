@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: DataSource.java,v 1.2 2000/09/30 02:21:41 mohammed Exp $
+ * $Id: DataSource.java,v 1.3 2000/09/30 02:25:38 mohammed Exp $
  */
 
 
@@ -405,7 +405,7 @@ public class DataSource
                 try {
                     final XAConnection xaConnection = ds.getXAConnection();
 
-                    for (; i < 10; i++) {
+                    for (; i < 5; i++) {
                         result[0] = Boolean.FALSE;
                         thread = new Thread(new Runnable()
                             {

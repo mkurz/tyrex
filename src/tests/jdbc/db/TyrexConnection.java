@@ -50,7 +50,7 @@ import java.util.*;
 /**
  * The tyrex connection
  */
-final class TyrexConnection 
+public final class TyrexConnection 
     implements Connection 
 {
     /**
@@ -76,6 +76,33 @@ final class TyrexConnection
      */
     private boolean _readOnly = false;
 
+
+    /**
+     * Transaction lock 1
+     * <p>
+     * Commit will get _lock1 and then _lock2
+     * Rollback wil get _lock2 and then _lock1
+     */
+    private final Object _lock1 = new Object();
+
+
+    /**
+     * Transaction lock 2
+     * <p>
+     * Commit will get _lock1 and then _lock2
+     * Rollback wil get _lock2 and then _lock1
+     */
+    private final Object _lock2 = new Object();
+
+
+    /**
+     * Commit wait time in milliseconds.
+     * <p>
+     * This is the time that commit will wait
+     * before trying to get lock2.
+     */
+    private int _commitWaitTime = 0;
+    
 
     /**
      * Create the TyrexConnection.
@@ -177,6 +204,37 @@ final class TyrexConnection
     }
 
     /**
+     * Set the commit wait time.
+     * <p>
+     * This is the time that commit will wait
+     * before trying to get a second transaction lock.
+     * <p>
+     * A commit wait time of zero or less
+     * means don't wait.
+     *
+     * @param commitWaitTime
+     */
+    public void setCommitWaitTime(int commitWaitTime)
+    {
+        _commitWaitTime = commitWaitTime;
+    }
+
+
+    /**
+     * Get the commit wait time
+     * <p>
+     * A commit wait time of zero or less
+     * means don't wait.
+     *
+     * @return the commit wait time
+     */
+    public int getCommitWaitTime()
+    {
+        return _commitWaitTime;
+    }
+
+
+    /**
      * Does nothing.
      *
      * @exception SQLException if a database access error occurs
@@ -185,7 +243,31 @@ final class TyrexConnection
     public void commit() 
         throws SQLException
     {
+        if (_commitWaitTime > 0) {
+            //System.out.println(this + " commit: getting lock1");
+        }
+        synchronized (_lock1)
+        {
+            if (_commitWaitTime > 0) {
+                //System.out.println(this + " commit: got lock1");
 
+                try {
+                    Thread.currentThread().sleep(_commitWaitTime);
+                }
+                catch (InterruptedException e)
+                {
+                    e.printStackTrace();
+                }
+
+                //System.out.println(this + " commit: getting lock2");
+            }
+            synchronized (_lock2)
+            {
+                if (_commitWaitTime > 0) {
+                    //System.out.println(this + " commit: got lock2");
+                }
+            }
+        }
     }
 
 
@@ -198,7 +280,23 @@ final class TyrexConnection
     public void rollback() 
         throws SQLException
     {
+        if (_commitWaitTime > 0) {
+            //System.out.println(this + " rollback: getting lock2");
+        }
+        synchronized (_lock2)
+        {
+            if (_commitWaitTime > 0) {
+                //System.out.println(this + " rollback: got lock2");
 
+                //System.out.println(this + " rollback: getting lock1");
+            }
+            synchronized (_lock1)
+            {
+                if (_commitWaitTime > 0) {
+                    //System.out.println(this + " rollback: got lock1");
+                }
+            }
+        }
     }
 
     /**

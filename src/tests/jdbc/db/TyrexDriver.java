@@ -82,6 +82,12 @@ public final class TyrexDriver
      */
     private static final int TYREX_MINOR_VERSION = 0;
 
+    /**
+     * The last connection returned
+     */
+    private TyrexConnection _lastConnection;
+
+
     static {
         try {
             DriverManager.registerDriver(new TyrexDriver());
@@ -115,9 +121,22 @@ public final class TyrexDriver
     public Connection connect(String url, Properties info)
         throws SQLException
     {
-        Connection connection = new TyrexConnection(url, info);
+        TyrexConnection connection = new TyrexConnection(url, info);
         ++_numberOfCreatedConnections;
+        _lastConnection = connection;
         return connection;
+    }
+
+
+    /**
+     * Return the last connection that was created.
+     * Can be null if no connections were created.
+     *
+     * @return the last connection that was created.
+     */
+    public TyrexConnection getLastConnection()
+    {
+        return _lastConnection;
     }
 
 
