@@ -142,9 +142,13 @@ public final class OTSServer
         
         try
         {
-        	txDomain = tyrex.tm.TransactionDomain.getDomain( config_file );
         	
-        	if( txDomain == null ) txDomain = tyrex.tm.TransactionDomain.createDomain( config_file );
+        	//txDomain = tyrex.tm.TransactionDomain.getDomain( config_file );
+        	//System.out.println(txDomain);
+        	//if( txDomain == null ) {
+        	  txDomain = tyrex.tm.TransactionDomain.createDomain( config_file );
+          
+         //} 
         }
         catch ( tyrex.tm.DomainConfigurationException ex )
         {
@@ -167,7 +171,7 @@ public final class OTSServer
 	}
 	catch ( tyrex.tm.RecoveryException ex )
 	{
-		fatal("OTSServer", "Unable to complexe the recovery : " + ex.toString() );    	
+		fatal("OTSServer", "Unable to complete the recovery : " + ex.toString() );    	
 	}
             
         
@@ -186,7 +190,13 @@ public final class OTSServer
         return ots;
     }
     
-   
+   /**
+     * Shutdown the transaction manager
+     */
+    public static void shutdownTransactionManager()
+    {
+    	txDomain.terminate(); 
+    }
     
         /**
          * Application entry point
