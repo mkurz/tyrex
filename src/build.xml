@@ -93,7 +93,7 @@
     </javac>
   </target>
 
-  <target name="all" depends="clean,jar,tests"
+  <target name="all" depends="clean,jar,jar-tests"
           description="Cleans and builds all the packages and tests" />
 
   <target name="tests" depends="prepare"
@@ -101,27 +101,28 @@
     
     <!-- create the builded tests directory -->
     <mkdir dir="${build.tests}" />
-    
-    <!-- IDL Compiler -->
-    <!--
-    <java classname="org.openorb.compiler.IdlCompiler" fork="yes">
-    	<arg line="${source.tests}/ots/idl/test.idl -d ${build.tests}" />
-    </java>
-    -->
-
-    <!-- build the java files -->
-    <!--javac srcdir="${source.tests};${build.tests}"
-           destdir="${build.tests}"           
-           debug="on"
-           excludes="naming/**,ots/**,transaction/**,jdbc/**"           
-           deprecation="${deprecation}">
-    </javac-->
+        
     <javac srcdir="${source.tests};${build.tests}"
            destdir="${build.tests}"           
            debug="on"
            excludes="ots/**"           
            deprecation="${deprecation}">
     </javac>
+  </target>
+  
+  
+  <target name="tests-iiop" depends="prepare">
+    <mkdir dir="${build.tests}" />
+    <java classname="org.openorb.compiler.IdlCompiler" fork="yes">
+    	<arg line="${source.tests}/ots/idl/test.idl -d ${build.tests}" />
+    </java>
+    <javac srcdir="${build.tests}" destdir="${build.tests}"
+           classpath="${classpath}:${build.tests}" debug="on" deprecation="${deprecation}" 
+           includes="otstests/**" />
+    <javac srcdir="${source.tests}" destdir="${build.tests}"
+           classpath="${classpath}" debug="on" deprecation="${deprecation}" 
+           includes="ots/**" />
+                  
   </target>
  
   <target name="iiop-jar" depends="iiop">
@@ -130,6 +131,20 @@
          basedir="${build.classes}"
          manifest="${build.classes}/MANIFEST.MF"
          includes="tyrex/corba/*" />
+  </target>
+  
+  <target name="jar-tests" depends="tests">
+    <property name="archive" value="${project}-${version}" />
+    <jar jarfile="${dist.dir}/${archive}-tests.jar"
+         basedir="${build.tests}"
+         excludes="ots/*" />
+  </target>
+  
+  <target name="jar-tests-iiop" depends="tests">    
+    <property name="archive" value="${project}-${version}" />
+    <jar jarfile="${dist.dir}/${archive}-iiop-tests.jar"
+         basedir="${build.tests}"
+         includes="ots/*,otstests/**" />
   </target>
 
   <target name="jar" depends="main"
@@ -177,14 +192,6 @@
          basedir="${build.classes}"
          manifest="${build.classes}/MANIFEST.MF"
          excludes="MANIFEST.MF,tyrex/corba/*" />
-
-    <!-- create the IIOP JAR -->
-    <!-- Removed until we can build the classes
-    <jar jarfile="${dist.dir}/${archive}-iiop.jar"
-         basedir="${build.classes}"
-         manifest="${build.classes}/MANIFEST.MF"
-         includes="tyrex/corba/*" />
-    -->
   </target>
 
 

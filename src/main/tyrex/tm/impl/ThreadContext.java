@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: ThreadContext.java,v 1.8 2001/04/11 01:20:28 arkin Exp $
+ * $Id: ThreadContext.java,v 1.9 2001/04/24 01:19:24 jdaniel Exp $
  */
 
 
@@ -63,7 +63,7 @@ import tyrex.util.FastThreadLocal;
  * Implementation of {@link RuntimeContext}.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.8 $ $Date: 2001/04/11 01:20:28 $
+ * @version $Revision: 1.9 $ $Date: 2001/04/24 01:19:24 $
  */
 public class ThreadContext
     extends RuntimeContext
@@ -217,7 +217,10 @@ public class ThreadContext
                 _table[ index ] = entry;
                 return;
             }
-            next = entry._nextEntry;
+            if ( entry != null )
+               next = entry._nextEntry;
+            else
+               next = null;
             while ( next != null ) {
                 if ( next._thread == thread ) {
                     next = new ThreadEntry( context, thread, next );
