@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: MemoryBinding.java,v 1.6 2001/03/12 19:20:16 arkin Exp $
+ * $Id: MemoryBinding.java,v 1.7 2001/04/10 21:02:47 arkin Exp $
  */
 
 
@@ -74,7 +74,7 @@ import javax.naming.spi.NamingManager;
  * This object is thread-safe.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.6 $ $Date: 2001/03/12 19:20:16 $
+ * @version $Revision: 1.7 $ $Date: 2001/04/10 21:02:47 $
  */
 public final class MemoryBinding
 {
@@ -143,7 +143,7 @@ public final class MemoryBinding
     }
 
 
-    public Object get( String name )
+    public synchronized Object get( String name )
     {
         int          hashCode;
         int          index;
@@ -184,8 +184,6 @@ public final class MemoryBinding
         index = ( hashCode & 0x7FFFFFFF ) % _hashTable.length;
         entry = _hashTable[ index ];
         if ( entry == null ) {
-            if ( _count + 1 >= _threshold )
-                rehash();
             entry = new BindingEntry( name, hashCode, value );
             _hashTable[ index ] = entry;
             ++_count;
@@ -203,12 +201,12 @@ public final class MemoryBinding
                     entry = next;
                     next = next._next;
                 }
-                if ( _count + 1 >= _threshold )
-                    rehash();
                 entry._next = new BindingEntry( name, hashCode, value );
                 ++_count;
             }
         }
+        if ( _count >= _threshold )
+            rehash();
     }
 
 
@@ -443,7 +441,7 @@ public final class MemoryBinding
      * created based of a {@link MemoryBinding}.
      *
      * @author <a href="arkin@intalio.com">Assaf Arkin</a>
-     * @version $Revision: 1.6 $ $Date: 2001/03/12 19:20:16 $
+     * @version $Revision: 1.7 $ $Date: 2001/04/10 21:02:47 $
      * @see MemoryBinding
      */
     private final class MemoryBindingEnumeration

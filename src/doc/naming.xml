@@ -123,7 +123,7 @@ RuntimeContext.setRuntimeContext( runCtx );
 InitialContext ctx;
 
 ctx = new InitialContext();
-ds = (DataSource) ctx.lookup( "java:comp/env/mydb" );
+ds = (DataSource) ctx.lookup( "java:comp/env/jdbc/mydb" );
 . . .
 
 <comment>// Dissociate the runtime context from the thread</comment>
