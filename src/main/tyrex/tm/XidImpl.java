@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: XidImpl.java,v 1.5 2001/02/23 19:22:50 jdaniel Exp $
+ * $Id: XidImpl.java,v 1.6 2001/02/23 19:50:51 jdaniel Exp $
  */
 
 
@@ -83,7 +83,7 @@ import tyrex.util.Logger;
  * 
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.5 $ $Date: 2001/02/23 19:22:50 $
+ * @version $Revision: 1.6 $ $Date: 2001/02/23 19:50:51 $
  *
  * Date     Author      Change
  * 1/8/1    J.Daniel    Added a new constructor to be able to restore an
@@ -163,7 +163,7 @@ public final class XidImpl
     /**
      * Defines the size of the global identifier in bytes.
      */
-    public static final int    GLOBAL_XID_LENGTH = 36;
+    public static final int    GLOBAL_XID_LENGTH = 16;
 
 
     /**
@@ -252,7 +252,7 @@ public final class XidImpl
 	StringBuffer buffer;
 	int          i;
 
-	buffer = new StringBuffer( 80 );
+	buffer = new StringBuffer( 40 );
 	for ( i = 8 ; i-- > 0 ; )
 	    buffer.append( toHex( XID_FORMAT >> ( 4 * i ) ) );
 	buffer.append( ':' );
