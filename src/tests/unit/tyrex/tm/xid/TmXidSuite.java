@@ -40,92 +40,39 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Unit.java,v 1.5 2001/09/06 02:09:20 mills Exp $
+ * $Id: TmXidSuite.java,v 1.1 2001/09/06 02:09:20 mills Exp $
  */
 
-package tyrex;
 
-import tyrex.naming.NamingSuite;
-import tyrex.services.ServicesSuite;
-import tyrex.tm.TmUnit;
-import tyrex.util.UtilSuite;
+package tyrex.tm.xid;
 
-import junit.framework.*;
-
-import java.io.IOException;
-import java.io.File;
-import java.io.FileReader;
-import java.io.OutputStream;
-import java.io.PrintWriter;
-import java.io.StringReader;
-import java.io.FileInputStream;
-
-import java.util.Enumeration;
-import java.util.Properties;
-import java.util.Vector;
+import junit.framework.TestSuite;
 
 
 /**
- * Main entry class for test cases execution.
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.1 $
  */
 
-public class Unit
+public class TmXidSuite
 {
-    public static void runTests(String args[], TestSuite suite)
+    public TmXidSuite()
     {
-        Class[] classes = new Class[1];
-        classes[0] = Test.class;
-        java.lang.reflect.Method method = null;
-        try
-        {
-            if (args.length == 1)
-            {
-                try
-                {
-                    Class cls = Class.forName(args[0]);
-                    method = cls.getMethod("run", classes);
-                }
-                catch (ClassNotFoundException e)
-                {
-                    // OK, runner not found.  The default will be used.
-                    System.out.println("Couldn't find different runner.");
-                }
-            }
-            if (method == null)
-            {
-                method = junit.textui.TestRunner.class
-                    .getMethod("run", classes);
-            }
-            Object[] methodArgs = new Object[1];
-            methodArgs[0] = suite;
-            method.invoke(null, methodArgs);
-        }
-        catch (Exception e)
-        {
-            // OK, just don't run the tests.
-            System.out.println("Failure to run tests.");
-            e.printStackTrace();
-            System.exit(1);
-        }
+        // Empty.
     }
-
 
     public static TestSuite suite()
     {
-        TestSuite suite = new TestSuite("Tyrex Unit Test Harness");
-        suite.addTest(NamingSuite.suite());
-        suite.addTest(ServicesSuite.suite());
-        suite.addTest(TmUnit.suite());
-        suite.addTest(UtilSuite.suite());
+        TestSuite suite = new TestSuite("TmXidSuite test harness");
+        suite.addTest(BranchXidTest.suite());
+//        suite.addTest(new TestSuite(BackgroundThreadTest.class));
         return suite;
     }
 
 
     public static void main(String args[])
     {
-        runTests(args, Unit.suite());
+        tyrex.Unit.runTests(args, suite());
     }
 }

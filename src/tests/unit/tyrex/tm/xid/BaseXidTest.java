@@ -40,92 +40,99 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Unit.java,v 1.5 2001/09/06 02:09:20 mills Exp $
+ * $Id: BaseXidTest.java,v 1.1 2001/09/06 02:09:20 mills Exp $
  */
 
-package tyrex;
+package tyrex.tm.xid;
 
-import tyrex.naming.NamingSuite;
-import tyrex.services.ServicesSuite;
-import tyrex.tm.TmUnit;
-import tyrex.util.UtilSuite;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
 
-import junit.framework.*;
-
-import java.io.IOException;
-import java.io.File;
-import java.io.FileReader;
-import java.io.OutputStream;
 import java.io.PrintWriter;
-import java.io.StringReader;
-import java.io.FileInputStream;
-
-import java.util.Enumeration;
-import java.util.Properties;
-import java.util.Vector;
 
 
 /**
- * Main entry class for test cases execution.
- *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.1 $
  */
 
-public class Unit
+public abstract class BaseXidTest extends TestCase
 {
-    public static void runTests(String args[], TestSuite suite)
+    private PrintWriter _logger = null;
+
+    public BaseXidTest(String name)
     {
-        Class[] classes = new Class[1];
-        classes[0] = Test.class;
-        java.lang.reflect.Method method = null;
+        super(name);
+    }
+
+    public void setUp()
+    {
+        _logger= new PrintWriter(System.out);
+    }
+
+    public void tearDown()
+    {
+        _logger.flush();
+    }
+
+
+    /**
+     * <p>The abstract method for creating an instance of BaseXid.
+     * The method must populate the enumeration with three
+     * elements.</p>
+     */
+
+    public abstract BaseXid newBaseXid()
+        throws Exception;
+
+    /**
+     * <p>Create an instance.</p>
+     *
+     * @result Ensure that hasMoreElements() returns true.  Call
+     * next() three times ensuring that the correct values are
+     * returned each time.  hasMoreElements() should now return false.
+     */
+
+    public void testBasicFunctionality()
+        throws Exception
+    {
+        BaseXid enum = newBaseXid();
+    }
+
+
+    /**
+     * <p>Attempt to test the bounds of argument values etc.</p>
+     *
+     * @result Create an BaseXid with no elements.
+     * hasMoreElements() should return false and nextElement() should
+     * throw a NoSuchElementException.
+     *
+     * <p>Now create an instance as in testBasicFunctionality.  Call
+     * nextElement() 4 times instead of three.  On the fourth call a
+     * NoSuchElementException should be thrown.</p>
+     */
+
+    public void testBoundsTest()
+        throws Exception
+    {
         try
         {
-            if (args.length == 1)
-            {
-                try
-                {
-                    Class cls = Class.forName(args[0]);
-                    method = cls.getMethod("run", classes);
-                }
-                catch (ClassNotFoundException e)
-                {
-                    // OK, runner not found.  The default will be used.
-                    System.out.println("Couldn't find different runner.");
-                }
-            }
-            if (method == null)
-            {
-                method = junit.textui.TestRunner.class
-                    .getMethod("run", classes);
-            }
-            Object[] methodArgs = new Object[1];
-            methodArgs[0] = suite;
-            method.invoke(null, methodArgs);
+            BaseXid enum = newBaseXid();
+            fail("Expected an exception to have been raised.");
         }
-        catch (Exception e)
+        catch (java.util.NoSuchElementException e)
         {
-            // OK, just don't run the tests.
-            System.out.println("Failure to run tests.");
-            e.printStackTrace();
-            System.exit(1);
+            // Expected.
         }
     }
 
 
-    public static TestSuite suite()
+    /** Adds a message in the log (except if the log is null)*/
+    private void logMessage(String message)
     {
-        TestSuite suite = new TestSuite("Tyrex Unit Test Harness");
-        suite.addTest(NamingSuite.suite());
-        suite.addTest(ServicesSuite.suite());
-        suite.addTest(TmUnit.suite());
-        suite.addTest(UtilSuite.suite());
-        return suite;
-    }
-
-
-    public static void main(String args[])
-    {
-        runTests(args, Unit.suite());
+        if (_logger != null)
+        {
+            _logger.println(message);
+        }
     }
 }

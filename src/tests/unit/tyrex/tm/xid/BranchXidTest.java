@@ -40,92 +40,73 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Unit.java,v 1.5 2001/09/06 02:09:20 mills Exp $
+ * $Id: BranchXidTest.java,v 1.1 2001/09/06 02:09:20 mills Exp $
  */
 
-package tyrex;
+package tyrex.tm.xid;
 
-import tyrex.naming.NamingSuite;
-import tyrex.services.ServicesSuite;
-import tyrex.tm.TmUnit;
-import tyrex.util.UtilSuite;
-
-import junit.framework.*;
-
-import java.io.IOException;
-import java.io.File;
-import java.io.FileReader;
 import java.io.OutputStream;
 import java.io.PrintWriter;
-import java.io.StringReader;
 import java.io.FileInputStream;
+import java.io.File;
 
-import java.util.Enumeration;
-import java.util.Properties;
-import java.util.Vector;
+import junit.framework.*;
+import junit.extensions.*;
 
 
 /**
- * Main entry class for test cases execution.
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.1 $
  */
 
-public class Unit
+public class BranchXidTest extends TestCase
 {
-    public static void runTests(String args[], TestSuite suite)
+    private PrintWriter _logger = null;
+
+    public BranchXidTest(String name)
     {
-        Class[] classes = new Class[1];
-        classes[0] = Test.class;
-        java.lang.reflect.Method method = null;
-        try
+        super(name);
+    }
+
+    public void setUp()
+    {
+        _logger= new PrintWriter(System.out);
+    }
+
+    public void tearDown()
+    {
+        _logger.flush();
+    }
+
+    public void testNone()
+        throws Exception
+    {
+    }
+
+
+    /** Adds a message in the log (except if the log is null)*/
+    private void logMessage(String message)
+    {
+        if (_logger != null)
         {
-            if (args.length == 1)
-            {
-                try
-                {
-                    Class cls = Class.forName(args[0]);
-                    method = cls.getMethod("run", classes);
-                }
-                catch (ClassNotFoundException e)
-                {
-                    // OK, runner not found.  The default will be used.
-                    System.out.println("Couldn't find different runner.");
-                }
-            }
-            if (method == null)
-            {
-                method = junit.textui.TestRunner.class
-                    .getMethod("run", classes);
-            }
-            Object[] methodArgs = new Object[1];
-            methodArgs[0] = suite;
-            method.invoke(null, methodArgs);
-        }
-        catch (Exception e)
-        {
-            // OK, just don't run the tests.
-            System.out.println("Failure to run tests.");
-            e.printStackTrace();
-            System.exit(1);
+            _logger.println(message);
         }
     }
 
 
+    // Compile the test suite.
     public static TestSuite suite()
     {
-        TestSuite suite = new TestSuite("Tyrex Unit Test Harness");
-        suite.addTest(NamingSuite.suite());
-        suite.addTest(ServicesSuite.suite());
-        suite.addTest(TmUnit.suite());
-        suite.addTest(UtilSuite.suite());
+        TestSuite suite = new TestSuite(BranchXidTest.class);
+        suite.addTest(new TestSuite(BranchXid_BaseXidImpl.class));
         return suite;
     }
 
 
+    // Allow this test to be run on its own.
     public static void main(String args[])
     {
-        runTests(args, Unit.suite());
+        tyrex.Unit.runTests(args, suite());
     }
 }
