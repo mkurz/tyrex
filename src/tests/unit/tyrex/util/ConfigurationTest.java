@@ -65,7 +65,7 @@ import junit.extensions.*;
  * documented tests updated accordingly.</p>
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 
 
@@ -127,6 +127,6 @@ public class ConfigurationTest extends TestCase
     // Allow this test to be run on its own.
     public static void main(String args[])
     {
-        junit.textui.TestRunner.run(new TestSuite(ConfigurationTest.class));
+        tyrex.Unit.runTests(args, new TestSuite(ConfigurationTest.class));
     }
 }

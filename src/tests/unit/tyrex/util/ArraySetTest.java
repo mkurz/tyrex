@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: ArraySetTest.java,v 1.1 2001/08/24 12:49:10 mills Exp $
+ * $Id: ArraySetTest.java,v 1.2 2001/08/24 14:01:23 mills Exp $
  */
 
 package tyrex.util;
@@ -62,7 +62,7 @@ import junit.extensions.*;
  * load testing arrays and therefore won't be attempted.</p>
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 
 public class ArraySetTest extends TestCase
@@ -112,6 +112,6 @@ public class ArraySetTest extends TestCase
     // Allow this test to be run on its own.
     public static void main(String args[])
     {
-        junit.textui.TestRunner.run(suite());
+        tyrex.Unit.runTests(args, suite());
     }
 }

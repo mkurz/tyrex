@@ -67,7 +67,7 @@ import junit.extensions.*;
  * documented tests updated accordingly.</p>
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  */
 
 
@@ -151,6 +151,6 @@ public class HashIntTableTest extends TestCase
     // Allow this test to be run on its own.
     public static void main(String args[])
     {
-        junit.textui.TestRunner.run(new TestSuite(HashIntTableTest.class));
+        tyrex.Unit.runTests(args, new TestSuite(HashIntTableTest.class));
     }
 }

@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: MemoryContextTest.java,v 1.6 2001/08/23 09:47:27 mills Exp $
+ * $Id: MemoryContextTest.java,v 1.7 2001/08/24 14:01:22 mills Exp $
  */
 
 
@@ -65,7 +65,7 @@ import java.io.PrintWriter;
 /**
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.7 $
  */
 
 public class MemoryContextTest extends TestCase
@@ -377,9 +377,9 @@ public class MemoryContextTest extends TestCase
     // Allow this test to be run on its own.
     public static void main(String args[])
     {
-        for( int i = 0 ; i < args.length ; i++ )
-            if ( args[ i ].equals( "-verbose" ) )
+        for (int i = 0 ; i < args.length ; i++)
+            if (args[i].equals( "-verbose"))
                 tests.VerboseStream.verbose = true;
-        junit.textui.TestRunner.run(MemoryContextTest.suite());
+        tyrex.Unit.runTests(args, suite());
     }
 }

@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: NamingSuite.java,v 1.3 2001/08/10 07:18:01 mills Exp $
+ * $Id: NamingSuite.java,v 1.4 2001/08/24 14:01:22 mills Exp $
  */
 
 
@@ -52,7 +52,7 @@ import junit.framework.TestSuite;
 /**
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  */
 
 public class NamingSuite
@@ -73,6 +73,6 @@ public class NamingSuite
 
     public static void main(String args[])
     {
-        junit.textui.TestRunner.run(NamingSuite.suite());
+        tyrex.Unit.runTests(args, suite());
     }
 }
