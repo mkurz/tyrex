@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: XAConnectionImpl.java,v 1.4 2001/03/19 17:39:02 arkin Exp $
+ * $Id: XAConnectionImpl.java,v 1.5 2001/05/24 17:31:35 mohammed Exp $
  */
 
 
@@ -537,9 +537,10 @@ public final class XAConnectionImpl
                 
                 // Update the number of XAConnections sharing this
                 // transaction connection.
-                if ( flags == TMJOIN && _txConn.count == 0 )
+                if ( flags == TMRESUME && _txConn.count == 0 ) 
                     throw new XAException( XAException.XAER_PROTO );
-                ++_txConn.count;
+                if ( flags == TMJOIN )
+                    ++_txConn.count;
                 
                 // If we already have an underlying connection (as we can
                 // expect to), we should release that underlying connection
@@ -564,9 +565,8 @@ public final class XAConnectionImpl
             throw new XAException( XAException.XAER_INVAL );
         // Note: we could get end with success or failure even it
         // we were previously excluded from the transaction.
-        if ( ( _txConn == null ) && 
-             ( ( flags == TMSUSPEND ) || ( flags == TMFAIL ) ) ) 
-            throw new XAException( XAException.XAER_NOTA );
+        if ( _txConn == null )
+            throw new XAException( XAException.XAER_PROTO );
         
         synchronized ( _resManager ) {
             if ( flags == TMSUCCESS || flags == TMFAIL) {
@@ -579,15 +579,9 @@ public final class XAConnectionImpl
                 // join it for the duration of this operation.
                 // Make sure the reference count reaches zero by the
                 // time we get to prepare.
-                if ( _txConn == null ) {
-                    _txConn = _resManager.getTxConnection( xid );
-                    if ( _txConn == null )
-                        throw new XAException( XAException.XAER_NOTA );
-                } else {
-                    if ( _txConn.xid != null && ! _txConn.xid.equals( xid ) )
-                        throw new XAException( XAException.XAER_NOTA );
-                    --_txConn.count;
-                }
+                if ( _txConn.xid != null && ! _txConn.xid.equals( xid ) )
+                    throw new XAException( XAException.XAER_NOTA );
+                --_txConn.count;
                 
                 // If transaction failed, we can rollback the
                 // transaction and release the underlying connection.
@@ -607,23 +601,11 @@ public final class XAConnectionImpl
                     _txConn.conn = null;
                     _txConn.xid = null;
                 }
-                
-                if ( flags == TMSUCCESS) {
-                    // We should be looking for a new transaction.
-                    // Next thing we might be participating in a new
-                    // transaction while the current one is being
-                    // rolled back.
-                    //releaseConnection( _txConn.conn );
-                    _txConn = null;
-                }
-            } else if ( flags == TMSUSPEND ) {
-                // We no longer take part in this transaction.
-                // Possibly we'll be asked to resume later on, but
-                // right now we have to forget about the transaction
-                // and the underlying connection.
-                --_txConn.count;
-                //releaseConnection( _txConn.conn );
                 _txConn = null;
+            } else if ( flags == TMSUSPEND ) {
+                _txConn = null;
+                if ( _txConn.count == 0 ) 
+                    throw new XAException( XAException.XAER_PROTO );
             } else
                 // No other flags supported in end().
                 throw new XAException( XAException.XAER_INVAL );
@@ -661,8 +643,6 @@ public final class XAConnectionImpl
                 }
                 txConn.xid = null;
             }
-            if ( _txConn == txConn )
-                _txConn = null;
         }
     }
 
@@ -781,6 +761,7 @@ public final class XAConnectionImpl
                     if ( txConn.conn instanceof TwoPhaseConnection )
                         ( (TwoPhaseConnection) txConn.conn ).enableSQLTransactions( true );
                     txConn.conn.commit();
+                    forget( xid );
                 } catch ( SQLException except ) {
                     try {
                         // Unknown error in the connection, better kill it.
@@ -789,10 +770,8 @@ public final class XAConnectionImpl
                     txConn.conn = null;
                     if ( _resManager.getLogWriter() != null )
                         _resManager.getLogWriter().println( "XAConnection: failed to commit a transaction: " + except );
-                    // If we cannot commit the transaction, a heuristic hazard.
-                    throw new XAException( XAException.XA_HEURHAZ );
-                }  finally {
-                    forget( xid );
+                    // If we cannot commit the transaction, a heuristic rollback.
+                    throw new XAException( XAException.XA_HEURRB );
                 }
             } else {
                 // 2pc we should have prepared before.
@@ -831,6 +810,7 @@ public final class XAConnectionImpl
                 if ( txConn.conn instanceof TwoPhaseConnection )
                     ( (TwoPhaseConnection) txConn.conn ).enableSQLTransactions( true );
                 txConn.conn.rollback();
+                forget( xid );
             } catch ( SQLException except ) {
                 try {
                     // Unknown error in the connection, better kill it.
@@ -841,8 +821,6 @@ public final class XAConnectionImpl
                     _resManager.getLogWriter().println( "XAConnection: failed to rollback a transaction: " + except );
                 // If we cannot commit the transaction, a heuristic tollback.
                 throw new XAException( XAException.XA_RBROLLBACK );
-            } finally {
-                forget( xid );
             }
         }
     }

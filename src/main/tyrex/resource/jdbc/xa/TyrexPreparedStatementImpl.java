@@ -111,7 +111,7 @@ class TyrexPreparedStatementImpl
      * query; never <code>null</code>
      * @exception SQLException if a database access error occurs
      */
-    public final ResultSet executeQuery() 
+    public synchronized final ResultSet executeQuery() 
         throws SQLException
     {
         // this method is not synchronized so that
@@ -119,17 +119,14 @@ class TyrexPreparedStatementImpl
 
         PreparedStatement statement;
 
-        synchronized (this) {
-            statement = getPreparedStatement();
-
-            // close the existing result set before getting
-            // the new one just in case the underlying
-            // statement does not close its underlying
-            // result set. There is no way to query a result
-            // set whether it is closed or not.
-            closeResultSet();
-        }
+        statement = getPreparedStatement();
         
+        // close the existing result set before getting
+        // the new one just in case the underlying
+        // statement does not close its underlying
+        // result set. There is no way to query a result
+        // set whether it is closed or not.
+        closeResultSet();
         return setResultSet(statement.executeQuery());
     }
 
