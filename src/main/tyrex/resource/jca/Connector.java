@@ -48,6 +48,7 @@ package tyrex.resource.jca;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.StringTokenizer;
@@ -74,12 +75,15 @@ import tyrex.util.Logger;
 /**
  * 
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  */
 public class Connector
     extends ResourceConfig
 {
-
+    /**
+     * The path of the deployment descriptor in the conenctor jar.
+     */
+    private static final String DEPLOYMENT_DESCRIPTOR_PATH = "META-INF/ra.xml";
 
     /**
      * The resource, if created.
@@ -134,13 +138,15 @@ public class Connector
         // a list of URLs for the class loader.
         try {
             file = new File( jarName );
-            if ( file.exists() && file.canRead() )
+            if ( file.exists() && file.canRead() ) {
                 url = file.toURL();
-            else
+            }
+            else {
                 url = new URL( jarName );
+            }
             paths = _paths;
             if ( paths != null && paths.length() > 0 ) {
-                tokenizer = new StringTokenizer( paths, ",:; " );
+                tokenizer = new StringTokenizer( paths, ",; " );
                 urls = new URL[ tokenizer.countTokens() + 1 ];
                 urls[ 0 ] = url;
                 for ( int i = 1 ; i < urls.length ; ++i ) {
@@ -159,15 +165,11 @@ public class Connector
 
         // Read the connector JAR file and it's deployment descriptor.
         try {
-            jarFile = new JarFile( _jar, true );
             info = new StringBuffer( "Loading connector " + name + " from " + _jar );
-            jarEntry = jarFile.getJarEntry( "META-INF/ra.xml" );
-            if ( jarEntry == null )
-                throw new ResourceException( "Connector " + name + 
-                                             " missing deployment descriptor" );
+            
             mapping = new Mapping();
             mapping.loadMapping( new InputSource( Connector.class.getResourceAsStream( "mapping.xml" ) ) );
-            ddConnector = (DDConnector) new Unmarshaller(mapping).unmarshal( new InputSource( jarFile.getInputStream( jarEntry ) ) );
+            ddConnector = (DDConnector) new Unmarshaller(mapping).unmarshal( new InputSource( getRAInputStream( urls[ 0 ] ) ) );
         } catch ( IOException except ) {
             throw new ResourceException( except );
         } catch ( ValidationException except ) {
@@ -188,7 +190,7 @@ public class Connector
             throw new ResourceException( "Connector " + name + 
                                          " missing resource adapter deployment descriptor" );
         txSupport = ddAdapter.getTransactionSupport();
-
+        
         // Create a new URL class loader for the data source.
         // Create a new connector loader using the class loader and
         // deployment descriptor.
@@ -235,4 +237,48 @@ public class Connector
     }
 
 
+    /**
+     * Return the input stream containing the ra.xml contents
+     * in the specified url.
+     *
+     * @param url the url
+     * @return the input stream containing the ra.xml contents
+     *      in the specified url.
+     * @throws IOException if there is a problem reading the
+     *      data from the url.
+     */
+    private InputStream getRAInputStream(URL url) 
+        throws IOException {
+        JarFile     jarFile;
+        JarEntry    jarEntry;
+        URL         jarURL;
+        String      file;
+
+        if ( url.getProtocol().equals( "file" ) ) {
+            jarFile = new JarFile( url.getFile(), true);
+            jarEntry = jarFile.getJarEntry( DEPLOYMENT_DESCRIPTOR_PATH );
+            
+            if ( jarEntry == null )
+                throw new IOException( "The connector deployment descriptor is not found for " + url );
+    
+            return jarFile.getInputStream( jarEntry );
+        }
+
+        if ( url.getProtocol().equals( "jar" ) ) {
+            file = url.getFile();
+
+            if ( file.endsWith( "!/" ) ) {
+                jarURL = new URL( "jar:" + url.getFile() + DEPLOYMENT_DESCRIPTOR_PATH );        
+            }
+            else {
+                jarURL = new URL( "jar:" + file.substring( 0, file.lastIndexOf( '!' ) ) + 
+                                  "!/" + DEPLOYMENT_DESCRIPTOR_PATH );
+            }
+        }
+        else {
+            jarURL = new URL( "jar:" + url + "!/" + DEPLOYMENT_DESCRIPTOR_PATH );
+        }
+        System.out.println("jarurl " + jarURL);
+        return jarURL.openStream();
+    }
 }
