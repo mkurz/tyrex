@@ -3,13 +3,13 @@
   <body>
     <title>Download</title>
     <header>
-      <ul>For FTP access use <url>ftp://ftp.exolab.org/pub</url>.
+      <ul>For FTP access use <url>ftp://ftp.exolab.org/pub/tyrex</url>.
         <li>The Tyrex JAR<br/>
-            <url>ftp://ftp.exolab.org/ftp/pub/tyrex/tyrex-$VERSION$/tyrex-$VERSION$.jar</url>
+            <url>ftp://ftp.exolab.org/pub/tyrex/tyrex-$VERSION$/tyrex-$VERSION$.jar</url>
             <br/>&#xA0;</li>
         <li>The Tyrex JARs, docs, DTDs, command line tools and examples<br/>
-            <url>ftp://ftp.exolab.org/ftp/pub/tyrex/tyrex-$VERSION$/tyrex-$VERSION$.tgz</url><br/>
-            <url>ftp://ftp.exolab.org/ftp/pub/tyrex/tyrex-$VERSION$/tyrex-$VERSION$.zip</url>
+            <url>ftp://ftp.exolab.org/pub/tyrex/tyrex-$VERSION$/tyrex-$VERSION$.tgz</url><br/>
+            <url>ftp://ftp.exolab.org/pub/tyrex/tyrex-$VERSION$/tyrex-$VERSION$.zip</url>
             <br/>&#xA0;</li>
         <li>Full documentation including all JavaDocs and specs (big)<br/>
             <url>ftp://ftp.exolab.org/ftp/pub/tyrex/tyrex-$VERSION$/tyrex-$VERSION$-doc.tgz</url><br/>
