@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE document SYSTEM "document.dtd">
+<document url="http://tyrex.exolab.org/databases.xml">
+  <properties>
+    <title>Databases</title>
+    <author email="mohammed@intalio.com">Riad Mohammed</author>
+  </properties>
+  <body>
+
+    <section title="Oracle">
+        <section title="Tested Versions">
+            <ul>
+            <li>Oracle 8i version 8.1.6.0.0</li>
+            </ul>
+        </section>
+        
+        <section title="Notes">
+            <p>Tyrex provides a workaround (<api>tyrex.tm.OracleXAResourceHelper</api> 
+            for two known Oracle XA issues:
+            <ul>
+            <li>Oracle XA resource transaction enlistment requires Oracle's implementation
+            of <i>javax.transaction.Xid</i>.</li>
+            <li>Suspended Oracle XA resources must be resumed first before they can be ended.</li>
+            </ul>
+            For the workaround to execute classes12.zip <b>must</b> be in the classpath. 
+            Classes12.zip is not necessary for the code to compile.
+            </p>
+        </section>                  
+                  
+        <section title="Issues">
+        <ul>
+        <li>XA resources delisted from a transaction with 
+        <i>javax.transaction.xa.XAResource#TMSUCCESS</i> cannot
+        be used in another transaction until the first transaction
+        ends.</li>
+        <li>If an XA resource is delisted using 
+        <i>javax.transaction.xa.XAResource#TMFAIL</i> the database
+        cannot be accessed for some amount of time (100 seconds in my tests)
+        using a new XA resource from a new XA connection from either the existing
+        XA data source or a new XA data source. Increasing the transaction timeout
+        on the XA resource works occasionally. Best results were achieved using
+        <code>Thread.currentThread().sleep(100000);</code>.</li>
+        </ul> 
+        </section>
+
+    </section>
+
+    <section title="Sybase">
+        <section title="Notes">
+            <p>Hopefully coming soon.
+            <br></br>
+            Sybase Adaptive Server 12.0
+            requires "Distributed Transaction Management" component,
+            which is not available for download, for XA support.
+            </p>
+        </section>
+    </section>
+    
+    <section title="Informix (Dynamic Server)">
+        <section title="Notes">
+            <p>The "free" Dynamic Server JDBC driver installation requires a serial
+            number and key. If someone knows where to find out this
+            information please send email to 
+            <a href="mailto:tyrex-dev@exolab.org">Tyrex Developer's Mailing List</a>
+            </p>
+        </section>
+    </section>
+    
+    <section title="Interbase">
+        <section title="Notes">
+            <p>The current JDBC driver (Version 2.0) does not support XA transactions yet.
+            </p>
+        </section>
+    </section>
+    
+    <section title="Cloudscape">
+        <section title="Tested Versions">
+            <ul>
+            <li>Cloudscape 3.5</li>
+            </ul>
+        </section>
+        
+        <section title="Notes">
+            <p>Cloudscape has a good XA implementation.
+            </p>
+        </section>                  
+                  
+        <section title="Issues">
+        <ul>
+        <li>XA resources delisted from a transaction with 
+        <i>javax.transaction.xa.XAResource#TMSUCCESS</i> cannot
+        be used in another transaction until the first transaction
+        ends.</li>
+        <li>There is a bug in the driver that causes infinite
+        recursion during driver registration occasionally.</li>
+        </ul> 
+        </section>
+
+    </section>
+    
+    <section title="Other Databases">
+        <p>If there are other databases with a XA implementation and
+        a <b>free</b> download (very important) that people would like
+        tested please send email to 
+        <a href="mailto:tyrex-dev@exolab.org">Tyrex Developer's Mailing List</a>.
+        </p>
+    </section>
+    
+    <section title="Problems">
+        <p>If there are other problems with the databases listed previously
+        send a detailed email to 
+        <a href="mailto:tyrex-dev@exolab.org">Tyrex Developer's Mailing List</a>.
+        </p>
+        <p>
+        The email should contain:
+        <ul>
+        <li>A stacktrace if one is available</li>
+        <li>The database used, including version number</li>
+        <li>The JDBC driver version number</li>
+        <li>Instructions on how to reproduce the problem</li>
+        </ul>
+        </p>
+    </section>
+
+  </body>
+</document>
