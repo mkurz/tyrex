@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: InterceptorHolder.java,v 1.5 2000/09/08 23:18:51 mohammed Exp $
+ * $Id: InterceptorHolder.java,v 1.6 2001/02/23 18:58:03 jdaniel Exp $
  */
 
 
@@ -55,7 +55,7 @@ import tyrex.util.Logger;
 
 /**
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.5 $ $Date: 2000/09/08 23:18:51 $
+ * @version $Revision: 1.6 $ $Date: 2001/02/23 18:58:03 $
  */
 public class InterceptorHolder
     implements Serializable
@@ -97,7 +97,7 @@ public class InterceptorHolder
 	try {
 	    return Class.forName( _className ).newInstance();
 	} catch ( Exception except ) {
-	    Logger.getSystemLogger().println( Messages.format( "tyrex.conf.cannotCreateInterceptor",
+	    Logger.conf.warn( Messages.format( "tyrex.conf.cannotCreateInterceptor",
 							       _className, except ) );
 	    return null;
 	}

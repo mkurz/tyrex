@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Initializer.java,v 1.2 2001/02/09 00:04:59 jdaniel Exp $
+ * $Id: Initializer.java,v 1.3 2001/02/23 18:58:37 jdaniel Exp $
  *
  * Date         Author  Changes
  */
@@ -54,8 +54,6 @@ package tyrex.corba;
  */
 public class Initializer extends org.omg.CORBA.LocalObject implements org.omg.PortableInterceptor.ORBInitializer
 {
-        private boolean _verbose = false;
-        
 	/**
 	 * Transactional slot id
 	 */
@@ -111,9 +109,8 @@ public class Initializer extends org.omg.CORBA.LocalObject implements org.omg.Po
          * Displays a trace
          */
         public void print( String from, String msg )
-        {
-            if ( _verbose )
-                tyrex.util.Logger.getSystemLogger().println(from + ": " + msg );            
+        {            
+                tyrex.util.Logger.ots.debug(from + ": " + msg );            
         }
         
         /**
@@ -121,7 +118,7 @@ public class Initializer extends org.omg.CORBA.LocalObject implements org.omg.Po
          */
         public void fatal( String from, String msg )
         {
-            tyrex.util.Logger.getSystemLogger().println("FATAL => " + from + ": " + msg );
+            tyrex.util.Logger.ots.warn(from + ": " + msg );
             throw new org.omg.CORBA.INTERNAL(msg);
         }
         
@@ -130,7 +127,7 @@ public class Initializer extends org.omg.CORBA.LocalObject implements org.omg.Po
          */
         public void exception( String from, String msg, java.lang.Exception ex )
         {
-            tyrex.util.Logger.getSystemLogger().println("EXCEPTION => " + from + ": " + msg );
+            tyrex.util.Logger.ots.warn("EXCEPTION => " + from + ": " + msg );
             ex.printStackTrace( tyrex.util.Logger.getSystemLogger() );            
         }
 }

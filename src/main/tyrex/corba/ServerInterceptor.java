@@ -52,8 +52,7 @@ public class ServerInterceptor
     extends org.omg.CORBA.LocalObject
     implements org.omg.PortableInterceptor.ServerRequestInterceptor
 {
-        private boolean _verbose = false;
-	private org.omg.PortableInterceptor.ORBInitInfo info;
+ 	private org.omg.PortableInterceptor.ORBInitInfo info;
 	private int t_slot;
 	
 	/**
@@ -156,9 +155,8 @@ public class ServerInterceptor
          * Displays a trace
          */
         public void print( String from, String msg )
-        {
-            if ( _verbose )
-                tyrex.util.Logger.getSystemLogger().println(from + ": " + msg );            
+        {            
+                tyrex.util.Logger.ots.debug(from + ": " + msg );            
         }
         
         /**
@@ -166,7 +164,7 @@ public class ServerInterceptor
          */
         public void fatal( String from, String msg )
         {
-            tyrex.util.Logger.getSystemLogger().println("FATAL => " + from + ": " + msg );
+            tyrex.util.Logger.ots.warn("FATAL => " + from + ": " + msg );
             throw new org.omg.CORBA.INTERNAL(msg);
         }
 }

@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Resource.java,v 1.4 2000/09/08 23:18:51 mohammed Exp $
+ * $Id: Resource.java,v 1.5 2001/02/23 18:58:03 jdaniel Exp $
  */
 
 
@@ -69,7 +69,7 @@ import tyrex.util.Logger;
  * </ul>
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.4 $ $Date: 2000/09/08 23:18:51 $
+ * @version $Revision: 1.5 $ $Date: 2001/02/23 18:58:03 $
  * @see ResourceFactoryBuilder
  * @see PoolManager
  */
@@ -241,7 +241,7 @@ public class Resource
 	try {
 	    return Class.forName( _type ).newInstance();
 	} catch ( Exception except ) {
-	    Logger.getSystemLogger().println( Messages.format( "tyrex.conf.cannotCreateFactory",
+	    Logger.conf.warn( Messages.format( "tyrex.conf.cannotCreateFactory",
 							       _type, except ) );
 	    return null;
 	}

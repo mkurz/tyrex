@@ -347,7 +347,7 @@ public final class OTSServer
          */
         private static void fatal( String from, String msg )
         {
-            tyrex.util.Logger.getSystemLogger().println(from + ": " + msg );
+            tyrex.util.Logger.ots.warn(from + ": " + msg );
             if ( cfg != null ) cfg.shutdownServer();
             System.exit(0);
         }

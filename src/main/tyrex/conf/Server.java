@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Server.java,v 1.6 2000/09/08 23:18:52 mohammed Exp $
+ * $Id: Server.java,v 1.7 2001/02/23 18:58:03 jdaniel Exp $
  */
 
 
@@ -74,7 +74,7 @@ import tyrex.util.Logger;
  *
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.6 $ $Date: 2000/09/08 23:18:52 $
+ * @version $Revision: 1.7 $ $Date: 2001/02/23 18:58:03 $
  * @see Configure
  * @see LogOption
  * @see PoolManager
@@ -123,7 +123,7 @@ public class Server
         if ( url != null ) {     
 		file = new File( url.getFile() );
 		if ( file.exists() ) {
-		    Logger.getSystemLogger().println( Messages.format( "tyrex.conf.loadingServer", file ) );
+		    Logger.conf.info( Messages.format( "tyrex.conf.loadingServer", file ) );
 		    return load( file );
 		}
 	    }
@@ -131,21 +131,21 @@ public class Server
         
         file = new File( System.getProperty( "user.dir" ), FileName );
         if ( file.exists() ) {
-		Logger.getSystemLogger().println( Messages.format( "tyrex.conf.loadingServer", file ) );
+		Logger.conf.info( Messages.format( "tyrex.conf.loadingServer", file ) );
 		return load( file );
 	    }
         
 	    file = new File( System.getProperty( "java.home" ), "lib" );
 	    file = new File( file, FileName );
         if ( file.exists() ) {
-		Logger.getSystemLogger().println( Messages.format( "tyrex.conf.loadingServer", file ) );
+		Logger.conf.info( Messages.format( "tyrex.conf.loadingServer", file ) );
 		return load( file );
 	    }
 	} catch ( IOException except ) {
-	    Logger.getSystemLogger().println( Messages.format( "tyrex.conf.loadingServerError", except ) );
+	    Logger.conf.warn( Messages.format( "tyrex.conf.loadingServerError", except ) );
 	    throw except;
 	}
-	Logger.getSystemLogger().println( Messages.format( "tyrex.conf.loadingServerMissing", FileName ) );
+	Logger.conf.warn( Messages.format( "tyrex.conf.loadingServerMissing", FileName ) );
 	throw new IOException( Messages.format( "tyrex.conf.loadingServerMissing", FileName ) );
     }
 
@@ -183,14 +183,14 @@ public class Server
 
 	try {
 	    unmarshaller = new Unmarshaller( Server.class );
-	    unmarshaller.setLogWriter( Logger.getSystemLogger() );
+	   // unmarshaller.setLogWriter( Logger.getSystemLogger() );
 	    unmarshaller.setEntityResolver( new SchemaEntityResolver() );
 	    return (Server) unmarshaller.unmarshal( reader );
 	} catch ( MarshalException except ) {
-	    Logger.getSystemLogger().println( Messages.format( "tyrex.conf.loadingResourcesError", except ) );
+	    Logger.conf.warn( Messages.format( "tyrex.conf.loadingResourcesError", except ) );
 	    throw new IOException( except.toString() );
 	} catch ( Exception except ) {
-	    Logger.getSystemLogger().println( Messages.format( "tyrex.conf.loadingResourcesError", except ) );
+	    Logger.conf.warn( Messages.format( "tyrex.conf.loadingResourcesError", except ) );
 	    throw new IOException( "Nested exception: " + except );
 	}
     }
@@ -209,7 +209,7 @@ public class Server
 	        // make the marshaller
             Marshaller marshaller = new Marshaller(writer);
             // set the log
-            marshaller.setLogWriter(Logger.getSystemLogger());
+            //marshaller.setLogWriter(Logger.getSystemLogger());
             // make the call
             marshaller.marshal(this);
         } catch ( MarshalException except ) {
