@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionImpl.java,v 1.19 2001/05/10 18:57:09 arkin Exp $
+ * $Id: TransactionImpl.java,v 1.20 2001/05/11 03:21:44 arkin Exp $
  */
 
 
@@ -88,7 +88,7 @@ import tyrex.util.Messages;
  * they are added.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.19 $ $Date: 2001/05/10 18:57:09 $
+ * @version $Revision: 1.20 $ $Date: 2001/05/11 03:21:44 $
  * @see XAResourceHolder
  * @see TransactionManagerImpl
  * @see TransactionDomain
@@ -1042,6 +1042,17 @@ final class TransactionImpl
             throw new IllegalStateException( Messages.message( "tyrex.tx.inactive" ) );
         }
     
+        // Call before completion on all the registered synchronizations.
+        // This happens before the transaction enters the PREPARED state,
+        // so synchronizations can enlist new XA/OTS resources. This call
+        // may affect the outcome of the transaction and cause it to be
+        // marked as rollback-only.
+        if ( _syncs != null ) {
+            beforeCompletion();
+            if ( _status == STATUS_MARKED_ROLLBACK )
+                return;
+        }
+         
         // We begin by having no heuristics at all, but during
         // the process we might reach a conclusion to have a
         // commit or rollback heuristic.
@@ -1049,10 +1060,6 @@ final class TransactionImpl
         _status = STATUS_PREPARING;
         committing = 0;
     
-        // Call before completion on all the registered synchronizations.
-        if ( _syncs != null )
-            beforeCompletion();
-         
         // We deal with OTS (remote transactions and subtransactions)
         // first because we expect a higher likelyhood of failure over
         // there, and we can easly recover over here.
