@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Transaction.java,v 1.11 2001/07/14 01:58:39 mohammed Exp $
+ * $Id: Transaction.java,v 1.12 2001/07/20 23:01:08 mohammed Exp $
  */
 
 
@@ -520,7 +520,7 @@ public class Transaction
 								connection = null;
 							}
 							if (null != xaConnection) {
-								try{xaConnection.close();}catch(SQLException e){}
+								try{xaConnection.close();}catch(Exception e){}
 								xaConnection = null;
 							}
 						}
