@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionManagerImpl.java,v 1.6 2001/03/16 03:38:28 arkin Exp $
+ * $Id: TransactionManagerImpl.java,v 1.7 2001/03/17 01:27:19 arkin Exp $
  */
 
 
@@ -77,7 +77,7 @@ import tyrex.util.Messages;
  * transaction server.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.6 $ $Date: 2001/03/16 03:38:28 $
+ * @version $Revision: 1.7 $ $Date: 2001/03/17 01:27:19 $
  * @see Tyrex#recycleThread
  * @see TransactionDomain
  * @see TransactionImpl
@@ -109,8 +109,9 @@ final class TransactionManagerImpl
     public void begin()
         throws NotSupportedException, SystemException
     {
-        ThreadContext   context;
-        XAResource[]    resources;
+        ThreadContext    context;
+        XAResource[]     resources;
+        TransactionImpl  tx;
 
         context = ThreadContext.getThreadContext();
         if ( context._tx != null && context._tx.getStatus() != STATUS_COMMITTED &&
@@ -118,29 +119,18 @@ final class TransactionManagerImpl
             if ( ! _txDomain.getNestedTransactions() )
                 throw new NotSupportedException( Messages.message( "tyrex.tx.noNested" ) );
             else {
-                // A nested transaction is not registered with
-                // the transaction server and the thread is not
-                // enlisted. Resources are not enlisted with
-                // this transaction, only the top-level one.
-                context._tx = _txDomain.createTransaction( context._tx, null, 0 );
-                return; // !!! Is this the correct behavior
+                // Resources are not enlisted with a nested transaction.
+                _txDomain.createTransaction( context._tx, Thread.currentThread(), 0 );
+                return;
             }
         } else
-            context._tx = _txDomain.createTransaction( null, Thread.currentThread(), 0 );
+            tx = _txDomain.createTransaction( null, Thread.currentThread(), 0 );
 
         // If there are any resources associated with the thread,
         // we need to enlist them with the transaction.
         resources = context.getResources();
         if ( resources != null )
-            enlistResources( context._tx, resources );
-        
-        try {
-            // register a synchronization to perform cleanup
-            context._tx.registerSynchronization( new TransactionManagerSynchronization() );
-        } catch ( RollbackException except ) {
-            // this should not happen
-            throw new NestedSystemException( except );
-        }
+            enlistResources( tx, resources );
     }
 
 
@@ -149,22 +139,13 @@ final class TransactionManagerImpl
                SecurityException, IllegalStateException, SystemException
     {
         ThreadContext   context;
-        TransactionImpl parent;
+        TransactionImpl tx;
 
         context = ThreadContext.getThreadContext();
-        if ( context._tx == null )
+        tx = context._tx;
+        if ( tx == null )
             throw new IllegalStateException( Messages.message( "tyrex.tx.inactive" ) );
-        parent = (TransactionImpl) context._tx.getParent();
-        try {
-            context._tx.commit();
-        } finally {
-            // This forgets about the transaction for the thread.
-            // We cannot forget about the resources, since a new
-            // transaction might be started on this thread.
-            // If this is a sub-transaction, we resume the parent
-            // transaction.
-            context._tx = parent;
-        }
+        tx.commit();
     }
 
 
@@ -172,34 +153,27 @@ final class TransactionManagerImpl
         throws IllegalStateException, SecurityException, SystemException
     {
         ThreadContext   context;
-        TransactionImpl parent;
+        TransactionImpl tx;
         
         context = ThreadContext.getThreadContext();
-        if ( context._tx == null )
+        tx = context._tx;
+        if ( tx == null )
             throw new IllegalStateException( Messages.message( "tyrex.tx.inactive" ) );
-        parent = (TransactionImpl) context._tx.getParent();
-        try {
-            context._tx.rollback();
-        } finally {
-            // This forgets about the transaction for the thread.
-            // We cannot forget about the resources, since a new
-            // transaction might be started on this thread.
-            // If this is a sub-transaction, we resume the parent
-            // transaction.
-            context._tx = parent;
-        }
+        tx.rollback();
     }
 
 
     public int getStatus()
     {
         ThreadContext   context;
+        TransactionImpl tx;
 
         context = ThreadContext.getThreadContext();
-        if ( context._tx == null )
+        tx = context._tx;
+        if ( tx == null )
             return Status.STATUS_NO_TRANSACTION;
         else
-            return context._tx._status;
+            return tx._status;
     }
 
 
@@ -208,9 +182,7 @@ final class TransactionManagerImpl
         ThreadContext   context;
 
         context = ThreadContext.getThreadContext();
-        if ( context._tx == null )
-            return null;    
-        return  context._tx;
+        return context._tx;
     }
 
 
@@ -252,11 +224,12 @@ final class TransactionManagerImpl
         TransactionImpl tx;
 
         context = ThreadContext.getThreadContext();
-        if ( context._tx == null )
+        tx = context._tx;
+        if ( tx == null )
             return null;
         
         // get the toplevel transaction
-        tx = (TransactionImpl) context._tx.getTopLevel();
+        tx = (TransactionImpl) tx.getTopLevel();
         context._tx = null;
         
         synchronized ( tx ) {
@@ -286,21 +259,19 @@ final class TransactionManagerImpl
         throws IllegalStateException, SystemException
     {
         ThreadContext   context;
+        TransactionImpl tx;
         
         context = ThreadContext.getThreadContext();
-        if ( context._tx == null )
+        tx = context._tx;
+        if ( tx == null )
             throw new IllegalStateException( Messages.message( "tyrex.tx.inactive" ) );
-        context._tx.setRollbackOnly();
+        tx.setRollbackOnly();
     }
 
 
     public void setTransactionTimeout( int seconds )
     {
-        ThreadContext   context;
-        
-        context = ThreadContext.getThreadContext();
-        if ( context._tx != null )
-            _txDomain.setTransactionTimeout( (TransactionImpl) context._tx.getTopLevel(), seconds );
+        _txDomain.setTransactionTimeout( seconds );
     }
 
 
@@ -385,6 +356,7 @@ final class TransactionManagerImpl
         throws SystemException
     {
         ThreadContext   context;
+        TransactionImpl tx;
         
         if ( xaResource == null )
             throw new IllegalArgumentException( "Argument xaResource is null" );
@@ -396,9 +368,10 @@ final class TransactionManagerImpl
         // For the resources all transaction are flat: we always
         // enlist with the top level transaction.
         context.add( xaResource );
-        if ( context._tx != null ) {
+        tx = context._tx;
+        if ( tx != null ) {
             try {
-                context._tx.getTopLevel().enlistResource( xaResource );
+                tx.getTopLevel().enlistResource( xaResource );
             } catch ( IllegalStateException except ) {
                 // The transaction is preparing/committing.
                 // We still allow future enlistment.
@@ -413,6 +386,7 @@ final class TransactionManagerImpl
     public void delistResource( XAResource xaResource, int flag )
     {
         ThreadContext   context;
+        TransactionImpl tx;
         
         if ( xaResource == null )
             throw new IllegalArgumentException( "Argument xaResource is null" );
@@ -426,9 +400,10 @@ final class TransactionManagerImpl
         // For the resources all transaction are flat: we always
         // delist with the top level transaction.
         context.remove( xaResource );
-        if ( context._tx != null ) {
+        tx = context._tx;
+        if ( tx != null ) {
             try {
-                context._tx.getTopLevel().delistResource( xaResource, flag );
+                tx.getTopLevel().delistResource( xaResource, flag );
             } catch ( SystemException except ) {
                 // We ignore failure to delist.
             } catch ( IllegalStateException except ) {
@@ -500,55 +475,6 @@ final class TransactionManagerImpl
                     throw new NestedSystemException( except );
             }
         }
-    }
-
-
-    /**
-     * The transaction that has been executing in this
-     * thread is complete.
-     */
-    private void transactionComplete()
-    {
-        ThreadContext   context;
-        TransactionImpl tx;
-        
-        context = ThreadContext.getThreadContext();
-        tx = context._tx;
-        if ( tx != null )
-            context._tx = (TransactionImpl) tx.getParent();
-    }
-
-
-    /**
-     * Synchronization used to inform the transaction manager
-     * when a transaction is complete.
-     */
-    private class TransactionManagerSynchronization 
-        implements Synchronization
-    {
-
-
-        /**
-         * Create the EnlistedResourceSynchronization with the
-         * the specified thread resources
-         */
-        private TransactionManagerSynchronization()
-        {
-        }
-        
-
-        public void afterCompletion( int status ) 
-        {
-            TransactionManagerImpl.this.transactionComplete();
-        }
-       
-
-        public void beforeCompletion() 
-        {
-            //do nothing
-        }
-
-
     }
 
 

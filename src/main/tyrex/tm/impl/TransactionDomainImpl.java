@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionDomainImpl.java,v 1.18 2001/03/16 20:56:57 arkin Exp $
+ * $Id: TransactionDomainImpl.java,v 1.19 2001/03/17 01:27:19 arkin Exp $
  */
 
 
@@ -96,7 +96,7 @@ import tyrex.util.Configuration;
  * Implementation of a transaction domain.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.18 $ $Date: 2001/03/16 20:56:57 $
+ * @version $Revision: 1.19 $ $Date: 2001/03/17 01:27:19 $
  */
 public class TransactionDomainImpl
     extends TransactionDomain
@@ -123,9 +123,10 @@ public class TransactionDomainImpl
 
 
     /**
-     * The maximum timeout for a transaction. This is five minutes.
+     * The maximum timeout for a transaction. This is ten minutes,
+     * specified as seconds.
      */
-    public static final int  MAXIMUM_TIMEOUT = 5 * 60;
+    public static final int  MAXIMUM_TIMEOUT = 10 * 60;
 
 
     /**
@@ -182,7 +183,7 @@ public class TransactionDomainImpl
     /**
      * The default timeout for all transactions, in seconds.
      */
-    private final int                     _txTimeout;
+    private int                            _txTimeout;
 
 
     /**
@@ -556,6 +557,7 @@ public class TransactionDomainImpl
         BaseXid         xid;
         int             hashCode;
         int             index;
+        ThreadContext   context;
 
         if ( _state != ACTIVE )
             throw new SystemException( "Transaction domain not active" );
@@ -571,16 +573,12 @@ public class TransactionDomainImpl
         newTx = new TransactionImpl( xid, parent, this, timeout * 1000 );
         timeout = newTx._timeout;
 
-        // Nested transactions are not registered directly
-        // with the transaction server. They are not considered
-        // new creation/activation and are not subject to timeout.
-        if ( parent != null )
-            return newTx;
-    
         synchronized ( this ) {
             // Block if exceeded maximum number of transactions allowed.
-            // At this point we might get a SystemException.
-            canCreateNew();
+            // At this point we might get a SystemException. This only
+            // applies for top-level transactions.
+            if ( parent == null )
+                canCreateNew();
 
             for ( int i = 0 ; i < _interceptors.length ; ++i ) {
                 try {
@@ -611,10 +609,19 @@ public class TransactionDomainImpl
                         _category.error( "Interceptor " + _interceptors[ i ] + " reported error", thrw );
                     }
                 }
-                if ( thread != null )
+                if ( thread != null ) {
                     newTx._threads = new Thread[] { thread };
+                    context = ThreadContext.getThreadContext( thread );
+                    context._tx = newTx;
+                }
             }
             
+            // Nested transactions are not registered directly
+            // with the transaction domain. They are not considered
+            // new creation/activation and are not subject to timeout.
+            if ( parent != null )
+                return newTx;
+    
             index = ( hashCode & 0x7FFFFFFF ) % _hashTable.length;
             entry = _hashTable[ index ];
             if ( entry == null )
@@ -801,6 +808,8 @@ public class TransactionDomainImpl
         int             hashCode;
         int             index;
         Thread[]        threads;
+        Thread          thread;
+        ThreadContext   context;
 
         if ( tx == null )
             throw new IllegalArgumentException( "Argument tx is null" );
@@ -839,14 +848,18 @@ public class TransactionDomainImpl
             threads = entry._threads;
             if ( threads != null && threads.length > 0 ) {
                 for ( int i = threads.length ; i-- > 0 ; ) {
-                    if ( threads[ i ]  != null ) {
+                    thread = threads[ i ];
+                    if ( thread  != null ) {
                         for ( int j = _interceptors.length ; j-- > 0 ; ) {
                             try {
-                                _interceptors[ j ].suspend( xid, threads[ i ] );
+                                _interceptors[ j ].suspend( xid, thread );
                             } catch ( Throwable thrw ) {
                                 _category.error( "Interceptor " + _interceptors[ i ] + " reported error", thrw );
                             }
                         }
+                        context = ThreadContext.getThreadContext( thread );
+                        if ( context._tx == tx )
+                            context._tx = (TransactionImpl) tx.getParent();
                     }
                 }
                 entry._threads = null;
@@ -870,9 +883,24 @@ public class TransactionDomainImpl
 
 
     /**
-     * Called by {@link TransactionManager#setTransactionTimeout
-     * setTransactionTimeout} to change the timeout of the transaction
-     * and all the resources enlisted with that transaction.
+     * Called to set the timeout of all transactions created from this domain.
+     *
+     * @param timeout The new timeout in seconds, zero to restore the
+     * default timeout
+     */
+    protected void setTransactionTimeout( int timeout )
+    {
+        if ( timeout <= 0 )
+            timeout = DomainConfig.DEFAULT_TIMEOUT;
+        else if ( timeout > MAXIMUM_TIMEOUT )
+            timeout = MAXIMUM_TIMEOUT;
+        _txTimeout = timeout;
+    }
+
+
+    /**
+     * Called to change the timeout of the transaction and all the resources
+     * enlisted with that transaction.
      *
      * @param tx The transaction
      * @param timeout The new timeout in seconds, zero to use the

@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionImpl.java,v 1.9 2001/03/16 20:56:57 arkin Exp $
+ * $Id: TransactionImpl.java,v 1.10 2001/03/17 01:27:19 arkin Exp $
  */
 
 
@@ -88,7 +88,7 @@ import tyrex.util.Messages;
  * they are added.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.9 $ $Date: 2001/03/16 20:56:57 $
+ * @version $Revision: 1.10 $ $Date: 2001/03/17 01:27:19 $
  * @see XAResourceHolder
  * @see TransactionManagerImpl
  * @see TransactionDomain
@@ -113,7 +113,9 @@ final class TransactionImpl
 
     /**
      * Holds a list of all the synchronization objects. This array is null
-     * if there are no synchronization and does not contain empty entries.
+     * if there are no synchronization. The array size may be larger than
+     * the actual number of registered synchronization, in which case all
+     * empty elements are consecutive at the end of the array.
      */
     private Synchronization[]          _syncs;
 
@@ -450,6 +452,9 @@ final class TransactionImpl
     public synchronized void registerSynchronization( Synchronization sync )
         throws RollbackException, IllegalStateException, SystemException
     {
+        Synchronization[] syncs;
+        int               length;
+
         if ( sync == null )
             throw new IllegalArgumentException( "Argument sync is null" );
 
@@ -480,20 +485,26 @@ final class TransactionImpl
         }
 
         if ( _syncs == null ) {
-            _syncs = new Synchronization[] { sync };
+            _syncs = new Synchronization[ 2 ];
+            _syncs[ 0 ] = sync;
         } else {
-            Synchronization[] newSyncs;
-            
             // In many cases we will get duplicity in synchronization
             // registration, but we don't want to fire duplicate events.
-            for ( int i = _syncs.length ; i-- > 0 ; )
-                if ( _syncs[ i ] == sync )
+            syncs = _syncs;
+            length = syncs.length;
+            for ( int i = 0 ; i < length ; ++i ) {
+                if ( syncs[ i ] == sync )
                     return;
-            newSyncs = new Synchronization[ _syncs.length + 1 ];
-            for ( int i = _syncs.length ; i-- > 0 ; )
-                newSyncs[ i ] = _syncs[ i ];
-            newSyncs[ _syncs.length ] = sync;
-            _syncs = newSyncs;
+                else if ( syncs[ i ] == null ) {
+                    syncs[ i ] = sync;
+                    return;
+                }
+            }
+            syncs = new Synchronization[ length * 2 ];
+            for ( int i = length ; i-- > 0 ; )
+                syncs[ i ] = _syncs[ i ];
+            syncs[ length ] = sync;
+            _syncs = syncs;
         }
     }
 
@@ -503,8 +514,17 @@ final class TransactionImpl
                 SecurityException, SystemException
     {
         // Proper notification for transactions that timed out.
-        if ( _timedOut )
+        if ( _timedOut ) {
+            try {
+                forget( Heuristic.ROLLBACK );
+            } catch ( IllegalStateException except ) {
+
+                _txDomain._category.error( "Internal error", except );
+            }
+            if ( _parent != null )
+                _parent.unregisterResource( new ResourceImpl( this ) );
             throw new RollbackException( Messages.message( "tyrex.tx.timedOut" ) );
+        }
         
         // If this is a subtransaction, it cannot commit directly,
         // only once the parent transaction commits through the
@@ -519,17 +539,15 @@ final class TransactionImpl
     public synchronized void rollback()
         throws IllegalStateException, SystemException
     {
-        // Proper notification for transactions that timed out.
-        if ( _timedOut )
-            throw new IllegalStateException( Messages.message( "tyrex.tx.timedOut" ) );
-        
         // Perform the rollback, pass IllegalStateException to
-        // the caller, ignore the returned heuristics.
+        // the caller, ignore the returned heuristics, do nothing
+        // if already timed out (except forget).
         try {
-            _txDomain.notifyRollback( this );
-            internalRollback();
-        }
-        finally {
+            if ( ! _timedOut ) {
+                _txDomain.notifyRollback( this );
+                internalRollback();
+            }
+        } finally {
             // The transaction will now tell all it's resources to
             // forget about the transaction and will release all
             // held resources. Also notifies all the synchronization
@@ -772,8 +790,17 @@ final class TransactionImpl
         Thread thread;
         
         // Proper notification for transactions that timed out.
-        if ( _timedOut )
+        if ( _timedOut ) {
+            try {
+                forget( Heuristic.ROLLBACK );
+            } catch ( IllegalStateException except ) {
+
+                _txDomain._category.error( "Internal error", except );
+            }
+            if ( _parent != null )
+                _parent.unregisterResource( new ResourceImpl( this ) );
             throw new RollbackException( Messages.message( "tyrex.tx.timedOut" ) );
+        }
 
         // Dissociated the tranaction from the current thread,
         // before embarking on asynchronous commit.
@@ -810,10 +837,6 @@ final class TransactionImpl
         throws IllegalStateException, SystemException, SecurityException
     {
         Thread thread;
-        
-        // Proper notification for transactions that timed out.
-        if ( _timedOut )
-            throw new IllegalStateException( Messages.message( "tyrex.tx.timedOut" ) );
         
         // Dissociated the tranaction from the current thread,
         // before embarking on asynchronous commit.
@@ -894,8 +917,17 @@ final class TransactionImpl
                IllegalStateException, SystemException
     {
         // Proper notification for transactions that timed out.
-        if ( _timedOut )
+        if ( _timedOut ) {
+            try {
+                forget( Heuristic.ROLLBACK );
+            } catch ( IllegalStateException except ) {
+
+                _txDomain._category.error( "Internal error", except );
+            }
+            if ( _parent != null )
+                _parent.unregisterResource( new ResourceImpl( this ) );
             throw new RollbackException( Messages.message( "tyrex.tx.timedOut" ) );
+        }
         
         // If this is a subtransaction, it cannot commit directly,
         // only once the parent transaction commits through the
@@ -1926,6 +1958,7 @@ final class TransactionImpl
         XAResourceHolder   resHolder;
         Transaction        suspended;
         Resource           resource;
+        Synchronization    sync;
         
         if ( _status != STATUS_COMMITTED && _status != STATUS_ROLLEDBACK )
             throw new IllegalStateException( Messages.message( "tyrex.tx.cannotForget" ) );
@@ -1999,9 +2032,12 @@ final class TransactionImpl
             // the current one before calling method.
             suspended = makeCurrentTransactionIfNecessary();
             
-            for ( int i = _syncs.length ; i-- > 0 ; ) {
+            for ( int i = 0 ; i < _syncs.length ; ++i ) {
+                sync = _syncs[ i ];
+                if ( sync == null )
+                    break;
                 try {
-                    _syncs[ i ].afterCompletion( _status );
+                    sync.afterCompletion( _status );
                 } catch ( Exception except ) {
                     error( except );
                 }
@@ -2335,7 +2371,8 @@ final class TransactionImpl
      */
     private void beforeCompletion()
     {
-        Transaction  suspended;
+        Transaction     suspended;
+        Synchronization sync;
 
         // First, notify all the synchronization objects that
         // we are about to complete a transaction. They might
@@ -2353,9 +2390,12 @@ final class TransactionImpl
             // Do not notify of completion if we already
             // decided to roll back the transaction.
             if ( _status != STATUS_MARKED_ROLLBACK ) {
-                for ( int i = _syncs.length ; i-- > 0 ; ) {
+                for ( int i = 0 ; i < _syncs.length ; ++i ) {
+                    sync = _syncs[ i ];
+                    if ( sync == null )
+                        break;
                     try {
-                        _syncs[ i ].beforeCompletion();
+                        sync.beforeCompletion();
                     } catch ( Exception except ) {
                         error( except );
                         _status = STATUS_MARKED_ROLLBACK;

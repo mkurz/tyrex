@@ -4,7 +4,7 @@
 - Need to validate that both TransactionManager and TransactionFactory
   provide the proper timeout in seconds.
 
-- Implement shutdown for transaction domain and connection pool
+- Implement destroy() for connection pool
 
 - Add ThreadPool implementation with ThreadPoolMetrics for statistics (including average
   execution time, average block time, block/unblock ratio)

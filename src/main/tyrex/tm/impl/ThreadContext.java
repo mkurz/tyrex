@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: ThreadContext.java,v 1.3 2001/03/13 03:14:59 arkin Exp $
+ * $Id: ThreadContext.java,v 1.4 2001/03/17 01:27:19 arkin Exp $
  */
 
 
@@ -63,7 +63,7 @@ import tyrex.util.FastThreadLocal;
  * Implementation of {@link RuntimeContext}.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.3 $ $Date: 2001/03/13 03:14:59 $
+ * @version $Revision: 1.4 $ $Date: 2001/03/17 01:27:19 $
  */
 public class ThreadContext
     extends RuntimeContext
@@ -157,7 +157,34 @@ public class ThreadContext
         // entry._next to point to the next entry.
         entry = _table[ index ];
         while ( entry != null ) {
-            if ( entry._thread != thread )
+            if ( entry._thread == thread )
+                return entry._context;
+            entry = entry._nextEntry;
+        }
+        synchronized ( _table ) {
+            context = new ThreadContext( null );
+            entry = new ThreadEntry( context, thread, null );
+            entry._nextEntry = _table[ index ];
+            _table[ index ] = entry;
+        }
+        return context;
+    }
+
+
+    public static ThreadContext getThreadContext( Thread thread )
+    {
+        ThreadEntry   entry;
+        ThreadContext context;
+        int           index;
+        
+        index = ( thread.hashCode() & 0x7FFFFFFF ) % _table.length;
+        // Lookup the first entry that maps to the has code and
+        // continue iterating to the last entry until a matching entry
+        // is found. Even if the current entry is removed, we expect
+        // entry._next to point to the next entry.
+        entry = _table[ index ];
+        while ( entry != null ) {
+            if ( entry._thread == thread )
                 return entry._context;
             entry = entry._nextEntry;
         }
