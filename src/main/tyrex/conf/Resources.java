@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: Resources.java,v 1.3 2000/02/23 21:13:44 arkin Exp $
+ * $Id: Resources.java,v 1.4 2000/08/28 19:01:47 mohammed Exp $
  */
 
 
@@ -70,7 +70,7 @@ import tyrex.util.Logger;
  *
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.3 $ $Date: 2000/02/23 21:13:44 $
+ * @version $Revision: 1.4 $ $Date: 2000/08/28 19:01:47 $
  */
 public class Resources
     implements Serializable
@@ -338,16 +338,20 @@ public class Resources
     public void save( Writer writer )
 	throws IOException
     {
-	try {
-	    if ( debug )
-		Marshaller.marshal( this, writer, Logger.getSystemLogger() );
-	    else
-		Marshaller.marshal( this, writer );
-	} catch ( MarshalException except ) {
-	    throw new IOException( except.toString() );
-	} catch ( Exception except ) {
-	    throw new IOException( "Nested exception: " + except );
-	}
+        
+	    try {
+	        // make the marshaller
+            Marshaller marshaller = new Marshaller(writer);
+            // set the log
+            if ( debug )
+                marshaller.setLogWriter(Logger.getSystemLogger());
+            // make the call
+            marshaller.marshal(this);
+        } catch ( MarshalException except ) {
+	        throw new IOException( except.toString() );
+	    } catch ( Exception except ) {
+	        throw new IOException( "Nested exception: " + except );
+	    }
     }
 
 

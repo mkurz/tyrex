@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: MemoryBindingEnumeration.java,v 1.2 2000/04/14 21:40:26 arkin Exp $
+ * $Id: MemoryBindingEnumeration.java,v 1.3 2000/08/28 19:01:49 mohammed Exp $
  */
 
 
@@ -66,7 +66,7 @@ import javax.naming.spi.NamingManager;
  * created based of a {@link MemoryBinding}.
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $ $Date: 2000/04/14 21:40:26 $
+ * @version $Revision: 1.3 $ $Date: 2000/08/28 19:01:49 $
  * @see MemoryBinding
  */
 final class MemoryBindingEnumeration

@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: ManagedConnection.java,v 1.2 2000/04/13 22:11:30 arkin Exp $
+ * $Id: ManagedConnection.java,v 1.3 2000/08/28 19:01:48 mohammed Exp $
  */
 
 
@@ -64,7 +64,7 @@ import javax.transaction.xa.XAResource;
  * Further changes to these API are expected in the future.
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $ $Date: 2000/04/13 22:11:30 $
+ * @version $Revision: 1.3 $ $Date: 2000/08/28 19:01:48 $
  */
 public interface ManagedConnection
 {
@@ -106,7 +106,6 @@ public interface ManagedConnection
     /**
      * Deregisters a connection event listener.
      *
-     *
      * @param listener The connection event listener
      */
     public void removeConnectionEventListener( ConnectionEventListener listener );
@@ -120,8 +119,8 @@ public interface ManagedConnection
      * @throws ConnectionException Reports an error that occured when
      *  attempting to pool the connection
      */
-    public void pool()
-        throws ConnectionException;
+    //public void pool()
+    //    throws ConnectionException;
 
 
     /**
@@ -155,6 +154,9 @@ public interface ManagedConnection
      * manage distributed transactions on this connection. This method
      * is called if the reported transaction type is {@link
      * #TRANSACTION_XA}.
+     * <BR>
+     * This method always returns the same XAResource any number of
+     * times it is called.
      *
      * @return An <tt>XAResource</tt> for managing distributed transactions
      * @throws ConnectionException An error occured while taking to the
@@ -165,17 +167,17 @@ public interface ManagedConnection
 
 
     /**
-     * Returns an <tt>SynchronizationResource</tt> object that will be
+     * Returns an <tt>LocalTransaction</tt> object that will be
      * used to manage local transactions on this connection. This method
      * is called if the reported transaction type is {@link
      * #TRANSACTION_SYNCHRONIZATION}.
      *
-     * @return An <tt>SynchronizationResource</tt> for managing local
+     * @return An <tt>LocalTransaction</tt> for managing local
      *  transactions
      * @throws ConnectionException An error occured while taking to the
      *  connection, this connection should be discarded
      */
-    public SynchronizationResource getSynchronizationResource()
+    public LocalTransaction getLocalTransaction()
         throws ConnectionException;
 
 
@@ -185,8 +187,8 @@ public interface ManagedConnection
      * method invocations, by associating/dissociating the connection held
      * by the application with an actual managed connection.
      */
-    public void connect( Object connection )
-        throws ConnectionException;
+    //public void connect( Object connection )
+    //    throws ConnectionException;
 
 
     /**
@@ -203,8 +205,6 @@ public interface ManagedConnection
      * @param logWriter The log writer
      */
     public void setLogWriter( PrintWriter logWriter );
-
-
 }
 
 

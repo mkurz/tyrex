@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: Policy.java,v 1.1 2000/02/23 21:20:21 arkin Exp $
+ * $Id: Policy.java,v 1.2 2000/08/28 19:01:47 mohammed Exp $
  */
 
 
@@ -54,7 +54,7 @@ import java.io.Serializable;
  *
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2000/02/23 21:20:21 $
+ * @version $Revision: 1.2 $ $Date: 2000/08/28 19:01:47 $
  */
 public class Policy
     implements Serializable

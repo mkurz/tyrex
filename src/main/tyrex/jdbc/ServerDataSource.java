@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: ServerDataSource.java,v 1.2 2000/01/17 22:18:36 arkin Exp $
+ * $Id: ServerDataSource.java,v 1.3 2000/08/28 19:01:48 mohammed Exp $
  */
 
 
@@ -50,6 +50,7 @@ package tyrex.jdbc;
 import java.io.PrintWriter;
 import java.io.Serializable;
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.Vector;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
@@ -73,22 +74,32 @@ import javax.naming.NamingException;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.Name;
-import tyrex.server.ResourceManager;
-import tyrex.util.PoolManager;
-import tyrex.util.PooledResources;
-import tyrex.util.TimeoutException;
+import tyrex.tm.ResourceManager;
+import tyrex.resource.ResourcePool;
+import tyrex.resource.ResourcePoolManager;
+import tyrex.resource.ResourcePoolManagerImpl;
+import tyrex.resource.ResourceTimeoutException;
 import tyrex.util.Messages;
 
 
 /**
- *
+ * This class allows the connections from a JDBC data source
+ * (javax.sql.ConnectionPoolDataSource and
+ * javax.sql.XADataSource) to be used as 
+ * {@link EnlistedResource} and to be pooled in a
+ * {@link tyrex.resource.ResourcePool}.
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $ $Date: 2000/01/17 22:18:36 $
+ * @version $Revision: 1.3 $ $Date: 2000/08/28 19:01:48 $
+ *
+ * Date         Author          Changes
+ * ?            Assaf Arkin     Created  
+ * Aug 8  2000  Riad Mohammed   Added retry functionality
+ * Aug 22 2000  Riad Mohammed   Added convenience constructors
  */
 public class ServerDataSource
     implements DataSource, ConnectionEventListener,
-	       Referenceable, Serializable, PooledResources
+	       Referenceable, Serializable, ResourcePool
 {
 
 
@@ -100,10 +111,24 @@ public class ServerDataSource
 
 
     /**
+     * The default number of times to try getting a
+     * a connection
+     */
+    public static final int DEFAULT_RETRY_ATTEMPTS = 5;
+
+
+    /**
      * Holds the timeout for waiting to obtain a new connection,
      * specified in seconds. The default is {@link #DEFAULT_TIMEOUT}.
      */
     private int _timeout = DEFAULT_TIMEOUT;
+
+
+    /**
+     * Holds the number of times to try to get a connection.
+     * The default is {@link #DEFAULT_RETRY_ATTEMPTS}.
+     */
+    private int _retryAttempts = DEFAULT_RETRY_ATTEMPTS;
 
 
     /**
@@ -157,7 +182,7 @@ public class ServerDataSource
     private transient Hashtable _active = new Hashtable();
 
 
-    private PoolManager         _poolManager;
+    private ResourcePoolManager         _poolManager;
 
 
 
@@ -166,6 +191,22 @@ public class ServerDataSource
     {
     }
 
+
+    public ServerDataSource( ConnectionPoolDataSource dataSource )
+    {
+	_dataSource = dataSource;
+    }
+
+
+    public ServerDataSource( XADataSource dataSource )
+    {
+    _dataSource = dataSource;
+    }
+
+    public ServerDataSource( String dataSourceName )
+    {
+    _dataSourceName = dataSourceName;
+    }
 
     public synchronized Connection getConnection()
         throws SQLException
@@ -178,41 +219,48 @@ public class ServerDataSource
         throws SQLException
     {
 	ConnectionPoolEntry entry;
-	Connection         conn;
+	Connection          conn;
+    int                 retryAttempts = 0;
 
-	// If the connection is unuseable we might detect it
-	// at this point and attempt to return a different
-	// connection to the application.
-	try {
-	    entry = getPoolEntry( user, password );
-	} catch ( TimeoutException except ) {
-	    // Time out occured waiting for an available connection.
-	    throw new SQLException( except.getMessage() );
-	}
-
-	try {
-
-	    // Check to see if we can produce a connection for
-	    // the application.
-	    conn = entry.conn.getConnection();
-
-	    // This will delist an XA resource with the transaction
-	    // manager whether or not we have a transaction.
-	    // We must return a {@link EnlistedConnection} to the
-	    // application.
-	    if ( entry.xaRes != null )
-		conn = new EnlistedConnection( conn, entry.xaRes );
-	    
-	    // Obtain a new pool entry, add it to the active list and
-	    // register as a listener on it.
-	    _active.put( entry.conn, entry );
-	    entry.conn.addConnectionEventListener( this );
-	    return conn;
-	} catch ( SQLException except ) {
-	    // This is not a problem of creating a new entry,
-	    // so just try to create a new one.
-	    return getConnection( user, password );
-	}
+    while ( ( -1 == _retryAttempts ) ||
+            ( retryAttempts <= _retryAttempts ) ) {
+        // If the connection is unuseable we might detect it
+    	// at this point and attempt to return a different
+    	// connection to the application.
+    	try {
+    	    entry = getPoolEntry( user, password );
+    	} catch ( ResourceTimeoutException except ) {
+    	    // Time out occured waiting for an available connection.
+    	    throw new SQLException( except.getMessage() );
+    	}
+    
+    	try {
+    
+    	    // Check to see if we can produce a connection for
+    	    // the application.
+    	    conn = entry.conn.getConnection();
+    
+    	    // This will delist an XA resource with the transaction
+    	    // manager whether or not we have a transaction.
+    	    // We must return a {@link EnlistedConnection} to the
+    	    // application.
+    	    if ( entry.xaRes != null ) {
+                conn = new EnlistedConnection( conn, entry.xaRes );
+            }
+    	    
+    	    // Obtain a new pool entry, add it to the active list and
+    	    // register as a listener on it.
+    	    _active.put( entry.conn, entry );
+    	    entry.conn.addConnectionEventListener( this );
+    	    return conn;
+    	} catch ( SQLException except ) {
+    	    // This is not a problem of creating a new entry,
+    	    // so just try to create a new one.
+    	    
+    	}
+        ++retryAttempts;
+    }
+    throw new SQLException("Failed to get a connection.");
     }
 
 
@@ -233,7 +281,7 @@ public class ServerDataSource
      *   connection after the pool limit has been reached
      */
     private synchronized ConnectionPoolEntry getPoolEntry( String user, String password )
-	throws SQLException, TimeoutException
+	throws SQLException, ResourceTimeoutException
     {
 	ConnectionPoolEntry entry;
 	String              account;
@@ -302,13 +350,15 @@ public class ServerDataSource
     public synchronized void releasePooled( int count )
     {
 	int start;
-
-	start = _pool.size() - count;
+    start = _pool.size() - count;
 	if ( start < 0 )
 	    start = 0;
 	count = _pool.size();
 	while ( count-- > start )
-	    _pool.removeElementAt( count );
+	    try {
+            ( ( ConnectionPoolEntry ) _pool.remove( count ) ).conn.close();
+        } catch ( Exception e ) {
+        }
     }
 
 
@@ -365,6 +415,30 @@ public class ServerDataSource
 	}
     }
 
+
+    /**
+     * Close the data source, freeing any pooled connections.
+     *
+     * @throws IllegalStateException if there are active connections
+     */
+    public synchronized void close()
+        throws IllegalStateException
+    {
+        if ( 0 != getActiveCount() ) {
+            throw new IllegalStateException( "Data source " + toString() +
+                                             " has active connections" );
+        }
+        if ( 0 != getPooledCount() ) {
+            // free the pooled connections
+            for ( Iterator i = _pool.iterator(); i.hasNext(); ) {
+                try {    
+                    ( ( ConnectionPoolEntry) i.next() ).conn.close();
+                } catch ( Exception except ) {
+                }
+            }
+            _pool.clear();
+        }
+    }
 
     /**
      * In order to deal with connections opened for a specific
@@ -478,6 +552,31 @@ public class ServerDataSource
 
 
     /**
+     * Set the number of attempts to try to get a connection.
+     * A negative value means try indefinitely.
+     *
+     * @param retryAttempts the number of attempts to try to get 
+     *      a connection
+     */
+    public void setRetryAttempts( int retryAttempts )
+    {
+    _retryAttempts = Math.max( -1, retryAttempts );
+    }
+
+
+    /**
+     * Return the number of attempts to try to 
+     * get a connection.
+     *
+     * @return the number of attempts to try to
+     *      get a connection.
+     */
+    public int getRetryAttempts()
+    {
+    return _retryAttempts;
+    }
+
+    /**
      * Sets the name of the data source used for creating new connections.
      * The standard name for this property is <tt>dataSourceName</tt>.
      *
@@ -530,7 +629,7 @@ public class ServerDataSource
     }
 
 
-    public synchronized void setPoolManager( PoolManager poolManager )
+    public synchronized void setPoolManager( ResourcePoolManager poolManager )
     {
 	if ( poolManager == null )
 	    throw new IllegalArgumentException( "Argument 'poolManager' is null" );
@@ -541,10 +640,10 @@ public class ServerDataSource
     }
 
 
-    public PoolManager getPoolManager()
+    public ResourcePoolManager getPoolManager()
     {
 	if ( _poolManager == null )
-	    _poolManager = new PoolManager( this, true );
+	    _poolManager = new ResourcePoolManagerImpl( this, true );
 	return _poolManager;
     }
 

@@ -18,8 +18,12 @@
     <property name="deprecation" value="true" />
     <property file="${etc}/VERSION" />
     <property name="archive" value="${project}-${version}" />
+     
   </target>
 
+<!-- 
+<property name="build.compiler" value="jikes" />      
+-->
  
   <!-- Display all the targets -->
   <target name="targets">
@@ -67,10 +71,19 @@
 
 
   <!-- Build all the sources with debug and deprecation -->
+  <!--
   <target name="main" depends="prepare">
     <javac srcdir="${main}" destdir="${classes}" excludes="**/package.html"
            classpath="${classpath}" debug="on" deprecation="${deprecation}"
-           includes="tyrex/concurrency/**,tyrex/connector/**,tyrex/interceptor/**,tyrex/naming/**,tyrex/util/**" />
+           includes="tyrex/concurrency/**,tyrex/interceptor/**,tyrex/naming/**,tyrex/util/**" />
+  </target> 
+  
+  -->
+  
+  <target name="main" depends="prepare">
+    <javac srcdir="${main}" destdir="${classes}" 
+           excludes="**/package.html,**/*.disabled,**/*.disable,**/*.old,tyrex/tools/Tomcat.java"
+           classpath="${classpath}" debug="on" deprecation="${deprecation}" />
   </target>
 
   <!-- Same as main, but also cleans and additional targets -->
@@ -78,7 +91,8 @@
 
   <!-- Same as main, but optimization, no debug and no deprecation -->
   <target name="main-opt" depends="prepare">
-    <javac srcdir="${main}" destdir="${classes}" excludes="**/package.html"
+    <javac srcdir="${main}" destdir="${classes}" 
+           excludes="**/package.html,**/*.disabled,**/*.disable,**/*.old,tyrex/tools/Tomcat.java"
            classpath="${classpath}" debug="off" deprecation="off" optimize="on" />
   </target>
 
@@ -86,7 +100,8 @@
   <target name="tests" depends="prepare">
     <mkdir dir="${build}/tests" />
     <javac srcdir="${source}/tests" destdir="${build}/tests"
-           classpath="${classpath}" debug="on" deprecation="${deprecation}" />
+           classpath="${classpath}" debug="on" deprecation="${deprecation}" 
+           excludes="cloudscape/*,interbase/*,sybase/*,oracle/*,postgres/*,tests/*,tm/* " />
   </target>
 
 
@@ -107,6 +122,25 @@
 
 
   <!-- Build the documentation -->
+  <!-- doc without style
+  <target name="doc" depends="prepare">
+    <mkdir    dir="${build}/doc" />
+    <copydir  src="${doc}" dest="${build}/doc" includes="license.txt,document.dtd" />
+    <copydir  src="${doc}/images" dest="${build}/doc/images" />
+    <copydir  src="${doc}/style" dest="${build}/doc/style" includes="images/**,*.css" />
+
+    <mkdir    dir="${build}/doc/print" />
+    <copydir  src="${doc}" dest="${build}/doc/print" includes="license.txt,document.dtd" />
+    <copydir  src="${doc}/images" dest="${build}/doc/print/images" />
+
+    <copydir  src="${schema}" includes="*.dtd,*.xsd" dest="${build}/doc" />
+    <replace  file="${build}/doc/index.html" token="$$VERSION$$" value="${version}" />
+    <replace  file="${build}/doc/download.html" token="$$VERSION$$" value="${version}" />
+    <replace  file="${build}/doc/print/index.html" token="$$VERSION$$" value="${version}" />
+    <replace  file="${build}/doc/print/download.html" token="$$VERSION$$" value="${version}" />
+  </target>
+  -->
+  
   <target name="doc" depends="prepare">
     <mkdir    dir="${build}/doc" />
     <style    basedir="${doc}" destdir="${build}/doc" style="style/exolab.xsl"
@@ -127,7 +161,7 @@
     <replace  file="${build}/doc/print/index.html" token="$$VERSION$$" value="${version}" />
     <replace  file="${build}/doc/print/download.html" token="$$VERSION$$" value="${version}" />
   </target>
-
+  
 
   <!-- Build the full JavaDocs -->
   <target name="javadoc" depends="prepare">
@@ -138,7 +172,7 @@
     <javadoc  sourcepath="${main}" destdir="${build}/doc/javadoc" dir="."
               doctitle="Tyrex JavaDoc" windowtitle="Tyrex JavaDoc" bottom="${copyright}"
               package="true" author="true" version="true" noindex="true"
-              packagenames="tyrex/**" />
+              packagenames="tyrex.*" />
   </target>
 
   <!-- Build the API JavaDocs -->
@@ -150,7 +184,7 @@
     <javadoc  sourcepath="${main}" destdir="${build}/doc/api" dir="."
               doctitle="Tyrex API" windowtitle="Tyrex API" bottom="${copyright}"
               public="true" author="true"
-              packagenames="tyrex.naming,tyrex.concurrency,tyrex.connector" />
+              packagenames="tyrex.*" />
   </target>
 
   <!-- Build the docs, API and full JavaDocs, doc archives -->

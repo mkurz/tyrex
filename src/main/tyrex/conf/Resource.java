@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: Resource.java,v 1.2 2000/01/17 22:16:40 arkin Exp $
+ * $Id: Resource.java,v 1.3 2000/08/28 19:01:47 mohammed Exp $
  */
 
 
@@ -50,8 +50,8 @@ package tyrex.conf;
 import java.io.Serializable;
 import java.util.Vector;
 import java.util.Enumeration;
-import tyrex.util.ResourceFactoryBuilder;
-import tyrex.util.PoolManager;
+import tyrex.resource.ResourcePoolManager;
+import tyrex.resource.ResourceFactoryBuilder;
 import tyrex.util.Messages;
 import tyrex.util.Logger;
 
@@ -69,7 +69,7 @@ import tyrex.util.Logger;
  * </ul>
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $ $Date: 2000/01/17 22:16:40 $
+ * @version $Revision: 1.3 $ $Date: 2000/08/28 19:01:47 $
  * @see ResourceFactoryBuilder
  * @see PoolManager
  */
@@ -116,7 +116,7 @@ public class Resource
     /**
      * The pool manager associated with this resource.
      */
-    private PoolManager _pool;
+    private ResourcePoolManager _pool;
 
 
     /**
@@ -254,7 +254,7 @@ public class Resource
      * @param pool The pool manager
      * @see PoolManager
      */
-    public void setPool( PoolManager pool )
+    public void setPool( ResourcePoolManager pool )
     {
 	_pool = pool;
     }
@@ -266,7 +266,7 @@ public class Resource
      * @return The pool manager
      * @see PoolManager
      */
-    public PoolManager getPool()
+    public ResourcePoolManager getPool()
     {
 	return _pool;
     }

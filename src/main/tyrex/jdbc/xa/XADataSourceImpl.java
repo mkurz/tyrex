@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: XADataSourceImpl.java,v 1.2 2000/01/17 22:18:28 arkin Exp $
+ * $Id: XADataSourceImpl.java,v 1.3 2000/08/28 19:01:49 mohammed Exp $
  */
 
 

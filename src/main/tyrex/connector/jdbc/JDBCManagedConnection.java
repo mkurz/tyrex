@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: JDBCManagedConnection.java,v 1.2 2000/04/13 22:06:00 arkin Exp $
+ * $Id: JDBCManagedConnection.java,v 1.3 2000/08/28 19:01:48 mohammed Exp $
  */
 
 
@@ -48,11 +48,12 @@ package tyrex.connector.jdbc;
 
 
 import java.io.PrintWriter;
-import java.util.Properties;
+import java.lang.ref.WeakReference;
 import java.sql.SQLException;
 import java.sql.Connection;
 import javax.sql.XAConnection;
 import javax.transaction.xa.XAResource;
+import tyrex.connector.AbstractManagedConnection;
 import tyrex.connector.ManagedConnection;
 import tyrex.connector.ConnectionException;
 import tyrex.connector.ConnectionEventListener;
@@ -61,45 +62,49 @@ import tyrex.connector.SynchronizationResource;
 
 /**
  * An adapter for JDBC XAConnection interface to expose
- * it as a managed connection.
+ * it as a managed connection. It produces an object of 
+ * type {link JDBCConnectionHandle}
+ * as a result of calling {@link #getConnection}.
+ * <BR>
+ * The last handle from a JDBC managed connection 
+ * {@link #getConnection}
+ * is valid ie previous handles become invalid when
+ * a new handle is obtained. This is in keeping with the
+ * semantics of JDBC pooled connection.
+ * <BR>
+ * This implementation currently uses a single java.sql.Connection
+ * object as the basis of the {link JDBCConnectionHandle} objects
+ * produced by this managed connection through the method
+ * {link getConnection}.
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $ $Date: 2000/04/13 22:06:00 $
+ * @version $Revision: 1.3 $ $Date: 2000/08/28 19:01:48 $
  */
-public class JDBCManagedConnection
+public final class JDBCManagedConnection
+    extends AbstractManagedConnection
     implements ManagedConnection, javax.sql.ConnectionEventListener
 {
 
 
-    private final XAConnection            _xaConnection;
+    private final XAConnection          xaConnection;
 
+    private final Connection            connection;
 
-    private Connection                    _connection;
-
-
-    private final SynchronizationResource _syncResource;
-
-
-    private final XAResource              _xaResource;
-
-
-    private final JDBCConnectionInfo      _info;
-
-
-    private ConnectionEventListener[]     _listeners;
-
-
+    private WeakReference               currentHandleReference;
+    
+    private final JDBCConnectionInfo      info;
+    
 
     public JDBCManagedConnection( XAConnection xaConnection, JDBCConnectionInfo info )
         throws ConnectionException
     {
-        _xaConnection = xaConnection;
-        _xaConnection.addConnectionEventListener( this );
-        _info = info;
+        this.xaConnection = xaConnection;
+        this.xaConnection.addConnectionEventListener( this );
+        this.info = info;
         try {
-            _connection = _xaConnection.getConnection();
-            _xaResource = _xaConnection.getXAResource();
-            _syncResource = null;
+            connection = xaConnection.getConnection();
+            // turn off auto commit
+            connection.setAutoCommit(false);
         } catch ( SQLException except ) {
             throw new ConnectionException( except );
         }
@@ -108,8 +113,8 @@ public class JDBCManagedConnection
 
     boolean isSameInfo( JDBCConnectionInfo info )
     {
-        return ( ( info == null && _info == null ) ||
-                 ( info != null && info.equals( _info ) ) );
+        return ( ( this.info == null && info == null ) ||
+                 ( this.info != null && this.info.equals( info ) ) );
     }
 
 
@@ -117,126 +122,137 @@ public class JDBCManagedConnection
     // ManagedConnection //
     //-------------------//
 
-
-    public synchronized void addConnectionEventListener( ConnectionEventListener listener )
-    {
-        if ( listener == null )
-            throw new IllegalArgumentException( "Argument 'listener' is null" );
-        if ( _listeners == null ) {
-            _listeners = new ConnectionEventListener[ 1 ];
-            _listeners[ 0 ] = listener;
-        } else {
-            ConnectionEventListener[] newListeners;
-
-            // Make sure same listener is not registered twice
-            for ( int i = 0 ; i < _listeners.length ; ++i )
-                if ( _listeners[ i ] == listener )
-                    return;
-            newListeners = new ConnectionEventListener[ _listeners.length + 1 ];
-            for ( int i = 0 ; i < _listeners.length ; ++i )
-                newListeners[ i ] = _listeners[ i ];
-            newListeners[ _listeners.length ] = listener;
-            _listeners = newListeners;
-        }
-    }
-
-
-    public synchronized void removeConnectionEventListener( ConnectionEventListener listener )
-    {
-        if ( listener == null )
-            throw new IllegalArgumentException( "Argument 'listener' is null" );
-        // Do nothing if listener not registered
-        if ( _listeners == null )
-            return;
-        if ( _listeners.length == 1 ) {
-            if ( _listeners[ 0 ] == listener )
-                _listeners = null;
-            return;
-        }
-        for ( int i = 0 ; i < _listeners.length ; ++i )
-            if ( _listeners[ i ] == listener ) {
-                ConnectionEventListener[] newListeners;
-
-                _listeners[ i ] = _listeners[ _listeners.length - 1 ];
-                newListeners = new ConnectionEventListener[ _listeners.length - 1 ];
-                for ( int j = 0 ; j < _listeners.length - 1 ; ++j )
-                    newListeners[ j ] = _listeners[ j ];
-                _listeners = newListeners;
-                return;
-            }
-    }
-
-
+    /*
     public void pool()
         throws ConnectionException
     {
-        if ( _connection == null )
+        if ( connection == null )
             throw new ConnectionException( "Connection closed" );
         
     }
+    */
 
-
-    public void close()
+    /**
+     * Create the XA resource to be used to manage distributed transactions 
+     * on this connection. This method is only called once.
+     *
+     * @return the XA resource to be used to manage distributed transactions
+     * on this connection.
+     * @throws ConnectionException if there is a problem creating the xa resource.
+     */
+    protected XAResource createXAResource()
         throws ConnectionException
     {
-        if ( _connection == null )
-            throw new ConnectionException( "Connection closed" );
-
-        _xaConnection.removeConnectionEventListener( this );
         try {
-            _xaConnection.close();
-        } catch ( SQLException except ) {
-            throw new ConnectionException( except );
-        } finally {
-            _connection = null;
+            return xaConnection.getXAResource();
+        }
+        catch(SQLException e) {
+            throw new ConnectionException("Failed to get XA resource for <" +
+                                          toString() +
+                                          ">.");
         }
     }
 
 
-    public Object getConnection( Object info )
+
+    /**
+     * Actual method that closes the connection. The connection 
+     * manager calls this method
+     * when the connection is removed from the pool and will not be
+     * used anymore. This method is called at most once and should 
+     * not be called directly.
+     *
+     * @throws ConnectionException Reports an error that occured when
+     *  attempting to close the connection
+     */
+    protected void performClose()
         throws ConnectionException
     {
-        if ( _connection == null )
-            throw new ConnectionException( "Connection closed" );
-        // Ignore info, only properties affecting connection creation
-        // from XAConnection were passed.
-        return new JDBCConnectionHandle( this, _connection );
+        // synchronization is needed to prevent the connection and current handle
+        // reference from changing while closing the managed connection,
+        // returning a connection or being notified that a connection
+        // is being closed
+        // synchronized by the close method in AbstractManagedConnection
+
+        xaConnection.removeConnectionEventListener( this );
+        try {
+            xaConnection.close();
+        } catch ( SQLException except ) {
+            throw new ConnectionException( except );
+        } finally {
+            // disconnect the current handle
+            disconnectCurrentConnection();
+        }
     }
 
 
+    // synchronized to prevent the connection and current handle
+    // reference from changing while closing the managed connection,
+    // returning a connection or being notified that a connection
+    // is being closed
+    public synchronized Object getConnection( Object info )
+        throws ConnectionException
+    {
+        checkClosed();
+        // disconnect the current handle
+        disconnectCurrentConnection();
+        // Ignore info, only properties affecting connection creation
+        // from XAConnection were passed.
+        Object handle = new JDBCConnectionHandle( this, connection );
+        // set the new reference
+        currentHandleReference = new WeakReference(handle);
+        // return the handle
+        return handle;
+    }
+
+    /**
+     * Disconnect the last connection returned by this managed connection
+     */
+    private void disconnectCurrentConnection()
+    {
+        JDBCConnectionHandle currentHandle = (null == currentHandleReference) 
+                                                ? null 
+                                                : (JDBCConnectionHandle)currentHandleReference.get();
+
+        if (null != currentHandle) {
+            currentHandle.disconnect();
+            // reset the var
+            currentHandleReference = null;
+        }
+    }
+
+    /*
     public XAResource getXAResource()
         throws ConnectionException
     {
-        if ( _connection == null )
-            throw new ConnectionException( "Connection closed" );
+        checkClosed();
         return _xaResource;
     }
+    */
 
-
+    /*
     public SynchronizationResource getSynchronizationResource()
         throws ConnectionException
     {
-        if ( _connection == null )
-            throw new ConnectionException( "Connection closed" );
+        checkClosed();
         return _syncResource;
     }
-
-
+    */
+    /*
     public void connect( Object connection )
         throws ConnectionException
     {
-        if ( _connection == null )
-            throw new ConnectionException( "Connection closed" );
+        checkClosed();
         if ( connection instanceof JDBCConnectionHandle ) {
             try {
-                ( (JDBCConnectionHandle) connection ).connect( _connection );
+                ( (JDBCConnectionHandle) connection ).connect( this, connection );
             } catch ( Exception except ) {
                 throw new ConnectionException( except.getMessage() );
             }
         } else
             throw new ConnectionException( "Internal error: Not a ProxyConnection" );
     }
-
+    */
 
     public PrintWriter getLogWriter()
     {
@@ -255,27 +271,42 @@ public class JDBCManagedConnection
     // javax.sql.ConnectionEventListener //
     //-----------------------------------//
 
-    public synchronized void connectionClosed( javax.sql.ConnectionEvent event )
+    /**
+     * The underlying java.sql.Connection has been closed externally 
+     * ie not through JDBCManagedConnection so it cannot be reused.
+     * This means that the JDBCManagedConnection cannot be reused.
+     */
+    public void connectionClosed( javax.sql.ConnectionEvent event )
     {
-        if ( _listeners != null )
-            for ( int i = 0 ; i < _listeners.length ; ++i )
-                _listeners[ i ].connectionClosed( this );
+        // the underlying connection has been closed externally
+        fireConnectionErrorOccurredEvent(new ConnectionException("The underlying java.sql.Connection used by the JDBCManagedConnection has been closed externally."));
     }
 
 
-    public synchronized void connectionErrorOccurred( javax.sql.ConnectionEvent event )
+    /**
+     * An error has occurred in the XA Connection.
+     */
+    public void connectionErrorOccurred( javax.sql.ConnectionEvent event )
     {
-        if ( _listeners != null )
-            for ( int i = 0 ; i < _listeners.length ; ++i )
-                _listeners[ i ].connectionErrorOccurred( this, event.getSQLException() );
+        fireConnectionErrorOccurredEvent(event.getSQLException());
     }
 
 
-    public synchronized void notifyClosed()
-    {
-        if ( _listeners != null )
-            for ( int i = 0 ; i < _listeners.length ; ++i )
-                _listeners[ i ].connectionClosed( this );
+    /**
+     * Called by the JDBCConnectionHandle to notify the JDBCManagedConnection
+     * that the handle has been closed.
+     */
+    synchronized void notifyClosed()
+    {   
+        // synchronized to prevent the connection and current handle
+        // reference from changing while closing the managed connection,
+        // returning a connection or being notified that a connection
+        // is being closed
+    
+        // reset the current handle
+        currentHandleReference = null;
+
+        fireConnectionClosedEvent();
     }
 
 

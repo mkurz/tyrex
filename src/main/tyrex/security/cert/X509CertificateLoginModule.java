@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: X509CertificateLoginModule.java,v 1.1 2000/02/23 21:22:19 arkin Exp $
+ * $Id: X509CertificateLoginModule.java,v 1.2 2000/08/28 19:01:49 mohammed Exp $
  */
 
 
@@ -65,8 +65,8 @@ import java.security.cert.X509Certificate;
 import java.security.cert.CertificateException;
 import javax.security.auth.login.LoginException;
 import javax.security.auth.callback.CallbackHandler;
-import tyrex.security.auth.Subject;
-import tyrex.security.auth.LoginModule;
+import javax.security.auth.Subject;
+import javax.security.auth.spi.LoginModule;
 
 
 /**
@@ -110,7 +110,7 @@ import tyrex.security.auth.LoginModule;
  *
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2000/02/23 21:22:19 $
+ * @version $Revision: 1.2 $ $Date: 2000/08/28 19:01:49 $
  */
 public final class X509CertificateLoginModule
     implements LoginModule

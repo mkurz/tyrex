@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: Configure.java,v 1.3 2000/02/23 21:11:26 arkin Exp $
+ * $Id: Configure.java,v 1.4 2000/08/28 19:01:50 mohammed Exp $
  */
 
 
@@ -63,7 +63,9 @@ import java.rmi.activation.ActivationDesc;
 import java.rmi.activation.ActivationID;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
-import tyrex.util.PoolManager;
+import tyrex.resource.ResourceLimits;
+import tyrex.resource.ResourcePoolManager;
+import tyrex.resource.ResourcePoolManagerImpl;
 import tyrex.util.Messages;
 import tyrex.conf.Server;
 
@@ -87,7 +89,7 @@ import tyrex.conf.Server;
  *
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.3 $ $Date: 2000/02/23 21:11:26 $
+ * @version $Revision: 1.4 $ $Date: 2000/08/28 19:01:50 $
  */
 public final class Configure
     implements Serializable
@@ -207,7 +209,13 @@ public final class Configure
     /**
      * The pool manager associated with this server.
      */
-    private PoolManager     _poolManager;
+    private ResourcePoolManager     _poolManager;
+
+
+    /**
+     * The resource limits for the pool manager
+     */
+    private ResourceLimits          _limits;
 
 
     /**
@@ -335,11 +343,26 @@ public final class Configure
      * @param poolManager The pool manager to use
      * @see PoolManager
      */
-    public synchronized void setPoolManager( PoolManager poolManager )
+    public synchronized void setResourcePoolManager( ResourcePoolManager poolManager )
     {
 	if ( poolManager == null )
 	    throw new IllegalArgumentException( "Argument 'poolManager' is null" );
 	_poolManager = poolManager;
+    }
+
+
+    public synchronized ResourceLimits getResourceLimits()
+    {
+    if ( _limits == null ) {
+        _limits = new ResourceLimits();    
+    }
+    return _limits;
+    }
+
+
+    public synchronized void setResourceLimits( ResourceLimits limits )
+    {
+    _limits = limits;
     }
 
 
@@ -351,16 +374,19 @@ public final class Configure
      * @return The pool manager to use, never null
      * @see PoolManager
      */
-    public synchronized PoolManager getPoolManager()
+    public synchronized ResourcePoolManager getResourcePoolManager()
     {
 	if ( _poolManager == null ) {
-	    _poolManager = new PoolManager();
-	    _poolManager.setUpperLimit( Default.UpperLimit );
-	    _poolManager.setActiveLimit( Default.UpperLimit );
-	    _poolManager.setDesiredSize( Default.UpperLimit );
-	    _poolManager.setWaitTimeout( Default.Duration );
-	    _poolManager.setCheckEvery( Default.Duration );
-	    _poolManager.setPruneFactor( 0.1F /* 10% */ );
+	    
+        // create a resource limits
+        ResourceLimits limits = getResourceLimits();
+	    limits.setUpperLimit( Default.UpperLimit );
+	    limits.setActiveLimit( Default.UpperLimit );
+	    limits.setDesiredSize( Default.UpperLimit );
+	    limits.setWaitTimeout( Default.Duration );
+	    limits.setCheckEvery( Default.Duration );
+	    limits.setPruneFactor( 0.1F /* 10% */ );
+        _poolManager = new ResourcePoolManagerImpl(limits);
 	}
 	return _poolManager;
     }

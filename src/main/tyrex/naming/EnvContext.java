@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: EnvContext.java,v 1.4 2000/04/14 21:40:26 arkin Exp $
+ * $Id: EnvContext.java,v 1.5 2000/08/28 19:01:49 mohammed Exp $
  */
 
 
@@ -127,7 +127,7 @@ import tyrex.util.FastThreadLocal;
  * </pre>
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.4 $ $Date: 2000/04/14 21:40:26 $
+ * @version $Revision: 1.5 $ $Date: 2000/08/28 19:01:49 $
  */
 public final class EnvContext
     implements Context, Serializable

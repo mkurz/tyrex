@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: JDBCConnectionInfo.java,v 1.1 2000/04/13 22:13:19 arkin Exp $
+ * $Id: JDBCConnectionInfo.java,v 1.2 2000/08/28 19:01:48 mohammed Exp $
  */
 
 
@@ -49,67 +49,31 @@ package tyrex.connector.jdbc;
 
 /**
  * Information passed to the connection factory to create a connection
- * with a specified user name or password. These are the only
- * properties that {@link DataSource} allows the application to set
- * when opening a new connection. The remaining properties have to be
- * set in the {@link JDBCConnectionFactory}.
+ * with a specified data source name. 
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2000/04/13 22:13:19 $
+ * @version $Revision: 1.2 $ $Date: 2000/08/28 19:01:48 $
  */
-public final class JDBCConnectionInfo
+public interface JDBCConnectionInfo
 {
 
 
     /**
-     * The user name of ths connection.
+     * Return true if the specified object is equal to the
+     * JDBCConnectionInfo object.
+     *
+     * @param other the object being compared.
+     * @return true if the specified object is equal to the
+     *      JDBCConnectionInfo object.
      */
-    private String  _userName;
+    boolean equals(Object other);
 
 
     /**
-     * The password of this connection.
+     * Return the hash code of the JDBCConnectionInfo object.
+     *
+     * @return the hash code of the JDBCConnectionInfo object.
      */
-    private String  _password;
-
-
-    /**
-     * Construct new properties with the specified user name and password.
-     */
-    JDBCConnectionInfo( String userName, String password )
-    {
-        _userName = userName == null ? "" : userName;
-        _password = password == null ? "" : password;
-    }
-
-
-    String getUserName()
-    {
-        return _userName;
-    }
-
-
-    String getPassword()
-    {
-        return _password;
-    }
-
-
-    public boolean equals( Object other )
-    {
-        if ( other == this )
-            return true;
-        return ( other instanceof JDBCConnectionInfo &&
-                 ( (JDBCConnectionInfo) other )._userName.equals( _userName ) &&
-                 ( (JDBCConnectionInfo) other )._password.equals( _password ) );
-    }
-
-
-    public int hashCode()
-    {
-        return _userName.hashCode();
-    }
-
-
+    int hashCode();
 }
 

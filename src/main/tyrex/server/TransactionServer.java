@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: TransactionServer.java,v 1.3 2000/02/23 21:11:26 arkin Exp $
+ * $Id: TransactionServer.java,v 1.4 2000/08/28 19:01:51 mohammed Exp $
  */
 
 
@@ -63,10 +63,15 @@ import org.omg.CosTransactions.PropagationContext;
 import org.omg.CosTransactions.otid_t;
 import org.omg.CosTransactions.Inactive;
 import tyrex.conf.Resources;
-import tyrex.util.TimeoutException;
+import tyrex.resource.ResourceLimits;
+import tyrex.resource.ResourceTimeoutException;
+import tyrex.tm.Heuristic;
+import tyrex.tm.TransactionDomain;
+import tyrex.tm.TyrexPermission;
+import tyrex.tm.XidImpl;
 import tyrex.util.Messages;
 import tyrex.util.Logger;
-import tyrex.resource.ResourceLimits;
+
 
 
 /**
@@ -85,7 +90,7 @@ import tyrex.resource.ResourceLimits;
  *
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.3 $ $Date: 2000/02/23 21:11:26 $
+ * @version $Revision: 1.4 $ $Date: 2000/08/28 19:01:51 $
  * @see Configure
  * @see Tyrex
  * @see TransactionManagerImpl
@@ -181,21 +186,34 @@ public final class TransactionServer
     }
 
 
-    public static TransactionDomain getTransactionDomain( String name, boolean createNew )
+    public synchronized static TransactionDomain getTransactionDomain( String name, boolean createNew )
     {
 	TransactionDomain txDomain;
 
 	txDomain = (TransactionDomain) _txDomains.get( name );
 	if ( txDomain == null ) {
 	    if ( createNew ) {
-		txDomain = new TransactionDomain( name, new ResourceLimits() );
+		txDomain = createTransactionDomain( name );
 	    } else {
-		txDomain = (TransactionDomain) _txDomains.get( DefaultDomain );
-	    }
+		txDomain = getTransactionDomain( DefaultDomain, true );
+        }
 	}
 	return txDomain;
     }
 
+
+    /**
+     * Create the transaction domain with the specified name.
+     *
+     * @param name the name
+     * @return the new transaction domain
+     */
+    private static TransactionDomain createTransactionDomain( String name )
+    {
+        TransactionDomain txDomain = new TransactionDomain( name, new ResourceLimits() );
+        _txDomains.put( name, txDomain );
+        return txDomain;
+    }
 
     /**
      * Returns an instance of the transaction server. If the server
@@ -214,13 +232,13 @@ public final class TransactionServer
 	    // into this method call again, but with _instance set.
 	    try {
 		// XXX
-		/**
-		start( Configure.createDefault() );
-		*/
+		///**
+		start( new Configure() );
+		//*/
 	    } catch ( Exception except ) {
-		Logger.getSystemLogger().println(
+		    Logger.getSystemLogger().println(
 		    Messages.format( "tyrex.server.failedInitialize", except ) );
-		throw new RuntimeException( Messages.format( "tyrex.server.failedInitialize", except ) );
+		    throw new RuntimeException( Messages.format( "tyrex.server.failedInitialize", except ) );
 	    }
 	}
 	return _instance;

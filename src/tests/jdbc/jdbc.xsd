@@ -1,0 +1,29 @@
+<xsd:schema xmlns:xsd="http://www.w3.org/1999/XMLSchema">
+
+<xsd:element name="jdbc" type="jdbc"/>
+
+<xsd:complexType name="jdbc">
+  <xsd:element name="performance" type="performance" minOccurs=1 maxOccurs=1 />
+  <xsd:element name="datasource" type="datasource" maxOccurs=unbounded />
+  <xsd:attribute name="name" type="xsd:string" />
+</xsd:complexType>
+
+
+<xsd:complexType name="performance">
+  <xsd:element name="onephasecommit" type="commit" minOccurs=1 maxOccurs=1 />
+  <xsd:element name="twophasecommit" type="commit" minOccurs=1 maxOccurs=1 />
+  <xsd:element name="rollback" type="commit" minOccurs=1 maxOccurs=1/>
+</xsd:complexType>
+
+<xsd:complexType name="commit">
+  <xsd:attribute name="value" type="xsd:positiveInteger" />
+  <xsd:attribute name="relative" type="xsd:boolean" />
+</xsd:complexType>
+
+<xsd:complexType name="datasource">
+  <xsd:attribute name="name" type="xsd:string" />
+  <xsd:attribute name="relative" type="xsd:boolean" />
+</xsd:complexType>
+                                                    
+
+

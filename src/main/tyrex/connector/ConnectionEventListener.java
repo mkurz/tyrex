@@ -40,11 +40,13 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: ConnectionEventListener.java,v 1.1 2000/04/13 22:13:19 arkin Exp $
+ * $Id: ConnectionEventListener.java,v 1.2 2000/08/28 19:01:47 mohammed Exp $
  */
 
 
 package tyrex.connector;
+
+import java.util.EventListener;
 
 
 /**
@@ -52,33 +54,60 @@ package tyrex.connector;
  * manager of changes to the state of a connection.
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2000/04/13 22:13:19 $
+ * @version $Revision: 1.2 $ $Date: 2000/08/28 19:01:47 $
  */
 public interface ConnectionEventListener
+    extends EventListener
 {
 
 
     /**
-     * Called by a managed connection to inform the connection manager
+     * Called by a managed connection to inform the listener
      * that the application closed the connection. After this call the
-     * connection manager may recycle the connection and hand it to a
-     * different caller.
+     * listener, like the connection manager may recycle the connection 
+     * and hand it to a different caller.
      *
-     * @param connection The closed connection
+     * @param event The event
      */
-    public void connectionClosed( ManagedConnection connection );
+    public void connectionClosed(ConnectionEvent event);
 
 
     /**
-     * Called by a managed connection to inform the connection manager
+     * Called by a managed connection to inform the listeners
      * that a critical error occured with the connection. After this
-     * call the connection manager will not attempt to use the
+     * call a listeners like a connection manager will not attempt to use the
      * connection and will properly discard it.
      *
-     * @param connection The erroneous connection
-     * @param except The critical exception
+     * @param event The event that may contain the exception that occurred.
      */
-    public void connectionErrorOccurred( ManagedConnection connection, Exception except );
+    public void connectionErrorOccurred(ConnectionEvent event);
+
+
+    /**
+     * Called by the managed connection to inform a listener
+     * that a local transaction has begun for the managed connection
+     *
+     * @param event The event
+     */
+    public void localTransactionBegun(ConnectionEvent event);
+
+
+    /**
+     * Called by the managed connection to inform a listener
+     * that a local transaction has been committed for the managed connection
+     *
+     * @param event The event
+     */
+    public void localTransactionCommitted(ConnectionEvent event);
+    
+    
+    /**
+     * Called by the managed connection to inform a listener
+     * that a local transaction has been rolled back for the managed connection
+     *
+     * @param event The event
+     */
+    public void localTransactionRolledback(ConnectionEvent event);
 
 
 }

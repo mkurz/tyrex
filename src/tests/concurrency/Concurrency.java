@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: Concurrency.java,v 1.1 2000/04/10 20:53:52 arkin Exp $
+ * $Id: Concurrency.java,v 1.2 2000/08/28 19:01:52 mohammed Exp $
  */
 
 

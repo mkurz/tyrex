@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: ConnectionException.java,v 1.1 2000/04/10 20:52:34 arkin Exp $
+ * $Id: ConnectionException.java,v 1.2 2000/08/28 19:01:47 mohammed Exp $
  */
 
 
@@ -49,22 +49,20 @@ package tyrex.connector;
 
 import java.io.PrintStream;
 import java.io.PrintWriter;
+import tyrex.util.WrappedException;
 
 
 /**
  * Reports an exception with the resource.
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2000/04/10 20:52:34 $
+ * @version $Revision: 1.2 $ $Date: 2000/08/28 19:01:47 $
  */
 public class ConnectionException
-    extends Exception
+    extends WrappedException
 {
 
 
-    private Exception  _except;
-
-    
     /**
      * Constructs a new exception with the specified message.
      * 
@@ -83,10 +81,9 @@ public class ConnectionException
      * @param message The exception message
      * @param except The exception that triggered this exception
      */
-    public ConnectionException( String message, Exception except )
+    public ConnectionException( String message, Throwable except )
     {
-        super( message );
-        _except = except;
+        super( message, except );
     }
 
 
@@ -95,50 +92,10 @@ public class ConnectionException
      * 
      * @param except The exception that triggered this exception
      */
-    public ConnectionException( Exception except )
+    public ConnectionException( Throwable except )
     {
-        super( except.toString() );
-        _except = except;
+        super( except );
     }
-
-
-    /**
-     * Return the exception that triggered this exception.
-     * May be null.
-     */
-    public Exception getException()
-    {
-        return _except;
-    }
-    
-    
-    public void printStackTrace()
-    {
-        if ( _except == null )
-            super.printStackTrace();
-        else
-            _except.printStackTrace();
-    }
-    
-    
-    public void printStackTrace( PrintStream print )
-    {
-        if ( _except == null )
-            super.printStackTrace( print );
-        else
-            _except.printStackTrace( print );
-    }
-    
-    
-    public void printStackTrace( PrintWriter print )
-    {
-        if ( _except == null )
-            super.printStackTrace( print );
-        else
-            _except.printStackTrace( print );
-    }
-    
-
 }
 
 

@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: TransactionalLockSet.java,v 1.1 2000/04/10 20:51:51 arkin Exp $
+ * $Id: TransactionalLockSet.java,v 1.2 2000/08/28 19:01:46 mohammed Exp $
  */
 
 
@@ -55,7 +55,7 @@ import org.omg.CosTransactions.Coordinator;
  * and release locks on behalf of a specified transaction.
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2000/04/10 20:51:51 $
+ * @version $Revision: 1.2 $ $Date: 2000/08/28 19:01:46 $
  */
 public interface TransactionalLockSet
 {

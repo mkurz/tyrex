@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: ServiceName.java,v 1.1 2000/04/10 20:51:51 arkin Exp $
+ * $Id: ServiceName.java,v 1.2 2000/08/28 19:01:46 mohammed Exp $
  */
 
 
@@ -51,7 +51,7 @@ package tyrex.concurrency;
  * The name of the service as it will be listed in a naming directory.
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2000/04/10 20:51:51 $
+ * @version $Revision: 1.2 $ $Date: 2000/08/28 19:01:46 $
  */
 public interface ServiceName
 {

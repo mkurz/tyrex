@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: Heuristic.java,v 1.1 2000/04/10 20:53:07 arkin Exp $
+ * $Id: Heuristic.java,v 1.2 2000/08/28 19:01:48 mohammed Exp $
  */
 
 
@@ -51,7 +51,7 @@ package tyrex.interceptor;
  * Values for heuristic decisions made regarding a transaction.
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2000/04/10 20:53:07 $
+ * @version $Revision: 1.2 $ $Date: 2000/08/28 19:01:48 $
  */
 public interface Heuristic
 {

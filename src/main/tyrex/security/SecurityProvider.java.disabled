@@ -1,0 +1,102 @@
+
+
+package tyrex.security;
+
+
+import java.security.Principal;
+
+
+/**
+ *
+ * @author Craig R. McClanahan
+ * @version $Revision: 1.1 $ $Date: 2000/08/28 19:01:49 $
+ */
+public interface SecurityProvider
+{
+
+
+    /**
+     * Return the Principal associated with the specified username and
+     * credentials, if there is one; otherwise return <code>null</code>.
+     *
+     * @param username Username of the Principal to look up
+     * @param credentials Password or other credentials to use in
+     *  authenticating this username
+     */
+    public Principal authenticate(String username, String credentials);
+
+
+    /**
+     * Return the Principal associated with the specified username and
+     * credentials, if there is one; otherwise return <code>null</code>.
+     *
+     * @param username Username of the Principal to look up
+     * @param credentials Password or other credentials to use in
+     *  authenticating this username
+     */
+    public Principal authenticate(String username, byte[] credentials);
+
+
+    /**
+     * Return <code>true</code> if the specified Principal has the specified
+     * security role, within the context of this Realm; otherwise return
+     * <code>false</code>.
+     *
+     * @param principal Principal for whom the role is to be checked
+     * @param role Security role to be checked
+     */
+    public boolean hasRole(Principal principal, String role);
+
+
+    /**
+     * Remove a property change listener from this component.
+     *
+     * @param listener The listener to remove
+     */
+    public void removePropertyChangeListener(PropertyChangeListener listener);
+
+
+}
+
+
+
+public interface SecurityProvider
+{
+
+
+    /**
+     * Authenticate within a realm using the username and credentials.
+     * A null <tt>realm</tt> indicates some default realm. If
+     * <tt>username</tt> is null, a principal called anyone with no
+     * roles is returned. If the username and credentials do not match,
+     * a security exception is thrown.
+     * <p>
+     * This method does not associate the current thread with the
+     * prinicipal. In order to associate the current thread with the
+     * prinicipal use {@link #setPrinicipal}.
+     * <p>
+     * This method requires that the caller has permission of type
+     * {@link SecurityProviderPermission}.
+     *
+     * @param realm The security realm, null for a default realm
+     * @param username The user's account name, null for 'anyone'
+     * @param credentials The proper credentials, null for 'anyone'
+     * @return The principal
+     */
+    public Subject authenticate( String realm, String username, byte[] credentials )
+	throws SecurityException;
+
+
+    public void setSubject( Subject subject )
+	throws SecurityException, IllegalStateException;
+
+
+    public boolean isInRole( String role );
+
+
+    public Principal getPrincipal();
+
+
+}
+
+

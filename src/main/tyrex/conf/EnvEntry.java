@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: EnvEntry.java,v 1.2 2000/01/17 22:16:40 arkin Exp $
+ * $Id: EnvEntry.java,v 1.3 2000/08/28 19:01:47 mohammed Exp $
  */
 
 
@@ -57,7 +57,7 @@ import java.util.Enumeration;
  * support for visibility based on application path.
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $ $Date: 2000/01/17 22:16:40 $
+ * @version $Revision: 1.3 $ $Date: 2000/08/28 19:01:47 $
  * @see Visible
  */
 public class EnvEntry
@@ -68,13 +68,13 @@ public class EnvEntry
     public static class Types
     {
 
-	public static final String String  = String.class.getName();
-	public static final String Integer = Integer.class.getName();
-	public static final String Long    = Long.class.getName();
-	public static final String Byte    = Byte.class.getName();
-	public static final String Float   = Float.class.getName();
-	public static final String Double  = Double.class.getName();
-	public static final String Boolean = Boolean.class.getName();
+	public static final String StringType  = String.class.getName();
+	public static final String IntegerType = Integer.class.getName();
+	public static final String LongType    = Long.class.getName();
+	public static final String ByteType    = Byte.class.getName();
+	public static final String FloatType   = Float.class.getName();
+	public static final String DoubleType  = Double.class.getName();
+	public static final String BooleanType = Boolean.class.getName();
 
     }
 
@@ -88,7 +88,7 @@ public class EnvEntry
     /**
      * The type of this entry. Defaults to a string.
      */
-    private String  _type = Types.String;
+    private String  _type = Types.StringType;
 
 
     /**

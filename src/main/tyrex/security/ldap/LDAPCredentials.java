@@ -13,7 +13,7 @@ import javax.security.auth.Destroyable;
  * and allow it to be destroyed. LDAP credentials are considered private.
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2000/02/23 21:22:19 $
+ * @version $Revision: 1.2 $ $Date: 2000/08/28 19:01:49 $
  */
 public final class LDAPCredentials
     implements Destroyable
@@ -26,21 +26,24 @@ public final class LDAPCredentials
     private char[]  _password;
     
     
-    private String  _url;
+    private String  _host;
     
-    
+
+    private int  _port;
     /**
      * Constructs a new credential with the given name and password.
      *
-     * @param url The LDAP URL
+     * @param host The LDAP host
+     * @param port The port on the host
      * @param dn The account DN
      * @param password The password, null if unkonwn
      */
-    public LDAPCredentials( String url, String dn, char[] password )
+    public LDAPCredentials( String host, int port, String dn, char[] password )
     {
-        if ( url == null )
-            throw new IllegalArgumentException( "Argument 'url' is null" );
-        _url = url;
+        if ( host == null )
+            throw new IllegalArgumentException( "Argument 'host' is null" );
+        _host = host;
+        _port = port;
         if ( dn == null )
             throw new IllegalArgumentException( "Argument 'dn' is null" );
         _dn = dn;
@@ -62,15 +65,27 @@ public final class LDAPCredentials
     
     
     /**
-     * Returns the LDAP URL.
+     * Returns the LDAP Host.
      *
-     * @return The LDAP URL
+     * @return The LDAP Host
      */
-    public String getURL()
+    public String getHost()
     {
         if ( _dn == null )
             throw new IllegalArgumentException( "This credentials have been destroyed" );
-        return _url;
+        return _host;
+    }
+
+    /**
+     * Returns the LDAP port on the host.
+     *
+     * @param the LDAP port on the host.
+     */
+    public int getPort()
+    {
+        if ( _dn == null )
+            throw new IllegalArgumentException( "This credentials have been destroyed" );
+        return _port;
     }
     
     
@@ -93,7 +108,7 @@ public final class LDAPCredentials
     public void destroy()
     {
         _dn = null;
-        _url = null;
+        _host = null;
         if ( _password != null ) {
             for ( int i = 0 ; i < _password.length ; ++i )
                 _password[ i ] = '\0';

@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: Server.java,v 1.4 2000/02/23 21:13:44 arkin Exp $
+ * $Id: Server.java,v 1.5 2000/08/28 19:01:47 mohammed Exp $
  */
 
 
@@ -65,7 +65,7 @@ import org.xml.sax.InputSource;
 import org.exolab.castor.xml.Marshaller;
 import org.exolab.castor.xml.Unmarshaller;
 import org.exolab.castor.xml.MarshalException;
-import tyrex.server.TransactionDomain;
+import tyrex.tm.TransactionDomain;
 import tyrex.util.Messages;
 import tyrex.util.Logger;
 
@@ -74,7 +74,7 @@ import tyrex.util.Logger;
  *
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.4 $ $Date: 2000/02/23 21:13:44 $
+ * @version $Revision: 1.5 $ $Date: 2000/08/28 19:01:47 $
  * @see Configure
  * @see LogOption
  * @see PoolManager
@@ -120,16 +120,24 @@ public class Server
 
 	try {
 	    url = Server.class.getResource( ResourceName );
-	    if ( url != null ) {
+        if ( url != null ) {     
 		file = new File( url.getFile() );
 		if ( file.exists() ) {
 		    Logger.getSystemLogger().println( Messages.format( "tyrex.conf.loadingServer", file ) );
 		    return load( file );
 		}
 	    }
+
+        
+        file = new File( System.getProperty( "user.dir" ), FileName );
+        if ( file.exists() ) {
+		Logger.getSystemLogger().println( Messages.format( "tyrex.conf.loadingServer", file ) );
+		return load( file );
+	    }
+        
 	    file = new File( System.getProperty( "java.home" ), "lib" );
 	    file = new File( file, FileName );
-	    if ( file.exists() ) {
+        if ( file.exists() ) {
 		Logger.getSystemLogger().println( Messages.format( "tyrex.conf.loadingServer", file ) );
 		return load( file );
 	    }
@@ -197,13 +205,18 @@ public class Server
     public void save( Writer writer )
 	throws IOException
     {
-	try {
-	    Marshaller.marshal( this, writer, Logger.getSystemLogger() );
-	} catch ( MarshalException except ) {
-	    throw new IOException( except.toString() );
-	} catch ( Exception except ) {
-	    throw new IOException( "Nested exception: " + except.toString() );
-	}
+        try {
+	        // make the marshaller
+            Marshaller marshaller = new Marshaller(writer);
+            // set the log
+            marshaller.setLogWriter(Logger.getSystemLogger());
+            // make the call
+            marshaller.marshal(this);
+        } catch ( MarshalException except ) {
+	        throw new IOException( except.toString() );
+	    } catch ( Exception except ) {
+	        throw new IOException( "Nested exception: " + except );
+	    }
     }
 
 
@@ -268,7 +281,7 @@ public class Server
 
     public void setDefault( String defName )
     {
-	_default = defName.trim();
+	_default = null == defName ? null : defName.trim();
     }
 
 

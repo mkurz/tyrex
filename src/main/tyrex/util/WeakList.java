@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: WeakList.java,v 1.2 2000/01/17 22:21:40 arkin Exp $
+ * $Id: WeakList.java,v 1.3 2000/08/28 19:01:52 mohammed Exp $
  */
 
 
@@ -87,7 +87,7 @@ import java.lang.reflect.Array;
  *
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $ $Date: 2000/01/17 22:21:40 $
+ * @version $Revision: 1.3 $ $Date: 2000/08/28 19:01:52 $
  * @see WeakReference
  */
 public class WeakList

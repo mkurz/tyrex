@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: Logger.java,v 1.3 2000/04/13 22:03:52 arkin Exp $
+ * $Id: Logger.java,v 1.4 2000/08/28 19:01:52 mohammed Exp $
  */
 
 
@@ -65,7 +65,7 @@ import java.util.Date;
  * post-mortem analysis.
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.3 $ $Date: 2000/04/13 22:03:52 $
+ * @version $Revision: 1.4 $ $Date: 2000/08/28 19:01:52 $
  */
 public class Logger
     extends PrintWriter

@@ -11,8 +11,8 @@ import netscape.ldap.LDAPEntry;
 import netscape.ldap.LDAPException;
 import netscape.ldap.LDAPAttribute;
 import netscape.ldap.LDAPv2;
-import tyrex.security.auth.Subject;
-import tyrex.security.auth.LoginModule;
+import javax.security.auth.Subject;
+import javax.security.auth.spi.LoginModule;
 import javax.security.auth.login.LoginException;
 import javax.security.auth.login.FailedLoginException;
 import javax.security.auth.callback.CallbackHandler;
@@ -126,9 +126,12 @@ public class LDAPLoginModule
                                             (String) _options.get( Options.DNMask ),
                                             (String) _options.get( Options.RolesRDN ) );
                 } catch ( Exception except ) {
-                    if ( options.get( Options.LogErrors ) != null )
+                    
+                    if ( options.get( Options.LogErrors ) != null ) {
                         System.out.println( ModuleName + " error: cannot load LDAP realm " + realmName +
                                             ": " + except );
+                        except.printStackTrace();
+                    }
                     return;
                 }
                 sharedState.put( realmName, _realm );
@@ -154,7 +157,7 @@ public class LDAPLoginModule
         while ( iter.hasNext() ) {
             
             ldapCreds = (LDAPCredentials) iter.next();
-            if ( ldapCreds.getURL().equals( _realm.getLDAPUrl() ) )
+            if ( ldapCreds.getHost().equals( _realm.getLDAPHost() ) && ( ldapCreds.getPort() == _realm.getLDAPPort() ) )
                 if ( loginWithCred( ldapCreds ) )
                     return true;
         }
@@ -170,7 +173,7 @@ public class LDAPLoginModule
             System.out.println( "Realm " + nameCreds.getRealm() + " " + _realm.isDefaultRealm() );
             if ( ( nameCreds.getRealm() == null && _realm.isDefaultRealm() ) ||
                  ( nameCreds.getRealm() != null && nameCreds.getRealm().equals( _realm.getRealmName() ) ) ) {
-                ldapCreds = new LDAPCredentials( _realm.getLDAPUrl(), _realm.getDN( nameCreds.getName() ),
+                ldapCreds = new LDAPCredentials( _realm.getLDAPHost(), _realm.getLDAPPort(), _realm.getDN( nameCreds.getName() ),
                                                  nameCreds.getPassword() );
                 if ( loginWithCred( ldapCreds ) ) {
                     _ldapCreds = ldapCreds;
@@ -207,7 +210,7 @@ public class LDAPLoginModule
         conn = new LDAPConnection();
         // dn = "uid=" + upc.getUser() + ",ou=people,dc=exoffice,dc=com";
         try {
-            conn.connect( ldapCreds.getURL(), -1 );
+            conn.connect( ldapCreds.getHost(), ldapCreds.getPort() );
             conn.authenticate( ldapCreds.getDN(), new String( ldapCreds.getPassword() ) );
             entry = conn.read( ldapCreds.getDN(), new String[] { "cn", "mail" } );
             // Add an LDAP prinicipal
@@ -257,7 +260,7 @@ public class LDAPLoginModule
             _subject.getPublicCredentials().add( _roleCreds );
         if ( _ldapCreds != null )
             _subject.getPrivateCredentials().add( _ldapCreds );
-        _subject.getPrincipals().add( _princs );
+        _subject.getPrincipals().addAll( _princs );
         return true;
     }
     

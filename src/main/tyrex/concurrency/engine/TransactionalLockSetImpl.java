@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: TransactionalLockSetImpl.java,v 1.1 2000/04/10 20:51:51 arkin Exp $
+ * $Id: TransactionalLockSetImpl.java,v 1.2 2000/08/28 19:01:47 mohammed Exp $
  */
 
 
@@ -61,7 +61,7 @@ import tyrex.concurrency.LockNotHeldException;
  * <b>Note:</b> NOT FULLY IMPLEMENTED
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2000/04/10 20:51:51 $
+ * @version $Revision: 1.2 $ $Date: 2000/08/28 19:01:47 $
  */
 public final class TransactionalLockSetImpl
     extends InternalLockSet

@@ -1,0 +1,266 @@
+/**
+ * Redistribution and use of this software and associated documentation
+ * ("Software"), with or without modification, are permitted provided
+ * that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain copyright
+ *    statements and notices.  Redistributions must also contain a
+ *    copy of this document.
+ *
+ * 2. Redistributions in binary form must reproduce the
+ *    above copyright notice, this list of conditions and the
+ *    following disclaimer in the documentation and/or other
+ *    materials provided with the distribution.
+ *
+ * 3. The name "Exolab" must not be used to endorse or promote
+ *    products derived from this Software without prior written
+ *    permission of Exoffice Technologies.  For written permission,
+ *    please contact info@exolab.org.
+ *
+ * 4. Products derived from this Software may not be called "Exolab"
+ *    nor may "Exolab" appear in their names without prior written
+ *    permission of Exoffice Technologies. Exolab is a registered
+ *    trademark of Exoffice Technologies.
+ *
+ * 5. Due credit should be given to the Exolab Project
+ *    (http://www.exolab.org/).
+ *
+ * THIS SOFTWARE IS PROVIDED BY EXOFFICE TECHNOLOGIES AND CONTRIBUTORS
+ * ``AS IS'' AND ANY EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT
+ * NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
+ * FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL
+ * EXOFFICE TECHNOLOGIES OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+ * OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
+ *
+ * $Id: Scheduler.disabled,v 1.1 2000/08/28 19:01:48 mohammed Exp $
+ */
+
+
+package tyrex.connector.manager;
+
+
+import java.io.PrintWriter;
+import java.util.Vector;
+import java.util.Hashtable;
+import javax.transaction.Synchronization;
+import javax.transaction.xa.XAResource;
+import tyrex.connector.ManagedConnection;
+import tyrex.connector.ManagedConnectionFactory;
+import tyrex.connector.ConnectionManager;
+import tyrex.connector.ConnectionException;
+import tyrex.connector.SynchronizationResource;
+import tyrex.util.Messages;
+
+
+/**
+ *
+ *
+ * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
+ * @version $Revision: 1.1 $ $Date: 2000/08/28 19:01:48 $
+ */
+public class Scheduler
+    implements Runnable
+{
+
+
+    public Scheduler()
+    {
+        start();
+    }
+
+
+    public synchronized void addSchedule( Schedule sched )
+    {
+        
+        
+    }
+
+
+    public synchronized void run()
+    {
+        try {
+            Timer timer;
+            long  clock;
+            long  onHold;
+        
+            while ( _active ) {
+                timer = _timers;
+                clock = System.currentTimeMillis();
+                onHold = clock;
+                while ( timer != null ) {
+                    if ( timer.getNextDispatch() <= clock ) {
+                        timer.dispatch( _sameThread );
+                        while ( timer.nextDispatch <= clock )
+                            timer.nextDispatch += timer.interval;
+                        if ( timer.nextDispatch > timer.lastDispatch )
+                            timer.disable = true;
+                        else if ( timer.nextDispatch > onHold )
+                            onHold = timer.nextDispatch;
+                    }
+                    timer = timer.next;
+                }
+                onHold = onHold - clock;
+                try {
+                    wait( onHold );
+                } catch ( InterruptedException except ) { }
+            }
+        } catch ( ThreadDeath death ) {
+            _active = false;
+        }
+    }
+
+
+    static class EventEntry
+    {
+
+        final Event  event;
+
+        final EventEntry next;
+
+        EventEntry( Event event, EventEntry next )
+        {
+            this.event = event;
+            this.next = next;
+        }
+
+    }
+
+
+
+}
+
+
+
+public interface Event
+{
+
+
+    /**
+     * Returns the next time this schedule expects to be dispatched.
+     * Each time this method is called it will return the same value,
+     * incremented after {@link #dispatch} has been called.
+     * 
+     * @return The next dispatch (clock in milliseconds)
+     */
+    public long nextDispatch();
+
+
+    /**
+     * Dispatch an event. If <tt>sameThread</tt> is true the event
+     * will be dispatched in the current thread and this method will
+     * block until the event concludes.
+     *
+     * @param sameThread True if dispatched in same thread
+     * @return True if event is schedulded to execute again in the
+     *  future
+     */
+    public boolean dispatch( boolean sameThread );
+
+
+
+}
+
+
+
+public interface EventListener
+{
+
+
+    public void dispatched( Event event );
+
+
+}
+
+
+
+
+public class EventImpl
+    implements Event
+{
+
+
+    private EventListener _listener;
+
+
+    public EventImpl( long delay, ScheduleListener listener )
+    {
+        _delay = delay;
+        _initialDelay = delay;
+        _listener = listener;
+    }
+
+
+    public void setEventListener( EventListener listener )
+    {
+        if ( _listener != null )
+            throw new IllegalStateException( "Must unset schedule listener first" );
+        _listener = listener;
+    }
+
+
+    public void unsetEventListener()
+    {
+        _listener = null;
+    }
+
+
+    public long nextDispatch()
+    {
+        return _nextDispatch;
+    }
+
+
+    public boolean dispatch( boolean sameThread )
+    {
+        if ( _listener != null ) {
+            if ( sameThread ) {
+                try {
+                    _listener.dispatched( this );
+                } catch ( Exception except ) { }
+            } else {
+                new Dispatcher( _listener, this );
+            }
+        }
+        if ( _every < 0 )
+            return false;
+        else {
+            _nextDispatch += _every;
+            return true;
+        }
+    }
+
+
+    static class Dispatcher
+        extends Thread
+    {
+
+        Dispatcher( EventListener listener, Event event )
+        {
+            _listener = listener;
+            _event = event;
+            start();
+        }
+
+        public void run()
+        {
+            try {
+                _listener.dispatched( _event );
+            } catch ( Exception except ) { }
+        }
+
+    }
+
+
+}
+
+
+
+

@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: JDBCConnectionHandle.java,v 1.1 2000/04/13 22:13:19 arkin Exp $
+ * $Id: JDBCConnectionHandle.java,v 1.2 2000/08/28 19:01:48 mohammed Exp $
  */
 
 
@@ -57,7 +57,6 @@ import java.sql.DatabaseMetaData;
 import java.sql.SQLWarning;
 import java.sql.SQLException;
 
-
 /**
  * A handle into the underlying connection. The application recieves this
  * handle to the underlying connection which is associated with any number
@@ -65,9 +64,15 @@ import java.sql.SQLException;
  * of the application. The application can release the handle by calling
  * the close() method. The underlying connection is managed by the
  * connection manager through the {@link JDBCManagedConnection}.
+ * <BR>
+ * The last handle from a JDBC managed connection 
+ * {@link JDBCManagedConnection#getConnection}
+ * is valid ie previous handles become invalid when
+ * a new handle is obtained. This is in keeping with the
+ * semantics of JDBC pooled connection.
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2000/04/13 22:13:19 $
+ * @version $Revision: 1.2 $ $Date: 2000/08/28 19:01:48 $
  */
 public final class JDBCConnectionHandle
     implements Connection
@@ -89,16 +94,27 @@ public final class JDBCConnectionHandle
     /**
      * The managed connection. Used to notify of closure and critical errors.
      */
-    private ManagedConnection _managed;
+    private JDBCManagedConnection _managed;
 
 
     /**
      * Constructs a new handle with the specified underlying connection.
      */
-    JDBCConnectionHandle( ManagedConnection managed, Connection connection )
+    JDBCConnectionHandle( JDBCManagedConnection managed, Connection connection )
     {
         _managed = managed;
         _connection = connection;
+    }
+
+    /**
+     * Return the public interface that this class represents.
+     *
+     * @return the public interface that connector handle
+     *      represents
+     */
+    public String getInterface()
+    {
+        return "java.sql.Connection";
     }
 
 
@@ -114,12 +130,21 @@ public final class JDBCConnectionHandle
     }
 
 
+    protected void finalize()
+        throws Throwable
+    {
+        if (null != _managed) {
+            close();    
+        }
+    }
+
+
     public void close()
         throws SQLException
     {
         if ( _managed == null )
             throw new SQLException( "Connection has been closed" );
-        _managed.notifyClose();
+        _managed.notifyClosed();
         _managed = null;
         _connection = null;
     }
@@ -289,12 +314,12 @@ public final class JDBCConnectionHandle
      * Returns the underlying connection. Report if this handle
      * has been closed by the application.
      */
-    Connection getConnection()
+    private Connection getConnection()
         throws SQLException
     {
         if ( _connection != null )
             return _connection;
-        if ( ( _managed == null ) )
+        if ( _managed == null )
             throw new SQLException( "Connection has been closed" );
         else
             throw new SQLException( "Internal error: suspended connection being used by the application" );
@@ -304,20 +329,30 @@ public final class JDBCConnectionHandle
     /**
      * Associates this handle with a given underlying connection.
      *
+     * @param managed The managed connection that is associating this handle
+     * with a given underlying connection.
      * @param connection The underlying connection
      */
-    void connect( Connection connection )
+    /*void connect(JDBCManagedConnection managed, Connection connection)
     {
         if ( _managed == null )
             throw new IllegalStateException( "Connection has been closed" );
+        if (_managed != managed) {
+            throw new IllegalStateException("Internal Error: Connection associated with different managed connection.");
+        }
         if ( _connection != null )
             throw new IllegalStateException( "Internal error: proxy connection already associated with underlying connection" );
         _connection = connection;
     }
-
+    */
 
     /**
-     * Dissociates this handle from any underlying connection.
+     * Dissociates this handle from any underlying connection and 
+     * from its managed connection. This method should only be called
+     * the managed connection of the handle. In all other cases 
+     * {@link #close} should be called. The difference between this method
+     * and close is that this method does not notify the managed connection
+     * that the handle has been closed.
      */
     void disconnect()
     {
@@ -326,8 +361,7 @@ public final class JDBCConnectionHandle
         if ( _connection == null )
             throw new IllegalStateException( "Internal error: proxy connection not associated with any underlying connection" );
         _connection = null;
+        _managed = null;
     }
-
-
 }
 

@@ -1,0 +1,209 @@
+
+/**
+ * Redistribution and use of this software and associated documentation
+ * ("Software"), with or without modification, are permitted provided
+ * that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain copyright
+ *    statements and notices.  Redistributions must also contain a
+ *    copy of this document.
+ *
+ * 2. Redistributions in binary form must reproduce the
+ *    above copyright notice, this list of conditions and the
+ *    following disclaimer in the documentation and/or other
+ *    materials provided with the distribution.
+ *
+ * 3. The name "Exolab" must not be used to endorse or promote
+ *    products derived from this Software without prior written
+ *    permission of Exoffice Technologies.  For written permission,
+ *    please contact info@exolab.org.
+ *
+ * 4. Products derived from this Software may not be called "Exolab"
+ *    nor may "Exolab" appear in their names without prior written
+ *    permission of Exoffice Technologies. Exolab is a registered
+ *    trademark of Exoffice Technologies.
+ *
+ * 5. Due credit should be given to the Exolab Project
+ *    (http://www.exolab.org/).
+ *
+ * THIS SOFTWARE IS PROVIDED BY EXOFFICE TECHNOLOGIES AND CONTRIBUTORS
+ * ``AS IS'' AND ANY EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT
+ * NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
+ * FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL
+ * EXOFFICE TECHNOLOGIES OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+ * OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
+ *
+ */
+
+
+package tyrex.connector.manager;
+
+import java.io.PrintWriter;
+import java.util.Enumeration;
+import javax.transaction.Transaction;
+import tyrex.connector.ConnectionException;
+import tyrex.connector.ManagedConnection;
+import tyrex.resource.ResourcePool;
+
+///////////////////////////////////////////////////////////////////////////////
+// ManagedConnectionPool
+///////////////////////////////////////////////////////////////////////////////
+
+/**
+ * This is the pool of managed connections created by a particular
+ * managed connection factory. 
+ *
+ * @author <a href="mohammed@exoffice.com">Riad Mohammed</a>
+ */
+public interface ManagedConnectionPool extends ResourcePool
+{
+    /**
+     * Called by the resource pool manager when it determines that a certain
+     * number of resources should be released from the pool.
+     * Active resources are never asked to be removed. The pool
+     * may remove any number of resources it sees fit.
+     * <BR>
+     * The managed connections are automatically closed when they
+     * are released from the pool.
+     *
+     * @param count The number of pooled resources that should be
+     *   released
+     */
+    void releasePooled(int count);
+
+    /**
+     * Get the log writer associated with the ManagedConnectionPool.
+     * can be null.
+     *
+     * @return the log writer associated with the ManagedConnectionPool.
+     */
+    PrintWriter getLogWriter();
+
+
+    /**
+     * Set the log writer associated with the ManagedConnectionPool.
+     *
+     * @param logWriter the new log writer. Can be null.
+     */
+    void setLogWriter(PrintWriter logWriter);
+
+
+    /**
+     * Return the description of the ManagedConnectionPool.
+     * Can be null.
+     *
+     * @return the description of the ManagedConnectionPool.
+     */
+    String getDescription();
+
+
+    /**
+     * Set the description of the ManagedConnectionPool.
+     *
+     * @param description the new description of the ManagedConnectionPool.
+     *      Can be null.
+     */
+    void setDescription(String description);
+
+
+    /**
+     * Return the enumeration containing the active managed 
+     * connections in the pool.
+     *
+     * @return the enumeration containing the active managed
+     *      connections in the pool.
+     */
+    Enumeration getActiveConnections();
+
+
+    /**
+     * Return the enumeration containing the pooled managed 
+     * connections.
+     *
+     * @return the enumeration containing the pooled managed
+     *      connections.
+     */
+    Enumeration getPooledConnections();
+
+
+    /**
+     * Remove the specified managed connection from the pool.
+     *
+     * @param managedConnection the managed connection to be
+     *      removed from the pool
+     */
+    void unpool(ManagedConnection managedConnection);
+
+
+    /**
+     * The specified managed connection is to be used externally
+     * in the specified transaction. 
+     * <BR>
+     * The managed connection is enlisted in the transaction if
+     * the managed connection is new.
+     *
+     * @param managedConnection the managed connection that may
+     *      or may not already be active. However it is assumed
+     *      that the connection is not pooled.    
+     * @param transaction the transaction to be associated with
+     *      the specified transaction. Can be null.
+     * @throws ConnectionException if the managed connection is shared
+     *      and the existing transaction is not the same as the
+     *      specified transaction
+     */
+    void use(ManagedConnection managedConnection, Transaction transaction)
+        throws ConnectionException;
+
+
+    /**
+     * Return the transaction associated with the active managed connection.
+     *
+     * @return the transaction associated with the active managed connection.
+     */
+    Transaction getTransaction(ManagedConnection managedConnection);
+    
+    
+    /**
+     * The handle from the specified managed connection 
+     * has been closed externally.
+     * <BR>
+     * If the managed connection is not shared put the connection
+     * back into the pool so that it can be used.
+     * <BR>
+     * If the managed connection is enlisted in a transaction it is
+     * automatically delisted.
+     *
+     * @param managedConnection the managed connection that is no 
+     *      longer used externally.
+     * @return True if the managed connection has been returned to the pool
+     * @throws ConnectionException if there is a problem returning the managed
+     * connection to the pool
+     */
+    boolean unuse(ManagedConnection managedConnection)
+        throws ConnectionException;
+
+
+    /**
+     * The specified managed connection should be discarded from tbe
+     * resource pool because an error occurred while it was being used.
+     * The managed connection is automatically closed by this method.
+     * <BR>
+     * If the managed connection is enlisted in a transaction it is
+     * automatically delisted.
+     *
+     * @param managedConnection the managed connection that is
+     * longer valid.
+     * @throws ConnectionException if there is a problem discarding the
+     *      managed connection.
+     */
+    void discard(ManagedConnection managedConnection)
+        throws ConnectionException;
+}

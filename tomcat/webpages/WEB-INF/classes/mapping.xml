@@ -1,0 +1,59 @@
+<!DOCTYPE databases PUBLIC "-//EXOLAB/Castor Java/SQL Mapping DTD Version 1.0//EN"
+                           "http://castor.exolab.org/jdo-mapping.dtd">
+<databases>
+<database db-name="bank">
+  <data-source class-name="postgresql.PostgresqlDataSource">
+     <params user="test" password="test" database-name="test"/>
+  </data-source>
+
+<mapping>
+
+  <object type="bank.Account"
+          table="accnt">
+    <description>Bank account</description>
+
+    <field name="id" sql-name="id" />
+    <field name="balance" sql-name="balance" />
+
+    <primary-key type="java.lang.Integer">
+      <field-ref name="id"/>
+    </primary-key>
+
+    <relation name="holder" type="one-one">
+      <description>Holder of this account</description>
+      <object type="bank.AccountHolder"
+              table="accnt_holder">
+        <field name="account" sql-name="accnt_id" type="bank.Account" />
+        <field name="name" sql-name="name" />
+        <primary-key type="bank.Account">
+          <field-ref name="account"/>
+       </primary-key>
+      </object>
+      <foreign-key>
+        <sql-column sql-name="holder_id" />
+      </foreign-key>
+    </relation>
+
+    <relation name="tx" type="one-one">
+      <description>Last transaction on this account</description>
+      <object type="bank.Transaction"
+              table="accnt_tx">
+        <field name="account" sql-name="accnt_id" type="bank.Account" />
+        <field name="amount" sql-name="amount" />
+        <field name="targetId" sql-name="target_id" />
+        <primary-key type="bank.Account">
+          <field-ref name="account"/>
+       </primary-key>
+      </object>
+      <foreign-key>
+        <sql-column sql-name="id" />
+      </foreign-key>
+    </relation>
+
+  </object>
+
+
+</mapping>
+</database>
+</databases>
+

@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: MemoryBinding.java,v 1.3 2000/04/11 20:24:47 arkin Exp $
+ * $Id: MemoryBinding.java,v 1.4 2000/08/28 19:01:49 mohammed Exp $
  */
 
 
@@ -67,7 +67,7 @@ import javax.naming.Binding;
  * value represented by a name/value pair.
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.3 $ $Date: 2000/04/11 20:24:47 $
+ * @version $Revision: 1.4 $ $Date: 2000/08/28 19:01:49 $
  */
 final class MemoryBinding
     extends Dictionary

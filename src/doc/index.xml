@@ -37,6 +37,7 @@
     <section title="News">
       <p>Version $VERSION$ is now <a href="download.xml">available for download</a>.
       <ul>
+        <li>August 25, 2000: Version 0.9.6</li>
         <li>April 10, 2000: Version 0.9.5</li>
         <li>Feb 10, 2000: Version 0.9.4</li>
         <li>Dec 21, 1999: Version 0.9</li>
@@ -55,8 +56,7 @@
 
       <p>Most of the code released in Tyrex has been developed by Assaf Arkin, CTO
          &lt;<email>arkin@exoffice.com</email>&gt;. Contributors are welcome
-         to join this project. Please join us on the <a href="lists.xml">mailing
-list</a>.</p>
+         to join this project. Please join us on the <a href="list.xml">mailing list</a>.</p>
     </section>
 
   </body>

@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: ManagedConnectionFactory.java,v 1.2 2000/04/13 22:10:17 arkin Exp $
+ * $Id: ManagedConnectionFactory.java,v 1.3 2000/08/28 19:01:48 mohammed Exp $
  */
 
 
@@ -49,13 +49,13 @@ package tyrex.connector;
 
 import java.io.PrintWriter;
 import java.util.Enumeration;
-
+import javax.security.auth.Subject;
 
 /**
  *
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $ $Date: 2000/04/13 22:10:17 $
+ * @version $Revision: 1.3 $ $Date: 2000/08/28 19:01:48 $
  */
 public interface ManagedConnectionFactory
 {
@@ -125,6 +125,22 @@ public interface ManagedConnectionFactory
 
 
     /**
+     * Returns the minimum number of connections.
+     *
+     * @return Minimum number of connections
+     */
+    public int getMinConnection();
+
+
+    /**
+     * Sets the minimum number of connections.
+     *
+     * @param min Minimum number of connections
+     */
+    public void setMinConnection( int min );
+
+
+    /**
      * Creates a new connection factory to be enlisted in JNDI and
      * used by the application. The connection factory is associated
      * with a given connection manager on creation.
@@ -132,8 +148,19 @@ public interface ManagedConnectionFactory
      * @param manager The connection manager
      * @throws ConnectionException The connection factory cannot be created
      */
-    public Object createConnectionFactory( ConnectionManager manager )
+    public ConnectionFactory createConnectionFactory( ConnectionManager manager )
         throws ConnectionException;
+
+    /**
+     * Creates a new connection factory to be enlisted in JNDI and
+     * used by the application. The connection factory is associated
+     * with a default connection manager on creation.
+     *
+     * @throws ConnectionException The connection factory cannot be created
+     */
+    public ConnectionFactory createConnectionFactory( )
+        throws ConnectionException;
+
 
 
     /**
@@ -141,11 +168,13 @@ public interface ManagedConnectionFactory
      * includes an underlying connection and is managed by the connection
      * manager for pooling and transaction enlistment.
      *
+     * @param subject the security information to create the managed 
+     *      connection with.
      * @param info Optional connection creation information
      * @return Open managed connection
      * @throws ConnectionException The connection cannot be created
      */
-    public ManagedConnection createManagedConnection( Object info )
+    public ManagedConnection createManagedConnection( Subject subject, Object info )
         throws ConnectionException;
 
 
@@ -154,12 +183,13 @@ public interface ManagedConnectionFactory
      * connection creation properties. If a match is found it is returned,
      * otherwise, null is returned and a new connection will be created.
      *
+     * @param subject the security information 
      * @param enum An enumeration of existing connections
      * @param info Optional connection creation information
      * @return Open managed connection
      * @throws ConnectionException The connection cannot be created
      */
-    public ManagedConnection getManagedConnection( Enumeration enum, Object info )
+    public ManagedConnection getManagedConnection( Subject subject, Enumeration enum, Object info )
         throws ConnectionException;
 
 

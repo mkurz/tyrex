@@ -11,7 +11,7 @@ import tyrex.security.container.RoleCredentials;
  * lookup roles and members in roles, and construct {@link RoleCredentials}.
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2000/02/23 21:22:19 $
+ * @version $Revision: 1.2 $ $Date: 2000/08/28 19:01:49 $
  */
 public class RolesRealm
 {

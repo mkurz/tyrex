@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: FastThreadLocal.java,v 1.4 2000/04/14 21:40:59 arkin Exp $
+ * $Id: FastThreadLocal.java,v 1.5 2000/08/28 19:01:52 mohammed Exp $
  */
 
 
@@ -127,7 +127,7 @@ package tyrex.util;
  * 
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.4 $ $Date: 2000/04/14 21:40:59 $
+ * @version $Revision: 1.5 $ $Date: 2000/08/28 19:01:52 $
  */
 public class FastThreadLocal
     //extends java.lang.ThreadLocal

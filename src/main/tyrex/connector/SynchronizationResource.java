@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: SynchronizationResource.java,v 1.1 2000/04/10 20:52:34 arkin Exp $
+ * $Id: SynchronizationResource.java,v 1.2 2000/08/28 19:01:48 mohammed Exp $
  */
 
 
@@ -68,7 +68,7 @@ import javax.transaction.Transaction;
  * </li>
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2000/04/10 20:52:34 $
+ * @version $Revision: 1.2 $ $Date: 2000/08/28 19:01:48 $
  */
 public interface SynchronizationResource
 {

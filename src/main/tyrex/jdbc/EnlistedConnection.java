@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: EnlistedConnection.java,v 1.2 2000/01/17 22:18:36 arkin Exp $
+ * $Id: EnlistedConnection.java,v 1.3 2000/08/28 19:01:48 mohammed Exp $
  */
 
 
@@ -49,12 +49,13 @@ package tyrex.jdbc;
 
 import java.util.*;
 import java.sql.*;
+import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 import javax.transaction.SystemException;
 import javax.transaction.RollbackException;
 import javax.transaction.xa.XAResource;
-import tyrex.server.ResourceManager;
-import tyrex.server.EnlistedResource;
+import tyrex.tm.ResourceManager;
+import tyrex.tm.EnlistedResource;
 
 
 /**
@@ -72,6 +73,12 @@ import tyrex.server.EnlistedResource;
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
  * @version 1.0
  * @see ServerDataSource
+ *
+ * Date         Author          Changes
+ * ?            Assaf Arkin     Created  
+ * Aug 8 2000   Riad Mohammed   Added changes that prevents
+ *                              underlying connection from
+ *                              being transactional.
  */
 public class EnlistedConnection
     implements Connection, EnlistedResource
@@ -103,11 +110,23 @@ public class EnlistedConnection
     /**
      * Constructs a new connection with the underlying JDBC
      * connection and the associated XA resource.
+     *
+     * @param underlying the underlying connection
+     * @param xaRes the XA resource associated with the
+     *      underlying connection.
+     * @throws SQLException if the auto-commit cannot be
+     *      turned off in the underlying connection.
      */
     EnlistedConnection( Connection underlying, XAResource xaRes )
+        throws SQLException
     {
 	_underlying = underlying;
 	_xaRes = xaRes;
+    if ( _underlying.getAutoCommit() ) {
+        // make sure the underlying connection is not auto commit
+        _underlying.setAutoCommit(false);
+    }
+    enlist();
     }
 
 
@@ -212,21 +231,24 @@ public class EnlistedConnection
     public void setAutoCommit( boolean autoCommit )
         throws SQLException
     {
-	getUnderlying().setAutoCommit( autoCommit );
+    throw new SQLException("SetAutoCommit not supported in enlisted connections");
+	//getUnderlying().setAutoCommit( autoCommit );
     }
 
 
     public boolean getAutoCommit()
         throws SQLException
     {
-	return getUnderlying().getAutoCommit();
+	//return getUnderlying().getAutoCommit();
+    return false;
     }
 
 
     public void commit()
         throws SQLException
     {
-	getUnderlying().commit();
+    throw new SQLException("Commit not supported in enlisted connections");
+	//getUnderlying().commit();
     }
 
 
@@ -234,7 +256,8 @@ public class EnlistedConnection
     public void rollback()
         throws SQLException
     {
-	getUnderlying().rollback();
+    throw new SQLException("Rollback not supported in enlisted connections");
+	//getUnderlying().rollback();
     }
 
 
@@ -269,9 +292,11 @@ public class EnlistedConnection
     public synchronized void close()
 	throws SQLException
     {
-	_underlying.close();
-	_underlying = null;
-	_xaRes = null;
+        if (!isClosed()) {
+            _underlying.close();
+        	_underlying = null;
+        	_xaRes = null;        
+        }
     }
 
 
@@ -304,14 +329,39 @@ public class EnlistedConnection
 
 
     /**
-     * Called to retrieve the underlying JDBC connection. Actual JDBC
-     * operations are performed against it. Throws an SQLException if
-     * this connection has been closed.
+     * Called by the transaction manager to notify the resource
+     * that it had been enlisted in the specified transaction.
+     *
+     * @param tx the transaction that the resource has been 
+     *      enlsited in.
      */
-    Connection getUnderlying()
+    public void enlisted(Transaction tx)
+    {
+    // do nothing
+    }
+
+    
+    /**
+     * Return true if the resource is enlisted in a transaction.
+     * Return false otherwise.
+     *
+     * @return true if the resource is enlisted in a transaction.
+     */
+    public boolean isEnlisted()
+    {
+    return _enlisted;
+    }
+
+
+    /**
+     * Enlist the resource with the {@link tyrex.tm.ResourceManager}
+     *
+     * @throws SQLException if there is a problem enlisting the resource.
+     */
+    private void enlist()
         throws SQLException
     {
-	if ( ! _enlisted  ) {
+        if ( ! _enlisted  ) {
 	    try {
 		ResourceManager.enlistResource( _xaRes, this );
 		_enlisted = true;
@@ -320,7 +370,22 @@ public class EnlistedConnection
 	    } catch ( SystemException except ) {
 		throw new SQLException( except.toString() );
 	    }
-	}
+	    }
+    }
+
+    /**
+     * Called to retrieve the underlying JDBC connection. Actual JDBC
+     * operations are performed against it. Throws an SQLException if
+     * this connection has been closed.
+     */
+    Connection getUnderlying()
+        throws SQLException
+    {
+    if (isClosed()) {
+        throw new SQLException("Connection is closed.");    
+    }
+	enlist();
+
 	return _underlying;
     }
 

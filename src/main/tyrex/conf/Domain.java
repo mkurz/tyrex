@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: Domain.java,v 1.1 2000/02/23 21:20:21 arkin Exp $
+ * $Id: Domain.java,v 1.2 2000/08/28 19:01:47 mohammed Exp $
  */
 
 
@@ -50,13 +50,13 @@ package tyrex.conf;
 import java.io.Serializable;
 import java.util.Vector;
 import java.util.Enumeration;
-import tyrex.server.TransactionDomain;
+import tyrex.tm.TransactionDomain;
 import tyrex.resource.ResourceLimits;
 
 
 /**
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2000/02/23 21:20:21 $
+ * @version $Revision: 1.2 $ $Date: 2000/08/28 19:01:47 $
  */
 public class Domain
     implements Serializable
@@ -115,13 +115,13 @@ public class Domain
 	    _limits = new ResourceLimits();
 	return _limits;
     }
-
+    
 
     public void setLimits( ResourceLimits limits )
     {
 	_limits = limits;
     }
-
+    
 
     public Enumeration listInterceptors()
     {

@@ -2,6 +2,53 @@
 <document url="http://tyrex.exolab.org/changelog.xml">
   <body>
     <title>Change log</title>
+    <section title="Version 0.9.6  August 25, 2000"><pre>
+- Split server package into tm and server packages. The tm
+  package contains jta specific code and server packages
+  contains transaction server code.
+  
+- Exposed JTA extensions using tyrex.tm.TyrexTransactionManager and
+  tyrex.tm.TyrexTransaction interfaces. tyrex.tm.TransactionManagerImpl
+  implements tyrex.tm.TyrexTransactionManager and 
+  tyrex.tm.TransactionImpl implements tyrex.tm.TyrexTransaction.
+  
+- Added one-phase commit optimization. If the same resource manager
+  is used in a transaction one-phase commit is used instead of 
+  two-phase commit.
+  
+- Added one-phase commit. A transaction can now be forced to be
+  committed using one-phase commit
+  
+- Add asynchronous commit and rollback.
+
+- XA resources delisted (using javax.xa.XAResource.TMSUCCESS) can be used
+  in other transactions before the current transaction ends.
+  (NOTE: not all xa resources support this ie the current transaction has to
+  end before the xa resource can be used in another transaction).
+  
+- Delisting XA resources (using javax.xa.XAResource.TMFAIL) cause the transaction
+  to be set as rollback only.
+  
+- Converted tyrex.security to use JAAS (Java Authentication and Authorization Service).
+  Requires JDK 1.3  
+
+- Fixed bugs in tyrex.security.ldap with Netscape Directory Server 4.2 
+  (tyrex.security.Test works)
+  
+- Added tyrex.connector which provides a generic way to connect to various
+  different types of backend systems (Note: not fully supported and tested).
+  
+- Enlisted resources (tyrex.tm.EnlistedResource) are now delisted upon
+  transaction boundaries.
+  
+- Synchronizations are always called, even if an exception happens
+  anytime during a commit or rollback.
+  
+- XAResource forget is now only called if an heuristic exception occurs.
+  
+- Various bug fixes and optimizations.
+
+    </pre></section>
     <section title="Version 0.9.5  April 10, 2000"><pre>
     </pre></section>
     <section title="Version 0.9.3 January 21 2000"><pre>

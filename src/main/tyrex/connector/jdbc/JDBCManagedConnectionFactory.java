@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: JDBCManagedConnectionFactory.java,v 1.1 2000/04/13 22:13:19 arkin Exp $
+ * $Id: JDBCManagedConnectionFactory.java,v 1.2 2000/08/28 19:01:48 mohammed Exp $
  */
 
 
@@ -50,8 +50,13 @@ package tyrex.connector.jdbc;
 import java.io.PrintWriter;
 import java.io.Serializable;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Set;
 import java.sql.SQLException;
+import javax.security.auth.Subject;
 import javax.sql.XADataSource;
+import tyrex.connector.AbstractManagedConnectionFactory;
 import tyrex.connector.ManagedConnectionFactory;
 import tyrex.connector.ManagedConnection;
 import tyrex.connector.ConnectionManager;
@@ -62,128 +67,263 @@ import tyrex.connector.ConnectionException;
  *
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2000/04/13 22:13:19 $
+ * @version $Revision: 1.2 $ $Date: 2000/08/28 19:01:48 $
  */
-public abstract class JDBCManagedConnectionFactory
+public abstract class JDBCManagedConnectionFactory 
+    extends AbstractManagedConnectionFactory
     implements ManagedConnectionFactory, Serializable
 {
 
+    /**
+     * The XA data source 
+     */
+    private XADataSource xaDataSource = null;
+    
 
-    private transient XADataSource  _xaDataSource;
-
-
-    private int                     _loginTimeout;
-
-
-    private int                     _maxConn;
-
-
-    private String                  _description;
-
-
-    private PrintWriter             _logWriter;
-
-
-    public String getDescription()
+    /**
+     * Default constructor
+     */
+    protected JDBCManagedConnectionFactory()
     {
-        return _description;
+
     }
 
 
-    public void setDescription( String description )
+    /**
+     * Return the XA data source associated with the factory. 
+     * If one does not exist return null.
+     *
+     * @return the XA data source associated with the factory. 
+     *      If one does not exist return null.
+     */
+    protected final XADataSource getDataSource()
     {
-        description = description;
+        return xaDataSource;
     }
 
-
-    public PrintWriter getLogWriter()
-    {
-        return _logWriter;
-    }
-
-
-    public void setLogWriter( PrintWriter logWriter )
-    {
-        _logWriter = logWriter;
-    }
-
-
-    public int getLoginTimeout()
-    {
-        return _loginTimeout;
-    }
-
-
-    public void setLoginTimeout( int timeout )
-    {
-        _loginTimeout = timeout;
-    }
-
-
-    public int getMaxConnection()
-    {
-        return _maxConn;
-    }
-
-
-    public void setMaxConnection( int maxConn )
-    {
-        _maxConn = maxConn;
-    }
-
-
-    public Object createConnectionFactory( ConnectionManager manager )
+    
+    /**
+     * Return the XA data source associated with the factory. If one does not
+     * exist then create it using the specified arguments.
+     *
+     * @param subject the security information for getting the data source.
+     * @param info the optional info used to create the data source
+     * @return the XA data source associated with the factory.
+     */
+    protected synchronized final XADataSource getDataSource(Subject subject,
+                                                            Set credentials,
+                                                            Object info)
         throws ConnectionException
     {
-        return new JDBCHandleFactory( manager );
+        // The double-check idiom is not used because it may not work because
+        // out-of-order execution of instructions ie the setting of the reference
+        // can occur before the referenced object has been fully constructed. This
+        // happens especially in a multi-processor environment
+        
+        if ( xaDataSource == null ) {
+
+            xaDataSource = createDataSource(subject, credentials, info);
+
+            if (null == xaDataSource) {
+                throw new ConnectionException("Failed to create data source.");    
+            }
+
+            try {
+                xaDataSource.setLogWriter(getLogWriter());
+                xaDataSource.setLoginTimeout(getLoginTimeout());    
+            }
+            catch (SQLException e) {
+                throw new ConnectionException(e);
+            }
+        }
+        else if (!canAccess(xaDataSource, subject, credentials, info)){
+            throw new ConnectionException("Subject <" + subject + "> cannot access required data source.");
+        }
+
+        return xaDataSource;
     }
 
+    /**
+     * Return true if the specified subject can access the specified
+     * data source.
+     *
+     * @param subject the subject containing the security information
+     * @param info optional info for accessing the data source.
+     * @param xaDataSource the data source
+     * @return true if the specified subject can access the specified
+     * data source.
+     */
+    protected abstract boolean canAccess(XADataSource xaDataSource,
+                                         Subject subject, 
+                                         Set credentials,
+                                         Object info);
 
-    protected abstract XADataSource createDataSource()
+    /**
+     * Create the XA data source to be associated with this factory.
+     * This method is only called once for a particular connection info object
+     * and should not be called directly.
+     *
+     * @param subject the security information for creating the data source.
+     * @param info optional info for creating the data source. Can be null.
+     * @return the created data source.
+     */
+    protected abstract XADataSource createDataSource(Subject subject,
+                                                     Set credentials,
+                                                     Object info)
         throws ConnectionException;
 
 
-    public ManagedConnection createManagedConnection( Object info )
+    /**
+     * Return true if the credential is valid for this factory
+     * <p>
+     * This method is used by the default implementation of 
+     * {@link #getCredentials}.
+     * <p>
+     * The default implementation returns true if the specified
+     * credential is an instance of {@link JDBCConnectionCredential}.
+     *
+     * @param credential the credential
+     * @param info optional info
+     * @param isPrivate true if the specified credential came from
+     *      the subject's private credentials.
+     * @return true if the credential is valid for this factory 
+     */
+    protected boolean isValidCredential(Object credential,
+                                        Object info,
+                                        boolean isPrivate)
+    {
+        return credential instanceof JDBCConnectionCredential;
+    }
+
+
+    /**
+     * Return the JDBCConnectionInfo object from the specified object.
+     * <p>
+     * The default implementation tries to cast the specified
+     * object to JDBCConnectionInfo. If the cast fails null is returned.
+     *
+     * @param object the object
+     * @return the JDBCConnectionInfo object from the specified object.
+     */
+    protected JDBCConnectionInfo getJDBCConnectionInfo(Object object)
+    {
+        return ((null == object) || (!(object instanceof JDBCConnectionInfo)))
+                ? null
+                : (JDBCConnectionInfo)object;
+    }
+
+
+    /**
+     * Return true if the specified subject can access the 
+     * specified managed connection.
+     *
+     * @param managedConnection the managed connection
+     * @param subject the subject
+     * @param credentials the set of credentials to be used
+     *      by the subject to access the managed connection.
+     *      Can be null or empty
+     * @param info optional info
+     * @return True if the specified subject can access the
+     *      specified managed connection.
+     */
+    public final ManagedConnection createManagedConnection(Subject subject, Set credentials, Object info)
         throws ConnectionException
     {
+        // get the connection credential
+        JDBCConnectionCredential credential = getConnectionCredential(subject, credentials, info);
+
+        if (null == credential) {
+            throw new ConnectionException("Cannot find the connection credential.");    
+        }
+
         try {
-            if ( _xaDataSource == null ) {
-                _xaDataSource = createDataSource();
-                _xaDataSource.setLogWriter( _logWriter );
-                _xaDataSource.setLoginTimeout( _loginTimeout );
-            }
-            if ( info == null || ! ( info instanceof JDBCConnectionInfo ) )
-                return new JDBCManagedConnection( _xaDataSource.getXAConnection(), null );
-            else {
-                JDBCConnectionInfo jdbcInfo;
-
-                jdbcInfo = (JDBCConnectionInfo) info;
-                return new JDBCManagedConnection( _xaDataSource.getXAConnection( jdbcInfo.getUserName(), jdbcInfo.getPassword() ),
-                                                  jdbcInfo );
-            }
-        } catch ( SQLException except ) {
-            throw new ConnectionException( except );
+            return new JDBCManagedConnection(getDataSource(subject, credentials, info).getXAConnection(credential.getUserName(),
+                                                                                                       credential.getPassword()),
+                                             getJDBCConnectionInfo(info));
+        } 
+        catch (SQLException except) {
+            throw new ConnectionException(except);
         }
     }
 
 
-    public ManagedConnection getManagedConnection( Enumeration enum, Object info )
+    /**
+     * Return the credential from the specified set of
+     * credentials used to get a connection from the
+     * data source.
+     * <p>
+     * The default implementation is to return the
+     * the only credential if the set is of size 1.
+     * Otherwise null is returned.
+     *
+     * @param credentials the set of credentials
+     * @return the credential from the specified set of
+     * credentials used to get a connection from the
+     * data source.
+     */
+    protected JDBCConnectionCredential getConnectionCredential(Subject subject, 
+                                                               Set credentials, 
+                                                               Object jdbcInfo)
+    {
+        return (null == credentials) || (1 != credentials.size())
+                ? null
+                : (JDBCConnectionCredential) credentials.iterator().next();
+    }
+
+    /**
+     * Return true if the specified subject can access the 
+     * specified managed connection.
+     *
+     * @param managedConnection the managed connection
+     * @param subject the subject
+     * @param credentials the set of credentials to be used
+     *      by the subject to access the managed connection.
+     *      Can be null or empty
+     * @param info optional info
+     * @return True if the specified subject can access the
+     *      specified managed connection.
+     * @throws ConnectionException if there is a connection problem
+     */
+    protected boolean canAccess(ManagedConnection managedConnection, 
+                                Subject subject, 
+                                Set credentials, 
+                                Object info)
         throws ConnectionException
     {
-        ManagedConnection managed;
-
-        if ( info == null || info instanceof JDBCConnectionInfo ) {
-            while ( enum.hasMoreElements() ) {
-                managed = (ManagedConnection) enum.nextElement();
-                if ( managed instanceof JDBCManagedConnection &&
-                     ( (JDBCManagedConnection) managed ).isSameInfo( (JDBCConnectionInfo) info ) )
-                    return managed;
-            }
-        }
-        return null;
+        return (managedConnection instanceof JDBCManagedConnection)
+                ? canAccess((JDBCManagedConnection) managedConnection,
+                            subject,
+                            credentials,
+                            getJDBCConnectionInfo(info))
+                : false;
     }
 
-
+    /**
+     * Return true if the specified subject can access the 
+     * specified managed connection.
+     * <p>
+     * The default implementation just tests whether the
+     * the specified info object is the same as the one used
+     * to create the specified managed connection.
+     *
+     * @param managedConnection the managed connection
+     * @param subject the subject
+     * @param credentials the set of credentials to be used
+     *      by the subject to access the managed connection.
+     *      Can be null or empty
+     * @param info optional info
+     * @return True if the specified subject can access the
+     *      specified managed connection.
+     * @throws ConnectionException if there is a connection problem
+     */                               
+    protected boolean canAccess(JDBCManagedConnection managedConnection, 
+                                Subject subject, 
+                                Set credentials, 
+                                JDBCConnectionInfo info)
+        throws ConnectionException
+    {
+        return managedConnection.isSameInfo(info);
+    }
 }
 
 

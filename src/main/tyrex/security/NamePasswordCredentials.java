@@ -13,7 +13,7 @@ import javax.security.auth.Destroyable;
  * and allow it to be destroyed. Name/password credentials are considered private.
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2000/02/23 21:22:56 $
+ * @version $Revision: 1.2 $ $Date: 2000/08/28 19:01:49 $
  */
 public final class NamePasswordCredentials
     implements Destroyable

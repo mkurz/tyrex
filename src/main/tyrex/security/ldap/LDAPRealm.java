@@ -20,7 +20,7 @@ import tyrex.security.container.helper.RolesRealm;
 /**
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $ $Date: 2000/04/10 20:45:18 $
+ * @version $Revision: 1.3 $ $Date: 2000/08/28 19:01:50 $
  */
 public class LDAPRealm
     extends RolesRealm
@@ -55,7 +55,7 @@ public class LDAPRealm
         Vector rdns;
         
         _url = new LDAPUrl( url );
-        _url = new LDAPUrl( _url.getHost(), _url.getPort(), null );
+        //_url = new LDAPUrl( _url.getHost(), _url.getPort(), null );
         
         dn = new DN( dnMask );
         rdns = dn.getRDNs();
@@ -107,7 +107,17 @@ public class LDAPRealm
         }
     }
     
+
+    public int getLDAPPort()
+    {
+        return _url.getPort();
+    }
     
+    public String getLDAPHost()
+    {
+        return _url.getHost();
+    }
+
     public String getLDAPUrl()
     {
         return _url.toString();

@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: CurrentImpl.java,v 1.2 2000/01/17 22:16:14 arkin Exp $
+ * $Id: CurrentImpl.java,v 1.3 2000/08/28 19:01:46 mohammed Exp $
  */
 
 
@@ -76,7 +76,7 @@ import org.omg.CosTSPortability.Receiver;
  *
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $ $Date: 2000/01/17 22:16:14 $
+ * @version $Revision: 1.3 $ $Date: 2000/08/28 19:01:46 $
  * @see TransactionManagerImpl
  */
 public final class CurrentImpl

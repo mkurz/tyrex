@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: ResourceFactoryBuilderImpl.java,v 1.2 2000/01/17 22:18:36 arkin Exp $
+ * $Id: ResourceFactoryBuilderImpl.java,v 1.3 2000/08/28 19:01:48 mohammed Exp $
  */
 
 
@@ -50,15 +50,15 @@ package tyrex.jdbc;
 import javax.sql.DataSource;
 import javax.sql.XADataSource;
 import javax.sql.ConnectionPoolDataSource;
-import tyrex.util.PoolManager;
-import tyrex.util.ResourceFactoryBuilder;
+import tyrex.resource.ResourcePoolManager;
+import tyrex.resource.ResourceFactoryBuilder;
 
 
 /**
  *
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $ $Date: 2000/01/17 22:18:36 $
+ * @version $Revision: 1.3 $ $Date: 2000/08/28 19:01:48 $
  * @see tyrex.conf.Resource
  */
 public final class ResourceFactoryBuilderImpl
@@ -66,7 +66,7 @@ public final class ResourceFactoryBuilderImpl
 {
 
 
-    public Object buildResourceFactory( Object param, PoolManager pool )
+    public Object buildResourceFactory( Object param, ResourcePoolManager pool )
     {
 	ServerDataSource sds;
 

@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: Naming.java,v 1.2 2000/04/14 21:41:16 arkin Exp $
+ * $Id: Naming.java,v 1.3 2000/08/28 19:01:53 mohammed Exp $
  */
 
 
@@ -50,6 +50,8 @@ package naming;
 import java.io.*;
 import java.util.Hashtable;
 import java.util.Enumeration;
+import java.util.Vector;
+import org.exolab.jtf.CWBaseApplication;
 import org.exolab.jtf.CWTestCategory;
 import org.exolab.jtf.CWTestCase;
 import org.exolab.jtf.CWVerboseStream;
@@ -505,7 +507,44 @@ public class Naming
 
     }
 
+    /*
+    public static void main (String args[]) {
 
+        class NamingTest extends CWBaseApplication
+        {
+            private final Vector categories;
+
+            public NamingTest(String s)
+                throws CWClassConstructorException
+            {
+                super(s);
+
+                categories = new Vector();
+                categories.addElement("naming.Naming");
+            }
+        
+            protected String getApplicationName()
+            {
+                return "NamingTest";
+            }
+        
+            protected Enumeration getCategoryClassNames()
+            {
+                return categories.elements();
+            }
+        }
+
+        try
+        {
+            NamingTest test = new NamingTest("naming test");
+            test.run(args);
+        }
+        catch(Exception exception)
+        {
+            exception.printStackTrace();
+        }
+    }
+    */
 }
 
 

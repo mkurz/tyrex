@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: ConnectionManager.java,v 1.2 2000/04/13 22:12:05 arkin Exp $
+ * $Id: ConnectionManager.java,v 1.3 2000/08/28 19:01:48 mohammed Exp $
  */
 
 
@@ -56,7 +56,7 @@ import java.util.Properties;
  * application.
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $ $Date: 2000/04/13 22:12:05 $
+ * @version $Revision: 1.3 $ $Date: 2000/08/28 19:01:48 $
  */
 public interface ConnectionManager
 {
@@ -65,17 +65,18 @@ public interface ConnectionManager
     /**
      * Called by the connection factory to obtain a connection on behalf
      * of the application. The factory may invoke this method at any point
-     * when a connection is requested by the application. The adapter can
-     * expect the connection to be of the same type as created by {@link
-     * ManagedConnection#getConnection} but should not call this method
-     * directly.
+     * when a connection is requested by the application. 
      *
+     * @param managedConnectionFactory the managed connection factory 
+     *  that can create {@link ManagedConnection managed connections} that
+     * will be used to create the actual connection returned by the
+     * connection factory to the application.
      * @param info Any optional information for creating the connection
      * @return An open connection
      * @throws ConnectionException An error occured trying to open
      *  a connection
      */
-    public Object getConnection( Object info )
+    public Object getConnection( ManagedConnectionFactory managedConnectionFactory, Object info )
         throws ConnectionException;
 
 
