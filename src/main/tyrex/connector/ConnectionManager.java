@@ -40,62 +40,44 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: ConnectionManager.java,v 1.1 2000/04/10 20:52:34 arkin Exp $
+ * $Id: ConnectionManager.java,v 1.2 2000/04/13 22:12:05 arkin Exp $
  */
 
 
 package tyrex.connector;
 
 
+import java.util.Properties;
+
+
 /**
- * An interface into the connection manager allowing the managed
- * connection to inform the connection manager of changes to the
- * state of a connection.
+ * An interface into the connection manager allowing the application
+ * connection factory to obtain a new connection on behalf of the
+ * application.
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2000/04/10 20:52:34 $
+ * @version $Revision: 1.2 $ $Date: 2000/04/13 22:12:05 $
  */
 public interface ConnectionManager
 {
 
 
     /**
-     * Called by a managed connection to inform the connection manager
-     * that the application closed the connection. After this call the
-     * connection manager may recycle the connection and hand it to a
-     * different caller.
-     *
-     * @param connection The closed connection
-     */
-    public void connectionClosed( ManagedConnection connection );
-
-
-    /**
-     * Called by a managed connection to inform the connection manager
-     * that a critical error occured with the connection. After this
-     * call the connection manager will not attempt to use the
-     * connection and will properly discard it.
-     *
-     * @param connection The erroneous connection
-     * @param except The critical exception
-     */
-    public void connectionErrorOccurred( ManagedConnection connection, Exception except );
-
-
-    /**
-     * Called by the {@link Adapter} to obtain a connection on behalf
-     * of the application. The adapter may invoke this method at any point
+     * Called by the connection factory to obtain a connection on behalf
+     * of the application. The factory may invoke this method at any point
      * when a connection is requested by the application. The adapter can
      * expect the connection to be of the same type as created by {@link
      * ManagedConnection#getConnection} but should not call this method
      * directly.
      *
+     * @param info Any optional information for creating the connection
      * @return An open connection
      * @throws ConnectionException An error occured trying to open
      *  a connection
      */
-    public Object getConnection()
+    public Object getConnection( Object info )
         throws ConnectionException;
+
 
 }
 
