@@ -19,7 +19,7 @@
             for two known Oracle XA issues:
             <ul>
             <li>Oracle XA resource transaction enlistment requires Oracle's implementation
-            of <i>javax.transaction.Xid</i>.</li>
+            of <i>javax.transaction.xa.Xid</i>.</li>
             <li>Suspended Oracle XA resources must be resumed first before they can be ended.</li>
             </ul>
             For the workaround to execute classes12.zip <b>must</b> be in the classpath. 
