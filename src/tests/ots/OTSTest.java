@@ -14,15 +14,15 @@ import tyrex.corba.OTSServer;
 
 public class OTSTest extends TestCase
 {
-    public static VerboseStream stream = new VerboseStream();
+    public static VerboseStream stream = new VerboseStream();  
     
-    //private static Current current;
+    private static long count = 0;
     
     public OTSTest(String name)
     {
         super( name );
         stream.writeVerbose("");
-        stream.writeVerbose("Starting test: " + name);
+        stream.writeVerbose("Starting test: " + name);        
     }
     
   /**
@@ -32,6 +32,8 @@ public class OTSTest extends TestCase
    */
     protected void setUp()
     {
+        if ( count == 0 )
+        {
         String [] args = new String[0];
         String nsStringRef = null;
         
@@ -53,7 +55,7 @@ public class OTSTest extends TestCase
         }
         
         Properties props = new Properties();
-        props.setProperty("ImportModule.tyrex", "tyrex");
+        props.setProperty("ImportModule.tyrex", "tyrex_module");
         props.setProperty("InitRef.NameService", nsStringRef );
         
         _orb = org.omg.CORBA.ORB.init(args, props);
@@ -74,6 +76,8 @@ public class OTSTest extends TestCase
         Thread.currentThread().interrupt();
         _orb.run();
         Thread.interrupted();
+        }
+        count++;
     }
     
     
@@ -83,13 +87,16 @@ public class OTSTest extends TestCase
      */
     protected void tearDown()
     {
+        if ( count == 24 )
+        {
     	   OTSServer.shutdownTransactionManager();	
         _orb.shutdown(true);
         _svcORB.shutdown(true);
+        }
     }
     
-    private org.omg.CORBA.ORB _orb;
-    private org.omg.CORBA.ORB _svcORB;
+    private static org.omg.CORBA.ORB _orb;
+    private static org.omg.CORBA.ORB _svcORB;
     
     /**
      * TC 01 : Basic transaction test
