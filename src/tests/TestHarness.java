@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: TestHarness.java,v 1.4 2000/09/07 20:37:18 mohammed Exp $
+ * $Id: TestHarness.java,v 1.5 2000/09/08 19:59:11 mohammed Exp $
  */
 
 
@@ -76,7 +76,7 @@ public class TestHarness
         try {
             TestHarness harness;
             harness = new TestHarness();
-            harness.run( ( null == args ) || ( 0 == args.length ) ? new String[]{"-execute"} : args );
+            harness.run( args );
         } catch ( Exception except ) {
             except.printStackTrace();
         }
