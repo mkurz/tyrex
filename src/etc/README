@@ -1,6 +1,8 @@
 Tyrex J2EE Service Provider
 
-Copyright (c) 1999-2001, Intalio, Inc.
+Original code is Copyright (c) 1999-2001, Intalio, Inc.
+
+Contributions by MetaBoss team are Copyright (c) 2003-2004, Softaris Pty. Ltd.
 
 
 Supported Features
@@ -24,14 +26,3 @@ Supported Features
 
 * Tomcat 3.0 connector
 
-
-Note about required packages
-----------------------------
-
-Tyrex requires the JCA (Java Connector Architecture) API version 1.0
-and the JAAS (Java Authentication & Authorization Service) API version
-1.0.
-
-Both JARs are not available for distribution. Tyrex users must download
-these JARs from the Sun Microsystems (http://java.sun.com) before
-building or deploying Tyrex.
