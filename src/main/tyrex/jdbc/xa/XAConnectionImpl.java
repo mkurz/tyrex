@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: XAConnectionImpl.java,v 1.8 2000/09/26 17:44:06 mohammed Exp $
+ * $Id: XAConnectionImpl.java,v 1.9 2000/09/27 22:02:53 mohammed Exp $
  */
 
 
@@ -163,6 +163,12 @@ public final class XAConnectionImpl
 
 
     /**
+     * The transaction time out
+     */
+    private int                       _txTimeout;  
+
+
+    /**
      * Construct a new XA/pooled connection with the underlying JDBC
      * connection suitable for this driver only. This is a one to one
      * mapping between this connection and the underlying connection.
@@ -188,6 +194,7 @@ public final class XAConnectionImpl
 	_resManager = resManager;
     _userName = userName;
     _password = password;
+    _txTimeout = resManager.getTransactionTimeout();
     }
 
 
@@ -320,8 +327,9 @@ public final class XAConnectionImpl
 	*/
 	// We have to expect being called by a ClientConnection that we
 	// no longer regard as valid. That's acceptable, we just ignore.
-	if ( clientId != _clientId )
-	    return;
+	if ( clientId != _clientId ) {
+        return;
+    }
 
 	// If we are handling an underlying connection, we commit the
 	// old transaction and are ready to work for a new one.
@@ -331,7 +339,7 @@ public final class XAConnectionImpl
 	    try {
 		_underlying.commit();
 	    } catch ( SQLException except ) {
-		if ( _listener != null ) {
+        if ( _listener != null ) {
 		    event = new ConnectionEvent( this, except );
 		    _listener.connectionErrorOccurred( event );
 		}
@@ -347,8 +355,8 @@ public final class XAConnectionImpl
     } finally {
         if ( _underlying != null ) {
             _resManager.releaseConnection( _underlying, _userName, _password );
+            _underlying = null;
         }
-        _underlying = null;
     }
     }
 
@@ -394,12 +402,13 @@ public final class XAConnectionImpl
 		// Ignore that, we know there's an error.
 	    }
 	    _underlying = null;
-	} else if ( _txConn != null ) {
+	} else if ( ( _txConn != null ) && ( _txConn.conn != null ) ) {
 	    try {
-		end( _txConn.xid, TMFAIL );
-	    } catch ( XAException e2 ) {
+		    _txConn.conn.close();
+	    } catch ( SQLException e2 ) {
 		// Ignore that, we know there's an error.
 	    }
+        _resManager.setTxConnection( _txConn.xid, null );
 	    _txConn = null;
 	} 
 
@@ -460,7 +469,7 @@ public final class XAConnectionImpl
 		    _txConn.xid = xid;
 		    _txConn.count = 1;
 		    _txConn.started = System.currentTimeMillis();
-		    _txConn.timeout = _txConn.started + ( _resManager.getTransactionTimeout() * 1000 );
+		    _txConn.timeout = _txConn.started + ( _txTimeout * 1000 );
             _txConn.userName = _userName;
             _txConn.password = _password;
 		    _resManager.setTxConnection( xid, _txConn );
@@ -475,12 +484,30 @@ public final class XAConnectionImpl
 		try {
 		    _txConn.conn.setAutoCommit( false );
 		    try {
-			if ( _resManager.isolationLevel() != Connection.TRANSACTION_NONE )
-			    _txConn.conn.setTransactionIsolation( _resManager.isolationLevel() );
+            if ( _resManager.getIsolationLevel() != _txConn.conn.getTransactionIsolation() )
+			    _txConn.conn.setTransactionIsolation( _resManager.getIsolationLevel() );
 		    } catch ( SQLException e ) {
-			// The underlying driver might not support this
-			// isolation level that we use by default.
-		    }
+                // The underlying driver might not support this
+			    // isolation level that we use by default.
+
+                // not wrapping the call to conn getTransactionIsolation in a
+                // try-catch block because if we can't determine the isolation level
+                // then it can be TRANSACTION_NONE and what's the point of continuing.
+                int isolationLevel = _txConn.conn.getTransactionIsolation();
+                // if transactions are not supported abort
+                if ( isolationLevel == Connection.TRANSACTION_NONE ) {
+                    if ( _resManager.getLogWriter() != null )
+			            _resManager.getLogWriter().println( "XAConnection <" + 
+                                                            toString() + 
+                                                            ">: does not support transactions." );
+                    throw new XAException( XAException.XAER_RMERR );    
+                }
+                else if ( _resManager.getLogWriter() != null ) {
+			            _resManager.getLogWriter().println( "XAConnection <" + 
+                                                            toString() +
+                                                            ">: cannot set isolation level. Using connection isolation level of " + isolationLevel + ".");
+                }
+			}
 		    if ( _txConn.conn instanceof TwoPhaseConnection )
 			( (TwoPhaseConnection) _txConn.conn ).enableSQLTransactions( false );
 		} catch ( SQLException except ) {
@@ -573,6 +600,7 @@ public final class XAConnectionImpl
 		    // Next thing we might be participating in a new
 		    // transaction while the current one is being
 		    // rolled back.
+            _resManager.releaseConnection( _txConn.conn, _userName, _password );
 		    _txConn = null;
 		}
 	    } else if ( flags == TMSUSPEND ) {
@@ -581,6 +609,7 @@ public final class XAConnectionImpl
 		// right now we have to forget about the transaction
 		// and the underlying connection.
 		--_txConn.count;
+        _resManager.releaseConnection( _txConn.conn, _userName, _password );
 		_txConn = null;
 	    } else
 		// No other flags supported in end().
@@ -816,24 +845,20 @@ public final class XAConnectionImpl
 	if ( seconds < 0 )
 	    throw new XAException( XAException.XAER_INVAL );
 	// Zero resets to the default for all transactions.
-	if ( seconds == 0 )
-	    seconds = _resManager.getTransactionTimeout();
+	_txTimeout = ( seconds == 0 ) 
+                    ? _resManager.getTransactionTimeout()
+                    : seconds;
 	// If a transaction has started, change it's timeout to the new value.
 	if ( _txConn != null ) {
-	    _txConn.timeout = _txConn.started + ( seconds * 1000 );
-	    return true;
+	    _txConn.timeout = _txConn.started + ( _txTimeout * 1000 );
 	}
-	return false;
+	return true;
     }
 
 
     public int getTransactionTimeout()
     {
-	long timeout;
-
-	if ( _txConn == null )
-	    return 0;
-	return (int) ( _txConn.timeout - _txConn.started ) / 1000;
+	return _txTimeout;
     }
 
 
@@ -876,7 +901,7 @@ public final class XAConnectionImpl
 	    return _txConn.conn;
 	}
 	if ( _underlying == null ) {
-	    _underlying = _resManager.newConnection( _userName, _password );
+        _underlying = _resManager.newConnection( _userName, _password );
 	    _underlying.setAutoCommit( true );
 	}
 	return _underlying;

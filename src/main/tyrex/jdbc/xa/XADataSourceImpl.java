@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: XADataSourceImpl.java,v 1.7 2000/09/26 17:44:06 mohammed Exp $
+ * $Id: XADataSourceImpl.java,v 1.8 2000/09/27 22:02:53 mohammed Exp $
  */
 
 
@@ -118,7 +118,16 @@ public abstract class XADataSourceImpl
     public final static int     DEFAULT_TX_TIMEOUT = 10;
 
 
+    /**
+     * The default isolation level
+     */
+    private int _isolationLevel = DEFAULT_ISOLATION_LEVEL;
 
+
+    /**
+     * The default isolation level is Read Committed
+     */
+    public final static int DEFAULT_ISOLATION_LEVEL = Connection.TRANSACTION_READ_COMMITTED;
 
     /**
      * Implementation details:
@@ -197,6 +206,8 @@ public abstract class XADataSourceImpl
 
     /**
      * Returns the default timeout for all transactions.
+     *
+     * @return the default timeout for all transactions.
      */
     public int getTransactionTimeout()
     {
@@ -214,9 +225,9 @@ public abstract class XADataSourceImpl
 
 
     /**
-     * Sets the default timeout for all transactions. The timeout is
-     * specified in seconds. Use zero for the default timeout. Calling
-     * this method does not affect transactions in progress.
+     * Sets the default timeout for all new transactions. The timeout is
+     * specified in seconds. Use zero or less for the 
+     * {@link #DEFAULT_TX_TIMEOUT default timeout}. 
      *
      * @param seconds The timeout in seconds
      */
@@ -271,9 +282,11 @@ public abstract class XADataSourceImpl
      */
     void releaseConnection( Connection conn, String userName, String password )
     {
-    synchronized ( _pool ) {
+    if (null != conn) {
+        synchronized ( _pool ) {
         _pool.add( new ConnectionEntry( conn,
                                         getAccount( userName, password ) ) );
+        }
     }
     }
 
@@ -319,7 +332,7 @@ public abstract class XADataSourceImpl
     {
 	synchronized ( _pool ) {
         // Check in the pool first.
-    	if ( ! _pool.isEmpty() ) {
+        if ( ! _pool.isEmpty() ) {
             String account = getAccount( userName, password );
             ConnectionEntry entry;
 
@@ -359,12 +372,41 @@ public abstract class XADataSourceImpl
 
     /**
      * Returns the transaction isolation level to use with all newly
-     * created transactions, or {@link Connection#TRANSACTION_NONE}
-     * if using the driver's default isolation level.
+     * created transactions.
+     *
+     * @return the transaction isolation level to use with all newly
+     * created transactions
      */
-    public int isolationLevel()
+    public int getIsolationLevel()
     {
-	return Connection.TRANSACTION_NONE;
+	return _isolationLevel;
+    }
+
+
+    /**
+     * Set the transaction isolation level to use with all newly
+     * created transactions.
+     * <p>
+     * The isolation level of java.sql.Connection.TRANSACTION_NONE
+     * is not supported.
+     *
+     * @param isolationLevel the new isolation level
+     * @throws IllegalArgumentException if the specified isolation
+     * level is not one of the following 
+     * java.sql.Connection.TRANSACTION_READ_UNCOMMITTED,
+     * java.sql.Connection.TRANSACTION_READ_COMMITTED,
+     * java.sql.Connection.TRANSACTION_REPEATABLE_READ,
+     * java.sql.Connection.TRANSACTION_SERIALIZABLE
+     */
+    public void setIsolationLevel( int isolationLevel )
+    {
+    if ( ( isolationLevel != Connection.TRANSACTION_READ_UNCOMMITTED ) ||
+         ( isolationLevel != Connection.TRANSACTION_READ_COMMITTED ) || 
+         ( isolationLevel != Connection.TRANSACTION_REPEATABLE_READ ) ||
+         ( isolationLevel != Connection.TRANSACTION_SERIALIZABLE ) ) {
+        throw new IllegalArgumentException("Invalid isolation level " + isolationLevel );
+    }
+	_isolationLevel = isolationLevel;
     }
 
 

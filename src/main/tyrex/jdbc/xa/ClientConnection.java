@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: ClientConnection.java,v 1.5 2000/09/26 01:26:37 mohammed Exp $
+ * $Id: ClientConnection.java,v 1.6 2000/09/27 22:02:53 mohammed Exp $
  */
 
 
@@ -397,7 +397,7 @@ final class ClientConnection
     public synchronized void close()
 	throws SQLException
     {
-	if ( _xaConn == null ) 
+    if ( _xaConn == null ) 
 	    return;
 
 	// Notify the XA connection that we are no longer going
