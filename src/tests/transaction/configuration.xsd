@@ -1,0 +1,66 @@
+<?xml version="1.0" ?>
+<schema xmlns:xsd="http://www.w3.org/2000/08/XMLSchema">
+
+    <element name="configuration">
+        <complexType>
+            <sequence>
+                <element ref="performance" minOccurs="0" maxOccurs="unbounded"/>
+                <element ref="datasource" minOccurs="1" maxOccurs="unbounded"/>
+            </sequence>
+        </complexType>
+    </element>
+
+    <element name="performance">
+        <complexType>
+            <sequence>
+                <element name="group" type="string" minOccurs="0" maxOccurs="unbounded"/>
+                <element name="one_phase_commit" type="performance" minOccurs="1" maxOccurs="1"/>
+                <element name="two_phase_commit" type="performance" minOccurs="1" maxOccurs="1"/>
+                <element name="rollback" type="performance" minOccurs="1" maxOccurs="1"/>
+            </sequence>
+        </complexType>
+    </element>
+    
+    <complexType name="performance">
+      <attribute name="iterations" default="1000" type="positiveInteger" minOccurs="0" maxOccurs="1"/>
+      <attribute name="value" type="positiveInteger" minOccurs="1" maxOccurs="1"/>
+    </complexType>
+
+    <element name="datasource">
+        <complexType>
+            <sequence>
+                <element name="name" type="string" minOccurs="0" maxOccurs="1"/>
+                <element name="class" type="string" minOccurs="1" maxOccurs="1"/>
+                <choice>
+                  <element ref="attribute" minOccurs="0" maxOccurs="unbounded"/>
+                  <element name="uri" type="string" minOccurs="0" maxOccurs="1"/>
+                </choice>
+                <element name="group" type="string" minOccurs="0" maxOccurs="unbounded"/>
+                <element name="user_name" type="string" minOccurs="0" maxOccurs="1"/>
+                <element name="password" type="string" minOccurs="0" maxOccurs="1"/>
+                <element name="table_name" default="test" type="string" minOccurs="0" maxOccurs="1"/>
+                <element name="fail_sleep_time" default="0" type="nonNegativeInteger" minOccurs="0" maxOccurs="1"/>
+                <element name="performance_test" default="true" type="boolean" minOccurs="0" maxOccurs="1"/>
+                <element name="reuse_delisted_xaresources" default="false" type="boolean" minOccurs="0" maxOccurs="1"/>
+            </sequence>
+        </complexType>
+    </element>
+
+    <element name="attribute">
+        <complexType>
+          <attribute name="name" type="string" minOccurs="1" maxOccurs="1"/>
+          <attribute name="value" type="string" minOccurs="1" maxOccurs="1"/>
+          <attribute name="type" type="type" minOccurs="1" maxOccurs="1"/>
+        </complexType>
+    </element>
+    
+  <simpleType name="type">
+    <restriction base="string">
+      <enumeration value="int"/>
+      <enumeration value="integer"/>
+      <enumeration value="string"/>
+    </restriction>
+  </simpleType>
+
+</schema>
+
