@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: ContextTest.java,v 1.4 2001/08/10 11:39:10 mills Exp $
+ * $Id: ContextTest.java,v 1.5 2001/08/22 08:08:54 mills Exp $
  */
 
 
@@ -65,7 +65,7 @@ import java.io.PrintWriter;
 /**
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  */
 
 public abstract class ContextTest extends TestCase
@@ -218,6 +218,106 @@ public abstract class ContextTest extends TestCase
                 ctx.destroySubcontext("sub");
             }
             assertEquals("Val", i4, ctx.lookup("name4"));
+            ctx.close();
+        }
+        catch (OperationNotSupportedException e)
+        {
+            // Expected in some cases.
+        }
+    }
+
+
+    /**
+     * Repeat the test testSubContexts() but for each Context method
+     * that can take a Name as argument rather than a string create a
+     * suitable Name and use it as argument.
+     *
+     * @result The results should be the same as for the previous test.
+     */
+
+    public void testSubContextsUsingName()
+        throws Exception
+    {
+        try
+        {
+            CompositeName subCtxName = new CompositeName("sub");
+            CompositeName name1 = new CompositeName("name1");
+            CompositeName name2 = new CompositeName("name2");
+            CompositeName name3 = new CompositeName("name3");
+            CompositeName name4 = new CompositeName("name4");
+            Context ctx = newContext();
+            Integer i4 = new Integer(4);
+
+            // Pre-existing from the previous test.
+            ctx.rebind(new CompositeName("name4"), i4);
+            Context subCtx = ctx.createSubcontext(subCtxName);
+            Integer i1 = new Integer(1);
+            subCtx.bind(name1, i1);
+            Integer i2 = new Integer(2);
+            subCtx.bind(name2, i2);
+            assertEquals("Val", i1, subCtx.lookup(name1));
+            assertEquals("Val", i2, subCtx.lookup(name2));
+            assertEquals("Val", i4, ctx.lookup(name4));
+            try
+            {
+                subCtx.lookup(name4);
+                fail("Sub-context can access contexts values.");
+            }
+            catch (NameNotFoundException e)
+            {
+                // Expected.
+            }
+            try
+            {
+                ctx.lookup(name1);
+                fail("Context can access sub-contexts values.");
+            }
+            catch (NameNotFoundException e)
+            {
+                // Expected.
+            }
+            try
+            {
+                ctx.lookup(name2);
+                fail("Context can access sub-contexts values.");
+            }
+            catch (NameNotFoundException e)
+            {
+                // Expected.
+            }
+            Integer i3 = new Integer(3);
+            subCtx.rebind(name2, i3);
+            assertEquals("Val", i3, subCtx.lookup(name2));
+            subCtx.rename(name2, name3);
+            try
+            {
+                subCtx.lookup(name2);
+                fail("Can still access old name.");
+            }
+            catch (NameNotFoundException e)
+            {
+                // Expected.
+            }
+            assertEquals("Val", i3, subCtx.lookup(name3));
+            subCtx.unbind(name3);
+            try
+            {
+                subCtx.lookup(name3);
+                fail("Can still access unbound value.");
+            }
+            catch (NameNotFoundException e)
+            {
+                // Expected.
+            }
+            Context subCtx1 = (Context)ctx.lookup(subCtxName);
+            assertEquals("Val", i1, subCtx.lookup(name1));
+            subCtx.unbind(name1);
+            if (!(ctx instanceof InitialContext))
+            {
+                ctx.destroySubcontext(subCtxName);
+            }
+            assertEquals("Val", i4, ctx.lookup(name4));
+            ctx.close();
         }
         catch (OperationNotSupportedException e)
         {
@@ -269,6 +369,10 @@ public abstract class ContextTest extends TestCase
             assertEquals("Composed name", "pref1/name3",
                          ctx.composeName("name3", "pref1"));
         }
+        CompositeName parserName = new CompositeName("name1");
+        NameParser np1 = ctx.getNameParser(parserName);
+        Name name1 = np1.parse("file:/usr/local/src/java/jdk1.3/docs/api/java/util/Hashtable.html#get(java.lang.Object)");
+        assertEquals(name, name1);
     }
 
 
@@ -352,6 +456,102 @@ public abstract class ContextTest extends TestCase
         try
         {
             ctx.lookup("name3");
+            fail("Can still access unbound value.");
+        }
+        catch (NameNotFoundException e)
+        {
+            // Expected.
+        }
+        catch (OperationNotSupportedException e)
+        {
+            // Expected in some cases.
+        }
+        ctx.close();
+    }
+
+
+    /**
+     * Repeat the tests testBindings() but using Name arguments rather
+     * than String.
+     *
+     * @result The results should be the same as for testBindings().
+     */
+
+    public void testBindingsUsingName()
+        throws Exception
+    {
+        CompositeName name1 = new CompositeName("name1");
+        CompositeName name2 = new CompositeName("name2");
+        CompositeName name3 = new CompositeName("name3");
+        CompositeName name4 = new CompositeName("name4");
+        Context ctx = newContext();
+        Integer i1 = new Integer(1);
+        try
+        {
+            // Pre-existing from the previous test.
+            ctx.rebind(name1, i1);
+        }
+        catch (OperationNotSupportedException e)
+        {
+            // Expected in some cases.
+        }
+        Integer i2 = new Integer(2);
+        try
+        {
+            ctx.bind(name2, i2);
+            assertEquals("Val", i1, ctx.lookup(name1));
+            assertEquals("Val", i2, ctx.lookup(name2));
+        }
+        catch (OperationNotSupportedException e)
+        {
+            // Expected in some cases.
+        }
+        Integer i3 = new Integer(3);
+        try
+        {
+            ctx.rebind(name2, i3);
+            assertEquals("Val", i3, ctx.lookup(name2));
+        }
+        catch (OperationNotSupportedException e)
+        {
+            // Expected in some cases.
+        }
+        try
+        {
+            ctx.rename(name2, name3);
+        }
+        catch (OperationNotSupportedException e)
+        {
+            // Expected in some cases.
+        }
+        try
+        {
+            ctx.lookup(name2);
+            fail("Can still access old name.");
+        }
+        catch (NameNotFoundException e)
+        {
+            // Expected.
+        }
+        catch (OperationNotSupportedException e)
+        {
+            // Expected in some cases.
+        }
+        if (!(ctx instanceof EnvContext))
+        {
+            assertEquals("Val", i3, ctx.lookup(name3));
+        }
+        try
+        {
+            ctx.unbind(name3);
+        }
+        catch (OperationNotSupportedException e)
+        {
+            // Expected in some cases.
+        }
+        try
+        {
+            ctx.lookup(name3);
             fail("Can still access unbound value.");
         }
         catch (NameNotFoundException e)
