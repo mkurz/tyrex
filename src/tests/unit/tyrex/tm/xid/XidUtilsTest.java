@@ -40,11 +40,13 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: XidUtilsTest.java,v 1.1 2001/09/07 02:39:15 mills Exp $
+ * $Id: XidUtilsTest.java,v 1.2 2001/09/08 05:05:31 mills Exp $
  */
 
 
 package tyrex.tm.xid;
+
+import javax.transaction.xa.Xid;
 
 import java.io.PrintWriter;
 
@@ -54,7 +56,7 @@ import junit.framework.TestSuite;
 /**
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 
 
@@ -82,13 +84,51 @@ public class XidUtilsTest extends TestCase
      * <p>Since the methods are all static an instance of
      * XidUtils is not required.</p>
      *
-     * @result 
+     * @result Create instances of each of branch, external, local and
+     * global Xid-s.  Use each in the is<Type>() calls.  Only the
+     * relevent ones should return true.
+     *
+     * <p>Call each of the new<Type>() methods.  Ensure that the Xid-s
+     * returned are unique.</p>
      */
 
     public void testBasicFunctionality()
         throws Exception
     {
-//        assertEquals("Title", "Tyrex", XidUtils.TITLE);
+        BranchXid_BaseXidImpl branch = new BranchXid_BaseXidImpl("");
+        Xid branchId = XidUtils.importXid(branch.newBaseXid());
+        assert("Branch", XidUtils.isBranch(branchId));
+        assert("Branch/Global", XidUtils.isGlobal(branchId));
+        assert("Branch/Local", !XidUtils.isLocal(branchId));
+
+        ExternalXid_BaseXidImpl external = new ExternalXid_BaseXidImpl("");
+        ExternalXid eId = (ExternalXid)external.newBaseXid();
+        Xid externalId = XidUtils.importXid(eId);
+        assert("External", !XidUtils.isBranch(externalId));
+        assert("External", XidUtils.isGlobal(externalId));
+        assert("External", !XidUtils.isLocal(externalId));
+
+        GlobalXid_BaseXidImpl global = new GlobalXid_BaseXidImpl("");
+        Xid globalId = XidUtils.importXid(global.newBaseXid());
+        assert("Global", !XidUtils.isBranch(globalId));
+        assert("Global", XidUtils.isGlobal(globalId));
+        assert("Global", !XidUtils.isLocal(globalId));
+
+        LocalXid_BaseXidImpl local = new LocalXid_BaseXidImpl("");
+        Xid localId = XidUtils.importXid(local.newBaseXid());
+        assert("Local/Branch", XidUtils.isBranch(localId));
+        assert("Local/Global", !XidUtils.isGlobal(localId));
+        assert("Local", XidUtils.isLocal(localId));
+
+        localId = XidUtils.newLocal();
+        branchId = XidUtils.newBranch(localId);
+        globalId = XidUtils.newGlobal();
+        assert("Uniqueness", localId.toString().compareTo(branchId.toString())
+               != 0);
+        assert("Uniqueness", localId.toString().compareTo(globalId.toString())
+               != 0);
+        assert("Uniqueness", globalId.toString().compareTo(branchId.toString())
+               != 0);
     }
 
 

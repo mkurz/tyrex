@@ -40,15 +40,14 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: LocalXidTest.java,v 1.1 2001/09/06 10:27:02 mills Exp $
+ * $Id: LocalXidTest.java,v 1.2 2001/09/08 05:05:31 mills Exp $
  */
 
 package tyrex.tm.xid;
 
-import java.io.OutputStream;
+import javax.transaction.xa.Xid;
+
 import java.io.PrintWriter;
-import java.io.FileInputStream;
-import java.io.File;
 
 import junit.framework.*;
 import junit.extensions.*;
@@ -57,7 +56,7 @@ import junit.extensions.*;
 /**
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 
 public class LocalXidTest extends TestCase
@@ -79,9 +78,46 @@ public class LocalXidTest extends TestCase
         _logger.flush();
     }
 
-    public void testNone()
+
+    /**
+     * <p>Test the aspects of the class that do not relate to
+     * BaseXid.</p>
+     *
+     * @result Create an instance.  Using its toString() and
+     * getBranchQualifier() values create a second instance.  Ensure
+     * that these are equal.  Create a third instance.  Ensure it is
+     * not equal.  Ensure that the value returned by getFormatId() is
+     * equal to LocalXid.LOCAL_FORMAT_ID and that the value returned
+     * by getGlobalTransactionId() is equal to an empty byte array.
+     *
+     * <p>Create an ExternalXid using the attributes from the first
+     * LocalXid.  Because an ExternalXid cannot be created with a null
+     * or zero length global value the ExternalXid won't be equal to
+     * the first LocalXid but using it in an equals call will test
+     * equals().</p>
+     */
+
+    public void testNonBaseXidFunctions()
         throws Exception
     {
+        LocalXid localId1 = new LocalXid();
+        LocalXid localId2 = new LocalXid(localId1.toString(),
+                                         localId1.getBranchQualifier());
+        assert("Copy", localId1.equals(localId2));
+        LocalXid localId3 = (LocalXid)localId1.newBranch();
+        assert("Copy", !localId1.equals(localId3));
+        assert("Copy", !localId2.equals(localId3));
+        assertEquals("Format id", LocalXid.LOCAL_FORMAT_ID,
+                     localId1.getFormatId());
+        assertEquals(BaseXid.EMPTY_ARRAY, localId1.getGlobalTransactionId());
+        Xid xid = XidUtils.parse(localId3.toString());
+        byte[] global = new byte[1];
+        global[0] = 66;
+        ExternalXid exId = new ExternalXid(LocalXid.LOCAL_FORMAT_ID,
+                                           global,
+                                           localId1.getBranchQualifier());
+        assert("Copy1", !localId1.equals(exId));
+        assert("Copy2", !localId1.equals(xid));
     }
 
 

@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Unit.java,v 1.5 2001/09/06 02:09:20 mills Exp $
+ * $Id: Unit.java,v 1.6 2001/09/08 05:05:31 mills Exp $
  */
 
 package tyrex;
@@ -69,11 +69,15 @@ import java.util.Vector;
  * Main entry class for test cases execution.
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  */
 
 public class Unit
 {
+    protected final static char[]  HEX_DIGITS
+    = new char[] {'0', '1', '2', '3', '4', '5', '6', '7',
+                  '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
+
     public static void runTests(String args[], TestSuite suite)
     {
         Class[] classes = new Class[1];
@@ -127,5 +131,15 @@ public class Unit
     public static void main(String args[])
     {
         runTests(args, Unit.suite());
+    }
+
+    public static String byteArrayToString(byte[] bytes)
+    {
+        StringBuffer buffer = new StringBuffer(bytes.length * 2 + 1);
+        for ( int i = bytes.length ; i-- > 0 ; ) {
+            buffer.append(HEX_DIGITS[(bytes[i] & 0xF0) >> 4]);
+            buffer.append(HEX_DIGITS[(bytes[i] & 0x0F)]);
+        }
+        return buffer.toString();
     }
 }
