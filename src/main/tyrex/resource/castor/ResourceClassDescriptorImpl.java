@@ -46,7 +46,6 @@ package tyrex.resource.castor;
 
 import java.lang.reflect.Method;
 import org.exolab.castor.mapping.ClassDescriptor;
-import org.exolab.castor.mapping.FieldHandler;
 import org.exolab.castor.mapping.MappingException;
 import org.exolab.castor.mapping.ValidityException;
 import org.exolab.castor.types.AnyNode;
@@ -74,45 +73,6 @@ class ResourceClassDescriptorImpl
 	 */
 	private static final DefaultNaming NAMING = new DefaultNaming();
 
-	/**
-	 * The dummy field handler
-	 */
-	private static final FieldHandler DEFAULT_FIELD_HANDLER = new FieldHandler() {
-										public Object getValue(Object object)
-											throws IllegalStateException {
-											// don't care
-											return null;
-										}
-										
-										public void setValue(Object object, Object value)
-											throws IllegalStateException, IllegalArgumentException {
-											ResourceMappingLoader.CATEGORY.error("Ignoring setting value " + 
-																	  ((value instanceof AnyNode) 
-																		? ((AnyNode)value).getStringValue() 
-																		: value) + 
-																	  " in object " + object);	
-										}
-									
-										public void resetValue(Object object)
-											throws IllegalStateException, IllegalArgumentException {
-											// don't care
-										}
-										
-										/**
-										 * @deprecated No longer supported
-										 */
-										public void checkValidity(Object object)
-											throws ValidityException, IllegalStateException {
-											// don't care
-										}
-									
-										public Object newInstance(Object parent)
-											throws IllegalStateException {
-											// don't care
-											return null;
-										}
-								};
-
 	static {
 		NAMING.setStyle(DefaultNaming.MIXED_CASE_STYLE);
 	}
@@ -123,36 +83,6 @@ class ResourceClassDescriptorImpl
 		setIntrospected(true); 
 		
 		initialize();
-	}
-
-	/**
-	 * Returns the XML field descriptor matching the given
-	 * xml name and nodeType. If NodeType is null, then
-	 * either an AttributeDescriptor, or ElementDescriptor
-	 * may be returned. If the XML field descriptor does not
-	 * exist create a new one..
-	 *
-	 * @param name the xml name to match against
-	 * @param nodeType, the NodeType to match against, or null if
-	 * the node type is not known.
-	 * @return the matching descriptor, or a new descriptor if no matching
-	 * descriptor is available.
-	 *
-	 */
-	public XMLFieldDescriptor getFieldDescriptor(String name, NodeType nodeType) {
-		XMLFieldDescriptor fieldDescriptor;
-
-		fieldDescriptor = super.getFieldDescriptor(name, nodeType);
-
-		if (null == fieldDescriptor) {
-			ResourceMappingLoader.CATEGORY.error("Ignoring field " + name);	
-			fieldDescriptor = new XMLFieldDescriptorImpl(java.lang.Object.class, name, name, nodeType);
-			((XMLFieldDescriptorImpl)fieldDescriptor).setHandler(DEFAULT_FIELD_HANDLER);
-			fieldDescriptor.setContainingClassDescriptor(this);
-			addFieldDescriptor(fieldDescriptor);
-		}
-
-		return fieldDescriptor;
 	}
 
 	/**
