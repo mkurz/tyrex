@@ -71,8 +71,6 @@ public class ServerInterceptor
 	public void receive_request_service_contexts(org.omg.PortableInterceptor.ServerRequestInfo ri)
 		throws org.omg.PortableInterceptor.ForwardRequest
 	{
-		print("TransactionalServerInterceptor", "receive_request_service_contexts");
-		
                 //see if there is a propagation context
 		org.omg.IOP.ServiceContext serviceCtx = null;
 		try
@@ -151,14 +149,6 @@ public class ServerInterceptor
 		return "Tyrex-Transactional-Server-Interceptor";
 	}
 	
-        /**
-         * Displays a trace
-         */
-        public void print( String from, String msg )
-        {            
-                tyrex.util.Logger.ots.debug(from + ": " + msg );            
-        }
-        
         /**
          * Displays a trace and throw a INTERNAL exception...
          */

@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Initializer.java,v 1.5 2001/03/14 22:37:44 jdaniel Exp $
+ * $Id: Initializer.java,v 1.6 2001/03/15 22:59:52 jdaniel Exp $
  *
  * Date         Author  Changes
  */
@@ -64,8 +64,6 @@ public class Initializer extends org.omg.CORBA.LocalObject implements org.omg.Po
 	 */
 	public void pre_init(org.omg.PortableInterceptor.ORBInitInfo info)
 	{
-		print("Initializer", "pre_init");
-		
 		t_slot = info.allocate_slot_id();
 		
 		tyrex.corba.ClientInterceptor clientInterceptor = new tyrex.corba.ClientInterceptor(info, t_slot);
@@ -87,7 +85,6 @@ public class Initializer extends org.omg.CORBA.LocalObject implements org.omg.Po
 	 */
 	public void post_init(org.omg.PortableInterceptor.ORBInitInfo info)
 	{
-		print("Initializer", "post_init");
 		try
 		{
 			org.omg.CORBA.Object obj = info.resolve_initial_references("TransactionService");
@@ -104,15 +101,7 @@ public class Initializer extends org.omg.CORBA.LocalObject implements org.omg.Po
 		}
 					
 	}
-        
-         /**
-         * Displays a trace
-         */
-        public void print( String from, String msg )
-        {            
-                tyrex.util.Logger.ots.debug(from + ": " + msg );            
-        }
-        
+                
         /**
          * Displays a trace and throw a INTERNAL exception...
          */

@@ -70,8 +70,7 @@ public class ClientInterceptor
 	 */
 	public void send_request(org.omg.PortableInterceptor.ClientRequestInfo ri)
 		throws org.omg.PortableInterceptor.ForwardRequest
-	{
-		print("TransactionalClientInterceptor", "send_request");
+	{		
 		org.omg.CORBA.Any any = null;
 		try
 		{
@@ -149,14 +148,6 @@ public class ClientInterceptor
 		return "Tyrex-Transactional-Client-Interceptor";
 	}
 
-        /**
-         * Displays a trace
-         */
-        public void print( String from, String msg )
-        {
-                tyrex.util.Logger.ots.debug(from + ": " + msg );            
-        }
-        
         /**
          * Displays a trace and throw a INTERNAL exception...
          */

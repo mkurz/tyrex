@@ -60,12 +60,7 @@ public final class OTSServer
          * Flag that indicates if an IOR file must be generated
          */
     private static boolean ior_file = false;
-    
-        /**
-         * Flag that indicates if a recovery process must be run
-         */
-    private static boolean recover = false;
-    
+     
         /**
          * Flag that indicates if the transaction factory must be bind to the ns
          */
@@ -75,6 +70,11 @@ public final class OTSServer
     	 * Configuration file name
     	 */
     private static String config_file = "domain.xml";
+    
+    	/**
+    	 * Reference to the transaction domain
+    	 */
+    private static tyrex.tm.TransactionDomain txDomain = null;
     
         /**
          * This function prints help.
@@ -91,11 +91,6 @@ public final class OTSServer
         System.out.println("\t-naming");
         System.out.println("\t\tbinds the transaction factory reference to the naming service using the");
         System.out.println("\t\tfollowing name : Tyrex\\TransactionFactory");
-        
-        System.out.println("\t-recover");
-        System.out.println("\t\tafter a failure ( internal or external of the OTS ),");
-        System.out.println("\t\tyou can run the OTS with this option. It will use ");
-        System.out.println("\t\tthe logs to recover all not completed transactions.");
         
         System.out.println("\t-config");
         System.out.println("\t\tspecifies the configuration file name used by Tyrex to create a domain.");
@@ -117,9 +112,6 @@ public final class OTSServer
                 if ( args[i].equalsIgnoreCase("-ior") )
                     ior_file = true;
                 else
-                    if ( args[i].equalsIgnoreCase("-recover") )
-                        recover = true;
-                    else
                         if ( args[i].equalsIgnoreCase("-naming") )
                             naming = true;
                         else
@@ -140,7 +132,7 @@ public final class OTSServer
         }
     }
     
-    public static TransactionFactory createTransactionFactory(org.omg.CORBA.ORB orb, boolean recover) 
+    public static TransactionFactory createTransactionFactory(org.omg.CORBA.ORB orb ) 
     {
         org.omg.CORBA.BOA boa = org.omg.CORBA.BOA.init( orb, new String[0] );
                 
@@ -148,7 +140,6 @@ public final class OTSServer
         // Gets the default transaction domain
         //
         
-        tyrex.tm.TransactionDomain txDomain = null;
         try
         {
         	txDomain = tyrex.tm.TransactionDomain.createDomain( config_file );
@@ -167,18 +158,16 @@ public final class OTSServer
         //
         // Check for recovery
         //
-        
-        if ( recover )
-        {
-            try
-            {
-            	txDomain.recover();
-            }
-            catch ( tyrex.tm.RecoveryException ex )
-            {
-        	fatal("OTSServer", "Unable to complexe the recovery : " + ex.toString() );    	
-            }
-        }                
+                
+   	try
+	{
+		txDomain.recover();
+	}
+	catch ( tyrex.tm.RecoveryException ex )
+	{
+		fatal("OTSServer", "Unable to complexe the recovery : " + ex.toString() );    	
+	}
+            
         
         //
         // Gets the transaction factory
@@ -193,6 +182,14 @@ public final class OTSServer
         orb.connect( ots );
         
         return ots;
+    }
+    
+    /**
+     * Shutdown the transaction manager
+     */
+    public static void shutdownTransactionManager()
+    {
+    	txDomain.removeDomain( txDomain.getDomainName() );
     }
     
         /**
@@ -224,7 +221,7 @@ public final class OTSServer
         //
         // Create transaction factory
         //
-        TransactionFactory ots = createTransactionFactory(orb, recover);
+        TransactionFactory ots = createTransactionFactory(orb);
         
         //
         // Write TransactionService IOR if needed
