@@ -38,35 +38,39 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
+ * Original code is Copyright (c) 1999-2001, Intalio, Inc. All Rights Reserved.
  *
- * $Id: MemoryContextTest.java,v 1.8 2001/11/12 02:50:43 mills Exp $
+ * Contributions by MetaBoss team are Copyright (c) 2003-2004, Softaris Pty. Ltd. All Rights Reserved.
+ *
+ * $Id: MemoryContextTest.java,v 1.9 2004/12/14 07:08:38 metaboss Exp $
  */
 
 
 package tyrex.naming;
 
-import java.io.*;
-import java.util.Hashtable;
+import java.io.PrintWriter;
 import java.util.Enumeration;
-import java.util.Vector;
+import java.util.Hashtable;
 
-import javax.naming.*;
-import javax.naming.spi.ObjectFactory;
-import tyrex.tm.RuntimeContext;
-import tyrex.naming.EnvContext;
-import VerboseStream;
+import javax.naming.CompositeName;
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import javax.naming.LinkRef;
+import javax.naming.NameClassPair;
+import javax.naming.NameNotFoundException;
+import javax.naming.NamingException;
+import javax.naming.NotContextException;
+import javax.naming.Reference;
 
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-
-import java.io.PrintWriter;
+import util.VerboseStream;
 
 
 /**
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.8 $
+ * @version $Revision: 1.9 $
  */
 
 public class MemoryContextTest extends TestCase
