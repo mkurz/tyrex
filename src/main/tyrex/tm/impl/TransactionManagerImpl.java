@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionManagerImpl.java,v 1.10 2001/03/21 20:02:48 arkin Exp $
+ * $Id: TransactionManagerImpl.java,v 1.11 2001/04/25 21:53:03 jdaniel Exp $
  */
 
 
@@ -76,7 +76,7 @@ import tyrex.util.Messages;
  * transaction server.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.10 $ $Date: 2001/03/21 20:02:48 $
+ * @version $Revision: 1.11 $ $Date: 2001/04/25 21:53:03 $
  * @see Tyrex#recycleThread
  * @see TransactionDomain
  * @see TransactionImpl
@@ -152,8 +152,10 @@ final class TransactionManagerImpl
         tx = context._tx;
         if ( tx == null )
             throw new IllegalStateException( Messages.message( "tyrex.tx.inactive" ) );
-        _txDomain.delistThread( context, thread );
+        
         tx.commit();
+        
+        _txDomain.delistThread( context, thread );
     }
 
 
@@ -169,8 +171,10 @@ final class TransactionManagerImpl
         tx = context._tx;
         if ( tx == null )
             throw new IllegalStateException( Messages.message( "tyrex.tx.inactive" ) );
-        _txDomain.delistThread( context, thread );
+        
         tx.rollback();
+        
+        _txDomain.delistThread( context, thread );
     }
 
 

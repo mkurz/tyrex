@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionImpl.java,v 1.17 2001/03/23 23:50:02 arkin Exp $
+ * $Id: TransactionImpl.java,v 1.18 2001/04/25 21:53:03 jdaniel Exp $
  */
 
 
@@ -88,7 +88,7 @@ import tyrex.util.Messages;
  * they are added.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.17 $ $Date: 2001/03/23 23:50:02 $
+ * @version $Revision: 1.18 $ $Date: 2001/04/25 21:53:03 $
  * @see XAResourceHolder
  * @see TransactionManagerImpl
  * @see TransactionDomain
@@ -526,7 +526,7 @@ final class TransactionImpl
 
     public synchronized void rollback()
         throws IllegalStateException, SystemException
-    {
+    {       
         // Perform the rollback, pass IllegalStateException to
         // the caller, ignore the returned heuristics.
         try {
@@ -887,7 +887,13 @@ final class TransactionImpl
         throws RollbackException, HeuristicMixedException,
                HeuristicRollbackException, SecurityException,
                IllegalStateException, SystemException
-    {
+    {                
+        Thread          thread;
+        ThreadContext   context;
+        
+        thread = Thread.currentThread();
+        context = ThreadContext.getThreadContext( thread );
+        
         if ( _status == STATUS_MARKED_ROLLBACK ) {
             // Status was changed to rollback or an error occured,
             // either case we have a heuristic decision to rollback.
@@ -904,7 +910,10 @@ final class TransactionImpl
         // preperation. The heuristic decision will be remembered.
         if ( _parent != null || _pgContext != null )
             return;
+               
         commit( true );
+       
+        _txDomain.delistThread( context, thread );
     }
 
 
@@ -1272,7 +1281,7 @@ final class TransactionImpl
         // We start as read-only until at least one resource indicates
         // it actually commited.
         _status = STATUS_COMMITTING;
-        _heuristic = Heuristic.READONLY;
+        _heuristic = Heuristic.READONLY;               
         
         // We deal with OTS (remote transactions and subtransactions)
         // first because we expect a higher likelyhood of failure over
@@ -1412,6 +1421,9 @@ final class TransactionImpl
         // we never truely rollback.
         _status = STATUS_ROLLING_BACK;
         _heuristic = Heuristic.READONLY;
+        
+        if ( _syncs != null )
+            beforeCompletion();
         
         if ( _resources != null ) {
             // Tell all the OTS resources to rollback their transaction

@@ -2365,7 +2365,7 @@ class TransactionTestSuite
                         return false;
                     }
                 }
-                catch (HeuristicRollbackException e) {
+                catch (RollbackException e) {
                     rollbackExceptionOccurred = true;    
                 }
     
