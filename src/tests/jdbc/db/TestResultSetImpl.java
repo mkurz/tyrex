@@ -38,16 +38,29 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 2000 (C) Intalio Technologies Inc. All Rights Reserved.
+ * Original code is Copyright (c) 1999-2001, Intalio, Inc. All Rights Reserved.
  *
+ * Contributions by MetaBoss team are Copyright (c) 2003-2004, Softaris Pty. Ltd. All Rights Reserved.
+ *
+ * $Id: TestResultSetImpl.java,v 1.2 2004/12/15 06:18:47 metaboss Exp $
  */
 
 
 package jdbc.db;
 
 import java.math.BigDecimal;
-import java.sql.*;
-import java.util.*;
+import java.net.URL;
+import java.sql.Array;
+import java.sql.Blob;
+import java.sql.Clob;
+import java.sql.DatabaseMetaData;
+import java.sql.Ref;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.sql.SQLWarning;
+import java.sql.Statement;
+import java.util.Calendar;
 
 /////////////////////////////////////////////////////////////////////
 // TestResultSetImpl
@@ -2705,4 +2718,75 @@ public final class TestResultSetImpl
     {
         throw new SQLException("getTimestamp method not supported.");
     }
+    
+	/* (non-Javadoc)
+	 * @see java.sql.ResultSet#getURL(int)
+	 */
+	public URL getURL(int columnIndex) throws SQLException {
+        throw new SQLException("getURL method not supported.");
+    }
+
+	/* (non-Javadoc)
+	 * @see java.sql.ResultSet#getURL(java.lang.String)
+	 */
+	public URL getURL(String columnName) throws SQLException {
+        throw new SQLException("getURL method not supported.");
+    }
+
+	/* (non-Javadoc)
+	 * @see java.sql.ResultSet#updateArray(int, java.sql.Array)
+	 */
+	public void updateArray(int columnIndex, Array x) throws SQLException {
+        throw new SQLException("updateArray method not supported.");
+    }
+
+	/* (non-Javadoc)
+	 * @see java.sql.ResultSet#updateArray(java.lang.String, java.sql.Array)
+	 */
+	public void updateArray(String columnName, Array x) throws SQLException {
+        throw new SQLException("updateArray method not supported.");
+    }
+
+	/* (non-Javadoc)
+	 * @see java.sql.ResultSet#updateBlob(int, java.sql.Blob)
+	 */
+	public void updateBlob(int columnIndex, Blob x) throws SQLException {
+        throw new SQLException("updateBlob method not supported.");
+    }
+
+	/* (non-Javadoc)
+	 * @see java.sql.ResultSet#updateBlob(java.lang.String, java.sql.Blob)
+	 */
+	public void updateBlob(String columnName, Blob x) throws SQLException {
+        throw new SQLException("updateBlob method not supported.");
+    }
+
+	/* (non-Javadoc)
+	 * @see java.sql.ResultSet#updateClob(int, java.sql.Clob)
+	 */
+	public void updateClob(int columnIndex, Clob x) throws SQLException {
+        throw new SQLException("updateClob method not supported.");
+    }
+
+	/* (non-Javadoc)
+	 * @see java.sql.ResultSet#updateClob(java.lang.String, java.sql.Clob)
+	 */
+	public void updateClob(String columnName, Clob x) throws SQLException {
+        throw new SQLException("updateClob method not supported.");
+    }
+
+	/* (non-Javadoc)
+	 * @see java.sql.ResultSet#updateRef(int, java.sql.Ref)
+	 */
+	public void updateRef(int columnIndex, Ref x) throws SQLException {
+        throw new SQLException("updateRef method not supported.");
+    }
+
+	/* (non-Javadoc)
+	 * @see java.sql.ResultSet#updateRef(java.lang.String, java.sql.Ref)
+	 */
+	public void updateRef(String columnName, Ref x) throws SQLException {
+        throw new SQLException("updateRef method not supported.");
+    }
+    
 }
