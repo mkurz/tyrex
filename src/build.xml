@@ -82,7 +82,7 @@
   
   <target name="main" depends="prepare">
     <javac srcdir="${main}" destdir="${classes}" 
-           excludes="**/package.html,**/*.disabled,**/*.disable,**/*.old,tyrex/tools/Tomcat.java"
+           excludes="**/package.html,**/*.disabled,**/*.disable,**/*.old,tyrex/tools/Tomcat.java,tyrex/jdbc/util/*"
            classpath="${classpath}" debug="on" deprecation="off" />
   </target>
 
@@ -92,7 +92,7 @@
   <!-- Same as main, but optimization, no debug and no deprecation -->
   <target name="main-opt" depends="prepare">
     <javac srcdir="${main}" destdir="${classes}" 
-           excludes="**/package.html,**/*.disabled,**/*.disable,**/*.old,tyrex/tools/Tomcat.java"
+           excludes="**/package.html,**/*.disabled,**/*.disable,**/*.old,tyrex/tools/Tomcat.java,tyrex/jdbc/util/*"
            classpath="${classpath}" debug="off" deprecation="off" optimize="on" />
   </target>
 

@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Logger.java,v 1.5 2000/09/08 23:06:38 mohammed Exp $
+ * $Id: Logger.java,v 1.6 2000/09/25 06:41:56 mohammed Exp $
  */
 
 
@@ -65,7 +65,7 @@ import java.util.Date;
  * post-mortem analysis.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.5 $ $Date: 2000/09/08 23:06:38 $
+ * @version $Revision: 1.6 $ $Date: 2000/09/25 06:41:56 $
  */
 public class Logger
     extends PrintWriter
@@ -87,7 +87,7 @@ public class Logger
     /**
      * The default system logger.
      */
-    private static PrintWriter  _system = new Logger( System.out ).setPrefix( Prefix );
+    private static Logger  _system = new Logger( System.out ).setPrefix( Prefix );
 
 
     /**
@@ -134,7 +134,7 @@ public class Logger
      * Returns the default logger. This logger is used to produce
      * system messages.
      */
-    public static PrintWriter getSystemLogger()
+    public static Logger getSystemLogger()
     {
 	return _system;
     }
@@ -145,6 +145,18 @@ public class Logger
      * system messages.
      */
     public static void setSystemLogger( PrintWriter system )
+    {
+	if ( system == null )
+	    throw new NullPointerException( "Argument 'system' is null" );
+	_system = system instanceof Logger ? ( Logger )system : new Logger( system ).setPrefix( Prefix );
+    }
+
+
+    /**
+     * Sets the default logger. This logger is used to produce
+     * system messages.
+     */
+    public static void setSystemLogger( Logger system )
     {
 	if ( system == null )
 	    throw new NullPointerException( "Argument 'system' is null" );
@@ -362,6 +374,19 @@ public class Logger
     {
 	prefixLine();
 	println( String.valueOf( value ) );
+    }
+
+
+    public void print( Exception e )
+    {
+    prefixLine();
+    e.printStackTrace(this);
+    }
+
+    public void println( Exception e )
+    {
+    print( e );
+	_newLine = true;
     }
 
 

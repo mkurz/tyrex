@@ -23,9 +23,7 @@
         wait-timeout:        how long to wait for a new transactions after
                              the quota limit has been reached (in seconds)
     -->
-    <!-- <tyrex:pool> -->
-      <tyrex:resource-limits active-limit="200" upper-limit="300" check-every="10" wait-timeout="10"/>
-    <!-- </tyrex:pool> -->
+    <tyrex:resource-limits active-limit="200" upper-limit="300" check-every="10" wait-timeout="10"/>
   </tyrex:domain>
 </tyrex:server>
 

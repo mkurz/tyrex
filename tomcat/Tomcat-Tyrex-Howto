@@ -128,7 +128,7 @@ Connector elements.
 Transaction/ENC support requires that at least one interceptor
 appear in the list:
 
-  <Interceptor className="tyrex.connector.Tomcat"
+  <RequestInterceptor className="tyrex.tools.Tomcat"
                docBase="*" />
 
 
@@ -183,9 +183,11 @@ JDBC driver as the resource mydb:
     <res:resource res-name="jdbc/mydb" res-type="postgresql.PostgresqlDataSource">
       <res:param database-name="test" description="PostgreSQL test database"
                  user="test" password="test"/>
-      <res:pool upper-limit="100" desired-size="10"/>
+      <res:pool>
+	<res:resource-limits upper-limit="100" desired-size="10"/>
+      <res:pool>	
       <res:visible>
-         <res:app-path>file:/*</res:app-path>
+         <res:app-path>*</res:app-path>
       </res:visible>
     </res:resource>
   </res:resources>
@@ -220,9 +222,10 @@ seconds wait timeout on creation of new transactions when reaching
 the transaction quota:
 
 <tyrex:server xmlns:tyrex="http://tyrex.exolab.org/tyrex">
-  <tyrex:config thread-terminate="false" nested-transaction="false"
+  <tyrex:domain name="default">
+    <tyrex:policy thread-terminate="false" nested-transaction="false"
                 transaction-timeout="10"/>
-  <tyrex:limits active-limit="200" check-every="10" wait-timeout="10"/>
+  <tyrex:resource-limits active-limit="200" check-every="10" wait-timeout="10"/>
 </tyrex:server>
 
 

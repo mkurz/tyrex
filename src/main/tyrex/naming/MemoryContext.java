@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: MemoryContext.java,v 1.6 2000/09/08 23:05:19 mohammed Exp $
+ * $Id: MemoryContext.java,v 1.7 2000/09/25 06:41:56 mohammed Exp $
  */
 
 
@@ -92,7 +92,7 @@ import javax.naming.spi.NamingManager;
  *
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.6 $ $Date: 2000/09/08 23:05:19 $
+ * @version $Revision: 1.7 $ $Date: 2000/09/25 06:41:56 $
  * @see MemoryContextFactory
  */
 public class MemoryContext
@@ -229,7 +229,7 @@ public class MemoryContext
 	// directly reachable in this context, otherwise, we default to the
 	// composite name lookup.
 	object = _bindings.get( name );
-	if ( object != null ) {
+    if ( object != null ) {
 	    if ( object instanceof LinkRef ) {
 		    // Found a link reference that we must follow. If the link
 		    // starts with a '.' we use it's name to do a look underneath

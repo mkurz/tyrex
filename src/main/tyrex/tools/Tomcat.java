@@ -40,15 +40,16 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Tomcat.java,v 1.4 2000/09/23 00:10:51 mohammed Exp $
+ * $Id: Tomcat.java,v 1.5 2000/09/25 06:41:56 mohammed Exp $
  */
 
 
 package tyrex.tools;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.Enumeration;
-import java.net.URL;
-import java.io.InputStream;
 import java.util.Hashtable;
 import javax.servlet.Servlet;
 import javax.servlet.http.HttpServletRequest;
@@ -80,7 +81,7 @@ import org.apache.tomcat.util.URLUtil;
  *
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.4 $ $Date: 2000/09/23 00:10:51 $
+ * @version $Revision: 1.5 $ $Date: 2000/09/25 06:41:56 $
  */
 public final class Tomcat
     extends BaseInterceptor
@@ -94,12 +95,11 @@ public final class Tomcat
 
     public Tomcat()
     {
-        System.out.println("Riad was here");
     }
 
     public int preService(Request req, Response resp ) {
         try {
-	    preInvoke( req.getContext(), null, /*req.getWrapper().getServlet(),*/
+        preInvoke( req.getContext(), null, /*req.getWrapper().getServlet(),*/
 				    null, null /*req.getFacade(),  resp.getFacade()*/);
 	    return 0;
 	} catch( InterceptorException ex ) {
@@ -112,6 +112,7 @@ public final class Tomcat
 			   HttpServletRequest req, HttpServletResponse res )
 	throws InterceptorException
     {
+    
 	MemoryContext memoryContext;
 
 	// Make sure the Tyrex is started at this point.
@@ -147,7 +148,7 @@ public final class Tomcat
 			    HttpServletRequest req, HttpServletResponse res )
 	throws InterceptorException
     {
-	try {
+    try {
 	    EnvContext.unsetEnvContext();
 	    Tyrex.recycleThread();
 	} catch ( RollbackException except ) {
@@ -174,75 +175,81 @@ public final class Tomcat
 	    } catch ( Exception except ) {
 	    }
         appName = context.getDocBase();
+        loadWebApplication(memoryContext, 
+                           getWebApplicationConfigPath(context.getContextManager().getTomcatHome(), appName), 
+                           appName);
         TomcatContextHelper.addEnvEntries( memoryContext, appName );
-        TomcatContextHelper.addResources( memoryContext, appName );
+        //TomcatContextHelper.addResources( memoryContext, appName );
     } 
 	return memoryContext;
     }
-    
-    /*
-    protected ENCHelper getENCHelper( Context context )
+
+
+    /**
+     * Return the path of the web application configuration file
+     * path.
+     *
+     * @param tomcatHome the path of the home of tomcat
+     * @param appName the name of the application
+     * @return the path of the web application configuration file
+     *      path.
+     */
+    private String  getWebApplicationConfigPath(String tomcatHome, String appName)
     {
-	ENCHelper   enc;
-
-	enc = (ENCHelper) _encs.get( context );
-	if ( enc == null ) {
-	    enc = new ENCHelper();
-	    _encs.put( context, enc );
-	    try {
-		enc.addUserTransaction( Tyrex.getUserTransaction() );
-	    } catch ( Exception except ) {
-	    }
-
-	    WebApplicationDescriptor appDesc;
-	    URL         url;
-	    String      base;
-	    InputStream is;
-
-	    base = context.getDocumentBase().toString();
-	    if ( context.getDocumentBase().getProtocol().equalsIgnoreCase(
-		     Constants.Request.WAR ) ) {
-		if ( base.endsWith( "/" ) ) {
-		    base = base.substring( 0, base.length() - 1 );
-		}
-		base += "!/";
-	    }
-	    try {
-		url = new URL( base + Constants.Context.ConfigFile );
-		is = url.openConnection().getInputStream();
-		appDesc = new WebApplicationReader().
-		    getDescriptor( is,  new WebDescriptorFactoryImpl(),
-				   context.isWARValidated() );
-
-		Enumeration       enum;
-		EnvironmentEntry  envEntry;
-		ResourceReference resRef;
-
-		enum = appDesc.getEnvironmentEntries();
-		while ( enum.hasMoreElements() ) {
-		    envEntry = (EnvironmentEntry) enum.nextElement();
-		    try {
-			enc.addEnvEntry( envEntry.getName(), envEntry.getType(), envEntry.getValue() );
-		    } catch ( NamingException except ) { }
-		}
-
-		enum = appDesc.getResourceReferences();
-		while ( enum.hasMoreElements() ) {
-		    resRef = (ResourceReference) enum.nextElement();
-		    enc.addResource( context.getDocumentBase().toString(), resRef.getName(),
-				     resRef.getType(), 
-				     ResourceReference.APPLICATION_AUTHORIZATION.equals( resRef.getAuthorization() ) );
-		}
-
-	    } catch ( Exception except ) {
-		System.out.println( except );
-		except.printStackTrace();
-	    }
-	    enc.addEnvEntries( context.getDocumentBase().toString() );
-	    
-      	}
-	return enc;
+        return new File(new File(tomcatHome, appName), "WEB-INF/web.xml").getPath();
     }
-    */
 
+    /**
+     * Load the entries from the web.xml into the specified memory
+     * context.
+     *
+     * @param memoryContext the memory context
+     * @param path the path of the web.xml file
+     * @param appName the name of the application
+     */
+    private void loadWebApplication(MemoryContext memoryContext, String path, String appName)
+    {
+        WebApplicationDescriptor appDesc;
+	    FileInputStream fis = null;
+
+	    try {
+            Enumeration       enum;
+    		EnvironmentEntry  envEntry;
+    		ResourceReference resRef;
+    
+            fis = new FileInputStream(path);
+    		appDesc = new WebApplicationReader().getDescriptor( fis,  
+                                                                new WebDescriptorFactoryImpl(),
+                                                                false ); // perform no validation
+    
+    		enum = appDesc.getEnvironmentEntries();
+            while ( enum.hasMoreElements() ) {
+    		    envEntry = (EnvironmentEntry) enum.nextElement();
+    		    try {
+                TomcatContextHelper.addEnvEntry( memoryContext, envEntry.getName(), envEntry.getType(), envEntry.getValue() );
+    		    } catch ( NamingException except ) { }
+    		}
+    
+    		enum = appDesc.getResourceReferences();
+            while ( enum.hasMoreElements() ) {
+    		    resRef = (ResourceReference) enum.nextElement();
+                TomcatContextHelper.addResource( memoryContext,
+                                                 appName, 
+                                                 resRef.getName(),
+                                                 resRef.getType(), 
+                                                 ResourceReference.APPLICATION_AUTHORIZATION.equals( resRef.getAuthorization() ) );
+		}
+
+	    } catch ( Exception except ) {
+    		System.out.println( except );
+    		except.printStackTrace();
+	    } finally {
+            if (null != fis) {
+                try {    
+                    fis.close();
+                } catch (IOException e) {
+                }
+            }
+        }
+    }
 }

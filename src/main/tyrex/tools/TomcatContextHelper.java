@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Technologies Inc. All Rights Reserved.
  *
- * $Id: TomcatContextHelper.java,v 1.2 2000/09/23 00:10:51 mohammed Exp $
+ * $Id: TomcatContextHelper.java,v 1.3 2000/09/25 06:41:56 mohammed Exp $
  */
 
 
@@ -71,7 +71,7 @@ import tyrex.util.Messages;
  *
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $ $Date: 2000/09/23 00:10:51 $
+ * @version $Revision: 1.3 $ $Date: 2000/09/25 06:41:56 $
  */
 public final class TomcatContextHelper
 {
@@ -203,6 +203,54 @@ public final class TomcatContextHelper
     }
 
 
+    static void addResource( Context ctx, String appName, String resName, String resType,
+                             boolean appAuth )
+    {
+	Enumeration enum;
+	Resource    resource;
+	Object      factory;
+	
+	enum = Resources.getResources().listResources();
+	while ( enum.hasMoreElements() ) {
+	    resource = (Resource) enum.nextElement();
+	    
+	    if ( resource.getResName().equals( resName ) &&
+		 resource.isApplicationAuth() == appAuth ) {
+		if ( resource.isVisible( appName ) ) {
+		    
+		    if ( resType.equals( "javax.sql.DataSource" ) ) {
+
+			factory = resource.createResourceFactory();
+			if ( factory == null || ! ( factory instanceof DataSource ) ) {
+			    Logger.getSystemLogger().println(
+			        Messages.format( "tyrex.enc.resourceNotSameType",
+						 resType, resource.getResType() ) );
+			} else {
+			    try {
+				addDataSource( ctx, resource.getResName(),
+					       (DataSource) factory );
+			    } catch ( NameAlreadyBoundException except ) {
+				// This happens if another data source was
+				// previously bound to the same name. Ignore.
+			    } catch ( NamingException except ) {
+				// This typically happens if name is invalid
+				Logger.getSystemLogger().println(
+				    Messages.format( "tyrex.enc.errorBindingResource",
+						     resource.getResName(), except ) );
+			    }
+			}
+
+		    } else {
+			Logger.getSystemLogger().println( 
+			    Messages.format( "tyrex.enc.resourceNotSupported",
+		            resource.getResName(), resource.getResType() ) );
+		    }
+		    
+		}
+	    }
+	}
+    }
+    
     static void addDataSource( Context ctx, String name, DataSource ds )
 	throws NamingException
     {

@@ -4,7 +4,7 @@ set DIR=%~dp0
 
 REM [Arkin] Added the following packages to the classpath
 REM         Required to support Tyrex
-set CLASSPATH=%CLASSPATH%;C:\java\tyrex\build\classes
+set CLASSPATH=%CLASSPATH%;%THOME%\build\classes
 REM set CLASSPATH=%CLASSPATH%;%DIR%lib\tyrex-0.9.6.jar
 SET CLASSPATH=%CLASSPATH%;%DIR%lib\castor-0.8.8-xml.jar
 set CLASSPATH=%CLASSPATH%;%DIR%lib\xerces.jar;%DIR%lib\postgresql-6.3.jar

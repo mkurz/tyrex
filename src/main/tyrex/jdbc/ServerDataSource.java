@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: ServerDataSource.java,v 1.6 2000/09/23 00:10:50 mohammed Exp $
+ * $Id: ServerDataSource.java,v 1.7 2000/09/25 06:41:56 mohammed Exp $
  */
 
 
@@ -82,12 +82,14 @@ import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.Name;
 import javax.naming.spi.ObjectFactory;
+import tyrex.naming.ReferenceRefAddr;
 import tyrex.tm.ResourceManager;
 import tyrex.resource.ResourceLimits;
 import tyrex.resource.ResourcePool;
 import tyrex.resource.ResourcePoolManager;
 import tyrex.resource.ResourcePoolManagerImpl;
 import tyrex.resource.ResourceTimeoutException;
+import tyrex.util.Logger;
 import tyrex.util.Messages;
 
 
@@ -99,7 +101,7 @@ import tyrex.util.Messages;
  * {@link tyrex.resource.ResourcePool}.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.6 $ $Date: 2000/09/23 00:10:50 $
+ * @version $Revision: 1.7 $ $Date: 2000/09/25 06:41:56 $
  *
  * Date         Author          Changes
  * ?            Assaf Arkin     Created  
@@ -696,16 +698,21 @@ public class ServerDataSource
 	if ( _dataSourceName != null )
 	    ref.add( new StringRefAddr( "dataSourceName", _dataSourceName ) );
     else if ( _dataSource != null ) {
-        if ( _dataSource instanceof Serializable ) {
-            try {
-                ref.add( new BinaryRefAddr( "dataSource", getDataSourceBytes() ) );
-            } catch (IOException e) {
-                System.out.println("Cannot bind data source " + _dataSource );
-                System.out.println(e);
+        try {
+            if ( _dataSource instanceof Referenceable ) {
+                ref.add( new ReferenceRefAddr( "dataSource", (Referenceable)_dataSource ) );
             }
-        }
-        else {
-            System.out.println("Cannot bind data source " + _dataSource );
+            else if ( _dataSource instanceof Reference ) {
+                ref.add( new ReferenceRefAddr( "dataSource", (Reference)_dataSource ) );
+            }
+            else if ( _dataSource instanceof Serializable ) {
+                ref.add( new BinaryRefAddr( "dataSource", getDataSourceBytes() ) );
+            }
+        } catch (NamingException e) {
+            Logger.getSystemLogger().print( "Failed to bind data source" );
+            Logger.getSystemLogger().print( _dataSource );
+            Logger.getSystemLogger().println(e);
+        } catch (IOException e) {
         }
     }
  	return ref;
@@ -784,7 +791,12 @@ public class ServerDataSource
             addr = ref.get( "dataSource" );
             if ( addr != null ) {
                 try {
-                    ds._dataSource = getDataSourceFromBytes( ( byte[] ) addr.getContent() );
+                    if ( addr instanceof BinaryRefAddr ) {
+                        ds._dataSource = getDataSourceFromBytes( ( byte[] ) addr.getContent() );
+                    }
+                    else {
+                        ds._dataSource = addr.getContent();
+                    }
                 } catch ( Exception e ) {
                     throw new NamingException( e.toString() );
                 }

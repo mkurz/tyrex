@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Resources.java,v 1.6 2000/09/23 00:10:50 mohammed Exp $
+ * $Id: Resources.java,v 1.7 2000/09/25 06:41:55 mohammed Exp $
  */
 
 
@@ -71,7 +71,7 @@ import tyrex.util.Logger;
  *
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.6 $ $Date: 2000/09/23 00:10:50 $
+ * @version $Revision: 1.7 $ $Date: 2000/09/25 06:41:55 $
  */
 public class Resources
     implements Serializable
@@ -256,8 +256,14 @@ public class Resources
 	URL  url;
 
 	try {
+        file = new File( System.getProperty( "user.dir" ), FileName );
+	    if ( file.exists() ) {
+		Logger.getSystemLogger().println( Messages.format( "tyrex.conf.loadingResources", file ) );
+		return load( file );
+	    }
+
 	    url = Server.class.getResource( "/" + FileName );
-	    if ( url != null ) {
+        if ( url != null ) {
 		file = new File( url.getFile() );
 		if ( file.exists() ) {
 		    Logger.getSystemLogger().println( Messages.format( "tyrex.conf.loadingResources", file ) );

@@ -32,9 +32,6 @@ file for complete configuration information:
             isWARValidated="false" isInvokerEnabled="true"
             isWorkDirPersistent="false"/>
 
-        <Interceptor className="tyrex.connector.Tomcat"
-                     docBase="*" />
-        
         <!-- Old TcpEndpoint-based HttpServer. Will be deprecated soon! 
         <Connector className="org.apache.tomcat.server.HttpServerConnector">
         </Connector>
@@ -71,5 +68,11 @@ file for complete configuration information:
         </Connector>
         -->
 
+        <!-- Tyrex integration -->
+        <RequestInterceptor className="tyrex.tools.Tomcat" docBase="*" />
+        
+        <Context path="/tyrex" docBase="webapps/tyrex" debug="0" reloadable="true" > 
+        </Context>
+        
     </ContextManager>
 </Server>
