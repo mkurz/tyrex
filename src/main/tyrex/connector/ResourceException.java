@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: ResourceException.java,v 1.1 2000/01/11 00:33:46 roro Exp $
+ * $Id: ResourceException.java,v 1.1.1.1 2000/01/11 00:33:46 roro Exp $
  */
 
 
@@ -51,7 +51,7 @@ package tyrex.connector;
  * Reports an exception generated from the resource factory.
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2000/01/11 00:33:46 $
+ * @version $Revision: 1.1.1.1 $ $Date: 2000/01/11 00:33:46 $
  */
 public class ResourceException
     extends Exception

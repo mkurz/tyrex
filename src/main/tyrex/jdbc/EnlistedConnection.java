@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: EnlistedConnection.java,v 1.1 2000/01/11 00:33:46 roro Exp $
+ * $Id: EnlistedConnection.java,v 1.1.1.1 2000/01/11 00:33:46 roro Exp $
  */
 
 

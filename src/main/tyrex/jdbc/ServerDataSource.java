@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: ServerDataSource.java,v 1.1 2000/01/11 00:33:46 roro Exp $
+ * $Id: ServerDataSource.java,v 1.1.1.1 2000/01/11 00:33:46 roro Exp $
  */
 
 
@@ -84,7 +84,7 @@ import tyrex.util.Messages;
  *
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2000/01/11 00:33:46 $
+ * @version $Revision: 1.1.1.1 $ $Date: 2000/01/11 00:33:46 $
  */
 public class ServerDataSource
     implements DataSource, ConnectionEventListener,

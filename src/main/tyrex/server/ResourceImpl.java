@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: ResourceImpl.java,v 1.1 2000/01/11 00:33:46 roro Exp $
+ * $Id: ResourceImpl.java,v 1.1.1.1 2000/01/11 00:33:46 roro Exp $
  */
 
 
@@ -67,7 +67,7 @@ import tyrex.util.Messages;
  * transaction. Requires that we use the OTS Java/IDL mapping.
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2000/01/11 00:33:46 $
+ * @version $Revision: 1.1.1.1 $ $Date: 2000/01/11 00:33:46 $
  */
 public final class ResourceImpl
     extends _ResourceImplBase

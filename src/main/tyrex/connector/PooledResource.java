@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: PooledResource.java,v 1.1 2000/01/11 00:33:46 roro Exp $
+ * $Id: PooledResource.java,v 1.1.1.1 2000/01/11 00:33:46 roro Exp $
  */
 
 
@@ -56,7 +56,7 @@ import javax.transaction.xa.XAResource;
  * resource reuse through the event listeners.
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2000/01/11 00:33:46 $
+ * @version $Revision: 1.1.1.1 $ $Date: 2000/01/11 00:33:46 $
  * @see ResourceEventListener
  */
 public interface PooledResource

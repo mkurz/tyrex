@@ -1,6 +1,6 @@
 #! /bin/sh
 
-# $Id: build.sh,v 1.1 2000/01/11 00:33:46 roro Exp $
+# $Id: build.sh,v 1.1.1.1 2000/01/11 00:33:46 roro Exp $
 
 if [ -z "$JAVA_HOME" ] ; then
   JAVAC=`which java`
