@@ -8,7 +8,7 @@
     <HTML>
       <HEAD>
        <TITLE>
-          Exoffice Bank: Account Summary for <xsl:value-of select="$name"/>
+          Intalio Bank: Account Summary for <xsl:value-of select="$name"/>
         </TITLE>
       </HEAD>
       <BODY>
