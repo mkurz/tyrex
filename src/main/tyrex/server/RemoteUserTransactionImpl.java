@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: RemoteUserTransactionImpl.java,v 1.1 2000/01/11 00:33:46 roro Exp $
+ * $Id: RemoteUserTransactionImpl.java,v 1.2 2000/01/17 22:13:59 arkin Exp $
  */
 
 
@@ -67,7 +67,7 @@ import tyrex.client.ClientUserTransaction;
  *
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2000/01/11 00:33:46 $
+ * @version $Revision: 1.2 $ $Date: 2000/01/17 22:13:59 $
  * @see RemoteUserTransaction
  * @see TransactionServer#createRemoteTransaction
  * @see TransactionServer#getTransaction
@@ -78,24 +78,23 @@ public class RemoteUserTransactionImpl
 {
 
 
-    private static TransactionServer _txServer;
+    private TransactionDomain _txDomain;
 
 
-    public RemoteUserTransactionImpl()
+    public RemoteUserTransactionImpl( TransactionDomain txDomain )
 	throws RemoteException
     {
 	super();
-	synchronized ( getClass() ) {
-	    if ( _txServer == null )
-		_txServer = TransactionServer.getInstance();
-	}
+	if ( txDomain == null )
+	    throw new IllegalArgumentException( "Argument 'txDomain' is null" );
+	_txDomain = txDomain;
     }
 
 
     public byte[] begin()
-	throws SystemException, RemoteException
+	throws SystemException
     {
-	return _txServer.createRemoteTransaction();
+	    return _txDomain.createTransaction( null, null ).getXid().getGlobalTransactionId();
     }
 
 
@@ -106,7 +105,7 @@ public class RemoteUserTransactionImpl
 	TransactionImpl tx;
 
 	try {
-	    tx = _txServer.getTransaction( gxid );
+	    tx = _txDomain.getTransaction( gxid );
 	} catch ( InvalidTransactionException except ) {
 	    throw new SystemException( except.getMessage() );
 	}
@@ -114,11 +113,11 @@ public class RemoteUserTransactionImpl
 	// to rollback, otherwise we get a security exception due to thread
 	// not being owner of the transaction. We will get a security
 	// exception if we cannot activate the transaction.
-	TransactionServer.enlistThread( tx, Thread.currentThread() );
+	_txDomain.enlistThread( tx, Thread.currentThread() );
 	try {
 	    tx.commit();
 	}  finally {
-	    TransactionServer.delistThread( tx, Thread.currentThread() );
+	    _txDomain.delistThread( tx, Thread.currentThread() );
 	}
     }
 
@@ -129,7 +128,7 @@ public class RemoteUserTransactionImpl
 	TransactionImpl tx;
 
 	try {
-	    tx = _txServer.getTransaction( gxid );
+	    tx = _txDomain.getTransaction( gxid );
 	} catch ( InvalidTransactionException except ) {
 	    throw new SystemException( except.getMessage() );
 	}
@@ -137,11 +136,11 @@ public class RemoteUserTransactionImpl
 	// to rollback, otherwise we get a security exception due to thread
 	// not being owner of the transaction. We will get a security
 	// exception if we cannot activate the transaction.
-	TransactionServer.enlistThread( tx, Thread.currentThread() );
+	_txDomain.enlistThread( tx, Thread.currentThread() );
 	try {
 	    tx.rollback();
 	} finally {
-	    TransactionServer.delistThread( tx, Thread.currentThread() );
+	    _txDomain.delistThread( tx, Thread.currentThread() );
 	}
     }
 
@@ -152,7 +151,7 @@ public class RemoteUserTransactionImpl
 	Transaction tx;
 
 	try {
-	    tx = _txServer.getTransaction( gxid );
+	    tx = _txDomain.getTransaction( gxid );
 	} catch ( InvalidTransactionException except ) {
 	    throw new SystemException( except.getMessage() );
 	}
@@ -166,7 +165,7 @@ public class RemoteUserTransactionImpl
 	Transaction tx;
 
 	try {
-	    tx = _txServer.getTransaction( gxid );
+	    tx = _txDomain.getTransaction( gxid );
 	} catch ( InvalidTransactionException except ) {
 	    throw new SystemException( except.getMessage() );
 	}
@@ -182,12 +181,12 @@ public class RemoteUserTransactionImpl
 	TransactionImpl tx;
 
 	try {
-	    tx = _txServer.getTransaction( gxid );
+	    tx = _txDomain.getTransaction( gxid );
 	} catch ( InvalidTransactionException except ) {
 	    throw new SystemException( except.getMessage() );
 	}
 	if ( tx != null )
-	    _txServer.setTransactionTimeout( tx, seconds );
+	    _txDomain.setTransactionTimeout( tx, seconds );
     }
 
     

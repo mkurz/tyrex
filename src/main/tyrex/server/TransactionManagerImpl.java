@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: TransactionManagerImpl.java,v 1.1 2000/01/11 00:33:46 roro Exp $
+ * $Id: TransactionManagerImpl.java,v 1.2 2000/01/17 22:13:59 arkin Exp $
  */
 
 
@@ -91,9 +91,9 @@ import tyrex.util.Messages;
  *
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2000/01/11 00:33:46 $
+ * @version $Revision: 1.2 $ $Date: 2000/01/17 22:13:59 $
  * @see Tyrex#recycleThread
- * @see TransactionServer
+ * @see TransactionDomain
  * @see TransactionImpl
  */
 final class TransactionManagerImpl
@@ -108,11 +108,14 @@ final class TransactionManagerImpl
     private static FastThreadLocal  _txLocal = new FastThreadLocal();
 
 
+    private TransactionDomain       _txDomain;
 
-    TransactionManagerImpl()
+
+    TransactionManagerImpl( TransactionDomain txDomain )
     {
-	// Make sure the transaction server is up and running.
-	TransactionServer.getInstance();
+	if ( txDomain == null )
+	    throw new IllegalArgumentException( "Argument 'txDomain' is null" );
+	_txDomain = txDomain;
     }
 
 
@@ -127,22 +130,22 @@ final class TransactionManagerImpl
 	if ( tres == null ) {
 	    tres = new ThreadResources();
 	    _txLocal.set( tres );
-	    tres.tx = TransactionServer.createTransaction( null, true );
+	    tres.tx = _txDomain.createTransaction( null, Thread.currentThread() );
 	} else {
 	    if ( tres.tx != null && tres.tx.getStatus() != STATUS_COMMITTED &&
 		 tres.tx.getStatus() != STATUS_ROLLEDBACK ) {
-		if ( ! TransactionServer.getConfigure().getNestedTransaction() )
+		if ( ! _txDomain.getNestedTransactions() )
 		    throw new NotSupportedException( Messages.message( "tyrex.tx.noNested" ) );
 		else {
 		    // A nested transaction is not registered with
 		    // the transaction server and the thread is not
 		    // enlisted. Resources are not enlisted with
 		    // this transaction, only the top-level one.
-		    tres.tx = TransactionServer.createTransaction( tres.tx, false );
+		    tres.tx = _txDomain.createTransaction( tres.tx, null );
 		    return; // XXX
 		}
 	    } else
-		tres.tx = TransactionServer.createTransaction( null, true );
+		tres.tx = _txDomain.createTransaction( null, Thread.currentThread() );
 	}
 	
 	// If there are any resources associated with the transaction,
@@ -231,7 +234,7 @@ final class TransactionManagerImpl
 	ThreadResources tres;
 
 	// TransactionManager operation requires suitable permission.
-	AccessController.checkPermission( TransactionServerPermission.Transaction.Manager );
+	AccessController.checkPermission( TyrexPermission.Transaction.Manager );
 	tres = (ThreadResources) _txLocal.get();
 	return tres.tx;
     }
@@ -245,7 +248,7 @@ final class TransactionManagerImpl
 	int              i;
 
 	// TransactionManager operation requires suitable permission.
-	AccessController.checkPermission( TransactionServerPermission.Transaction.Manager );
+	AccessController.checkPermission( TyrexPermission.Transaction.Manager );
 	if ( ! ( tx instanceof TransactionImpl ) )
 	    throw new InvalidTransactionException( Messages.message( "tyrex.tx.resumeForeign" ) );
 
@@ -278,8 +281,8 @@ final class TransactionManagerImpl
 	    // Enlist the current thread with the transaction so it
 	    // may timeout the thread. We always enlist the top
 	    // level transaction.
-	    TransactionServer.enlistThread( ( (TransactionImpl) tx ).getTopLevel(),
-					    Thread.currentThread() );
+	    _txDomain.enlistThread( ( (TransactionImpl) tx ).getTopLevel(),
+				    Thread.currentThread() );
 	}
     }
 
@@ -291,7 +294,7 @@ final class TransactionManagerImpl
 	int             i;
 
 	// TransactionManager operation requires suitable permission.
-	AccessController.checkPermission( TransactionServerPermission.Transaction.Manager );
+	AccessController.checkPermission( TyrexPermission.Transaction.Manager );
 	tres = (ThreadResources) _txLocal.get();
 	if ( tres == null || tres.tx == null )
 	    return null;
@@ -302,7 +305,7 @@ final class TransactionManagerImpl
 	// Delist the current thread form the transaction so it
 	// does not attempt to timeout. We always enlist the top
 	// level transaction.
-	TransactionServer.delistThread( tx.getTopLevel(), Thread.currentThread() );
+	_txDomain.delistThread( tx.getTopLevel(), Thread.currentThread() );
 
 	// We do not return an inactive transaction.
 	if ( tx.getStatus() == STATUS_ACTIVE || tx.getStatus() == STATUS_MARKED_ROLLBACK ) {
@@ -341,7 +344,7 @@ final class TransactionManagerImpl
 	    throw new IllegalArgumentException( Messages.message( "tyrex.tx.timeNegative" ) );
 	tres = (ThreadResources) _txLocal.get();
 	if ( tres != null && tres.tx != null )
-	    TransactionServer.setTransactionTimeout( tres.tx.getTopLevel(), seconds );
+	    _txDomain.setTransactionTimeout( tres.tx.getTopLevel(), seconds );
     }
 
 
@@ -472,7 +475,7 @@ final class TransactionManagerImpl
 	int             i;
 
 	// TransactionManager operation requires suitable permission.
-	AccessController.checkPermission( TransactionServerPermission.Transaction.Manager );
+	AccessController.checkPermission( TyrexPermission.Transaction.Manager );
 	tres = (ThreadResources) _txLocal.get();
 	if ( tres != null ) {
 	    tx = tres.tx;
@@ -485,7 +488,7 @@ final class TransactionManagerImpl
 		    _txLocal.set( null );
 		    throw new RollbackException( Messages.message( "tyrex.tx.recycleThreadRollback" ) );
 		} else
-		    TransactionServer.delistThread( tx, Thread.currentThread() );
+		    _txDomain.delistThread( tx, Thread.currentThread() );
 	    }
 	    _txLocal.set( null );
 	}
@@ -510,119 +513,115 @@ final class TransactionManagerImpl
     }
 
 
-}
-
-
-
-
-/**
- * Identifies resources associated with the thread. Each thread must
- * have exactly one of these objects associated with it, listing the
- * transaction (if active), the XA resources enlisted with the
- * transaction, and the resources that should be notified on
- * completion. This object is required even before the transaction
- * start to enlist the resources.
- *
- * @see EnlistedResource
- */
-final class ThreadResources
-{
-
 
     /**
-     * The transaction associated with this thread, if the thread
-     * is in a transaction, or null if the thread is not in a
-     * transaction.
+     * Identifies resources associated with the thread. Each thread must
+     * have exactly one of these objects associated with it, listing the
+     * transaction (if active), the XA resources enlisted with the
+     * transaction, and the resources that should be notified on
+     * completion. This object is required even before the transaction
+     * start to enlist the resources.
+     *
+     * @see EnlistedResource
      */
-    TransactionImpl    tx;
-
-
-    /**
-     * The XA resources that have been opened before or during the
-     * transaction and must be enlisted with the transaction when
-     * the transaction starts. Allows duplicate entries.
-     */
-    XAResource[]       xaList;
-
-
-    /**
-     * The enlisted resources that have been opened before or during
-     * the transaction and must be notified when the transaction
-     * completes, or this thread is no longer used. Allows duplicate
-     * entries.
-     */
-    EnlistedResource[] enlisted;
-
-
-    /**
-     * Adds an XA resource to the association list.
-     */
-    void add( XAResource xaRes )
+    static class ThreadResources
     {
-	XAResource[] newList;
-	int          i;
+	
+	/**
+	 * The transaction associated with this thread, if the thread
+	 * is in a transaction, or null if the thread is not in a
+	 * transaction.
+	 */
+	TransactionImpl    tx;
+	
+	/**
+	 * The XA resources that have been opened before or during the
+	 * transaction and must be enlisted with the transaction when
+	 * the transaction starts. Allows duplicate entries.
+	 */
+	XAResource[]       xaList;
+	
+	/**
+	 * The enlisted resources that have been opened before or during
+	 * the transaction and must be notified when the transaction
+	 * completes, or this thread is no longer used. Allows duplicate
+	 * entries.
+	 */
+	EnlistedResource[] enlisted;
 
-	if ( xaList == null ) {
-	    xaList = new XAResource[ 1 ];
-	    xaList[ 0 ] = xaRes;
-	} else {
-	    // Prevent duplicity.
-	    for ( i = 0 ; i < xaList.length ; ++i )
-		if ( xaList[ i ] == xaRes )
-		    return;
-	    newList = new XAResource[ xaList.length + 1 ];
-	    System.arraycopy( xaList, 0, newList, 0, xaList.length );
-	    newList[ xaList.length ] = xaRes;
-	    xaList = newList;
-	}
-    }
-
-
-    /**
-     * Adds an enlisted resource to the associated list.
-     */
-    void add( EnlistedResource enlist )
-    {
-	EnlistedResource[] newList;
-	int                i;
-
-	if ( enlisted == null ) {
-	    enlisted = new EnlistedResource[ 1 ];
-	    enlisted[ 0 ] = enlist;
-	} else {
-	    // Prevent duplicity.
-	    for ( i = 0 ; i < enlisted.length ; ++i )
-		if ( enlisted[ i ] == enlist )
-		    return;
-	    newList = new EnlistedResource[ enlisted.length + 1 ];
-	    System.arraycopy( enlisted, 0, newList, 0, enlisted.length );
-	    newList[ enlisted.length ] = enlist;
-	    enlisted = newList;
-	}
-    }
-
-
-    /**
-     * Removes an XA resource from the associated list.
-     */
-    void remove( XAResource xaRes )
-    {
-	XAResource[] newList;
-	int          i;
-
-	if ( xaList != null ) {
-	    if ( xaList.length == 1 && xaList[ 0 ] == xaRes )
-		xaList = null;
-	    else {
+	
+	/**
+	 * Adds an XA resource to the association list.
+	 */
+	void add( XAResource xaRes )
+	{
+	    XAResource[] newList;
+	    int          i;
+	    
+	    if ( xaList == null ) {
+		xaList = new XAResource[ 1 ];
+		xaList[ 0 ] = xaRes;
+	    } else {
+		// Prevent duplicity.
 		for ( i = 0 ; i < xaList.length ; ++i )
-		    if ( xaList[ i ] == xaRes ) {
-			xaList[ i ] = xaList[ xaList.length - 1 ];
-			newList = new XAResource[ xaList.length - 1 ];
-			System.arraycopy( xaList, 0, newList, 0, xaList.length - 1 );
-			xaList = newList;
-		    }
+		    if ( xaList[ i ] == xaRes )
+			return;
+		newList = new XAResource[ xaList.length + 1 ];
+		System.arraycopy( xaList, 0, newList, 0, xaList.length );
+		newList[ xaList.length ] = xaRes;
+		xaList = newList;
 	    }
 	}
+	
+	
+	/**
+	 * Adds an enlisted resource to the associated list.
+	 */
+	void add( EnlistedResource enlist )
+	{
+	    EnlistedResource[] newList;
+	    int                i;
+	    
+	    if ( enlisted == null ) {
+		enlisted = new EnlistedResource[ 1 ];
+		enlisted[ 0 ] = enlist;
+	    } else {
+		// Prevent duplicity.
+		for ( i = 0 ; i < enlisted.length ; ++i )
+		    if ( enlisted[ i ] == enlist )
+			return;
+		newList = new EnlistedResource[ enlisted.length + 1 ];
+		System.arraycopy( enlisted, 0, newList, 0, enlisted.length );
+		newList[ enlisted.length ] = enlist;
+		enlisted = newList;
+	    }
+	}
+	
+	
+	/**
+	 * Removes an XA resource from the associated list.
+	 */
+	void remove( XAResource xaRes )
+	{
+	    XAResource[] newList;
+	    int          i;
+	    
+	    if ( xaList != null ) {
+		if ( xaList.length == 1 && xaList[ 0 ] == xaRes )
+		    xaList = null;
+		else {
+		    for ( i = 0 ; i < xaList.length ; ++i )
+			if ( xaList[ i ] == xaRes ) {
+			    xaList[ i ] = xaList[ xaList.length - 1 ];
+			    newList = new XAResource[ xaList.length - 1 ];
+			    System.arraycopy( xaList, 0, newList, 0, xaList.length - 1 );
+			    xaList = newList;
+			}
+		}
+	    }
+	}
+
+
     }
 
 

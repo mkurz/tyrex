@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: TransactionFactoryImpl.java,v 1.1 2000/01/11 00:33:46 roro Exp $
+ * $Id: TransactionFactoryImpl.java,v 1.2 2000/01/17 22:13:59 arkin Exp $
  */
 
 
@@ -68,13 +68,27 @@ import javax.jts.TransactionService;
  *
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2000/01/11 00:33:46 $
+ * @version $Revision: 1.2 $ $Date: 2000/01/17 22:13:59 $
  * @see TransactionImpl
  */
 public final class TransactionFactoryImpl
     extends _TransactionFactoryImplBase
     implements TransactionService
 {
+
+
+    /**
+     * The transaction domain to which this factory belongs.
+     */
+    private TransactionDomain  _txDomain;
+
+
+    TransactionFactoryImpl( TransactionDomain txDomain )
+    {
+	if ( txDomain == null )
+	    throw new IllegalArgumentException( "Argument 'txDomain' is null" );
+	_txDomain = txDomain;
+    }
 
 
     public Control create( int timeout )
@@ -84,7 +98,7 @@ public final class TransactionFactoryImpl
 	// Create a new transaction and return the control
 	// interface of that transaction.
 	try {
-	    tx = TransactionServer.createTransaction( null, false );
+	    tx = _txDomain.createTransaction( null, null );
 	    return tx.getControl();
 	} catch ( Exception except ) {
 	    throw new INVALID_TRANSACTION();
@@ -97,7 +111,7 @@ public final class TransactionFactoryImpl
 	TransactionImpl tx;
 
 	try {
-	    tx = TransactionServer.recreateTransaction( pgContext );
+	    tx = _txDomain.recreateTransaction( pgContext );
 	    return tx.getControl();
 	} catch ( Exception except ) {
 	    throw new INVALID_TRANSACTION();
@@ -110,14 +124,14 @@ public final class TransactionFactoryImpl
 	CurrentImpl current;
 
 	try {
-	    current = new CurrentImpl();
+	    current = new CurrentImpl( this, (TransactionManagerImpl) _txDomain.getTransactionManager() );
 	    tsi.identify_sender( (Sender) current );
 	    tsi.identify_receiver( (Receiver) current );
 	} catch ( Exception except ) {
 	    // The ORB might tell us it's already using some sender/reciever,
 	    // or any other error we are not interested in reporting back
 	    // to the caller (i.e. the ORB).
-	    TransactionServer.logMessage( except.toString() );
+	    _txDomain.logMessage( except.toString() );
 	}
     }
 

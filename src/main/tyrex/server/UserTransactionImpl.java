@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: UserTransactionImpl.java,v 1.1 2000/01/11 00:33:46 roro Exp $
+ * $Id: UserTransactionImpl.java,v 1.2 2000/01/17 22:13:59 arkin Exp $
  */
 
 
@@ -52,11 +52,6 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 import javax.transaction.*;
 import javax.transaction.xa.*;
-import javax.naming.Reference;
-import javax.naming.Referenceable;
-import javax.naming.Name;
-import javax.naming.Context;
-import javax.naming.StringRefAddr;
 
 
 /**
@@ -71,26 +66,28 @@ import javax.naming.StringRefAddr;
  *
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2000/01/11 00:33:46 $
+ * @version $Revision: 1.2 $ $Date: 2000/01/17 22:13:59 $
  */
 public final class UserTransactionImpl
-    implements UserTransaction, Referenceable
+    implements UserTransaction
 {
 
 
     /**
      * The only instance of the transaction manager in this JVM.
      */
-    private static TransactionManagerImpl _txManager;
+    private TransactionManager   _txManager;
 
 
 
     /**
      * Private constructor. Use {@link #getInstance} instead.
      */
-    public UserTransactionImpl()
+    public UserTransactionImpl( TransactionManager txManager )
     {
-	_txManager = new TransactionManagerImpl();
+	if ( txManager == null )
+	    throw new IllegalArgumentException( "Argument 'txManager' is null" );
+	_txManager = _txManager;
     }
 
 
@@ -117,6 +114,7 @@ public final class UserTransactionImpl
 
 
     public int getStatus()
+	throws SystemException
     {
 	return _txManager.getStatus();
     }
@@ -129,12 +127,14 @@ public final class UserTransactionImpl
     }
 
 
-    public void setTransactionTimeout( int seconds )
+    public void setTransactionTimeout( int timeout )
+	throws SystemException
     {
-	_txManager.setTransactionTimeout( seconds );
+	_txManager.setTransactionTimeout( timeout );
     }
 
 
+    /*
     public Reference getReference()
     {
 	Reference ref;
@@ -171,6 +171,8 @@ public final class UserTransactionImpl
     {
 	return new UserTransactionImpl();
     }
+
+    */
 
 
 }

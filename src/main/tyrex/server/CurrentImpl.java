@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: CurrentImpl.java,v 1.1 2000/01/11 00:33:46 roro Exp $
+ * $Id: CurrentImpl.java,v 1.2 2000/01/17 22:13:59 arkin Exp $
  */
 
 
@@ -83,7 +83,7 @@ import javax.transaction.InvalidTransactionException;
  *
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2000/01/11 00:33:46 $
+ * @version $Revision: 1.2 $ $Date: 2000/01/17 22:13:59 $
  * @see TransactionManagerImpl
  */
 public final class CurrentImpl
@@ -97,41 +97,32 @@ public final class CurrentImpl
     /**
      * Reference to the transaction manager.
      */
-    private static TransactionManagerImpl _txManager;
+    private TransactionManagerImpl        _txManager;
 
 
     /**
      * Reference to the transaction factory used for creating
      * new transactions and recreating transactions on import.
      */
-    private static TransactionFactory     _txFactory;
-
-
-    /**
-     * The single instance of this object obtained from
-     * {@link #getInstance}.
-     */
-    private static CurrentImpl            _instance;
+    private TransactionFactory            _txFactory;
 
 
     /**
      * The default timeout for all newly created transactions,
      * specified in seconds. The default is zero, meaning no timeout.
      */
-    private static int                    _timeout;
+    private  int                          _timeout;
 
 
     /**
      * Private constructor. Use {@link #getInstance} instead.
      */
-    public CurrentImpl()
+    public CurrentImpl( TransactionFactoryImpl txFactory, TransactionManagerImpl txManager )
     {
-	synchronized ( getClass() ) {
-	    if ( _txFactory == null )
-		_txFactory = new TransactionFactoryImpl();
-	    if ( _txManager == null )
-		_txManager = new TransactionManagerImpl();
-	}
+	if ( txFactory == null || txManager == null )
+	    throw new IllegalArgumentException( "Argument 'txFactory' or 'txManager' is null" );
+	_txFactory = txFactory;
+	_txManager = txManager;
     }
 
 

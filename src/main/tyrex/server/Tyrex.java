@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: Tyrex.java,v 1.1 2000/01/11 00:33:46 roro Exp $
+ * $Id: Tyrex.java,v 1.2 2000/01/17 22:13:59 arkin Exp $
  */
 
 
@@ -66,37 +66,27 @@ import javax.transaction.SystemException;
  *
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2000/01/11 00:33:46 $
+ * @version $Revision: 1.2 $ $Date: 2000/01/17 22:13:59 $
  */
-public abstract class Tyrex
+public final class Tyrex
 {
 
 
-    /**
-     * An instance of the transaction manager.
-     */
-    private static TransactionManagerImpl  _txManager;
-
-
-    /**
-     * An instance of the use transaction interface.
-     */
-    private static UserTransaction         _userTx;
+    private static TransactionDomain    _txDomain =
+        TransactionServer.getTransactionDomain( TransactionServer.DefaultDomain, true );
 
 
     /**
      * Returns an instance of the transaction manager. The caller must
-     * have {@link TransactionServerPermission.Trasaction#Manager} permission.
+     * have {@link TyrexPermission.Trasaction#Manager} permission.
      *
      * @return An instance of the transaction manager
      * @throws SecurityException Caller does not have permission
      */
     public static TransactionManager getTransactionManager()
     {
-	AccessController.checkPermission( TransactionServerPermission.Transaction.Manager );
-	if ( _txManager == null )
-	    _txManager = new TransactionManagerImpl();
-	return _txManager;
+	AccessController.checkPermission( TyrexPermission.Transaction.Manager );
+	return _txDomain.getTransactionManager();
     }
 
 
@@ -107,19 +97,15 @@ public abstract class Tyrex
      */
     public static UserTransaction getUserTransaction()
     {
-	if ( _userTx == null )
-	    _userTx = UserTransactionImpl.getInstance();
-	return _userTx;
+	return _txDomain.getUserTransaction();
     }
 
 
     public static void recycleThread()
 	throws RollbackException
     {
-	AccessController.checkPermission( TransactionServerPermission.Transaction.Manager );
-	if ( _txManager == null )
-	    _txManager = new TransactionManagerImpl();
-	_txManager.recycleThread();
+	AccessController.checkPermission( TyrexPermission.Transaction.Manager );
+	( (TransactionManagerImpl) _txDomain.getTransactionManager() ).recycleThread();
     }
 
 
@@ -128,11 +114,9 @@ public abstract class Tyrex
     {
 	Transaction tx;
 
-	AccessController.checkPermission( TransactionServerPermission.Transaction.Manager );
-	tx = TransactionServer.getTransaction( gxid );
-	if ( _txManager == null )
-	    _txManager = new TransactionManagerImpl();
-	_txManager.resume( tx );
+	AccessController.checkPermission( TyrexPermission.Transaction.Manager );
+	tx = _txDomain.getTransaction( gxid );
+	_txDomain.getTransactionManager().resume( tx );
     }
 
 
@@ -140,7 +124,7 @@ public abstract class Tyrex
      * Returns the transaction currently associated with the given
      * thread, or null if the thread is not associated with any
      * transaction. The caller must have {@link
-     * TransactionServerPermission.Transaction#List} permission.
+     * TyrexPermission.Transaction#List} permission.
      * <p>
      * This method is equivalent to calling {@link
      * TransactionManager#getTransaction} from within the thread.
@@ -152,12 +136,10 @@ public abstract class Tyrex
     {
 	Transaction tx;
 
-	AccessController.checkPermission( TransactionServerPermission.Transaction.List );
-	if ( _txManager == null )
-	    _txManager = new TransactionManagerImpl();
-	tx =  _txManager.getTransaction( thread );
+	AccessController.checkPermission( TyrexPermission.Transaction.List );
+	tx =  ( (TransactionManagerImpl) _txDomain.getTransactionManager() ).getTransaction( thread );
 	if ( tx != null )
-	    return TransactionServer.getTransactionStatus( tx );
+	    return _txDomain.getTransactionStatus( tx );
 	return null;
     }
 
@@ -169,21 +151,21 @@ public abstract class Tyrex
      * the transaction, its resources, timeout and active state.
      * Some of that information is only current to the time the list
      * was produced. The caller must have {@link
-     * TransactionServerPermission.Transaction#List} permission.
+     * TyrexPermission.Transaction#List} permission.
      *
      * @return List of all transactions currently registered
      */
     public static TransactionStatus[] listTransactions()
     {
-	AccessController.checkPermission( TransactionServerPermission.Transaction.List );
-	return TransactionServer.listTransactions();
+	AccessController.checkPermission( TyrexPermission.Transaction.List );
+	return _txDomain.listTransactions();
     }
 
 
     /**
      * Terminates a transaction in progress. The transaction will be rolled
      * back with a timed-out flag and all threads associated with it will be
-     * terminated. Caller must have {@link TransactionServerPermission.
+     * terminated. Caller must have {@link TyrexPermission.
      * Transaction#Terminate}
      * permission to terminate the transaction and {@link RuntimePermission}
      * <tt>stopThread</tt> permission to terminate any running thread.
@@ -195,8 +177,8 @@ public abstract class Tyrex
     public static void terminateTransaction( Transaction tx )
 	throws InvalidTransactionException
     {
-	AccessController.checkPermission( TransactionServerPermission.Transaction.Terminate );
-	TransactionServer.terminateTransaction( tx );
+	AccessController.checkPermission( TyrexPermission.Transaction.Terminate );
+	_txDomain.terminateTransaction( tx );
     }
 
 
@@ -211,7 +193,7 @@ public abstract class Tyrex
 	int                 i;
 	int                 j;
 
-	AccessController.checkPermission( TransactionServerPermission.Transaction.List );
+	AccessController.checkPermission( TyrexPermission.Transaction.List );
 	txsList = listTransactions();
 	if ( txsList.length == 0 )
 	    writer.println( "Server Transactions: No Transactions" );
@@ -238,7 +220,7 @@ public abstract class Tyrex
 	String[]          resList;
 	int               i;
 
-	AccessController.checkPermission( TransactionServerPermission.Transaction.List );
+	AccessController.checkPermission( TyrexPermission.Transaction.List );
 	txs = getTransaction( Thread.currentThread() );
 	if ( txs == null )
 	    writer.println( "Current Transaction: No Transaction" );
@@ -255,3 +237,4 @@ public abstract class Tyrex
 
 
 }
+

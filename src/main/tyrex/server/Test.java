@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: Test.java,v 1.1 2000/01/11 00:33:46 roro Exp $
+ * $Id: Test.java,v 1.2 2000/01/17 22:13:59 arkin Exp $
  */
 
 
@@ -63,7 +63,7 @@ import org.exolab.testing.Timing;
  *
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2000/01/11 00:33:46 $
+ * @version $Revision: 1.2 $ $Date: 2000/01/17 22:13:59 $
  */
 public class Test
 {
@@ -93,7 +93,7 @@ public class Test
 	    System.out.println( "  kt          Timeout - kill thread" );
 	    System.exit ( 1 );
 	}
-	writer = Logger.getLogger();
+	writer = Logger.getSystemLogger();
 	memory = new Memory( "Memory consumption" );
 	debug = ( args.length >= 2 && "debug".startsWith( args[ 1 ] ) );
 
@@ -104,8 +104,10 @@ public class Test
 	    config.setLogWriter( writer );
 	config.getPoolManager().setCheckEvery( 1 );
 	config.startServer();
+	/*
 	if ( debug && test == TEST_PERFORMANCE )
 	    new Meter( new Logger( System.out ).setPrefix( "METER" ), 200 );
+	*/
 
 	tmManager = (TransactionManagerImpl) Tyrex.getTransactionManager();
 

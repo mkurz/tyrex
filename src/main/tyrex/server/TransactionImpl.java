@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: TransactionImpl.java,v 1.1 2000/01/11 00:33:46 roro Exp $
+ * $Id: TransactionImpl.java,v 1.2 2000/01/17 22:13:59 arkin Exp $
  */
 
 
@@ -74,10 +74,10 @@ import tyrex.util.Messages;
  *
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2000/01/11 00:33:46 $
+ * @version $Revision: 1.2 $ $Date: 2000/01/17 22:13:59 $
  * @see EnlistedXAResource
  * @see TransactionManagerImpl
- * @see TransactionServer
+ * @see TransactionDomain
  * @see ResourceImpl
  */
 final class TransactionImpl
@@ -88,20 +88,20 @@ final class TransactionImpl
     /**
      * Holds a list of all the synchronization objects.
      */
-    private Synchronization[]    _syncs;
+    private Synchronization[]       _syncs;
 
 
     /**
      * Holds a list of all the enlisted resources, each one
      * of type {@link EnlistedXAResource}.
      */
-    private EnlistedXAResource[] _enlisted;
+    private EnlistedXAResource[]    _enlisted;
 
 
     /**
      * Holds a list of all the enlisted OTS resources.
      */
-    private Resource[]           _resources;
+    private Resource[]              _resources;
 
 
     /**
@@ -109,13 +109,13 @@ final class TransactionImpl
      * will have exactly one global Xid for as long as it
      * exists.
      */
-    private XidImpl             _xid;
+    private XidImpl                  _xid;
 
 
     /**
      * Holds the current status of the transaction.
      */
-    private int                _status;
+    private int                     _status;
 
 
     /**
@@ -124,13 +124,13 @@ final class TransactionImpl
      * if there is no other more important exception to report
      * (e.g. RollbackException).
      */
-    private SystemException   _sysError;
+    private SystemException         _sysError;
 
 
     /**
      * True if this transaction has been rolled back due to timeout.
      */
-    private boolean             _timedOut;
+    private boolean                 _timedOut;
 
 
     /**
@@ -148,7 +148,7 @@ final class TransactionImpl
      * context used to recreate this transaction. If this
      * transaction was created locally, this variable is null.
      */
-    private PropagationContext     _pgContext;
+    private PropagationContext      _pgContext;
 
 
     /**
@@ -157,7 +157,7 @@ final class TransactionImpl
      * Held in case the operation is repeated to return a consistent
      * heuristic decision. Defaults to read-only (i.e. no heuristic decision).
      */
-    private int                    _heuristic = HEURISTIC_READONLY;
+    private int                    _heuristic = Heuristic.ReadOnly;
 
 
     /**
@@ -169,22 +169,31 @@ final class TransactionImpl
     private ControlImpl           _control;
 
 
+    /**
+     * The domain to which this transaction belongs. The domain is notified
+     * of the outcome of the transaction and any request to commit/rollback
+     * the transaction.
+     */
+    private TransactionDomain     _txDomain;
 
 
     /**
-     * Hidden constructor used by {@link TransactionServer} to create
+     * Hidden constructor used by {@link TransactionDomain} to create
      * a new transaction. A transaction can only be created through
-     * {@link TransactionServer} or {@link TransactionManager} which
+     * {@link TransactionDomain} or {@link TransactionManager} which
      * take care of several necessary housekeeping duties.
      *
      * @param xid The Xid for this transaction
      * @param parent The parent of this transaction if this is a
      *   nested transaction, null if this is a top level transaction
+     * @param txDomain The transaction domain
      */
-    TransactionImpl( XidImpl xid, TransactionImpl parent )
+    TransactionImpl( XidImpl xid, TransactionImpl parent,
+		     TransactionDomain txDomain )
     {
 	_xid = xid;
 	_status = STATUS_ACTIVE;
+	_txDomain = txDomain;
 	// If this transaction is a subtransaction we register it
 	// as a resource in the parent transaction.
 	if ( parent != null ) {
@@ -201,10 +210,16 @@ final class TransactionImpl
     }
 
 
+    TransactionDomain getTransactionDomain()
+    {
+	return _txDomain;
+    }
+
+
     /**
-     * Hidden constructor used by {@link TransactionServer} to create
+     * Hidden constructor used by {@link TransactionDomain} to create
      * a new transaction. A transaction can only be created through
-     * {@link TransactionServer} or {@link TransactionManager} which
+     * {@link TransactionDomain} or {@link TransactionManager} which
      * take care of several necessary housekeeping duties. This
      * transaction is created to import an OTS transaction using
      * the propagation context.
@@ -213,12 +228,15 @@ final class TransactionImpl
      * @param pgContext The propagation context
      * @throws Inactive The parent transaction has rolled  back or
      *   is inactive
+     * @param txDomain The transaction domain
      */
-    TransactionImpl( XidImpl xid, PropagationContext pgContext )
+    TransactionImpl( XidImpl xid, PropagationContext pgContext,
+		     TransactionDomain txDomain )
 	throws Inactive
     {
 	_xid = xid;
 	_status = STATUS_ACTIVE;
+	_txDomain = txDomain;
 	// If this transaction is a local copy of a remote
 	// transaction, we register it as a resource with the
 	// remote transaction.
@@ -255,18 +273,27 @@ final class TransactionImpl
 	if ( _parent != null || _pgContext != null )
 	    return;
 
-	// This is two phase commit.
-	prepare();
+	// This is two phase commit. Notify the domain about request
+	// to commit transaction which might result in RollbackException.
+	// If succeeded, attempt to prepare transaction and act based
+	// no the return heuristic.
+	try {
+	    _txDomain.notifyCommit( _xid );
+	    prepare();
+	} catch ( RollbackException except ) {
+	    _heuristic = Heuristic.Rollback;
+	}
+
 	switch ( _heuristic ) {
-	case HEURISTIC_READONLY:
+	case Heuristic.ReadOnly:
 	    // Read only resource does not need either commit, nor rollback
-	    TransactionServer.logTransaction( _xid, _heuristic );
+	    _txDomain.notifyCompletion( _xid, _heuristic );
 	    _status = STATUS_COMMITTED;
 	    break;
 
-	case HEURISTIC_ROLLBACK:
-	case HEURISTIC_MIXED:
-	case HEURISTIC_HAZARD:
+	case Heuristic.Rollback:
+	case Heuristic.Mixed:
+	case Heuristic.Hazard:
 	    // Transaction must be rolled back and an exception thrown to
 	    // that effect.
 	    _status = STATUS_MARKED_ROLLBACK;
@@ -276,7 +303,7 @@ final class TransactionImpl
 	    } catch ( IllegalStateException except ) { }
 	    throw new HeuristicRollbackException( Messages.message( "tyrex.tx.rolledback" ) );
 
-	case HEURISTIC_COMMIT:
+	case Heuristic.Commit:
 	default:
 	    internalCommit();
 	    break;
@@ -294,19 +321,19 @@ final class TransactionImpl
 	// we must report it accordingly. I believe this
 	// supercedes reporting a system error;
 	switch ( _heuristic ) {
-	case HEURISTIC_ROLLBACK:
+	case Heuristic.Rollback:
 	    // Transaction was completed rolled back at the
 	    // request of one of it's resources. We don't
 	    // get to this point if it has been marked for
 	    // roll back.
 	    throw new HeuristicRollbackException( Messages.message( "tyrex.tx.heuristicRollback" ) );
-	case HEURISTIC_MIXED:
+	case Heuristic.Mixed:
 	    // Transaction has partially commited and partially
 	    // rolledback.
 	    throw new HeuristicMixedException( Messages.message( "tyrex.tx.heuristicMixed" ) );
-	case HEURISTIC_HAZARD:
+	case Heuristic.Hazard:
 	    throw new HeuristicMixedException( Messages.message( "tyrex.tx.heuristicHazard" ) );
-	case HEURISTIC_COMMIT:
+	case Heuristic.Commit:
 	default:
 	    // Transaction completed successfuly, even if
 	    // a resource insisted on commiting it.
@@ -335,8 +362,9 @@ final class TransactionImpl
 
 	// Perform the rollback, pass IllegalStateException to
 	// the caller, ignore the returned heuristics.
+	_txDomain.notifyRollback( _xid );
 	internalRollback();
- 
+
  	// The transaction will now tell all it's resources to
 	// forget about the transaction and will release all
 	// held resources. Also notifies all the synchronization
@@ -373,15 +401,15 @@ final class TransactionImpl
      * <p>
      * The heuristic decision can be any of the following:
      * <ul>
-     * <li>{@link #HEURISTIC_READONLY} There were no resources for this
+     * <li>{@link #Heuristic.ReadOnly} There were no resources for this
      * transaction, or all resources are read only -- there is no need to
      * commit/rollback this transaction
-     * <li>{@link #HEURISTIC_COMMIT} All resources are prepared and those
+     * <li>{@link #Heuristic.Commit} All resources are prepared and those
      * with a false {@link EnlistedXAResource#readOnly} need to be commited.
-     * <li>{@link #HEURISTIC_ROLLBACK} The transaction has been marked for
+     * <li>{@link #Heuristic.Rollback} The transaction has been marked for
      * rollback, an error has occured or at least one resource failed to
      * prepare and there were no resources that commited
-     * <li>{@link #HEURISTIC_MIXED} Some resources have already commited,
+     * <li>{@link #Heuristic.Mixed} Some resources have already commited,
      * others have either rolledback or failed to commit, or we got an
      * error in the process: all resources must be rolledback
      * </ul>
@@ -423,7 +451,7 @@ final class TransactionImpl
 	case STATUS_MARKED_ROLLBACK:
 	    // Transaction has been marked for roll-back, no preparation
 	    // necessary.
-	    _heuristic = HEURISTIC_ROLLBACK;
+	    _heuristic = Heuristic.Rollback;
 	    return;
 	    
 	case STATUS_ROLLEDBACK:
@@ -445,13 +473,13 @@ final class TransactionImpl
         // or a special thread that is allowed to commit/rollback the
         // transaction. Must be performed after checking whether the
         // transaciton is active. Inactive transactions have no owners.
-	if ( ! TransactionServer.isOwner( getTopLevel(), Thread.currentThread() ) )
+	if ( ! _txDomain.isOwner( getTopLevel(), Thread.currentThread() ) )
 	    throw new SecurityException( Messages.message( "tyrex.tx.threadNotOwner" ) );
   
 	// We begin by having no heuristics at all, but during
 	// the process we might reach a conclusion to have a
 	// commit or rollback heuristic.
-	_heuristic = HEURISTIC_READONLY;
+	_heuristic = Heuristic.ReadOnly;
 	_status = STATUS_PREPARING;
 	committing = 0;
 
@@ -461,19 +489,17 @@ final class TransactionImpl
 	// we'll do a rollback.
 	// might decide to rollback the transaction.
 	if ( _syncs != null ) {
-	    TransactionManager tm;
 	    Transaction        suspended;
 	    Synchronization    sync;
 	    
 	    // If we are not running in the same thread as
 	    // this transaction, need to make this transaction
 	    // the current one before calling method.
-	    tm = new TransactionManagerImpl();
 	    suspended = null;
 	    try {
-		if ( tm.getTransaction() !=  this ) {
-		    suspended = tm.suspend();
-		    tm.resume( this );
+		if ( _txDomain.getTransactionManager().getTransaction() !=  this ) {
+		    suspended = _txDomain.getTransactionManager().suspend();
+		    _txDomain.getTransactionManager().resume( this );
 		}
 	    } catch ( Exception except ) {
 		_status = STATUS_MARKED_ROLLBACK;
@@ -499,12 +525,12 @@ final class TransactionImpl
 	    // the thread.
 	    if ( suspended != null ) {
 		try {
-		    tm.suspend();
+		    _txDomain.getTransactionManager().suspend();
 		} catch ( Exception except ) {
 		    error( except );
 		}
 		try {
-		    tm.resume( suspended );
+		    _txDomain.getTransactionManager().resume( suspended );
 		} catch ( Exception except ) {
 		    _status = STATUS_MARKED_ROLLBACK;
 		    error( except );
@@ -514,7 +540,7 @@ final class TransactionImpl
 	    if ( _status == STATUS_MARKED_ROLLBACK ) {
 		// Status was changed to rollback or an error occured,
 		// either case we have a heuristic decision to rollback.
-		_heuristic = HEURISTIC_ROLLBACK;
+		_heuristic = Heuristic.Rollback;
 		return;
 	    }
 	}
@@ -532,7 +558,7 @@ final class TransactionImpl
 
 		// If at least one resource failed to prepare, we will
 		// not prepare the remaining resources, but rollback.
-		if ( _heuristic != HEURISTIC_READONLY && _heuristic != HEURISTIC_COMMIT )
+		if ( _heuristic != Heuristic.ReadOnly && _heuristic != Heuristic.Commit )
 		    break;
 
 		resource = _resources[ i ];
@@ -556,20 +582,20 @@ final class TransactionImpl
 			// so the only decision was can make is to
 			// rollback. We do not need to rollback this
 			// resource or forget it.
-			_heuristic = _heuristic | HEURISTIC_ROLLBACK;
+			_heuristic = _heuristic | Heuristic.Rollback;
 			_resources[ i ] = null;
 		    }
 		} catch ( HeuristicMixed except ) {
 		    // Resource indicated mixed/hazard heuristic, so the
 		    // entire transaction is mixed heuristics.
-		    _heuristic = _heuristic | HEURISTIC_MIXED;
+		    _heuristic = _heuristic | Heuristic.Mixed;
 		} catch ( HeuristicHazard except ) {
-		    _heuristic = _heuristic | HEURISTIC_HAZARD;
+		    _heuristic = _heuristic | Heuristic.Hazard;
 		} catch ( Exception except ) {
 		    if ( except instanceof TRANSACTION_ROLLEDBACK )
-			_heuristic = _heuristic | HEURISTIC_ROLLBACK;
+			_heuristic = _heuristic | Heuristic.Rollback;
 		    else {
-			_heuristic = _heuristic | HEURISTIC_HAZARD;
+			_heuristic = _heuristic | Heuristic.Hazard;
 			error( except );
 		    }
 		}
@@ -591,11 +617,11 @@ final class TransactionImpl
 		    xaRes.xa.end( xaRes.xid, XAResource.TMSUCCESS );
 		} catch ( XAException except ) {
 		    // Error occured, we won't be commiting this transaction.
-		    _heuristic = _heuristic | HEURISTIC_ROLLBACK;
+		    _heuristic = _heuristic | Heuristic.Rollback;
 		    error( except );
 		} catch ( Exception except ) {
 		    // Error occured, we won't be commiting this transaction.
-		    _heuristic = _heuristic | HEURISTIC_ROLLBACK;
+		    _heuristic = _heuristic | Heuristic.Rollback;
 		    error( except );
 		}
 	    }
@@ -608,7 +634,7 @@ final class TransactionImpl
 
 		// If at least one resource failed to prepare, we will
 		// not prepare the remaining resources, but rollback.
-		if ( _heuristic != HEURISTIC_READONLY && _heuristic != HEURISTIC_COMMIT )
+		if ( _heuristic != Heuristic.ReadOnly && _heuristic != Heuristic.Commit )
 		    break;
 
 		xaRes = _enlisted[ i ];
@@ -632,27 +658,27 @@ final class TransactionImpl
 		    // since we can call rollback more than once.
 		} catch ( XAException except ) {
 		    if ( except.errorCode == XAException.XA_HEURMIX )
-			_heuristic = _heuristic | HEURISTIC_MIXED; 
+			_heuristic = _heuristic | Heuristic.Mixed; 
 		    if ( except.errorCode == XAException.XA_HEURHAZ )
-			_heuristic = _heuristic | HEURISTIC_HAZARD; 
+			_heuristic = _heuristic | Heuristic.Hazard; 
 		    else if ( ( except.errorCode == XAException.XA_HEURRB ||
 				except.errorCode == XAException.XA_RBTIMEOUT ) )
-			_heuristic = _heuristic | HEURISTIC_ROLLBACK;
+			_heuristic = _heuristic | Heuristic.Rollback;
 		    else if ( except.errorCode == XAException.XA_HEURCOM )
-			_heuristic = _heuristic | HEURISTIC_COMMIT;
+			_heuristic = _heuristic | Heuristic.Commit;
 		    else if ( except.errorCode >= XAException.XA_RBBASE &&
 			      except.errorCode <= XAException.XA_RBEND )
-			_heuristic = _heuristic | HEURISTIC_HAZARD;
+			_heuristic = _heuristic | Heuristic.Hazard;
 		    else {
 			// Any error will cause us to rollback the entire
 			// transaction or at least the remaining part of it.
-			_heuristic = _heuristic | HEURISTIC_HAZARD;
+			_heuristic = _heuristic | Heuristic.Hazard;
 			error( except );
 		    }
 		}  catch ( Exception except ) {
 		    // Any error will cause us to rollback the entire
 		    // transaction or at least the remaining part of it.
-		    _heuristic = _heuristic | HEURISTIC_HAZARD;
+		    _heuristic = _heuristic | Heuristic.Hazard;
 		    error( except );
 		}
 	    }
@@ -661,8 +687,8 @@ final class TransactionImpl
 	// We make a heuristic decision to commit only if we made no other
 	// heuristic decision during perparation and we have at least
 	// one resource interested in committing.
-	if ( _heuristic == HEURISTIC_READONLY  && committing > 0 )
-	    _heuristic = HEURISTIC_COMMIT;
+	if ( _heuristic == Heuristic.ReadOnly  && committing > 0 )
+	    _heuristic = Heuristic.Commit;
 	else
 	    _heuristic = normalize( _heuristic );
     }
@@ -677,11 +703,11 @@ final class TransactionImpl
      * <p>
      * The heuristic decision can be any of the following:
      * <ul>
-     * <li>{@link #HEURISTIC_COMMIT} All resources were commited
+     * <li>{@link #Heuristic.Commit} All resources were commited
      * successfuly
-     * <li>{@link #HEURISTIC_ROLLBACK} No resources were commited
+     * <li>{@link #Heuristic.Rollback} No resources were commited
      * successfuly, all resources were rolledback successfuly
-     * <li>{@link #HEURISTIC_MIXED} Some resources have commited,
+     * <li>{@link #Heuristic.Mixed} Some resources have commited,
      * others have rolled back
      * </ul>
      *
@@ -712,7 +738,7 @@ final class TransactionImpl
 	// We start as read-only until at least one resource indicates
 	// it actually commited.
 	_status = STATUS_COMMITTING;
-	_heuristic = HEURISTIC_READONLY;
+	_heuristic = Heuristic.ReadOnly;
 
 	// We deal with OTS (remote transactions and subtransactions)
 	// first because we expect a higher likelyhood of failure over
@@ -726,18 +752,18 @@ final class TransactionImpl
 		    resource.commit();
 		    // At least one resource commited, we are either
 		    // commit or mixed.
-		    _heuristic = _heuristic | HEURISTIC_COMMIT;
+		    _heuristic = _heuristic | Heuristic.Commit;
 		} catch ( HeuristicMixed except ) {
-		    _heuristic = _heuristic | HEURISTIC_MIXED;
+		    _heuristic = _heuristic | Heuristic.Mixed;
 		} catch ( HeuristicHazard except ) {
-		    _heuristic = _heuristic | HEURISTIC_HAZARD;
+		    _heuristic = _heuristic | Heuristic.Hazard;
 		} catch ( HeuristicRollback except ) {
-		    _heuristic = _heuristic | HEURISTIC_ROLLBACK;
+		    _heuristic = _heuristic | Heuristic.Rollback;
 		} catch ( Exception except ) {
 		    if ( except instanceof TRANSACTION_ROLLEDBACK )
-			_heuristic = _heuristic | HEURISTIC_ROLLBACK;
+			_heuristic = _heuristic | Heuristic.Rollback;
 		    else {
-			_heuristic = _heuristic | HEURISTIC_HAZARD;
+			_heuristic = _heuristic | Heuristic.Hazard;
 			error( except );
 		    }
 		}
@@ -755,28 +781,28 @@ final class TransactionImpl
 			xaRes.xa.commit( xaRes.xid, false );
 			// At least one resource commited, we are either
 			// commit or mixed.
-			_heuristic = _heuristic | HEURISTIC_COMMIT;
+			_heuristic = _heuristic | Heuristic.Commit;
 		    }
 		} catch ( XAException except ) {
 		    if ( except.errorCode == XAException.XA_HEURMIX )
-			_heuristic = _heuristic | HEURISTIC_MIXED;
+			_heuristic = _heuristic | Heuristic.Mixed;
 		    else if ( except.errorCode == XAException.XA_HEURHAZ )
-			_heuristic = _heuristic | HEURISTIC_HAZARD;
+			_heuristic = _heuristic | Heuristic.Hazard;
 		    else if ( except.errorCode == XAException.XA_HEURRB )
-			_heuristic = _heuristic | HEURISTIC_ROLLBACK;
+			_heuristic = _heuristic | Heuristic.Rollback;
 		    else if ( except.errorCode >= XAException.XA_RBBASE &&
 			      except.errorCode <= XAException.XA_RBEND )
-			_heuristic = _heuristic | HEURISTIC_ROLLBACK;
+			_heuristic = _heuristic | Heuristic.Rollback;
 		    else {
 			// This is an error in the resource manager which
 			// we need to report.
-			_heuristic = _heuristic | HEURISTIC_HAZARD;
+			_heuristic = _heuristic | Heuristic.Hazard;
 			error( except );
 		    }
 		} catch ( Exception except ) {
 		    // Any error will cause us to rollback the entire
 		    // transaction or at least the remaining part of it.
-		    _heuristic = _heuristic | HEURISTIC_HAZARD;
+		    _heuristic = _heuristic | Heuristic.Hazard;
 		    error( except );
 		}
 	    }
@@ -785,7 +811,7 @@ final class TransactionImpl
 	_status = STATUS_COMMITTED;
 	
 	_heuristic = normalize( _heuristic );
-	TransactionServer.logTransaction( _xid, _heuristic );
+	_txDomain.notifyCompletion( _xid, _heuristic );
     }
 
 
@@ -797,13 +823,13 @@ final class TransactionImpl
      * <p>
      * The heuristic decision can be any of the following:
      * <ul>
-     * <li>{@link #HEURISTIC_READONLY} There were no resources for this
+     * <li>{@link #Heuristic.ReadOnly} There were no resources for this
      * transaction, or all resources are read only -- there is no need to
      * commit/rollback this transaction
-     * <li>{@link #HEURISTIC_COMMIT} All resources have decided to commit
-     * <li>{@link #HEURISTIC_ROLLBACK} All resources have rolled back
+     * <li>{@link #Heuristic.Commit} All resources have decided to commit
+     * <li>{@link #Heuristic.Rollback} All resources have rolled back
      * (except for read-only resources)
-     * <li>{@link #HEURISTIC_MIXED} Some resources have already commited,
+     * <li>{@link #Heuristic.Mixed} Some resources have already commited,
      * others have rolled back
      * </ul>
      *
@@ -834,7 +860,7 @@ final class TransactionImpl
 
 	case STATUS_ROLLING_BACK:
 	    // Transaction has been or is being rolled back, just leave.
-	    _heuristic = HEURISTIC_ROLLBACK;
+	    _heuristic = Heuristic.Rollback;
 	    return;
 	    
 	case STATUS_NO_TRANSACTION:
@@ -853,7 +879,7 @@ final class TransactionImpl
         // or a special thread that is allowed to commit/rollback the
         // transaction. Must be performed after checking whether the
         // transaciton is active. Inactive transactions have no owners.
-	if ( ! TransactionServer.isOwner( getTopLevel(), Thread.currentThread() ) )
+	if ( ! _txDomain.isOwner( getTopLevel(), Thread.currentThread() ) )
 	    throw new SecurityException( Messages.message( "tyrex.tx.threadNotOwner" ) );
 
 	// If we got to this point, we'll start rolling back the
@@ -863,7 +889,7 @@ final class TransactionImpl
 	// since unless there's at least one rollback resource,
 	// we never truely rollback.
 	_status = STATUS_ROLLING_BACK;
-	_heuristic = HEURISTIC_READONLY;
+	_heuristic = Heuristic.ReadOnly;
 
 	if ( _resources != null ) {
 	    // Tell all the OTS resources to rollback their transaction
@@ -876,16 +902,16 @@ final class TransactionImpl
 		    resource.rollback();
 		    // Initially we're readonly so we switch to rollback.
 		    // If we happen to be in commit, we switch to mixed.
-		    _heuristic = _heuristic | HEURISTIC_ROLLBACK;
+		    _heuristic = _heuristic | Heuristic.Rollback;
 		    _resources[ i ] = null;
 		} catch ( HeuristicMixed except ) {
-		    _heuristic = _heuristic | HEURISTIC_MIXED;
+		    _heuristic = _heuristic | Heuristic.Mixed;
 		} catch ( HeuristicHazard except ) {
-		    _heuristic = _heuristic | HEURISTIC_HAZARD;
+		    _heuristic = _heuristic | Heuristic.Hazard;
 		} catch ( HeuristicCommit except ) {
-		    _heuristic = _heuristic | HEURISTIC_COMMIT;
+		    _heuristic = _heuristic | Heuristic.Commit;
 		} catch ( Exception except ) {
-		    _heuristic = _heuristic | HEURISTIC_HAZARD;
+		    _heuristic = _heuristic | Heuristic.Hazard;
 		    error( except );
 		}
 	    }
@@ -903,11 +929,11 @@ final class TransactionImpl
 		} catch ( XAException except ) {
 		    if ( except.errorCode <= XAException.XA_RBBASE ||
 			 except.errorCode >= XAException.XA_RBEND ) {
-			_heuristic = _heuristic | HEURISTIC_HAZARD;
+			_heuristic = _heuristic | Heuristic.Hazard;
 			error( except );
 		    }
 		} catch ( Exception except ) {
-		    _heuristic = _heuristic | HEURISTIC_HAZARD;
+		    _heuristic = _heuristic | Heuristic.Hazard;
 		    error( except );
 		}
 	    }
@@ -921,25 +947,25 @@ final class TransactionImpl
 			xaRes.xa.rollback( xaRes.xid );
 			// Initially we're readonly so we switch to rollback.
 			// If we happen to be in commit, we switch to mixed.
-			_heuristic = _heuristic | HEURISTIC_ROLLBACK;
+			_heuristic = _heuristic | Heuristic.Rollback;
 		    }
 		} catch ( XAException except ) {
 		    if ( except.errorCode == XAException.XA_HEURMIX )
-			_heuristic = _heuristic | HEURISTIC_MIXED;
+			_heuristic = _heuristic | Heuristic.Mixed;
 		    else if ( except.errorCode == XAException.XA_HEURHAZ )
-			_heuristic = _heuristic | HEURISTIC_HAZARD;
+			_heuristic = _heuristic | Heuristic.Hazard;
 		    else if ( except.errorCode == XAException.XA_HEURCOM )
-			_heuristic = _heuristic | HEURISTIC_COMMIT;
+			_heuristic = _heuristic | Heuristic.Commit;
 		    else if ( except.errorCode == XAException.XA_RDONLY )
 			// Resource was read only, we don't care.
 			    ;
 		    else if ( except.errorCode <= XAException.XA_RBBASE ||
 			      except.errorCode >= XAException.XA_RBEND ) {
-			_heuristic = _heuristic | HEURISTIC_HAZARD;
+			_heuristic = _heuristic | Heuristic.Hazard;
 			error( except );
 		    }
 		} catch ( Exception except ) {
-		    _heuristic = _heuristic | HEURISTIC_HAZARD;
+		    _heuristic = _heuristic | Heuristic.Hazard;
 		    error( except );
 		}
 	    }
@@ -948,7 +974,7 @@ final class TransactionImpl
 
 	_status = STATUS_ROLLEDBACK;
 	_heuristic = normalize( _heuristic );
-	TransactionServer.logTransaction( _xid, _heuristic );
+	_txDomain.notifyCompletion( _xid, _heuristic );
     }
 
 
@@ -1023,12 +1049,11 @@ final class TransactionImpl
 	    // If we are not running in the same thread as
 	    // this transaction, need to make this transaction
 	    // the current one before calling method.
-	    tm = new TransactionManagerImpl();
 	    suspended = null;
 	    try {
-		if ( tm.getTransaction() !=  this ) {
-		    suspended = tm.suspend();
-		    tm.resume( this );
+		if ( _txDomain.getTransactionManager().getTransaction() !=  this ) {
+		    suspended = _txDomain.getTransactionManager().suspend();
+		    _txDomain.getTransactionManager().resume( this );
 		}
 	    } catch ( Exception except ) {
 		error( except );
@@ -1049,12 +1074,12 @@ final class TransactionImpl
 	    // the thread.
 	    if ( suspended != null ) {
 		try {
-		    tm.suspend();
+		    _txDomain.getTransactionManager().suspend();
 		} catch ( Exception except ) {
 		    error( except );
 		}
 		try {
-		    tm.resume( suspended );
+		    _txDomain.getTransactionManager().resume( suspended );
 		} catch ( Exception except ) {
 		    error( except );
 		}
@@ -1064,7 +1089,7 @@ final class TransactionImpl
 	// Only top level transaction is registered with the
 	// transaction server and should be unlisted.
 	if ( _parent == null )
-	    TransactionServer.forgetTransaction( this );
+	    _txDomain.forgetTransaction( this );
     }
 
 
@@ -1544,10 +1569,10 @@ final class TransactionImpl
 	}
 
 	// Log the message with whatever logging mechanism we have.
-	TransactionServer.logMessage( _xid.toString() + " : " + except.toString() );
+	_txDomain.logMessage( _xid.toString() + " : " + except.toString() );
 	if ( except instanceof RuntimeException &&
-	     TransactionServer.getConfigure().getLogWriter() != null )
-	    except.printStackTrace( TransactionServer.getConfigure().getLogWriter() );
+	     _txDomain.getLogWriter() != null )
+	    except.printStackTrace( _txDomain.getLogWriter() );
 
 	// Record the first general exception as a system exception,
 	// so it may be returned from commit/rollback.
@@ -1638,12 +1663,12 @@ final class TransactionImpl
      */
     public int normalize( int heuristic )
     {
-	if ( ( heuristic & HEURISTIC_HAZARD ) != 0 )
-	    return HEURISTIC_HAZARD;
-	else if ( ( heuristic & HEURISTIC_MIXED ) != 0 )
-	    return HEURISTIC_MIXED;
-	else if ( heuristic == ( HEURISTIC_COMMIT | HEURISTIC_ROLLBACK ) )
-	    return HEURISTIC_MIXED;
+	if ( ( heuristic & Heuristic.Hazard ) != 0 )
+	    return Heuristic.Hazard;
+	else if ( ( heuristic & Heuristic.Mixed ) != 0 )
+	    return Heuristic.Mixed;
+	else if ( heuristic == ( Heuristic.Commit | Heuristic.Rollback ) )
+	    return Heuristic.Mixed;
 	else
 	    return heuristic;
     }
@@ -1690,7 +1715,7 @@ final class TransactionImpl
     /**
      * Returns the heuristic decision of this transaction after it
      * has been prepared, commited or rolledback. At all other times
-     * this method will return {@link #HEURISTIC_READONLY}.
+     * this method will return {@link #Heuristic.ReadOnly}.
      *
      * @return The heuristic decision of this transaction
      */
@@ -1701,13 +1726,13 @@ final class TransactionImpl
 
 
     /**
-     * Called by {@link TransactionServer} to change the timeout for
+     * Called by {@link TransactionDomain} to change the timeout for
      * the transaction's resources to the new value. This might or
      * might not have an effect on the underlying resources.
      * All consistency checks are made by the server.
      *
      * @param secods The new timeout in seconds
-     * @see TransactionServer#setTransactionTimeout
+     * @see TransactionDomain#setTransactionTimeout
      */
     void setTransactionTimeout( int seconds )
     {
@@ -1829,61 +1854,57 @@ final class TransactionImpl
     }
 
 
-}
 
 
-/**
- * Describes an {@link XAResource} enlisted with this transaction.
- * Each resource enlisted with the transaction will have such a record
- * until the transaction timesout or is forgetted. The only way to
- * delist a resource is if it fails.
- */
-class EnlistedXAResource
-{
-    
-    
     /**
-     * The xid under which this resource is enlisted.
-     * Generally each resource will have the same global Xid,
-     * but a different branch, but shared resources will also
-     * share the same branch.
+     * Describes an {@link XAResource} enlisted with this transaction.
+     * Each resource enlisted with the transaction will have such a record
+     * until the transaction timesout or is forgetted. The only way to
+     * delist a resource is if it fails.
      */
-    Xid  xid;
+    class EnlistedXAResource
+    {
     
+	/**
+	 * The xid under which this resource is enlisted.
+	 * Generally each resource will have the same global Xid,
+	 * but a different branch, but shared resources will also
+	 * share the same branch.
+	 */
+	Xid  xid;
     
-    /**
-     * The enlisted XA resource.
-     */
-    XAResource xa;
+	/**
+	 * The enlisted XA resource.
+	 */
+	XAResource xa;
     
+	/**
+	 * If the resource has been suspended this flag will be set,
+	 * but the resource will not be removed from the list.
+	 * We will have to resume the transaction on the resource
+	 * before we can commit/rollback the transaction.
+	 */
+	boolean suspended;
     
-    /**
-     * If the resource has been suspended this flag will be set,
-     * but the resource will not be removed from the list.
-     * We will have to resume the transaction on the resource
-     * before we can commit/rollback the transaction.
-     */
-    boolean suspended;
+	/**
+	 * A shared resource is one that shares it's transaction
+	 * branch with another resource (e.g. two JDBC connections
+	 * to the same database). Only one of the shared resources
+	 * must be commited or rolled back, although both should be
+	 * notified when the transaction terminates.
+	 */
+	boolean shared;
     
-    
-    /**
-     * A shared resource is one that shares it's transaction
-     * branch with another resource (e.g. two JDBC connections
-     * to the same database). Only one of the shared resources
-     * must be commited or rolled back, although both should be
-     * notified when the transaction terminates.
-     */
-    boolean shared;
-    
-    
-    /**
-     * This flag is used during 2pc to indicate whether the resource
-     * should be commited/rolledback. Shared resources and those that
-     * indicated they are read-only during preperation do not need
-     * to be commited/rolledback.
-     */
-    boolean readOnly;
-    
+	/**
+	 * This flag is used during 2pc to indicate whether the resource
+	 * should be commited/rolledback. Shared resources and those that
+	 * indicated they are read-only during preperation do not need
+	 * to be commited/rolledback.
+	 */
+	boolean readOnly;
+
+    }
+
     
 }
 

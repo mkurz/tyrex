@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: Configure.java,v 1.1 2000/01/11 00:33:46 roro Exp $
+ * $Id: Configure.java,v 1.2 2000/01/17 22:13:59 arkin Exp $
  */
 
 
@@ -83,11 +83,11 @@ import tyrex.conf.Server;
  * from the same configuration object that was used to start it.
  * Failure to do so will cause a {@link SecurityException}.
  * The caller must also have the suitable permission, see {@link
- * TransactionServerPermission}.
+ * TyrexPermission}.
  *
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2000/01/11 00:33:46 $
+ * @version $Revision: 1.2 $ $Date: 2000/01/17 22:13:59 $
  */
 public final class Configure
     implements Serializable
@@ -401,7 +401,7 @@ public final class Configure
      * to this configuration object. This method may only be called
      * with the same configuration object for the life of the server.
      * The caller must have the {@link
-     * TransactionServerPermission.SERVER_START} permission to perform
+     * TyrexPermission.SERVER_START} permission to perform
      * this operation. If problems occur during start up, use {@link
      * TransactionServer#setLogWriter} to view them.
      */
@@ -418,7 +418,7 @@ public final class Configure
      * Called to shutdown the server. Must be called with the same
      * configuration object that was used to start the server.
      * The caller must have the {@link
-     * TransactionServerPermission.SERVER_SHUTDOWN} permission to
+     * TyrexPermission.SERVER_SHUTDOWN} permission to
      * perform this operation.
      */
     public void shutdownServer()

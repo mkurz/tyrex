@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: ResourceImpl.java,v 1.1 2000/01/11 00:33:46 roro Exp $
+ * $Id: ResourceImpl.java,v 1.2 2000/01/17 22:13:59 arkin Exp $
  */
 
 
@@ -67,7 +67,7 @@ import tyrex.util.Messages;
  * transaction. Requires that we use the OTS Java/IDL mapping.
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2000/01/11 00:33:46 $
+ * @version $Revision: 1.2 $ $Date: 2000/01/17 22:13:59 $
  */
 public final class ResourceImpl
     extends _ResourceImplBase
@@ -105,7 +105,7 @@ public final class ResourceImpl
 	    throw new TRANSACTION_ROLLEDBACK( except.getMessage() );
 	}
 	switch ( _tx.getHeuristic() ) {
-	case HEURISTIC_READONLY:
+	case Heuristic.ReadOnly:
 	    // No need for us to participate in commit/rollback.
 	    // We must call after_completion on all synchronizations
 	    // and forget about this transaction and move on.
@@ -113,7 +113,7 @@ public final class ResourceImpl
 		_tx.forget();
 	    } catch ( IllegalStateException except ) { }
 	    return Vote.VoteReadOnly;
-	case HEURISTIC_ROLLBACK:
+	case Heuristic.Rollback:
 	    // No need for us to participate in commit/rollback.
 	    // We must call after_completion on all synchronizations
 	    // and forget about this transaction and move on.
@@ -122,16 +122,16 @@ public final class ResourceImpl
 		_tx.forget();
 	    } catch ( IllegalStateException except ) { }
 	    return Vote.VoteRollback;
-	case HEURISTIC_COMMIT:
+	case Heuristic.Commit:
 	    // We can commit any number of resources.
 	    return Vote.VoteCommit;
-	case HEURISTIC_MIXED:
+	case Heuristic.Mixed:
 	    _tx.internalRollback();
 	    try {
 		_tx.forget();
 	    } catch ( IllegalStateException except ) { }
 	    throw new HeuristicMixed();
-	case HEURISTIC_HAZARD:
+	case Heuristic.Hazard:
 	default:
 	    _tx.internalRollback();
 	    try {
@@ -155,14 +155,14 @@ public final class ResourceImpl
 	}
 	try {
 	    switch ( _tx.getHeuristic() ) {
-	    case HEURISTIC_READONLY:
-	    case HEURISTIC_ROLLBACK:
+	    case Heuristic.ReadOnly:
+	    case Heuristic.Rollback:
 		break;
-	    case HEURISTIC_COMMIT:
+	    case Heuristic.Commit:
 		throw new HeuristicCommit();
-	    case HEURISTIC_MIXED:
+	    case Heuristic.Mixed:
 		throw new HeuristicMixed();
-	    case HEURISTIC_HAZARD:
+	    case Heuristic.Hazard:
 	    default:
 		throw new HeuristicHazard();
 	    }
@@ -184,14 +184,14 @@ public final class ResourceImpl
 	    throw new NotPrepared();
 	}
 	switch ( _tx.getHeuristic() ) {
-	case HEURISTIC_READONLY:
-	case HEURISTIC_COMMIT:
+	case Heuristic.ReadOnly:
+	case Heuristic.Commit:
 	    break;
-	case HEURISTIC_ROLLBACK:
+	case Heuristic.Rollback:
 	    throw new HeuristicRollback();
-	case HEURISTIC_MIXED:
+	case Heuristic.Mixed:
 	    throw new HeuristicMixed();
-	case HEURISTIC_HAZARD:
+	case Heuristic.Hazard:
 	default:
 	    throw new HeuristicHazard();
 	}
@@ -221,9 +221,9 @@ public final class ResourceImpl
 	}
 	try {
 	    switch ( _tx.getHeuristic() ) {
-	    case HEURISTIC_HAZARD:
+	    case Heuristic.Hazard:
 		throw new HeuristicHazard();
-	    case HEURISTIC_ROLLBACK:
+	    case Heuristic.Rollback:
 		throw new TRANSACTION_ROLLEDBACK( Messages.message( "tyrex.tx.heuristicRollback" ) );
 	    }
 	} finally {

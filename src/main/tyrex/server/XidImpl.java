@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: XidImpl.java,v 1.1 2000/01/11 00:33:46 roro Exp $
+ * $Id: XidImpl.java,v 1.2 2000/01/17 22:13:59 arkin Exp $
  */
 
 
@@ -83,7 +83,7 @@ import tyrex.util.Logger;
  * 
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2000/01/11 00:33:46 $
+ * @version $Revision: 1.2 $ $Date: 2000/01/17 22:13:59 $
  */
 public final class XidImpl
     implements Xid, Serializable
@@ -415,7 +415,7 @@ public final class XidImpl
 	    }
 	} catch ( UnknownHostException except ) {
 	    addr = 0xFFFFFFFF;
-	    Logger.getLogger().println( Messages.message( "tyrex.server.failedFindHostIP" ) );
+	    Logger.getSystemLogger().println( Messages.message( "tyrex.server.failedFindHostIP" ) );
 	}
 	_machineId = new byte[ MACHINE_ID_LENGTH ];
 	for ( i = 0 ; i < MACHINE_ID_LENGTH ; ++i ) {

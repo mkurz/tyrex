@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: ControlImpl.java,v 1.1 2000/01/11 00:33:46 roro Exp $
+ * $Id: ControlImpl.java,v 1.2 2000/01/17 22:13:59 arkin Exp $
  */
 
 
@@ -71,7 +71,7 @@ import javax.transaction.xa.Xid;
  *
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2000/01/11 00:33:46 $
+ * @version $Revision: 1.2 $ $Date: 2000/01/17 22:13:59 $
  * @see TransactionImpl
  */
 public class ControlImpl
@@ -101,7 +101,6 @@ public class ControlImpl
      * held for subsequent requests.
      */
     private PropagationContext _pgContext;
-
 
 
     /**
@@ -396,7 +395,7 @@ public class ControlImpl
 	    throw new Inactive();
 
 	try {
-	    tx = TransactionServer.createTransaction( _tx, false );
+	    tx = _tx.getTransactionDomain().createTransaction( _tx, null );
 	    return tx.getControl();
 	} catch ( SystemException except ) {
 	    throw new Inactive();
@@ -407,7 +406,7 @@ public class ControlImpl
     public synchronized PropagationContext get_txcontext()
     {
 	if ( _pgContext == null )
-	    _pgContext = new PropagationContext( TransactionServer.getTransactionTimeout( _tx ),
+	    _pgContext = new PropagationContext( _tx.getTransactionDomain().getTransactionTimeout( _tx ),
                 get_identity(), _parents != null ? _parents : new TransIdentity[ 0 ], null );
 	return _pgContext;
     }
