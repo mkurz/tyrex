@@ -74,6 +74,7 @@ import tyrex.resource.PoolLimits;
 import tyrex.resource.PoolMetrics;
 import tyrex.resource.Resource;
 import tyrex.resource.ResourceException;
+import tyrex.resource.ReuseOptions;
 import tyrex.services.Clock;
 import tyrex.services.DaemonMaster;
 import tyrex.util.Primes;
@@ -83,13 +84,29 @@ import tyrex.util.LoggerPrintWriter;
 /**
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.14 $
+ * @version $Revision: 1.15 $
  */
 final class ConnectionPool
     extends PoolMetrics
     implements Resource, DataSource, ConnectionEventListener, Runnable
 {
+	/**
+     * Flag that signifies that the pooled connection is available
+     */
+    static final int AVAILABLE = 0;
 
+    /**
+     * Flag that signifies that the pooled connection is not 
+     * available
+     */
+    static final int IN_USE = 1;
+
+    /**
+     * Flag that signifies that the connection from the pooled 
+     * connection has been closed but the pooled connection is not
+     * available
+     */
+    static final int CLOSED = 2;
 
     /**
      * The initial table size, unless a maximum number of connections
@@ -127,7 +144,7 @@ final class ConnectionPool
     /**
      * The category used for writing log information.
      */
-    private final Category                 _category;
+    final Category                 		   _category;
 
 
     /**
@@ -172,6 +189,11 @@ final class ConnectionPool
     private boolean                        _destroyed;
 
 
+	/**
+	 * The reuse option
+	 */
+	private final int						_reuse;
+
     ConnectionPool( String name, PoolLimits limits,
                     ClassLoader loader, XADataSource xaDataSource,
                     ConnectionPoolDataSource poolDataSource,
@@ -199,6 +221,7 @@ final class ConnectionPool
         _poolDataSource = poolDataSource;
         _category = category;
         _txManager= txManager;
+		_reuse = ReuseOptions.REUSE_TRANSACTION;
 
         try {
             // Clone object to prevent changes by caller from affecting the
@@ -312,7 +335,7 @@ final class ConnectionPool
         for ( int i = _pool.length ; i-- > 0 ; ) {
             entry = _pool[ i ];
             while ( entry != null ) {
-                if ( entry._available ) {
+                if ( AVAILABLE == entry._state ) {
                     recordUnusedDuration( (int) ( clock - entry._timeStamp ) );
                     recordDiscard();
                 }
@@ -323,7 +346,7 @@ final class ConnectionPool
                     _category.error( "Error attempting to destory connection " + entry._pooled +
                                      " by connection pool " + this, except );
                 }
-                entry._available = false;
+                entry._state = IN_USE;
                 entry = entry._nextEntry;
             }
             _pool[ i ] = null;
@@ -629,7 +652,7 @@ final class ConnectionPool
         index = ( hashCode & 0x7FFFFFFF ) % _pool.length;
         entry = _pool[ index ];
         if ( entry == null ) {
-            entry = new PoolEntry( pooled, hashCode, xaResource, user, password );
+            entry = new PoolEntry( this, pooled, hashCode, xaResource, user, password );
             _pool[ index ] = entry;
         } else {
             if ( entry._hashCode == hashCode && entry._pooled.equals( pooled ) ) {
@@ -645,7 +668,7 @@ final class ConnectionPool
                 entry = next;
                 next = entry._nextEntry;
             }
-            next = new PoolEntry( pooled, hashCode, xaResource, user, password );
+            next = new PoolEntry( this, pooled, hashCode, xaResource, user, password );
             entry._nextEntry = next;
             entry = next;
         }
@@ -655,7 +678,7 @@ final class ConnectionPool
         // available and increase the available count.
         recordCreated();
         if ( ! reserve ) {
-            entry._available = true;
+            entry._state = AVAILABLE;
             _available += 1;
         }
         // Calculate the next expiration time based on this connection.
@@ -699,8 +722,8 @@ final class ConnectionPool
         while ( entry != null && entry._hashCode != hashCode &&
                 ! entry._pooled.equals( pooled ) )
             entry = entry._nextEntry;
-        if ( entry != null && entry._available ) {
-            entry._available = false;
+        if ( entry != null && ( AVAILABLE == entry._state ) ) {
+            entry._state = IN_USE;
             _available -= 1;
             clock = Clock.clock();
             recordUnusedDuration( (int) ( clock - entry._timeStamp ) );
@@ -733,7 +756,7 @@ final class ConnectionPool
      * the connection is released due to an error
      * @return True if the connection has been released
      */
-    private synchronized boolean release( PooledConnection pooled, boolean success )
+    synchronized boolean release( PooledConnection pooled, boolean success )
     {
         PoolEntry entry;
         int       hashCode;
@@ -749,7 +772,7 @@ final class ConnectionPool
         entry = _pool[ index ];
         if ( entry != null ) {
             if ( hashCode == entry._hashCode && entry._pooled.equals( pooled ) ) {
-                if ( entry._available ) {
+                if ( AVAILABLE == entry._state ) {
                     _category.error( "Connector error: Released connection " + pooled + " not in pool" );
                     return false;
                 }
@@ -758,7 +781,7 @@ final class ConnectionPool
                 while ( entry != null && hashCode != entry._hashCode &&
                         ! entry._pooled.equals( pooled ) )
                     entry = entry._nextEntry;
-                if ( entry == null || entry._available ) {
+                if ( entry == null || ( AVAILABLE == entry._state ) ) {
                     _category.error( "Connector error: Released connection " + pooled + " not in pool" );
                     return false;
                 }
@@ -767,7 +790,7 @@ final class ConnectionPool
             _category.error( "Connector error: Released connection " + pooled + " not in pool" );
             return false;
         }
-        
+
         // If we reached this point, we have the connection entry
         // and the connection is not reserved. If an XA resource
         // is used, we need to delist it. If successful, we mark
@@ -775,33 +798,80 @@ final class ConnectionPool
         // the pool that a new connection is available. Otherwise,
         // we discard the connection with an error.
         try {
-            clock = Clock.clock();
-            recordUsedDuration( (int) ( clock - entry._timeStamp ) );
-            entry._timeStamp = clock;
-            entry._available = true;
-            if ( entry._xaResource != null )
-                _txManager.delistResource( entry._xaResource, success ? XAResource.TMSUCCESS : XAResource.TMFAIL );
-            if ( success ) {
-                _available += 1;
-                // Calculate the next expiration time based on this connection.
-                maxRetain = _limits.getMaxRetain();
-                if ( maxRetain > 0 ) {
-                    nextExpiration = entry._timeStamp + ( maxRetain * 1000 );
-                    if ( _nextExpiration == 0 || _nextExpiration > nextExpiration )
-                        _nextExpiration = nextExpiration;
+            if ( entry._xaResource != null ) {
+                if ( _category.isDebugEnabled() ) {
+                    _category.debug( "Delisting " + entry._xaResource + " for " + entry._pooled );    
                 }
+                _txManager.delistResource( entry._xaResource,
+										   success ? XAResource.TMSUCCESS : XAResource.TMFAIL );
+            }
+
+            // the connection has been closed
+            entry._state = CLOSED;
+
+            if ( ! success ||
+                 ( ReuseOptions.REUSE_ON == _reuse ) ||
+                 ( 0 == entry._enlistCount ) ) {
+                clock = Clock.clock();
+                recordUsedDuration( (int) ( clock - entry._timeStamp ) );
+                entry._timeStamp = clock;
+                
+                if ( ! success ||
+                     ( ReuseOptions.REUSE_OFF == _reuse ) ||
+                     ( ( ReuseOptions.REUSE_TRANSACTION_OFF == _reuse ) &&
+                       entry._enlistedInTransaction ) ||
+                     ( ( ReuseOptions.REUSE_NO_TRANSACTION_OFF == _reuse ) &&
+                       !entry._enlistedInTransaction ) ) {
+                    if ( _category.isDebugEnabled() ) {
+                        _category.debug( "Discarding " + pooled );    
+                    }
+                    discard( pooled, success );    
+                }
+                else {  // ReuseOptions.REUSE_ON, ReuseOptions.REUSE_TRANSACTION, 
+                        // ReuseOptions.REUSE_TRANSACTION_OFF and not used in transaction
+                        // ReuseOptions.REUSE_NO_TRANSACTION_OFF and used in transaction
+                    if ( _category.isDebugEnabled() ) {
+                        _category.debug( "Reusing " + pooled );    
+                    }
+                    entry._state = AVAILABLE;
+                    entry._enlistedInTransaction = false;
+                    _available += 1;
+                    // Calculate the next expiration time based on this connection.
+                    maxRetain = _limits.getMaxRetain();
+                    if ( maxRetain > 0 ) {
+                        nextExpiration = entry._timeStamp + ( maxRetain * 1000 );
+                        if ( _nextExpiration == 0 || _nextExpiration > nextExpiration )
+                            _nextExpiration = nextExpiration;
+                    }
+                }
+
                 // We notify any blocking thread that it can attempt to
                 // get a new connection.
                 notifyAll();
-            } else
-                discard( pooled, false );
+                if ( _logWriter != null )
+                    _logWriter.println( "Released connection " + pooled );
+                return true;
+
+            } else {
+                if ( _category.isDebugEnabled() ) {
+                    _category.debug( "Cannot release " + pooled + 
+                                     " enlisted count " + entry._enlistCount);    
+                }
+                return false;
+            }
         } catch ( Exception except ) {
             // An error occured when attempting to clean up the connection.
             // Log the error and discard the connection.
             _category.error( "Error attempting to release connection " + entry._pooled +
                              " by connection pool " + this, except );
+            // make sure the state is correct so that connection can be discarded
+            entry._state = CLOSED;
             discard( entry._pooled, false );
         }
+
+        // We notify any blocking thread that it can attempt to
+        // get a new connection.
+        notifyAll();
         if ( _logWriter != null )
             _logWriter.println( "Released connection " + pooled );
         return true;
@@ -829,13 +899,13 @@ final class ConnectionPool
         for ( int i = _pool.length ; i-- > 0 ; ) {
             entry = _pool[ i ];
             if ( entry != null ) {
-                if ( entry._available ) {
+                if ( AVAILABLE == entry._state ) {
                     _pool[ i ] = entry._nextEntry;
                     break;
                 } else {
                     next = entry._nextEntry;
                     while ( next != null ) {
-                        if ( next._available ) {
+                        if ( AVAILABLE == entry._state ) {
                             entry._nextEntry = next._nextEntry;
                             entry = next;
                             break;
@@ -908,7 +978,8 @@ final class ConnectionPool
             return false;
         if ( hashCode == entry._hashCode && entry._pooled.equals( pooled ) ) {
             _pool[ index ] = entry._nextEntry;
-            if ( ! entry._available ) {
+            if ( ( AVAILABLE != entry._state ) &&
+				 ( CLOSED != entry._state ) ) {
                 _category.error( "Connector error: Discarded connection " + pooled + " not in pool" );
                 return false;
             }
@@ -916,7 +987,8 @@ final class ConnectionPool
             next = entry._nextEntry;
             while ( next != null ) {
                 if ( hashCode == next._hashCode && next._pooled.equals( pooled ) ) {
-                    if ( ! next._available ) {
+                    if ( ( AVAILABLE == next._state ) &&
+						 ( CLOSED != next._state ) ) {
                         _category.error( "Connector error: Discarded connection " + pooled + " not in pool" );
                         return false;
                     }
@@ -994,7 +1066,8 @@ final class ConnectionPool
                 entry = null;
                 next = _pool[ i ];
                 while ( next != null ) {
-                    if ( next._available ) {
+                    if ( ( AVAILABLE == next._state ) &&
+						 ( 0 == next._enlistCount ) ) {
                         if ( next._timeStamp <= oldest ) {
                             if ( entry == null )
                                 _pool[ i ] = next._nextEntry;
@@ -1055,7 +1128,7 @@ final class ConnectionPool
         for ( int i = _pool.length ; i-- > 0 ; ) {
             entry = _pool[ i ];
             while ( entry != null ) {
-                if ( entry._available ) {
+                if ( AVAILABLE == entry._state ) {
                     if ( user == null && entry._user == null )
                         return entry._pooled;
                     else if ( user != null && entry._user != null && user.equals( entry._user ) &&
