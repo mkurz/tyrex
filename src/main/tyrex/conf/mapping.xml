@@ -45,7 +45,7 @@
     </field>
   </class>
 
-  <class name="tyrex.resource.ResourcePoolManagerImpl"  >
+  <class name="tyrex.resource.ResourcePoolManagerImpl"  extends="tyrex.resource.ResourcePoolManager">
     <description>Resource Pool Manager Implementation</description>
     <map-to xml="pool"/>
     <field name="resourceLimits" type="tyrex.resource.ResourceLimits" required="true">
@@ -53,7 +53,7 @@
     </field>
   </class>
   
-  <class name="tyrex.resource.ResourceLimits"  >
+  <class name="tyrex.resource.ResourceLimits">
     <description>Resource Limits</description>
     <map-to xml="resource-limits"/>
     <field name="upperLimit" type="integer" required="false">
