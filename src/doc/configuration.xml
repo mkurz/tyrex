@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!-- $Id: configuration.xml,v 1.2 2001/03/14 21:39:27 arkin Exp $ -->
+<!-- $Id: configuration.xml,v 1.3 2001/03/16 01:21:03 arkin Exp $ -->
 <document>
   <properties>
     <title>Tyrex Configuration</title>
@@ -114,9 +114,10 @@ tyrex.domain.fila=domain.xml</code>
         but must have no correlation to the network card address. The UUID state is generally
         stored in a file called <tt>uuid.state</tt>.</p>
       
-      <p>To obtain the network card address under UNIX run <tt>ifconfig</tt> from the root
-        account. The following example illustrates a UUID state file generated from the
-        network card address 08:00:46:08:64:C3 using the clock sequence 100. Both values
+      <p>To obtain the network card address under Linux/UNIX run <tt>ifconfig</tt> from the root
+        account. To obtain the network card address under Windows 2000 open a DOS window and type
+        <tt>ipconfig /all</tt>. The following example illustrates a UUID state file generated from
+        the network card address 08:00:46:08:64:C3 using the clock sequence 100. Both values
         are specified as hexadecimal values:</p>
       
       <code>
