@@ -132,7 +132,7 @@ final class XAResourceHelperManager
 
         if ( className.equals( _informixXAResourceClassName ) ) {
             synchronized ( _informixXAResourceClassName ) {
-                if ( null == _informixXAResourceClassName )
+                if ( null == _informixHelper )
                     _informixHelper = new InformixXAResourceHelper();
                 return _informixHelper;
             }
