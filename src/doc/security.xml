@@ -2,7 +2,6 @@
 <!DOCTYPE document SYSTEM "document.dtd">
 <document url="http://tyrex.exolab.org/security.xml">
   <properties>
-    <title>J2EE Security And Authentication</title>
     <abstract>Explains the J2EE security and authentication model, how security is
               implemented in Servlet and EJB servers, the role of JAAS, and details
               the LDAP security provider.</abstract>
