@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: Naming.java,v 1.1 2000/04/12 00:46:16 arkin Exp $
+ * $Id: Naming.java,v 1.2 2000/04/14 21:41:16 arkin Exp $
  */
 
 
@@ -55,6 +55,7 @@ import org.exolab.jtf.CWTestCase;
 import org.exolab.jtf.CWVerboseStream;
 import org.exolab.exceptions.CWClassConstructorException;
 import javax.naming.*;
+import javax.naming.spi.ObjectFactory;
 import tyrex.naming.EnvContext;
 import tyrex.naming.NamingPermission;
 
@@ -72,9 +73,11 @@ public class Naming
         
         CWTestCase tc;
         
-        tc = new SharedMemoryContext();
+        tc = new MemoryContextTest();
         add( tc.name(), tc, true );
-        tc = new EnvNamingContext();
+        tc = new EnvContextTest();
+        add( tc.name(), tc, true );
+        tc = new ReferenceableTest();
         add( tc.name(), tc, true );
     }
 
@@ -93,14 +96,28 @@ public class Naming
     }
 
 
-    public static class SharedMemoryContext
+    public static InitialContext getEnvInitialContext()
+        throws NamingException
+    {
+        Hashtable env;
+
+        env = new Hashtable();
+        env.put( Context.URL_PKG_PREFIXES, "tyrex.naming" );
+        return new InitialContext( env );
+    }
+
+
+    /**
+     * Tests the in-memory service provider (MemoryContext).
+     */
+    public static class MemoryContextTest
         extends CWTestCase
     {
 
-        public SharedMemoryContext()
+        public MemoryContextTest()
             throws CWClassConstructorException
         {
-            super( "TC01", "Shared Memory Context" );
+            super( "TC01", "In-Memory Service Provider" );
         }
 
         public void preExecute()
@@ -115,7 +132,9 @@ public class Naming
         
         public boolean run( CWVerboseStream stream )
         {
-            String               testValue = "testValue";
+            String               value = "Just A Test";
+            String               name = "test";
+            String               sub = "sub";
             InitialContext       initCtx;
             Context              ctx1;
             Context              ctx2;
@@ -124,19 +143,19 @@ public class Naming
                 // Construct the same context from two perspsective
                 // and compare bound values
                 stream.writeVerbose( "Constructing same context in two different ways and comparing bound values" );
-                initCtx = Naming.getInitialContext( "test" );
+                initCtx = Naming.getInitialContext( name );
                 ctx1 = initCtx;
                 initCtx = Naming.getInitialContext( "" );
-                ctx2 = (Context) initCtx.lookup( "test" );
-                ctx1.bind( "test", testValue );
-                if ( ctx2.lookup( "test" ) != testValue ) {
+                ctx2 = (Context) initCtx.lookup( name );
+                ctx1.bind( name, value );
+                if ( ctx2.lookup( name ) != value ) {
                     stream.writeVerbose( "Error: Same testValue not bound in both contexts" );
                     return false;
                 }
-                ctx2 = ctx2.createSubcontext( "sub" );
-                ctx1 = (Context) ctx1.lookup( "sub" );
-                ctx1.bind( "sub-test", testValue );
-                if ( ctx2.lookup( "sub-test" ) != testValue ) {
+                ctx2 = ctx2.createSubcontext( sub );
+                ctx1 = (Context) ctx1.lookup( sub );
+                ctx1.bind( sub + name, value );
+                if ( ctx2.lookup( sub + name ) != value ) {
                     stream.writeVerbose( "Error: Same testValue not bound in both contexts" );
                     return false;
                 }
@@ -145,29 +164,29 @@ public class Naming
                 stream.writeVerbose( "Testing that shared and non-shared namespaces are different" );
                 ctx2 = Naming.getInitialContext( null );
                 try {
-                    ctx2 = (Context) ctx2.lookup( "test" );
-                    if ( ctx2.lookup( "test" ) == testValue ) {
+                    ctx2 = (Context) ctx2.lookup( name );
+                    if ( ctx2.lookup( name ) == value ) {
                         stream.writeVerbose( "Error: Same testValue bound to not-shared contexts" );
                         return false;
                     }
                     stream.writeVerbose( "Error: NameNotFoundException not reported" );
                     return false;
                 } catch ( NameNotFoundException except ) {
-                    ctx2.bind( "test", testValue );
+                    ctx2.bind( name, value );
                 }
                 // Test that two non-shared spaces not the same.
                 stream.writeVerbose( "Testing that two non-shared namespaces are different" );
                 ctx2 = Naming.getInitialContext( null );
                 try {
-                    ctx2 = (Context) ctx2.lookup( "test" );
-                    if ( ctx2.lookup( "test" ) == testValue ) {
+                    ctx2 = (Context) ctx2.lookup( name );
+                    if ( ctx2.lookup( name ) == value ) {
                         stream.writeVerbose( "Error: Same testValue bound to not-shared contexts" );
                         return false;
                     }
                     stream.writeVerbose( "Error: NameNotFoundException not reported" );
                     return false;
                 } catch ( NameNotFoundException except ) {
-                    ctx2.bind( "test", testValue );
+                    ctx2.bind( name, value );
                 }
 
                 return true;
@@ -184,11 +203,14 @@ public class Naming
     }
 
 
-    public static class EnvNamingContext
+    /**
+     * Tests the environment naming context (EnvContext).
+     */
+    public static class EnvContextTest
         extends CWTestCase
     {
 
-        public EnvNamingContext()
+        public EnvContextTest()
             throws CWClassConstructorException
         {
             super( "TC02", "Environment Naming Context" );
@@ -340,6 +362,144 @@ public class Naming
                 except.printStackTrace();
                 return false;
             }
+        }
+
+
+    }
+
+
+    /**
+     * Test the handling of referencable objects.
+     */
+    public static class ReferenceableTest
+        extends CWTestCase
+    {
+
+        public ReferenceableTest()
+            throws CWClassConstructorException
+        {
+            super( "TC03", "Referenceable Object Handling" );
+        }
+
+        public void preExecute()
+        {
+            super.preExecute();
+        }
+        
+        public void postExecute()
+        {
+            super.postExecute();
+        }
+        
+        public boolean run( CWVerboseStream stream )
+        {
+            Context   ctx;
+            String    name = "test";
+            String    value = "Just A Test";
+            Object    object;
+
+            try {
+                object = new TestObject( value );
+                // Construct the same context from two perspsective
+                // and compare bound values
+                stream.writeVerbose( "Test binding of Referenceable object in MemoryContext" );
+                ctx = (Context) Naming.getInitialContext( null ).lookup( "" );
+                ctx.bind( name, object );
+                if ( ctx.lookup( name ) == object ) {
+                    stream.writeVerbose( "Error: Same object instance returned in both cases" );
+                    return false;
+                }
+                if ( ! ctx.lookup( name ).equals( object ) ) {
+                    stream.writeVerbose( "Error: The two objects are not identical" );
+                    return false;
+                }
+                stream.writeVerbose( "Bound one object, reconstructed another, both pass equality test" );
+
+                stream.writeVerbose( "Test looking up Referenceable object from EnvContext" );
+                EnvContext.setEnvContext( ctx );
+                ctx = getEnvInitialContext();
+                if ( ctx.lookup( "java:" + name ) == object ) {
+                    stream.writeVerbose( "Error: Same object instance returned in both cases" );
+                    return false;
+                }
+                if ( ! ctx.lookup( "java:" + name ).equals( object ) ) {
+                    stream.writeVerbose( "Error: The two objects are not identical" );
+                    return false;
+                }
+                EnvContext.unsetEnvContext();
+                stream.writeVerbose( "Bound one object, reconstructed another, both pass equality test" );
+
+                return true;
+            } catch ( IOException except ) {
+                System.out.println( except );
+                return false;
+            } catch ( NamingException except ) {
+                System.out.println( except );
+                except.printStackTrace();
+                return false;
+            }
+        }
+
+
+        public static class TestObject
+            implements Referenceable
+        {
+
+            private String _value;
+
+            TestObject( String value )
+            {
+                _value = value;
+            }
+
+            public boolean equals( Object other )
+            {
+                if ( this == other )
+                    return true;
+                if ( other instanceof TestObject &&
+                     ( (TestObject) other )._value.equals( _value ) )
+                    return true;
+                return false;
+            }
+
+            public Reference getReference()
+                throws NamingException
+            {
+                Reference ref;
+
+                // We use same object as factory.
+                ref = new Reference( getClass().getName(), TestObjectFactory.class.getName(), null );
+                ref.add( new StringRefAddr( "Value", _value ) );
+                return ref;
+            }
+
+        }
+
+        public static class TestObjectFactory
+            implements ObjectFactory
+        {
+
+            public Object getObjectInstance( Object refObj, Name name, Context nameCtx, Hashtable env )
+                throws NamingException
+            {
+                Reference ref;
+                
+                // Can only reconstruct from a reference.
+                if ( refObj instanceof Reference ) {
+                    ref = (Reference) refObj;
+                    // Make sure reference is of datasource class.
+                    if ( ref.getClassName().equals( TestObject.class.getName() ) ) {
+                        TestObject object;
+
+                        object = new TestObject( (String) ref.get( "Value" ).getContent() );
+                        return object;
+                        
+                    } else
+                        throw new NamingException( "Not a reference" );
+                }
+                return null;
+            }
+
         }
 
 
