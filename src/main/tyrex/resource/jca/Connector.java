@@ -80,7 +80,7 @@ import tyrex.util.Logger;
 /**
  * 
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.9 $
+ * @version $Revision: 1.10 $
  */
 public class Connector
     extends ResourceConfig
@@ -408,8 +408,7 @@ public class Connector
                     configProperty = ( DDConfigProperty )configProperties.get( i );
                     configPropertyValue = trim( configProperty.getConfigPropertyValue() );
                     // can only add non-empty values
-                    if ( ( null != configPropertyValue ) &&
-                         ( 0 != configPropertyValue.length() ) ) {
+                    if ( null != configPropertyValue ) {
                         initConfigPropertyValue( trim( configProperty.getConfigPropertyType() ), configPropertyValue, argClasses, 
                                                  argPrimitiveClasses, args );
                         methodName = getConfigPropertySetMethodName( trim( configProperty.getConfigPropertyName() ) );
