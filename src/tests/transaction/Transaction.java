@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Transaction.java,v 1.7 2001/04/24 19:47:53 jdaniel Exp $
+ * $Id: Transaction.java,v 1.8 2001/06/22 17:52:57 mohammed Exp $
  */
 
 
@@ -502,7 +502,7 @@ public class Transaction
 
         // first look at the property
         property = System.getProperty(CONFIGURATION_FILE_PROPERTY);
-        if (null != property) {
+		if (null != property) {
             file = new File(property);
 
             if (file.exists()) {
@@ -807,7 +807,10 @@ public class Transaction
         catch(Exception exception) {
             exception.printStackTrace();
         }*/
-      //  TestSuite main = new Transaction( "Transaction Test");
+		//org.apache.log4j.BasicConfigurator.configure();
+		//org.apache.log4j.BasicConfigurator.disableAll();
+		//tests.VerboseStream.verbose = true;
+        //TestSuite main = new Transaction( "Transaction Test", args[0]);
         
         //junit.textui.TestRunner.run(main);
     }

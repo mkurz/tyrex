@@ -2747,7 +2747,7 @@ class TransactionTestSuite
                     }
                 } 
                 catch (SystemException e) {
-                    if (!e.getMessage().endsWith(forceRollbackString)) {
+					if (-1 == e.getMessage().indexOf(forceRollbackString)) {
                         throw e;
                     }
                 }
@@ -2757,6 +2757,26 @@ class TransactionTestSuite
                     stream.writeVerbose("Rollback exception not thrown");
                     return false;
                 }
+
+				if (null != completionException[0]) {
+					throw completionException[0];    
+				}
+		
+				if (commit && (completionCalled[0] == -1)) {
+					stream.writeVerbose("Synchronization beforeCompletion method not called");    
+					return false;
+				}
+
+				if (!commit && (completionCalled[0] != -1)) {
+					stream.writeVerbose("Synchronization beforeCompletion method called");    
+					return false;
+				}
+		
+				if (isBeforeCompletionFailure &&
+					(completionCalled[0] == 1)) {
+					stream.writeVerbose("Transaction not marked for rollback during beforeCompletion");    
+					return false;
+				}
             } 
             else {
                 try {
@@ -2765,25 +2785,10 @@ class TransactionTestSuite
                     }
                 } 
                 catch (SystemException e) {
-                    if (!e.getMessage().endsWith(forceRollbackString)) {
+					if (-1 == e.getMessage().indexOf(forceRollbackString)) {
                         throw e;
                     }
                 }
-            }
-            
-            if (null != completionException[0]) {
-                throw completionException[0];    
-            }
-    
-            if (completionCalled[0] == -1) {
-                stream.writeVerbose("Synchronization beforeCompletion method not called");    
-                return false;
-            }
-    
-            if (isBeforeCompletionFailure &&
-                (completionCalled[0] == 1)) {
-                stream.writeVerbose("Transaction not marked for rollback during beforeCompletion");    
-                return false;
             }
             
             if (completionCalled[1] == -1) {
@@ -3011,8 +3016,13 @@ class TransactionTestSuite
                 return false;
             }
     
-            if (completionCalled[0] == -1) {
+            if (commit && (completionCalled[0] == -1)) {
                 stream.writeVerbose("Synchronization beforeCompletion method not called");    
+                return false;
+            }
+
+			if (!commit && (completionCalled[0] != -1)) {
+                stream.writeVerbose("Synchronization beforeCompletion method called");    
                 return false;
             }
     
@@ -3629,11 +3639,7 @@ class TransactionTestSuite
                     }
 
                     public void beforeCompletion() {
-                        try {
-                            synchronizationStatus[ 0 ] = transactionManager.getStatus();
-                        } catch ( Exception e ) {
-                            synchronizationException[ 0 ] = e;
-                        }
+                        synchronizationStatus[ 0 ] = 0;
                     }
                 } );
         
@@ -3645,17 +3651,11 @@ class TransactionTestSuite
             throw synchronizationException[0];    
         }
 
-        if ( -1 == synchronizationStatus[0]) {
-            stream.writeVerbose( "Before completion method not called" );
+        if ( -1 != synchronizationStatus[0]) {
+            stream.writeVerbose( "Before completion method called" );
             return false;
         }
         
-        if ( ( synchronizationStatus[ 0 ] != Status.STATUS_ROLLING_BACK ) ) {
-            stream.writeVerbose( "BeforeCompletion called with incorrect status - " + 
-                                 synchronizationStatus[ 0 ] );
-            return false; 
-        }
-
         if ( -1 == synchronizationStatus[ 1 ] ) {
             stream.writeVerbose( "After completion method not called" );
             return false;
@@ -3836,7 +3836,7 @@ class TransactionTestSuite
             }
     
             if (used1PC && 
-                 (synchronizationStatus[0] != Status.STATUS_COMMITTING)) {
+                 (synchronizationStatus[0] != Status.STATUS_ACTIVE)) {
                 stream.writeVerbose("BeforeCompletion - One phase commit called with incorrect status - " + 
                                      synchronizationStatus[0]);
                 return false; 
