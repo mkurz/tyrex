@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Logger.java,v 1.8 2001/02/23 19:23:13 jdaniel Exp $
+ * $Id: Logger.java,v 1.9 2001/02/23 21:42:54 jdaniel Exp $
  */
 
 
@@ -64,7 +64,7 @@ import org.apache.log4j.FileAppender;
  * post-mortem analysis.
  *
  * @author <a href="jdaniel@intalio.com">Jerome DANIEL</a>
- * @version $Revision: 1.8 $ $Date: 2001/02/23 19:23:13 $
+ * @version $Revision: 1.9 $ $Date: 2001/02/23 21:42:54 $
  */
 public class Logger
 {
@@ -80,9 +80,7 @@ public class Logger
 
     public static final Category tm;
     
-    public static final Category tools;
-    
-    public static final Category util;
+    public static final Category tools;   
     
     public static final Appender appender;
 
@@ -105,7 +103,6 @@ public class Logger
         server = Category.getInstance( "tyrex.server" );
         tm = Category.getInstance( "tyrex.tm" );
         tools = Category.getInstance( "tyrex.tools" );
-        util = Category.getInstance( "tyrex.util" );
         
          if ( !tyrex.tm.Tyrex.log() )
          {        
@@ -118,7 +115,6 @@ public class Logger
             server.addAppender( nullAppender );
             tm.addAppender( nullAppender );
             tools.addAppender( nullAppender );
-            util.addAppender( nullAppender );
          }
         else
         {
@@ -131,7 +127,6 @@ public class Logger
             server.addAppender( appender );
             tm.addAppender( appender );
             tools.addAppender( appender );
-            util.addAppender( appender );
         }
     }
 
