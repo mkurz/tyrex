@@ -40,7 +40,7 @@
  *
  * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionDomainImpl.java,v 1.2 2001/03/02 03:24:27 arkin Exp $
+ * $Id: TransactionDomainImpl.java,v 1.3 2001/03/02 19:01:34 arkin Exp $
  */
 
 
@@ -66,6 +66,7 @@ import javax.transaction.xa.Xid;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.XAException;
 import tyrex.tm.DomainConfig;
+import tyrex.tm.DomainMetrics;
 import tyrex.tm.Heuristic;
 import tyrex.tm.TransactionDomain;
 import tyrex.tm.TransactionInterceptor;
@@ -89,7 +90,7 @@ import tyrex.util.Configuration;
  * domain.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $ $Date: 2001/03/02 03:24:27 $
+ * @version $Revision: 1.3 $ $Date: 2001/03/02 19:01:34 $
  */
 public class TransactionDomainImpl
     extends TransactionDomain
@@ -221,6 +222,12 @@ public class TransactionDomainImpl
 
 
     /**
+     * Transaction domain metrics.
+     */
+    private final DomainMetrics            _metrics;
+
+
+    /**
      * Constructs a new transaction domain.
      *
      * @param domainName The transaction domain name
@@ -241,6 +248,7 @@ public class TransactionDomainImpl
         _maximum = ( config == null ? 0 : config.getMaximum() );
         _category = Category.getInstance( "tyrex." + _domainName );
         _hashTable = new TransactionImpl[ TABLE_SIZE ];
+        _metrics = new DomainMetrics();
 
         // Obtain a transaction journal with the domain name.
         _journal = ( config == null ? null : config.getJournal() );
@@ -462,6 +470,11 @@ public class TransactionDomainImpl
             _hashTable[ index ] = entry._nextEntry;
             terminateThreads( entry );
             --_txCount;
+            try {
+                _metrics.changeActive( - 1 );
+            } catch ( IllegalStateException except ) {
+                _category.error( "Internal error", except );
+            }
             // We notify any blocking thread that it's able to create
             // a new transaction.
             notify();
@@ -473,6 +486,11 @@ public class TransactionDomainImpl
                     entry._nextEntry = next._nextEntry;
                     terminateThreads( next );
                     --_txCount;
+                    try {
+                        _metrics.changeActive( - 1 );
+                    } catch ( IllegalStateException except ) {
+                        _category.error( "Internal error", except );
+                    }
                     // We notify any blocking thread that it's able to create
                     // a new transaction.
                     notify();
@@ -537,6 +555,12 @@ public class TransactionDomainImpl
             writer.println( "  Started " + Debug.fromClock( tx._started ) +
                             " time-out " + Debug.fromClock( tx._timeout ) );
         }
+    }
+
+
+    public DomainMetrics getDomainMetrics()
+    {
+        return _metrics;
     }
 
 
@@ -643,6 +667,7 @@ public class TransactionDomainImpl
                 entry._nextEntry = newTx;
             }
             ++_txCount;
+            _metrics.changeActive( 1 );
         }
         
         // If this transaction times out before any other transaction,
@@ -732,6 +757,7 @@ public class TransactionDomainImpl
                 entry._nextEntry = newTx;
             }
             ++_txCount;
+            _metrics.changeActive( 1 );
         }
 
         // If this transaction times out before any other transaction,
@@ -795,6 +821,11 @@ public class TransactionDomainImpl
                     return;
             }
             --_txCount;
+            try {
+                _metrics.changeActive( - 1 );
+            } catch ( IllegalStateException except ) {
+                _category.error( "Internal error", except );
+            }
 
             // If we reach this point, entry points to the transaction we
             // just removed.
@@ -987,13 +1018,13 @@ public class TransactionDomainImpl
     }
 
 
-    protected void notifyCompletion( Xid xid, int heuristic )
+    protected void notifyCompletion( TransactionImpl tx, int heuristic )
     {
-        if ( xid == null )
-            throw new IllegalArgumentException( "Argument xid is null" );
+        if ( tx == null )
+            throw new IllegalArgumentException( "Argument tx is null" );
         for ( int i = _interceptors.length ; i-- > 0 ; ) {
 	    try {
-		_interceptors[ i ].completed( xid, heuristic );
+		_interceptors[ i ].completed( tx._xid, heuristic );
             } catch ( Throwable thrw ) {
                 _category.error( "Interceptor " + _interceptors[ i ] + " reported error", thrw );
             }
@@ -1001,34 +1032,36 @@ public class TransactionDomainImpl
     }
 
 
-    protected void notifyCommit( Xid xid )
+    protected void notifyCommit( TransactionImpl tx )
 	throws RollbackException
     {
-        if ( xid == null )
-            throw new IllegalArgumentException( "Argument xid is null" );
+        if ( tx == null )
+            throw new IllegalArgumentException( "Argument tx is null" );
         for ( int i = _interceptors.length ; i-- > 0 ; ) {
 	    try {
-		_interceptors[ i ].commit( xid );
+		_interceptors[ i ].commit( tx._xid );
 	    } catch ( RollbackException except ) {
 		throw except;
             } catch ( Throwable thrw ) {
                 _category.error( "Interceptor " + _interceptors[ i ] + " reported error", thrw );
             }
 	}
+        _metrics.recordCommitted( (int) ( Clock.clock() - tx._started ) );
     }
 
 
-    protected void notifyRollback( Xid xid )
+    protected void notifyRollback( TransactionImpl tx )
     {
-        if ( xid == null )
-            throw new IllegalArgumentException( "Argument xid is null" );
+        if ( tx == null )
+            throw new IllegalArgumentException( "Argument tx is null" );
         for ( int i = _interceptors.length ; i-- > 0 ; ) {
 	    try {
-		_interceptors[ i ].rollback( xid );
+		_interceptors[ i ].rollback( tx._xid );
             } catch ( Throwable thrw ) {
                 _category.error( "Interceptor " + _interceptors[ i ] + " reported error", thrw );
             }
 	}
+        _metrics.recordRolledback( (int) ( Clock.clock() - tx._started ) );
     }
 
 
@@ -1156,28 +1189,27 @@ public class TransactionDomainImpl
                             if ( _nextTimeout <= clock ) {
                                 nextTimeout = 0;
                                 for ( int i = _hashTable.length ; i-- > 0 ; ) {
-                                    entry = _hashTable[ i ];
-                                    while ( entry != null ) {
-                                        if ( entry._timeout <= clock ) {
-                                            _hashTable[ i ] = entry._nextEntry;
-                                            terminateThreads( entry );
-                                            entry = _hashTable[ i ];
-                                        } else if ( nextTimeout == 0 || nextTimeout > entry._timeout )
-                                            nextTimeout = entry._timeout;
-                                    }
-                                    if ( entry != null ) {
-                                        next = entry._nextEntry;
-                                        while ( next != null ) {
-                                            if ( entry._timeout <= clock ) {
+                                    entry = null;
+                                    next = _hashTable[ i ];
+                                    while ( next != null ) {
+                                        if ( next._timeout <= clock ) {
+                                            if ( entry == null )
+                                                _hashTable[ i ] = next._nextEntry;
+                                            else
                                                 entry._nextEntry = next._nextEntry;
-                                                terminateThreads( next );
-                                                next = next._nextEntry;
-                                            } else {
-                                                if ( nextTimeout == 0 || nextTimeout > next._timeout )
-                                                    nextTimeout = next._timeout;
-                                                entry = next;
-                                                next = next._nextEntry;
+                                            terminateThreads( next );
+                                            --_txCount;
+                                            try {
+                                                _metrics.changeActive( - 1 );
+                                            } catch ( IllegalStateException except ) {
+                                                _category.error( "Internal error", except );
                                             }
+                                            next = next._nextEntry;
+                                        } else {
+                                            if ( nextTimeout == 0 || nextTimeout > next._timeout )
+                                                nextTimeout = next._timeout;
+                                            entry = next;
+                                            next = next._nextEntry;
                                         }
                                     }
                                 }
@@ -1279,6 +1311,8 @@ public class TransactionDomainImpl
             _category.info( "Transaction recovery for domain " + _domainName + ": " +
                             commit + " committed, " + rollback + " rolled back" );
         }
+        _metrics.reset();
+        _metrics.changeActive( _txCount );
     }
 
 
@@ -1358,6 +1392,7 @@ public class TransactionDomainImpl
             entry._nextEntry = newTx;
         }
         ++_txCount;
+        _metrics.changeActive( 1 );
     }
 
 

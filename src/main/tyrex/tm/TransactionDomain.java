@@ -40,7 +40,7 @@
  *
  * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionDomain.java,v 1.7 2001/03/02 03:24:27 arkin Exp $
+ * $Id: TransactionDomain.java,v 1.8 2001/03/02 19:01:33 arkin Exp $
  */
 
 
@@ -69,7 +69,7 @@ import tyrex.tm.impl.TransactionDomainImpl;
  * domain.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.7 $ $Date: 2001/03/02 03:24:27 $
+ * @version $Revision: 1.8 $ $Date: 2001/03/02 19:01:33 $
  */
 public abstract class TransactionDomain
 {
@@ -268,6 +268,14 @@ public abstract class TransactionDomain
      * in this thread to the specified writer.
      */
     public abstract void dumpCurrentTransaction( PrintWriter writer );
+
+
+    /**
+     * Returns the transaction domain metrics.
+     *
+     * @return The transaction domain metrics
+     */
+    public abstract DomainMetrics getDomainMetrics();
 
 
 }

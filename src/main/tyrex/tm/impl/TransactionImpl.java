@@ -40,7 +40,7 @@
  *
  * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionImpl.java,v 1.2 2001/02/28 18:28:25 arkin Exp $
+ * $Id: TransactionImpl.java,v 1.3 2001/03/02 19:01:34 arkin Exp $
  */
 
 
@@ -89,7 +89,7 @@ import tyrex.util.Messages;
  * they are added.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $ $Date: 2001/02/28 18:28:25 $
+ * @version $Revision: 1.3 $ $Date: 2001/03/02 19:01:34 $
  * @see XAResourceHolder
  * @see TransactionManagerImpl
  * @see TransactionDomain
@@ -530,7 +530,7 @@ final class TransactionImpl
 	// Perform the rollback, pass IllegalStateException to
 	// the caller, ignore the returned heuristics.
 	try {
-            _txDomain.notifyRollback( _xid );
+            _txDomain.notifyRollback( this );
 	    internalRollback();
         }
         finally {
@@ -1262,7 +1262,7 @@ final class TransactionImpl
 
 	_status = STATUS_COMMITTED;
 	_heuristic = normalize( _heuristic );
-	_txDomain.notifyCompletion( _xid, _heuristic );
+	_txDomain.notifyCompletion( this, _heuristic );
 
         // We record the transaction only if two-phase commit,
         // or we didn't expect the heuristic decision.
@@ -1415,7 +1415,7 @@ final class TransactionImpl
         
 	_status = STATUS_ROLLEDBACK;
 	_heuristic = normalize( _heuristic );
-	_txDomain.notifyCompletion( _xid, _heuristic );
+	_txDomain.notifyCompletion( this, _heuristic );
 
         // We record the transaction only if two-phase commit,
         // or we didn't expect the heuristic decision, or
@@ -2280,7 +2280,7 @@ final class TransactionImpl
                SecurityException, SystemException
     {
         try {
-            _txDomain.notifyCommit( _xid );
+            _txDomain.notifyCommit( this );
             
             if ( !canUseOnePhaseCommit )
                 // This is two phase commit. Notify the domain about request
@@ -2299,7 +2299,7 @@ final class TransactionImpl
         case Heuristic.READONLY:
             try {
                 // Read only resource does not need either commit, nor rollback
-                _txDomain.notifyCompletion( _xid, _heuristic );
+                _txDomain.notifyCompletion( this, _heuristic );
                 _status = STATUS_COMMITTED;
                 break;
             } finally { 

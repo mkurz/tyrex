@@ -55,7 +55,7 @@ package tyrex.resource;
  * in the pool, etc.
  *
  * @author <a href="jdaniel@intalio.com">Jerome Daniel</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 public final class PoolMetrics
 {
@@ -326,6 +326,23 @@ public final class PoolMetrics
             throw new IllegalStateException( "Available number of connections falls below zero" );
         }
         _available = change;
+    }
+
+
+    /**
+     * Called to reset this metrics object.
+     */
+    public synchronized void reset()
+    {
+        _accumUsedTime = 0;
+        _accumUnusedTime = 0;
+        _accumCreated = 0;
+        _accumUsed = 0;
+        _accumUnused = 0;
+        _accumDiscarded = 0;
+        _accumErrors = 0;
+        _total = 0;
+        _available = 0;
     }
 
 
