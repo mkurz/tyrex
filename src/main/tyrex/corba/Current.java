@@ -48,7 +48,7 @@ package tyrex.corba;
  * This is the current interface implementation. This code is extracted from the OpenORB OTS source code.
  * 
  * @author <a href="mailto:jdaniel@intalio.com">Jerome Daniel &lt;daniel@intalio.com&gt;</a>
- * @version $Revision: 1.8 $ $Date: 2001/09/22 00:04:56 $ 
+ * @version $Revision: 1.9 $ $Date: 2004/04/21 03:52:27 $ 
  */
 public class Current extends org.omg.CORBA.LocalObject implements org.omg.CosTransactions.Current				     
 {
@@ -557,7 +557,7 @@ public class Current extends org.omg.CORBA.LocalObject implements org.omg.CosTra
         public void print( String from, String msg )
         { 
         	if ( tyrex.util.Configuration.verbose )
-                	tyrex.util.Logger.ots.info(from + ": " + msg );            
+                	tyrex.util.logging.Logger.ots.info(from + ": " + msg );            
         }
         
         /**
@@ -565,7 +565,7 @@ public class Current extends org.omg.CORBA.LocalObject implements org.omg.CosTra
          */
         public void fatal( String from, String msg )
         {
-            tyrex.util.Logger.ots.warn(from + ": " + msg );
+			tyrex.util.logging.Logger.ots.warn(from + ": " + msg );
             throw new org.omg.CORBA.INTERNAL(msg);
         }
         

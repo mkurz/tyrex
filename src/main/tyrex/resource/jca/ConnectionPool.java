@@ -47,41 +47,40 @@ package tyrex.resource.jca;
 
 
 import java.io.PrintWriter;
-import java.util.Set;
+import java.lang.reflect.Array;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
-import java.lang.reflect.Array;
-import org.apache.log4j.Category;
+import java.util.Set;
+
 import javax.resource.ResourceException;
-import javax.resource.NotSupportedException;
-import javax.resource.spi.ManagedConnection;
-import javax.resource.spi.ConnectionRequestInfo;
 import javax.resource.spi.ConnectionEvent;
 import javax.resource.spi.ConnectionEventListener;
-import javax.resource.spi.ManagedConnectionFactory;
 import javax.resource.spi.ConnectionManager;
+import javax.resource.spi.ConnectionRequestInfo;
 import javax.resource.spi.LocalTransaction;
-import javax.resource.spi.ResourceAllocationException;
+import javax.resource.spi.ManagedConnection;
+import javax.resource.spi.ManagedConnectionFactory;
 import javax.resource.spi.ManagedConnectionMetaData;
-import javax.resource.spi.ApplicationServerInternalException;
-import javax.security.auth.Subject;
+import javax.resource.spi.ResourceAllocationException;
 import javax.transaction.xa.XAResource;
-import tyrex.tm.TyrexTransactionManager;
-import tyrex.tm.impl.ThreadContext;
-import tyrex.resource.Resource;
-import tyrex.resource.PoolMetrics;
+
 import tyrex.resource.PoolLimits;
+import tyrex.resource.PoolMetrics;
+import tyrex.resource.Resource;
 import tyrex.services.Clock;
 import tyrex.services.DaemonMaster;
+import tyrex.tm.TyrexTransactionManager;
+import tyrex.tm.impl.ThreadContext;
 import tyrex.util.Primes;
-import tyrex.util.LoggerPrintWriter;
+import tyrex.util.logging.Category;
+import tyrex.util.logging.LoggerPrintWriter;
 
 
 /**
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.9 $
+ * @version $Revision: 1.10 $
  */
 final class ConnectionPool
     extends PoolMetrics

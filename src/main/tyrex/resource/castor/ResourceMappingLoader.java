@@ -45,8 +45,6 @@
 
 package tyrex.resource.castor;
 
-import java.io.PrintWriter;
-import org.apache.log4j.Category;
 import org.exolab.castor.mapping.ClassDescriptor;
 import org.exolab.castor.mapping.FieldDescriptor;
 import org.exolab.castor.mapping.FieldHandler;
@@ -55,7 +53,10 @@ import org.exolab.castor.mapping.ValidityException;
 import org.exolab.castor.mapping.xml.FieldMapping;
 import org.exolab.castor.xml.XMLMappingLoader;
 import org.exolab.castor.xml.util.XMLFieldDescriptorImpl;
+
 import tyrex.resource.ResourceConfig;
+import tyrex.util.logging.Category;
+import tyrex.util.logging.Priority;
 
 /////////////////////////////////////////////////////////////////////
 // ResourceMappingLoader
@@ -75,7 +76,7 @@ public final class ResourceMappingLoader
 	/**
 	 * Logging category
 	 */
-	static final Category CATEGORY = tyrex.util.Logger.castor; //Category.getInstance("tyrex.resource.castor");
+	static final Category CATEGORY = tyrex.util.logging.Logger.castor; //Category.getInstance("tyrex.resource.castor");
 
 	/**
 	 * The new class to create a class descriptor for
@@ -88,7 +89,7 @@ public final class ResourceMappingLoader
     public ResourceMappingLoader()
         throws MappingException {
         super(null, null);
-   CATEGORY.setPriority(org.apache.log4j.Priority.ERROR );
+   		CATEGORY.setPriority(Priority.ERROR );
 		_newClass = null;
     }
     

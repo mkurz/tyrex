@@ -49,7 +49,6 @@ package tyrex.resource;
 import java.util.HashMap;
 import java.util.Iterator;
 import tyrex.tm.TransactionDomain;
-import tyrex.util.Logger;
 
 /**
  * Represents a collection of installed resources. Resources are
@@ -71,7 +70,7 @@ import tyrex.util.Logger;
  * client connection factory available to the application.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.8 $
+ * @version $Revision: 1.9 $
  */
 public final class Resources
 {

@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Initializer.java,v 1.8 2001/08/31 20:18:59 jdaniel Exp $
+ * $Id: Initializer.java,v 1.9 2004/04/21 03:52:27 metaboss Exp $
  *
  * Date         Author  Changes
  */
@@ -103,7 +103,7 @@ public class Initializer extends org.omg.CORBA.LocalObject implements org.omg.Po
    */
   public void fatal( String from, String msg )
   {
-      tyrex.util.Logger.ots.warn(from + ": " + msg );
+      tyrex.util.logging.Logger.ots.warn(from + ": " + msg );
       throw new org.omg.CORBA.INTERNAL(msg);
   }
   
@@ -112,7 +112,7 @@ public class Initializer extends org.omg.CORBA.LocalObject implements org.omg.Po
    */
   public void exception( String from, String msg, java.lang.Exception ex )
   {
-      tyrex.util.Logger.ots.warn("EXCEPTION => " + from + ": " + msg );            
+      tyrex.util.logging.Logger.ots.warn("EXCEPTION => " + from + ": " + msg );            
   }
 }
 

@@ -160,7 +160,7 @@ public class ClientInterceptor
          */
         public void fatal( String from, String msg )
         {
-            tyrex.util.Logger.ots.warn(from + ": " + msg );
+            tyrex.util.logging.Logger.ots.warn(from + ": " + msg );
             throw new org.omg.CORBA.INTERNAL(msg);
         }
 }

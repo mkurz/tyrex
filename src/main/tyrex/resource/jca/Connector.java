@@ -46,43 +46,43 @@
 package tyrex.resource.jca;
 
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.StringTokenizer;
 import java.util.Vector;
-import java.util.jar.JarFile;
 import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
+
 import javax.resource.spi.ManagedConnectionFactory;
-import org.xml.sax.InputSource;
-import org.apache.log4j.Category;
+
 import org.exolab.castor.mapping.Mapping;
 import org.exolab.castor.mapping.MappingException;
+import org.exolab.castor.xml.MarshalException;
 import org.exolab.castor.xml.Unmarshaller;
 import org.exolab.castor.xml.ValidationException;
-import org.exolab.castor.xml.MarshalException;
-import org.exolab.castor.xml.util.DefaultNaming;
 import org.exolab.castor.xml.util.ClassDescriptorResolverImpl;
-import tyrex.tm.TransactionDomain;
-import tyrex.tm.TyrexTransactionManager;
-import tyrex.resource.ResourceConfig;
+import org.exolab.castor.xml.util.DefaultNaming;
+import org.xml.sax.InputSource;
+
 import tyrex.resource.Resource;
+import tyrex.resource.ResourceConfig;
 import tyrex.resource.ResourceException;
-import tyrex.resource.PoolMetrics;
 import tyrex.resource.jca.dd.DDConfigProperty;
 import tyrex.resource.jca.dd.DDConnector;
 import tyrex.resource.jca.dd.DDResourceAdapter;
-import tyrex.util.Logger;
+import tyrex.tm.TransactionDomain;
+import tyrex.tm.TyrexTransactionManager;
+import tyrex.util.logging.Category;
+import tyrex.util.logging.Logger;
 
 
 /**
  * 
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.13 $
+ * @version $Revision: 1.14 $
  */
 public class Connector
     extends ResourceConfig
