@@ -1300,6 +1300,11 @@ class TransactionTestSuite
             TransactionManager transactionManager = null;
             
             try {
+                if (!_group.canTestFailedDelist()) {
+                    stream.writeVerbose("Unable to test rollback with resource failure.");
+                    return;    
+                }
+
                 try {
                     
                     // get the transaction manager
@@ -1946,7 +1951,7 @@ class TransactionTestSuite
             int result;
             
             try {
-                if (!_group.hasMultiple()) {
+                if (!_group.canTestMultiplePerformance()) {
           
                     stream.writeVerbose("Unable to test one-phase commit optimization using multiple data sources.");
                     return;
@@ -2034,7 +2039,7 @@ class TransactionTestSuite
             int result;
             
             try {
-                if (!_group.hasMultiple()) {
+                if (!_group.canTestMultiplePerformance()) {
                     stream.writeVerbose("Unable to test two-phase commit performance.");
                     return;
                 }
@@ -2107,6 +2112,11 @@ class TransactionTestSuite
             int result;
             
             try {
+                if (!_group.canTestPerformance()) {
+                    stream.writeVerbose("Unable to test two-phase commit performance.");
+                    return;
+                }
+
                 try {
                     
                     // get the transaction manager
@@ -2176,6 +2186,11 @@ class TransactionTestSuite
             int result;
             
             try {
+                if (!_group.canTestPerformance()) {
+                    stream.writeVerbose("Unable to test rollback performance.");
+                    return;
+                }
+
                 try {
                     
                     // get the transaction manager
@@ -2253,12 +2268,14 @@ class TransactionTestSuite
         Entry entry;
         ArrayList entries;
         int i;
+        long time;
         
         stream.writeVerbose("Test rollback with resource delist (TMFAIL). This test may cause the database to hang so it may be preferable to set the timeout for database locks to a small number");
                 
         entries = getEntries(group, false, stream);
 
         insert(entries, stream);
+        time = 0;
 
         try {
             transactionManager.begin();
@@ -2273,6 +2290,11 @@ class TransactionTestSuite
     
             for (i = 0; i < entries.size(); ++i) {
                 entry = (Entry)entries.get(i);
+
+                if (entry._dataSourceEntry.getFailSleepTime() < 0) {
+                    continue;    
+                }
+
                 transactionManager.getTransaction().delistResource(entry._xaResource, XAResource.TMFAIL);
 
                 //System.out.println("old xa connection " + entry.xaConnection);
@@ -2290,7 +2312,9 @@ class TransactionTestSuite
                 entry._xaResource.setTransactionTimeout(200);
                 //System.out.println("new xa connection " + entry.xaConnection);
                 //System.out.println("new xa resource " + entry.xaResource);
-    
+
+                time += entry._dataSourceEntry.getFailSleepTime();
+                
             }
     
             // the status should be rollback
@@ -2298,7 +2322,11 @@ class TransactionTestSuite
                 stream.writeVerbose("Transaction not marked for rollback");    
                 return false;
             }
-    
+
+            if (time > 0) {
+                Thread.sleep(time);
+            }
+
             if (!transactionBoundary(transactionManager, stream, false)) {
                 return false;
             }
@@ -3177,10 +3205,15 @@ class TransactionTestSuite
         TransactionManager transactionManager = null;
         Connection connection;
         Statement stmt;
-
+        
         // get the transaction manager
         transactionManager = _txDomain.getTransactionManager();
         
+        if (null != transactionManager.getTransaction()) {
+            //stream.writeVerbose( "Rolling back current transaction" );
+            //transactionManager.rollback();    
+        }
+
         transactionManager.begin();
 
         // enlist the xa resource
@@ -3528,6 +3561,10 @@ class TransactionTestSuite
     
             for (i = 0; i < numberOfEntries; ++i) {
                 entry = (Entry)entries.get(i);
+
+                if (!entry._dataSourceEntry.getPerformanceTest()) {
+                    continue;    
+                }
     
                 // enlist the xa resource
                 if (!transactionManager.getTransaction().enlistResource(entry._xaResource)) {

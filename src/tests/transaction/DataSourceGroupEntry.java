@@ -98,6 +98,58 @@ final class DataSourceGroupEntry {
     }
 
     /**
+     * Return true if the performance test can be run.
+     *
+     * @return true if the performance test can be run
+     */
+    boolean canTestFailedDelist() {
+        for (int i = _datasourceEntries.size(); --i >= 0;) {
+            if (((DataSourceEntry)_datasourceEntries.get(i)).getFailSleepTime() >= 0) {
+                return true;    
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Return true if the performance test can be run.
+     *
+     * @return true if the performance test can be run
+     */
+    boolean canTestPerformance() {
+        for (int i = _datasourceEntries.size(); --i >= 0;) {
+            if (((DataSourceEntry)_datasourceEntries.get(i)).getPerformanceTest()) {
+                return true;    
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Return true if the performance test can be run on multiple entries.
+     *
+     * @return true if the performance test can be run on multiple entries.
+     */
+    boolean canTestMultiplePerformance() {
+        boolean one;
+
+        one = false;
+
+        for (int i = _datasourceEntries.size(); --i >= 0;) {
+            if (((DataSourceEntry)_datasourceEntries.get(i)).getPerformanceTest()) {
+                if (one) {
+                    return true;    
+                }
+                one = true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Return the group name (optional)
      *
      * @return the group name
