@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionManagerImpl.java,v 1.16 2001/09/24 18:29:43 mohammed Exp $
+ * $Id: TransactionManagerImpl.java,v 1.17 2001/09/25 02:07:12 mohammed Exp $
  */
 
 
@@ -76,7 +76,7 @@ import tyrex.util.Messages;
  * transaction server.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.16 $ $Date: 2001/09/24 18:29:43 $
+ * @version $Revision: 1.17 $ $Date: 2001/09/25 02:07:12 $
  * @see Tyrex#recycleThread
  * @see TransactionDomain
  * @see TransactionImpl
@@ -128,18 +128,24 @@ final class TransactionManagerImpl
             }
         } else
             tx = _txDomain.createTransaction( null, 0 );
-        System.out.println(Thread.currentThread() + "TransactionManager " + toString() + "begin " + tx);    
+        synchronized(System.out) {
+            System.out.println(Thread.currentThread() + "TransactionManager " + toString() + " begin " + tx);    
+        }
 
         if ( _txDomain.enlistThread( tx, context, thread ) ) {
             // If there are any resources associated with the thread,
             // we need to enlist them with the transaction.
             resources = context.getResources();
-            System.out.println(Thread.currentThread() + "TransactionManager " + toString() + "enlist " + resources + " " + (null == resources ? "null" : Integer.toString(resources.length)));    
+            synchronized(System.out) {
+                System.out.println(Thread.currentThread() + "TransactionManager " + toString() + " enlist " + resources + " " + (null == resources ? "null" : Integer.toString(resources.length)));    
+            }
             if ( resources != null )
                 enlistResources( tx, resources );
         }
         else {
-            System.out.println(Thread.currentThread() + "TransactionManager " + toString() + "failed to enlist thread ");    
+            synchronized(System.out) {
+                System.out.println(Thread.currentThread() + "TransactionManager " + toString() + " failed to enlist thread ");    
+            }
         }
     }
 
@@ -158,7 +164,9 @@ final class TransactionManagerImpl
         if ( tx == null )
             throw new IllegalStateException( Messages.message( "tyrex.tx.inactive" ) );
         
-        System.out.println(Thread.currentThread() + "TransactionManager " + toString() + "commit " + tx);    
+        synchronized(System.out) {
+            System.out.println(Thread.currentThread() + "TransactionManager " + toString() + " commit " + tx);    
+        }
         tx.commit();
         
         _txDomain.delistThread( context, thread );
@@ -177,7 +185,9 @@ final class TransactionManagerImpl
         tx = context._tx;
         if ( tx == null )
             throw new IllegalStateException( Messages.message( "tyrex.tx.inactive" ) );
-        System.out.println(Thread.currentThread() + "TransactionManager " + toString() + "rollback " + tx);    
+        synchronized(System.out) {
+            System.out.println(Thread.currentThread() + "TransactionManager " + toString() + " rollback " + tx);    
+        }
         tx.rollback();
         
         _txDomain.delistThread( context, thread );
@@ -226,7 +236,9 @@ final class TransactionManagerImpl
             if ( txImpl._status != Status.STATUS_ACTIVE && txImpl._status != Status.STATUS_MARKED_ROLLBACK )
                 throw new InvalidTransactionException( Messages.message( "tyrex.tx.inactive" ) );
             try {
-                System.out.println(Thread.currentThread() + "TransactionManager " + toString() + "resume " + tx);    
+                synchronized(System.out) {
+                    System.out.println(Thread.currentThread() + "TransactionManager " + toString() + " resume " + tx);    
+                }
                 ( (TransactionImpl) txImpl.getTopLevel() ).resumeAndEnlistResources( context.getResources() );
             } catch ( RollbackException except ) { }
             _txDomain.enlistThread( txImpl, context, thread );
@@ -264,7 +276,9 @@ final class TransactionManagerImpl
                     // the resources associated with the thread is
                     // a subset of the resources associated with the 
                     // transaction.
-                    System.out.println(Thread.currentThread() + "TransactionManager " + toString() + "suspend " + tx);    
+                    synchronized(System.out) {
+                        System.out.println(Thread.currentThread() + "TransactionManager " + toString() + " suspend " + tx);    
+                    }
                     tx.suspendResources();
                 } catch ( SystemException except ) { }
                 return tx;
@@ -364,7 +378,9 @@ final class TransactionManagerImpl
         // for the current thread.
         // For the resources all transaction are flat: we always
         // enlist with the top level transaction.
-        System.out.println(Thread.currentThread() + "TransactionManager " + toString() + "enlist resournce " + xaResource);    
+        synchronized(System.out) {
+            System.out.println(Thread.currentThread() + "TransactionManager " + toString() + " enlist resournce " + xaResource);    
+        }
         context.add( xaResource );
         tx = context._tx;
         if ( tx != null ) {
@@ -379,7 +395,9 @@ final class TransactionManagerImpl
             }
         }
         else {
-            System.out.println(Thread.currentThread() + "TransactionManager " + toString() + "no tx to enlist " + xaResource);    
+            synchronized(System.out) {
+                System.out.println(Thread.currentThread() + "TransactionManager " + toString() + " no tx to enlist " + xaResource);    
+            }
         }
     }
 

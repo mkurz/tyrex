@@ -83,7 +83,7 @@ import tyrex.util.LoggerPrintWriter;
 /**
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.12 $
+ * @version $Revision: 1.13 $
  */
 final class ConnectionPool
     extends PoolMetrics
@@ -380,18 +380,19 @@ final class ConnectionPool
         XAResource        xaResource;
         PoolEntry         entry;
 
-		System.out.println(Thread.currentThread() + "Retrieving connection " + toString() + " user " + user + " password " + password);    
-
         if ( _destroyed )
             throw new SQLException( "Connection pool has been destroyed" );
         entry = allocate( user, password );
+		synchronized(System.out) {
+			System.out.println(Thread.currentThread() + "Retrieving connection " + toString() + " " + ((entry._xaResource != null) ? "enlist " + entry._xaResource : " no xa resource"));
+			new Throwable().printStackTrace();
+		}
         // If connection supports XA resource, we need to enlist
         // it in this or any future transaction. If this fails,
         // the connection is unuseable.
         if ( entry._xaResource != null ) {
             try {
-				System.out.println(Thread.currentThread() + "Enlist connection xa resource " + toString() + " " + entry._xaResource + " in " + _txManager);    
-                _txManager.enlistResource( entry._xaResource );
+				_txManager.enlistResource( entry._xaResource );
             } catch ( Exception except ) {
                 release( entry._pooled, false );
                 throw new SQLException( "Error occured using connection " + entry._pooled + ": " + except );
@@ -401,10 +402,8 @@ final class ConnectionPool
         // the event listener. If we failed, the connection is not
         // useable and we discard it and try again.
         try {
-            connection = entry._pooled.getConnection();
-			System.out.println(Thread.currentThread() + "Retrieving connection " + toString() + " " + connection);    
-            return connection;
-        } catch ( Exception except ) {
+            return entry._pooled.getConnection();
+		} catch ( Exception except ) {
             release( entry._pooled, false );
             throw new SQLException( "Error occured using connection " + entry._pooled + ": " + except );
         }
