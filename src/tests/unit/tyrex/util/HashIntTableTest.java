@@ -45,6 +45,8 @@
 
 package tyrex.util;
 
+import java.util.Enumeration;
+
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.FileInputStream;
@@ -65,7 +67,7 @@ import junit.extensions.*;
  * documented tests updated accordingly.</p>
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 
 
@@ -90,7 +92,9 @@ public class HashIntTableTest extends TestCase
 
 
     /**
-     * <p></p>
+     * <p>Create an instance.  Populate it, change some of the values
+     * associated with various keys.  Remove instances.  Ensure it
+     * behaves as expected.</p>
      *
      * @result 
      */
@@ -98,6 +102,39 @@ public class HashIntTableTest extends TestCase
     public void testBasicFunctionality()
         throws Exception
     {
+        HashIntTable table = new HashIntTable();
+        assertEquals("Size", 0, table.size());
+        Integer i1 = new Integer(1);
+        Integer i2 = new Integer(2);
+        Integer i3 = new Integer(3);
+        Integer i4 = new Integer(4);
+        table.put(i1, 1);
+        table.put(i2, 2);
+        table.put(i3, 3);
+        assertEquals("Size", 3, table.size());
+        assertEquals("get()", 1, table.get(i1));
+        assertEquals("get()", 2, table.get(i2));
+        assertEquals("get()", 3, table.get(i3));
+        assertEquals("get()", 0, table.get(i4));
+        table.increment(i2, 5);
+        assertEquals("get()", 7, table.get(i2));
+        table.remove(i1);
+        assertEquals("Size", 2, table.size());
+        Enumeration keys = table.keys();
+        assert(keys.hasMoreElements());
+        assertEquals("Key", i2, keys.nextElement());
+        assert(keys.hasMoreElements());
+        assertEquals("Key", i3, keys.nextElement());
+        assert(!keys.hasMoreElements());
+        table = new HashIntTable(10, 999);
+        table.put(i1, 1);
+        table.put(i2, 2);
+        table.put(i3, 3);
+        assertEquals("Size", 3, table.size());
+        assertEquals("get()", 1, table.get(i1));
+        assertEquals("get()", 2, table.get(i2));
+        assertEquals("get()", 3, table.get(i3));
+        assertEquals("get()", 999, table.get(i4));
     }
 
 
