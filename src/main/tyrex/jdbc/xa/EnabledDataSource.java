@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: EnabledDataSource.java,v 1.4 2000/08/31 22:46:01 mohammed Exp $
+ * $Id: EnabledDataSource.java,v 1.5 2000/09/05 18:39:44 mohammed Exp $
  */
 
 
@@ -74,16 +74,19 @@ import javax.naming.spi.ObjectFactory;
  * connection support is also available, but the application must
  * used the designated DataSource interface to obtain them.
  * <p>
+ * The driver class name {@link #setDriverClassName} specifies the
+ * class of the JDBC driver to be loaded.
+ * <p>
+ * The JDBC URL is specified by {@link #setDriverName}.
+ * <p>
  * The supported data source properties are:
  * <pre>
  * driverName          (required)
  * description         (required, default)
- * databaseName        (optional)
  * loginTimeout        (required, default from driver)
+ * driverClassName     (optional) 
  * user                (optional)
  * password            (optional)
- * serverName          (optional)
- * portNumber          (optional)
  * transactionTimeout  (optional, default from driver)
  * isolationLevel      (optional, defaults to serializable)
  * </pre>
@@ -95,8 +98,9 @@ import javax.naming.spi.ObjectFactory;
  * InitialContext    ctx;
  *
  * ds = new EnabledDataSource();
- * ds.setDriverClass( "..." );
- * ds.setDatabaseName( "test" );
+ * ds.setDriverClassName( "..." );
+ * ds.setDriverName( "..." );
+ * ds.setDriverSubname( "..." );
  * ds.setUser( "me" );
  * ds.setPassword( "secret" );
  * ctx = new InitialContext();
@@ -147,30 +151,9 @@ public class EnabledDataSource
 
 
     /**
-     * Holds the name of the particular database on the server.
-     */
-    private String _databaseName;
-
-
-    /**
      * Description of this datasource.
      */
     private String _description = "Enabled DataSource";
-
-
-    /**
-     * Holds the database server name. If null, this is
-     * assumed to be the localhost.
-     */
-    private String _serverName;
-
-
-    /**
-     * Holds the port number where a server is listening.
-     * The default value will open a connection with an
-     * unspecified port.
-     */
-    private int _portNumber = DEFAULT_PORT;
 
 
     /**
@@ -197,14 +180,6 @@ public class EnabledDataSource
 
 
     /**
-     * The default port number. Since we open the connection
-     * without specifying the port if it's the default one,
-     * this value can be meaningless.
-     */
-    private static final int DEFAULT_PORT = 0;
-
-
-    /**
      * Holds the log writer to which all messages should be
      * printed. The default writer is obtained from the driver
      * manager, but it can be specified at the datasource level
@@ -218,8 +193,6 @@ public class EnabledDataSource
      * driver-specific setup (e.g. pools, log writer).
      */
     private transient Driver       _driver;
-
-
 
 
     public EnabledDataSource()
@@ -242,10 +215,13 @@ public class EnabledDataSource
     {
 	Connection conn;
 	Properties info;
-	String     url;
-
+    
 	if ( _driver == null ) {
-	    try {
+
+        if ( null == _driverName ) {
+            throw new SQLException ( "The driver name is not set." );
+        }
+        try {
 		if ( _driverClassName != null )
 		    Class.forName( _driverClassName );
 	    } catch ( ClassNotFoundException except ) {
@@ -275,33 +251,10 @@ public class EnabledDataSource
 	info.put( "user", user );
 	info.put( "password", password );
 
-	// Construct the URL suitable for this driver.
-	url = _driverName + ":";
-
-	if ( _serverName != null ) {
-	    if ( _portNumber == DEFAULT_PORT )
-		url = url + "//" + _serverName + "/";
-	    else
-		url = url + "//" + _serverName + ":" + _portNumber + "/";
-	} else if ( _portNumber != DEFAULT_PORT )
-	    url = url + "//localhost:" + _portNumber + "/";
-	
-	// Database name must be present for this driver.
-	if ( _databaseName == null || _databaseName.length() == 0 )
-	    throw new SQLException( "Database name not specified" );
-	url = url + _databaseName;
-	
-	// If username an password supplied, place them in the URL.
-	/*if ( user != null && user.length() > 0 ) {
-	    url = url + "?user=" + user;
-	    if ( password != null )
-		url = url + "&password=" + password;
-	}*/
-
-	// Attempt to establish a connection. Report a successful
+    // Attempt to establish a connection. Report a successful
 	// attempt or a failure.
 	try {
-        conn = _driver.connect( url, info );
+        conn = _driver.connect( constructJDBCURL(), info );
 	} catch ( SQLException except ) {
 	    if ( _logWriter != null )
 		_logWriter.println( "DataSource: getConnection failed " + except );
@@ -312,6 +265,28 @@ public class EnabledDataSource
 	return conn;
     }
 
+
+    /**
+     * Construct the JDBC URL used to connect to the database.
+     *
+     * @return the JDBC URL used to connect to the database.
+     */
+    private String constructJDBCURL()
+    {
+    // Construct the URL suitable for this driver.
+    if ( ( null == _driverName ) ||
+         ( 0 == _driverName.length() ) ) {
+        return "jdbc:subprotocol:subname";        
+    } 
+    
+    if ( _driverName.startsWith( "jdbc:" ) ) {
+        return _driverName;    
+    }
+    
+    return "jdbc" + 
+           ( ( ':' == _driverName.charAt( 0 ) ) ? "" : ":" ) +
+            _driverName;
+    }
 
     public PrintWriter getLogWriter()
     {
@@ -330,7 +305,8 @@ public class EnabledDataSource
 
 
     /**
-     * Sets the URL name of the JDBC driver to use, e.g. <tt>jdbc:postgresql</tt>.
+     * Sets the URL name of the JDBC driver to use, e.g. <tt>jdbc:subprotocol:subname</tt>.
+     * The jdbc header is optional.
      * The standard name for this property is <tt>driverName</tt>.
      *
      * @param driverName The URL name of the JDBC driver to use
@@ -341,7 +317,7 @@ public class EnabledDataSource
 	// a connection yet.
 	if ( _driver != null )
 	    throw new IllegalStateException( "Cannot change driver name after a connection has been opened" );
-	_driverName = driverName;
+	_driverName = null == driverName ? driverName : driverName.trim();
     }
 
 
@@ -359,7 +335,7 @@ public class EnabledDataSource
 
     /**
      * Sets the class name of the JDBC driver to use, e.g. <tt>postgresql.Driver</tt>.
-     * The standard name for this property is <tt>driverClassName</tt>.
+                                     * The standard name for this property is <tt>driverClassName</tt>.
      *
      * @param className The class name of the JDBC driver to use
      */
@@ -394,32 +370,6 @@ public class EnabledDataSource
     public synchronized int getLoginTimeout()
     {
 	return _loginTimeout;
-    }
-
-
-    /**
-     * Sets the name of the particular database on the server.
-     * The standard name for this property is <tt>databaseName</tt>.
-     *
-     * @param databaseName The name of the particular database on the server
-     */
-    public synchronized void setDatabaseName( String databaseName )
-    {
-	if ( databaseName == null )
-	    throw new NullPointerException( "DataSource: Argument 'databaseName' is null" );
-	_databaseName = databaseName;
-    }
-
-
-    /**
-     * Returns the name of the particular database on the server.
-     * The standard name for this property is <tt>databaseName</tt>.
-     *
-     * @return The name of the particular database on the server
-     */
-    public String getDatabaseName()
-    {
-	return _databaseName;
     }
 
 
@@ -470,55 +420,6 @@ public class EnabledDataSource
     public String getPassword()
     {
 	return _password;
-    }
-
-
-    /**
-     * Sets the port number where a server is listening.
-     * The standard name for this property is <tt>portNumber</tt>.
-     *
-     * @param portNumber The port number where a server is listening
-     */
-    public synchronized void setPortNumber( int portNumber )
-    {
-	_portNumber = portNumber;
-    }
-
-
-    /**
-     * Returns the port number where a server is listening.
-     * The standard name for this property is <tt>portNumber</tt>.
-     *
-     * @return The port number where a server is listening
-     */
-    public int getPortNumber()
-    {
-	return _portNumber;
-    }
-
-
-    /**
-     * Sets the database server name.
-
-     * The standard name for this property is <tt>serverName</tt>.
-     *
-     * @param serverName The database server name
-     */
-    public synchronized void setServerName( String serverName )
-    {
-	_serverName = serverName;
-    }
-
-
-    /**
-     * Returns the database server name.
-     * The standard name for this property is <tt>serverName</tt>.
-     *
-     * @return The database server name
-     */
-    public String getServerName()
-    {
-	return _serverName;
     }
 
 
@@ -641,40 +542,29 @@ public class EnabledDataSource
 	EnabledDataSource with;
 
 	with = (EnabledDataSource) other;
-	if ( _driverName == null || ! _driverName.equals( with._driverName ) )
-	    return false;
-	if ( _databaseName != null && _databaseName.equals( with._databaseName ) )
-	    if ( _portNumber == with._portNumber && 
-		 ( ( _serverName == null && with._serverName == null ) ||
-		   ( _serverName != null && _serverName.equals( with._serverName ) ) ) )
-		if ( ( _user == null && with._user == null ) ||
-		     ( _user != null && _password != null && _user.equals( with._user ) &&
-		       _password.equals( with._password ) ) )
-		    return true;
+
+    if ( _driverName == null ) {
+        return null == with._driverName;    
+    }
+
+    if ( null == with._driverName ) {
+        return false;    
+    }
+
+	if ( constructJDBCURL().equals( with.constructJDBCURL() ) )
+	    return true;
+
 	return false;
     }
 
 
     public String toString()
     {
-	if ( _description != null )
-	    return _description;
-	else {
-	    String url;
-	    
-	    url = _driverName + ":";
-	    if ( _serverName != null ) {
-		if ( _portNumber == DEFAULT_PORT )
-		    url = url + "//" + _serverName + "/";
-		else
-		    url = url + "//" + _serverName + ":" + _portNumber + "/";
-	    } else if ( _portNumber != DEFAULT_PORT )
-		url = url + "//localhost:" + _portNumber + "/";
-	    if ( _databaseName != null )
-		url = url + _databaseName;
-	    return "DataSource " + url;
+
+    //return _description;
+
+	return "DataSource " + constructJDBCURL();
 	}
-    }
 
 
     public synchronized Reference getReference()
@@ -690,21 +580,13 @@ public class EnabledDataSource
 	    ref.add( new StringRefAddr( "driverName", "no driver" ) );
 	else
 	    ref.add( new StringRefAddr( "driverName", _driverName ) );
-	// Optional properties
+    // Optional properties
 	if ( _driverClassName != null )
 	    ref.add( new StringRefAddr( "driverClassName", _driverClassName ) );
-	if ( _databaseName != null )
-	    ref.add( new StringRefAddr( "databaseName", _databaseName ) );
 	if ( _user != null )
 	    ref.add( new StringRefAddr( "user", _user ) );
 	if ( _password != null )
 	    ref.add( new StringRefAddr( "password", _password ) );
-	if ( _serverName != null )
-	    ref.add( new StringRefAddr( "serverName", _serverName ) );
-	if ( _portNumber != DEFAULT_PORT )
-	    ref.add( new StringRefAddr( "portNumber", Integer.toString( _portNumber ) ) );
-	if ( _portNumber != DEFAULT_PORT )
-	    ref.add( new StringRefAddr( "portNumber", Integer.toString( _portNumber ) ) );
 	if ( getIsolationLevel() != null )
 	    ref.add( new StringRefAddr( "isolationLevel", getIsolationLevel() ) );
 	ref.add( new StringRefAddr( "transactionTimeout", Integer.toString( getTransactionTimeout() ) ) );
@@ -733,27 +615,18 @@ public class EnabledDataSource
 		}
 		// Mandatory properties
 		ds._driverName = (String) ref.get( "driverName" ).getContent();
-		ds._description = (String) ref.get( "description" ).getContent();
+        ds._description = (String) ref.get( "description" ).getContent();
 		ds._loginTimeout = Integer.parseInt( (String) ref.get( "loginTimeout" ).getContent() );
 		// Optional properties
 		addr = ref.get( "driverClassName" );
 		if ( addr != null )
 		    ds._driverClassName = (String) addr.getContent();
-		addr = ref.get( "databaseName" );
-		if ( addr != null )
-		    ds._databaseName = (String) addr.getContent();
 		addr = ref.get( "user" );
 		if ( addr != null )
 		    ds._user = (String) addr.getContent();
 		addr = ref.get( "password" );
 		if ( addr != null )
 		    ds._password = (String) addr.getContent();
-		addr = ref.get( "serverName" );
-		if ( addr != null )
-		    ds._serverName = (String) addr.getContent();
-		addr = ref.get( "portNumber" );
-		if ( addr != null )
-		    ds._portNumber = Integer.parseInt( (String) addr.getContent() );
 		addr = ref.get( "transactionTimeout" );
 		if ( addr != null )
 		    setTransactionTimeout( Integer.parseInt( (String) addr.getContent() ) );
