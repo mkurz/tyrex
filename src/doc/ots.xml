@@ -27,15 +27,15 @@
     	module to describe the OTS :
     	<br/>
     	<code>
-    	&gt;module name="tyrex" initializer="tyrex.corba.Initializer" /&lt;
+    	&lt;module name="tyrex" initializer="tyrex.corba.Initializer" /&gt;
     	</code>
     	<br/>
     	Then, define a new profile :
     	<br/>
     	<code>
-    	&gt;profile name="ots" extends="default"&lt;
-    	  &gt;import module="transaction" /&lt;
-  	&gt;/profile&lt;
+    	&lt;profile name="ots" extends="default"&gt;
+    	  &lt;import module="transaction" /&gt;
+  	&lt;/profile&gt;
     	</code>
     	<br/>
     	When you start a CORBA application that want to use the Tyrex OTS, be sure to use the <t>ots</t> profile. For example,
@@ -44,7 +44,7 @@
     	To be able to resolve the 'TransactionService' initial reference, you have to extend the <b>InitRef</b> module, by adding :
     	<br/>
     	<code>
-    	&gt;property name="TransactionService" value="corbaname:rir:#tyrex/TransactionFactory" /&lt;
+    	&lt;property name="TransactionService" value="corbaname:rir:#Tyrex/TransactionFactory" /&gt;
     	</code>
     	<br/>
     	</p>
