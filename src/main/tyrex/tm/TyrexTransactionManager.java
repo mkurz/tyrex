@@ -49,7 +49,9 @@ package tyrex.tm;
 import java.io.PrintWriter;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
+import javax.transaction.SystemException;
 import javax.transaction.xa.Xid;
+import javax.transaction.xa.XAResource;
 
 
 /**
@@ -119,7 +121,32 @@ public interface TyrexTransactionManager
     public abstract void dumpCurrentTransaction( PrintWriter writer );
 
 
+    /**
+     * Called to enlist a resource with the current thread.
+     * If this method is called within an active transaction,
+     * the connection will be enlisted in that transaction.
+     * The connection will be enlisted in any future transaction
+     * associated with the same thread context.
+     *
+     * @param xaRes The XA resource
+     * @throws SystemException The resource cannot be enlisted with
+     * the current transaction
+     */
+    public abstract void enlistResource( XAResource xaResource )
+        throws SystemException;
 
+
+    /**
+     * Called to delist a resource from the current thread.
+     * If this method is called within an active transaction,
+     * the connection will be delisted using the success flag.
+     * The connection will not be enlisted in any future transaction
+     * associated with the same thread context.
+     *
+     * @param xaRes The XA resource
+     * @param flag The delist flag
+     */
+    public abstract void delistResource( XAResource xaResource, int flag );
 
 
 }

@@ -38,87 +38,62 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
+ * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: ErrorLogger.java,v 1.4 2001/02/23 19:23:02 jdaniel Exp $
+ * $Id: DDLicense.java,v 1.1 2001/03/03 03:23:44 arkin Exp $
  */
 
 
-package tyrex.tools;
-
-
-import java.io.PrintWriter;
-import javax.transaction.xa.Xid;
-import tyrex.util.Logger;
-import tyrex.interceptor.TransactionInterceptor;
-import tyrex.tm.Heuristic;
+package tyrex.tm.jca.dd;
 
 
 /**
- *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.4 $ $Date: 2001/02/23 19:23:02 $
+ * @version $Revision: 1.1 $
  */
-public class ErrorLogger
-    implements TransactionInterceptor 
+public class DDLicense
 {
 
 
-    public ErrorLogger()
+    public static final String TRUE  = "true";
+
+
+    public static final String FALSE = "false";
+
+
+    private String _description;
+
+
+    private String _licenseRequired;
+
+
+    public String getDescription()
     {
+        return _description;
     }
 
 
-/*    public void setLogWriter( PrintWriter logWriter )
+    public void setDescription( String description )
     {
-	if ( logWriter == null )
-	    throw new IllegalArgumentException( "Argument 'logWriter' is null" );
-	_logWriter = logWriter;
-}
-    public PrintWriter setLogWriter()
-    {
-	return _logWriter;
+        _description = description;
     }
 
-*/
-    public void begin( Xid xid )
-    {
-    }
-    
-    
-    public void commit( Xid xid )
-    {
-    }
-    
-    
-    public void rollback( Xid xid )
-    {
-    }
-    
-    
-    public void completed( Xid xid, int heuristic )
-    {
-	switch ( heuristic ) {
-	case Heuristic.TimedOut:
-	    Logger.tools.info( xid.toString() + ": timed out and rolled back" );
-	    break;
-	case Heuristic.Hazard:
-	    Logger.tools.info( xid.toString() + ": reported hazard heuristic" );
-	    break;
-	case Heuristic.Mixed:
-	    Logger.tools.info( xid.toString() + ": reported mixed heuristic" );
-	    break;
-	}
-    }
-    
-    
-    public void resume( Xid xid, Thread thread )
-    {
-    }
-    
 
-    public void suspend( Xid xid, Thread thread )
+    /**
+     * Specifies whether a license is required to deploy and use the
+     * resource adapter. Valid values are {@link #TRUE} or {@link #FALSE}.
+     *
+     * @return Specifies whether a license is required
+     */
+    public String getLicenseRequired()
     {
+        return _licenseRequired;
+    }
+
+
+    public void setLicenseRequired( String required )
+    {
+        _licenseRequired = required;
     }
 
 

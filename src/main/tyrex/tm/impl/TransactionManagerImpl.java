@@ -40,7 +40,7 @@
  *
  * Copyright 2000,2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionManagerImpl.java,v 1.3 2001/03/03 03:00:56 arkin Exp $
+ * $Id: TransactionManagerImpl.java,v 1.4 2001/03/03 03:22:52 arkin Exp $
  */
 
 
@@ -77,7 +77,7 @@ import tyrex.util.Messages;
  * transaction server.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.3 $ $Date: 2001/03/03 03:00:56 $
+ * @version $Revision: 1.4 $ $Date: 2001/03/03 03:22:52 $
  * @see Tyrex#recycleThread
  * @see TransactionDomain
  * @see TransactionImpl
@@ -381,22 +381,8 @@ final class TransactionManagerImpl
     }
 
 
-    //-------------------------------------------------------------------------
-    // Extended methods used for resource management
-    //-------------------------------------------------------------------------
-
-    
-    /**
-     * Called to enlist a resource with the current thread.
-     * If this method is called within an active transaction,
-     * the connection will be enlisted in that transaction.
-     * The connection will be enlisted in any future transaction
-     * associated with the same thread context.
-     *
-     * @param xaRes The XA resource
-     */
     public void enlistResource( XAResource xaResource )
-	throws SystemException
+        throws SystemException
     {
         ThreadContext   context;
         
@@ -424,18 +410,7 @@ final class TransactionManagerImpl
     }
 
 
-    /**
-     * Called to delist a resource from the current thread.
-     * If this method is called within an active transaction,
-     * the connection will be delisted using the success flag.
-     * The connection will not be enlisted in any future transaction
-     * associated with the same thread context.
-     *
-     * @param xaRes The XA resource
-     * @param flag The delist flag
-     */
     public void delistResource( XAResource xaResource, int flag )
-	throws SystemException
     {
         ThreadContext   context;
         
@@ -454,6 +429,8 @@ final class TransactionManagerImpl
         if ( context._tx != null ) {
             try {
                 context._tx.getTopLevel().delistResource( xaResource, flag );
+            } catch ( SystemException except ) {
+                // We ignore failure to delist.
             } catch ( IllegalStateException except ) {
                 // The transaction is preparing/committing.
                 // We still need to prevent future enlistment.

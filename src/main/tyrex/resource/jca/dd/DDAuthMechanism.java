@@ -38,56 +38,76 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
+ * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: ConsoleMeter.save,v 1.1 2001/02/27 00:37:09 arkin Exp $
+ * $Id: DDAuthMechanism.java,v 1.1 2001/03/03 03:23:44 arkin Exp $
  */
 
 
-package tyrex.tools;
-
-
-import javax.transaction.xa.Xid;
-import tyrex.interceptor.TransactionInterceptor;
+package tyrex.tm.jca.dd;
 
 
 /**
- *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2001/02/27 00:37:09 $
+ * @version $Revision: 1.1 $
  */
-public class ConsoleMeter
-    implements TransactionInterceptor
+public class DDAuthMechanism
 {
 
 
-    public void begin( Xid xid )
-    {
-    }
-    
-    
-    public void commit( Xid xid )
-    {
-    }
-    
-    
-    public void rollback( Xid xid )
-    {
-    }
-    
-    
-    public void completed( Xid xid, int heuristic )
-    {
-    }
-    
-    
-    public void resume( Xid xid, Thread thread )
-    {
-    }
-    
+    private String _description;
 
-    public void suspend( Xid xid, Thread thread )
+
+    private String _mechType;
+
+
+    private String _credentialInterface;
+
+
+    public String getDescription()
     {
+        return _description;
+    }
+
+
+    public void setDescription( String description )
+    {
+        _description = description;
+    }
+
+
+    /**
+     * Specifies the type of the authentication mechanism.
+     *
+     * @return The type of the authentication mechanism
+     */
+    public String getAuthMechType()
+    {
+        return _mechType;
+    }
+
+
+    public void setAuthMechType( String mechType )
+    {
+        _mechType = mechType;
+    }
+
+
+    /**
+     * Specifies the interface that the resource adapter implementation supports
+     * for the representation of the security credentials.
+     *
+     * @return The interface that the resource adapter implementation supports
+     */
+    public String getCredentialInterface()
+    {
+        return _credentialInterface;
+    }
+
+
+    public void setCredentialInterface( String credentialInterface )
+    {
+        _credentialInterface = credentialInterface;
     }
 
 
