@@ -1,8 +1,8 @@
 /*
  * This class was automatically generated with 
- * <a href="http://castor.exolab.org">Castor 0.8.10</a>, using an
+ * <a href="http://castor.exolab.org">Castor 0.9.2</a>, using an
  * XML Schema.
- * $Id: TwoPhaseCommit.java,v 1.2 2001/02/23 17:17:43 omodica Exp $
+ * $Id: TwoPhaseCommit.java,v 1.3 2001/07/10 19:16:19 mohammed Exp $
  */
 
 package transaction.configuration;
@@ -21,28 +21,11 @@ import org.xml.sax.DocumentHandler;
 
 /**
  * 
- * @version $Revision: 1.2 $ $Date: 2001/02/23 17:17:43 $
+ * @version $Revision: 1.3 $ $Date: 2001/07/10 19:16:19 $
 **/
-public class TwoPhaseCommit implements java.io.Serializable {
-
-
-      //--------------------------/
-     //- Class/Member Variables -/
-    //--------------------------/
-
-    private int _iterations;
-
-    /**
-     * keeps track of state for field: _iterations
-    **/
-    private boolean _has_iterations;
-
-    private int _value;
-
-    /**
-     * keeps track of state for field: _value
-    **/
-    private boolean _has_value;
+public class TwoPhaseCommit extends transaction.configuration.PerformanceValueType 
+implements java.io.Serializable
+{
 
 
       //----------------/
@@ -57,48 +40,6 @@ public class TwoPhaseCommit implements java.io.Serializable {
       //-----------/
      //- Methods -/
     //-----------/
-
-    /**
-    **/
-    public void deleteIterations()
-    {
-        this._has_iterations= false;
-    } //-- void deleteIterations() 
-
-    /**
-    **/
-    public void deleteValue()
-    {
-        this._has_value= false;
-    } //-- void deleteValue() 
-
-    /**
-    **/
-    public int getIterations()
-    {
-        return this._iterations;
-    } //-- int getIterations() 
-
-    /**
-    **/
-    public int getValue()
-    {
-        return this._value;
-    } //-- int getValue() 
-
-    /**
-    **/
-    public boolean hasIterations()
-    {
-        return this._has_iterations;
-    } //-- boolean hasIterations() 
-
-    /**
-    **/
-    public boolean hasValue()
-    {
-        return this._has_value;
-    } //-- boolean hasValue() 
 
     /**
     **/
@@ -137,26 +78,6 @@ public class TwoPhaseCommit implements java.io.Serializable {
 
     /**
      * 
-     * @param _iterations
-    **/
-    public void setIterations(int _iterations)
-    {
-        this._iterations = _iterations;
-        this._has_iterations = true;
-    } //-- void setIterations(int) 
-
-    /**
-     * 
-     * @param _value
-    **/
-    public void setValue(int _value)
-    {
-        this._value = _value;
-        this._has_value = true;
-    } //-- void setValue(int) 
-
-    /**
-     * 
      * @param reader
     **/
     public static transaction.configuration.TwoPhaseCommit unmarshal(java.io.Reader reader)
@@ -170,8 +91,8 @@ public class TwoPhaseCommit implements java.io.Serializable {
     public void validate()
         throws org.exolab.castor.xml.ValidationException
     {
-        org.exolab.castor.xml.Validator v = new org.exolab.castor.xml.Validator();
-        v.validate(this, null);
+        org.exolab.castor.xml.Validator validator = new org.exolab.castor.xml.Validator();
+        validator.validate(this);
     } //-- void validate() 
 
 }

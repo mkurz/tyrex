@@ -1,8 +1,8 @@
 /*
  * This class was automatically generated with 
- * <a href="http://castor.exolab.org">Castor 0.8.10</a>, using an
+ * <a href="http://castor.exolab.org">Castor 0.9.2</a>, using an
  * XML Schema.
- * $Id: OnePhaseCommitDescriptor.java,v 1.1 2001/02/16 23:47:55 mohammed Exp $
+ * $Id: OnePhaseCommitDescriptor.java,v 1.2 2001/07/10 19:16:19 mohammed Exp $
  */
 
 package transaction.configuration;
@@ -24,9 +24,9 @@ import org.exolab.castor.xml.validators.*;
 
 /**
  * 
- * @version $Revision: 1.1 $ $Date: 2001/02/16 23:47:55 $
+ * @version $Revision: 1.2 $ $Date: 2001/07/10 19:16:19 $
 **/
-public class OnePhaseCommitDescriptor extends org.exolab.castor.xml.util.XMLClassDescriptorImpl {
+public class OnePhaseCommitDescriptor extends transaction.configuration.PerformanceValueTypeDescriptor {
 
 
       //--------------------------/
@@ -53,92 +53,6 @@ public class OnePhaseCommitDescriptor extends org.exolab.castor.xml.util.XMLClas
         XMLFieldHandler         handler        = null;
         FieldValidator          fieldValidator = null;
         //-- initialize attribute descriptors
-        
-        //-- _iterations
-        desc = new XMLFieldDescriptorImpl(java.lang.Integer.TYPE, "_iterations", "iterations", NodeType.Attribute);
-        handler = (new XMLFieldHandler() {
-            public Object getValue( Object object ) 
-                throws IllegalStateException
-            {
-                OnePhaseCommit target = (OnePhaseCommit) object;
-                if(!target.hasIterations())
-                    return null;
-                return new Integer(target.getIterations());
-            }
-            public void setValue( Object object, Object value) 
-                throws IllegalStateException, IllegalArgumentException
-            {
-                try {
-                    OnePhaseCommit target = (OnePhaseCommit) object;
-                    // if null, use delete method for optional primitives 
-                    if (value == null) {
-                        target.deleteIterations();
-                        return;
-                    }
-                    target.setIterations( ((Integer)value).intValue());
-                }
-                catch (Exception ex) {
-                    throw new IllegalStateException(ex.toString());
-                }
-            }
-            public Object newInstance( Object parent ) {
-                return null;
-            }
-        } );
-        desc.setHandler(handler);
-        addFieldDescriptor(desc);
-        
-        //-- validation code for: _iterations
-        fieldValidator = new FieldValidator();
-        { //-- local scope
-            IntegerValidator iv = new IntegerValidator();
-            iv.setMinInclusive(1);
-            fieldValidator.setValidator(iv);
-        }
-        desc.setValidator(fieldValidator);
-        
-        //-- _value
-        desc = new XMLFieldDescriptorImpl(java.lang.Integer.TYPE, "_value", "value", NodeType.Attribute);
-        handler = (new XMLFieldHandler() {
-            public Object getValue( Object object ) 
-                throws IllegalStateException
-            {
-                OnePhaseCommit target = (OnePhaseCommit) object;
-                if(!target.hasValue())
-                    return null;
-                return new Integer(target.getValue());
-            }
-            public void setValue( Object object, Object value) 
-                throws IllegalStateException, IllegalArgumentException
-            {
-                try {
-                    OnePhaseCommit target = (OnePhaseCommit) object;
-                    // if null, use delete method for optional primitives 
-                    if (value == null) {
-                        target.deleteValue();
-                        return;
-                    }
-                    target.setValue( ((Integer)value).intValue());
-                }
-                catch (Exception ex) {
-                    throw new IllegalStateException(ex.toString());
-                }
-            }
-            public Object newInstance( Object parent ) {
-                return null;
-            }
-        } );
-        desc.setHandler(handler);
-        addFieldDescriptor(desc);
-        
-        //-- validation code for: _value
-        fieldValidator = new FieldValidator();
-        { //-- local scope
-            IntegerValidator iv = new IntegerValidator();
-            iv.setMinInclusive(1);
-            fieldValidator.setValidator(iv);
-        }
-        desc.setValidator(fieldValidator);
         
         //-- initialize element descriptors
         
@@ -167,6 +81,8 @@ public class OnePhaseCommitDescriptor extends org.exolab.castor.xml.util.XMLClas
     **/
     public org.exolab.castor.mapping.FieldDescriptor getIdentity()
     {
+        if (identity == null)
+            return super.getIdentity();
         return identity;
     } //-- org.exolab.castor.mapping.FieldDescriptor getIdentity() 
 
@@ -195,7 +111,7 @@ public class OnePhaseCommitDescriptor extends org.exolab.castor.xml.util.XMLClas
     **/
     public org.exolab.castor.xml.TypeValidator getValidator()
     {
-        return null;
+        return this;
     } //-- org.exolab.castor.xml.TypeValidator getValidator() 
 
     /**

@@ -1,8 +1,8 @@
 /*
  * This class was automatically generated with 
- * <a href="http://castor.exolab.org">Castor 0.8.10</a>, using an
+ * <a href="http://castor.exolab.org">Castor 0.9.2</a>, using an
  * XML Schema.
- * $Id: Configuration.java,v 1.2 2001/02/23 17:17:43 omodica Exp $
+ * $Id: Configuration.java,v 1.3 2001/07/10 19:16:20 mohammed Exp $
  */
 
 package transaction.configuration;
@@ -23,7 +23,7 @@ import org.xml.sax.DocumentHandler;
 
 /**
  * 
- * @version $Revision: 1.2 $ $Date: 2001/02/23 17:17:43 $
+ * @version $Revision: 1.3 $ $Date: 2001/07/10 19:16:20 $
 **/
 public class Configuration implements java.io.Serializable {
 
@@ -227,10 +227,10 @@ public class Configuration implements java.io.Serializable {
 
     /**
      * 
-     * @param vDatasource
      * @param index
+     * @param vDatasource
     **/
-    public void setDatasource(Datasource vDatasource, int index)
+    public void setDatasource(int index, Datasource vDatasource)
         throws java.lang.IndexOutOfBoundsException
     {
         //-- check bounds for index
@@ -238,7 +238,7 @@ public class Configuration implements java.io.Serializable {
             throw new IndexOutOfBoundsException();
         }
         _datasourceList.setElementAt(vDatasource, index);
-    } //-- void setDatasource(Datasource, int) 
+    } //-- void setDatasource(int, Datasource) 
 
     /**
      * 
@@ -255,10 +255,10 @@ public class Configuration implements java.io.Serializable {
 
     /**
      * 
-     * @param vPerformance
      * @param index
+     * @param vPerformance
     **/
-    public void setPerformance(Performance vPerformance, int index)
+    public void setPerformance(int index, Performance vPerformance)
         throws java.lang.IndexOutOfBoundsException
     {
         //-- check bounds for index
@@ -266,7 +266,7 @@ public class Configuration implements java.io.Serializable {
             throw new IndexOutOfBoundsException();
         }
         _performanceList.setElementAt(vPerformance, index);
-    } //-- void setPerformance(Performance, int) 
+    } //-- void setPerformance(int, Performance) 
 
     /**
      * 
@@ -285,10 +285,10 @@ public class Configuration implements java.io.Serializable {
      * 
      * @param reader
     **/
-    public static Configuration unmarshal(java.io.Reader reader)
+    public static transaction.configuration.Configuration unmarshal(java.io.Reader reader)
         throws org.exolab.castor.xml.MarshalException, org.exolab.castor.xml.ValidationException
     {
-        return (Configuration) Unmarshaller.unmarshal(Configuration.class, reader);
+        return (transaction.configuration.Configuration) Unmarshaller.unmarshal(transaction.configuration.Configuration.class, reader);
     } //-- transaction.configuration.Configuration unmarshal(java.io.Reader) 
 
     /**
@@ -296,8 +296,8 @@ public class Configuration implements java.io.Serializable {
     public void validate()
         throws org.exolab.castor.xml.ValidationException
     {
-        org.exolab.castor.xml.Validator v = new org.exolab.castor.xml.Validator();
-        v.validate(this, null);
+        org.exolab.castor.xml.Validator validator = new org.exolab.castor.xml.Validator();
+        validator.validate(this);
     } //-- void validate() 
 
 }

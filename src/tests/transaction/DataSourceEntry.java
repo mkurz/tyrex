@@ -48,6 +48,7 @@ package transaction;
 import java.sql.SQLException;
 import javax.sql.XAConnection;
 import javax.sql.XADataSource;
+import transaction.configuration.Datasource;
 
 /////////////////////////////////////////////////////////////////////
 // DataSourceEntry
@@ -66,17 +67,22 @@ final class DataSourceEntry {
     private final XADataSource _dataSource;
 
     /**
+     * The xa Data source used for creation
+     */
+    private final XADataSource _creationDataSource;
+
+    /**
      * The number of milliseconds to sleep after
      * ending an xa resource with the TMFAIL flag.
      * <P>
      * A value of zero or less means don't wait.
      */
-    private final long _failSleepTime;
+    //private final long _failSleepTime;
 
     /**
      * True if performance can be tested.
      */
-    private final boolean _performanceTest;
+    //private final boolean _performanceTest;
 
     /**
      * True if the XA resources can be
@@ -85,62 +91,60 @@ final class DataSourceEntry {
      * an existed transaction that has not been 
      * committed or rolled back.
      */
-    private final boolean _reuseDelistedXAResources;
+    //private final boolean _reuseDelistedXAResources;
 
     /**
      * The name of the table that is 
      * to be created in the database.
      */
-    private final String _tableName;
+    //private final String _tableName;
 
     /**
      * The name
      */
-    private final String _name;
+    //private final String _name;
 
     /**
      * The user name
      */
-    private final String _userName;
+    //private final String _userName;
 
     /**
      * The password
      */
-    private final String _password;
+    //private final String _password;
+
+    /**
+     * The config
+     */
+    private final Datasource _config;
 
     /**
      * Create the DataSourceEntry
      *
      * @param dataSource the data source (required)
-     * @param name the name of the data source (optional)
-     * @param tableName the table name (required)
-     * @param userName the user name (optional)
-     * @param password the password (optional)
-     * @param failSleepTime the number of milliseconds to sleep after
-     *      ending an xa resource with the TMFAIL flag.
-     * @param performanceTest True if performance can be tested.
-     * @param reuseDelistedXAResources True if the XA resources can be
-     *      used in a new transaction when they've been delisted using 
-     *      XAResource.TMSUCCESS in an existed transaction that has not 
-     *      been committed or rolled back.
+     * @param creationDataSource the data source used to create the test
+     *      tables (required)
+     * @param config the configuration (required)
      */
-    DataSourceEntry(XADataSource dataSource, String name,
-                    String tableName, String userName, String password, long failSleepTime,
-                    boolean performanceTest, boolean reuseDelistedXAResources) {
+    DataSourceEntry(XADataSource dataSource, XADataSource creationDataSource, 
+                    Datasource config) {
         if (null == dataSource) {
             throw new IllegalArgumentException("The argument 'dataSource' is null.");
         }
-        if ((null == tableName) || (0 == tableName.length())) {
+        if (null == creationDataSource) {
+            throw new IllegalArgumentException("The argument 'creationDataSource' is null.");
+        }
+        if (null == config) {
+            throw new IllegalArgumentException("The argument 'config' is null.");    
+        }
+
+        if ((null == config.getTableName()) || (0 == config.getTableName().length())) {
             throw new IllegalArgumentException("The argument 'tableNamePrefix' is null or empty.");    
         }
-        _name = name;
         _dataSource = dataSource;
-        _tableName = tableName;
-        _userName = userName;
-        _password = password;
-        _failSleepTime = failSleepTime;
-        _performanceTest = performanceTest;
-        _reuseDelistedXAResources = reuseDelistedXAResources;
+        _creationDataSource = creationDataSource;
+        _config = config;
     }
     /**
      * Return the user name
@@ -148,7 +152,7 @@ final class DataSourceEntry {
      * @return the user name
      */
     String getUserName() {
-        return _userName;
+        return _config.getUserName();
     }
 
     /**
@@ -157,7 +161,16 @@ final class DataSourceEntry {
      * @return the password
      */
     String getPassword() {
-        return _password;
+        return _config.getPassword();
+    }
+
+    /**
+     * Return true if the tables are to be created
+     * and/or dropped as part of initialization and
+     * finalization
+     */
+    boolean getCreateDropTables() {
+        return _config.getCreateDropTables();
     }
 
 
@@ -167,7 +180,7 @@ final class DataSourceEntry {
      * @return the name
      */
     String getName() {
-        return _name;
+        return _config.getName();
     }
 
     /**
@@ -180,6 +193,15 @@ final class DataSourceEntry {
     }
 
     /**
+     * Return the XA Data source used to create the test tables.
+     *
+     * @return the XA Data source
+     */
+    XADataSource getCreateDataSource() {
+        return _creationDataSource;
+    }
+
+    /**
      * Return the number of milliseconds to sleep after
      * ending an xa resource with the TMFAIL flag.
      * <P>
@@ -189,7 +211,7 @@ final class DataSourceEntry {
      *      ending an xa resource with the TMFAIL flag.
      */
     long getFailSleepTime() {
-        return _failSleepTime;
+        return _config.getFailSleepTime();
     }
 
     /**
@@ -198,7 +220,7 @@ final class DataSourceEntry {
      * @return true if performance can be tested.
      */
     boolean getPerformanceTest() {
-        return _performanceTest;
+        return _config.getPerformanceTest();
     }
 
     /**
@@ -209,7 +231,7 @@ final class DataSourceEntry {
      * committed or rolled back.
      */
     boolean getReuseDelistedXAResources() {
-        return _reuseDelistedXAResources;
+        return _config.getReuseDelistedXaresources();
     }
 
     /**
@@ -217,7 +239,7 @@ final class DataSourceEntry {
      * to be created in the database.
      */
     String getTableName() {
-        return _tableName;
+        return _config.getTableName();
     }
 
     /**
@@ -229,8 +251,23 @@ final class DataSourceEntry {
      */
     XAConnection getXAConnection() 
         throws SQLException {
-        return null == _userName 
+        return null == _config.getUserName() 
                 ? _dataSource.getXAConnection()
-                : _dataSource.getXAConnection(_userName, _password);
+                : _dataSource.getXAConnection(_config.getUserName(), _config.getPassword());
+    }
+
+    /**
+     * Return the XA Connection from the data source entry used to
+     * create the test tables
+     *
+     * @param dataSourceEntry the data source entry
+     * @return the XA Connection from the data source entry.
+     * @throws SQLException if there is a problem getting the XA connection
+     */
+    XAConnection getXAConnectionForCreation() 
+        throws SQLException {
+        return null == _config.getUserName() 
+                ? _creationDataSource.getXAConnection()
+                : _creationDataSource.getXAConnection(_config.getUserName(), _config.getPassword());
     }
 }

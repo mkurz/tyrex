@@ -2,7 +2,7 @@
  * This class was automatically generated with 
  * <a href="http://castor.exolab.org">Castor 0.9.2</a>, using an
  * XML Schema.
- * $Id: AttributeDescriptor.java,v 1.3 2001/07/10 19:16:20 mohammed Exp $
+ * $Id: PerformanceValueTypeDescriptor.java,v 1.1 2001/07/10 19:16:19 mohammed Exp $
  */
 
 package transaction.configuration;
@@ -24,9 +24,9 @@ import org.exolab.castor.xml.validators.*;
 
 /**
  * 
- * @version $Revision: 1.3 $ $Date: 2001/07/10 19:16:20 $
+ * @version $Revision: 1.1 $ $Date: 2001/07/10 19:16:19 $
 **/
-public class AttributeDescriptor extends org.exolab.castor.xml.util.XMLClassDescriptorImpl {
+public class PerformanceValueTypeDescriptor extends org.exolab.castor.xml.util.XMLClassDescriptorImpl {
 
 
       //--------------------------/
@@ -46,30 +46,36 @@ public class AttributeDescriptor extends org.exolab.castor.xml.util.XMLClassDesc
      //- Constructors -/
     //----------------/
 
-    public AttributeDescriptor() {
+    public PerformanceValueTypeDescriptor() {
         super();
-        xmlName = "attribute";
+        xmlName = "performanceValueType";
         XMLFieldDescriptorImpl  desc           = null;
         XMLFieldHandler         handler        = null;
         FieldValidator          fieldValidator = null;
         //-- initialize attribute descriptors
         
-        //-- _name
-        desc = new XMLFieldDescriptorImpl(java.lang.String.class, "_name", "name", NodeType.Attribute);
-        desc.setImmutable(true);
+        //-- _iterations
+        desc = new XMLFieldDescriptorImpl(java.lang.Integer.TYPE, "_iterations", "iterations", NodeType.Attribute);
         handler = (new XMLFieldHandler() {
             public Object getValue( Object object ) 
                 throws IllegalStateException
             {
-                Attribute target = (Attribute) object;
-                return target.getName();
+                PerformanceValueType target = (PerformanceValueType) object;
+                if(!target.hasIterations())
+                    return null;
+                return new Integer(target.getIterations());
             }
             public void setValue( Object object, Object value) 
                 throws IllegalStateException, IllegalArgumentException
             {
                 try {
-                    Attribute target = (Attribute) object;
-                    target.setName( (java.lang.String) value);
+                    PerformanceValueType target = (PerformanceValueType) object;
+                    // if null, use delete method for optional primitives 
+                    if (value == null) {
+                        target.deleteIterations();
+                        return;
+                    }
+                    target.setIterations( ((Integer)value).intValue());
                 }
                 catch (Exception ex) {
                     throw new IllegalStateException(ex.toString());
@@ -82,31 +88,37 @@ public class AttributeDescriptor extends org.exolab.castor.xml.util.XMLClassDesc
         desc.setHandler(handler);
         addFieldDescriptor(desc);
         
-        //-- validation code for: _name
+        //-- validation code for: _iterations
         fieldValidator = new FieldValidator();
         { //-- local scope
-            StringValidator sv = new StringValidator();
-            sv.setWhiteSpace("preserve");
-            fieldValidator.setValidator(sv);
+            IntegerValidator iv = new IntegerValidator();
+            iv.setMinInclusive(1);
+            fieldValidator.setValidator(iv);
         }
         desc.setValidator(fieldValidator);
         
         //-- _value
-        desc = new XMLFieldDescriptorImpl(java.lang.String.class, "_value", "value", NodeType.Attribute);
-        desc.setImmutable(true);
+        desc = new XMLFieldDescriptorImpl(java.lang.Integer.TYPE, "_value", "value", NodeType.Attribute);
         handler = (new XMLFieldHandler() {
             public Object getValue( Object object ) 
                 throws IllegalStateException
             {
-                Attribute target = (Attribute) object;
-                return target.getValue();
+                PerformanceValueType target = (PerformanceValueType) object;
+                if(!target.hasValue())
+                    return null;
+                return new Integer(target.getValue());
             }
             public void setValue( Object object, Object value) 
                 throws IllegalStateException, IllegalArgumentException
             {
                 try {
-                    Attribute target = (Attribute) object;
-                    target.setValue( (java.lang.String) value);
+                    PerformanceValueType target = (PerformanceValueType) object;
+                    // if null, use delete method for optional primitives 
+                    if (value == null) {
+                        target.deleteValue();
+                        return;
+                    }
+                    target.setValue( ((Integer)value).intValue());
                 }
                 catch (Exception ex) {
                     throw new IllegalStateException(ex.toString());
@@ -122,47 +134,15 @@ public class AttributeDescriptor extends org.exolab.castor.xml.util.XMLClassDesc
         //-- validation code for: _value
         fieldValidator = new FieldValidator();
         { //-- local scope
-            StringValidator sv = new StringValidator();
-            sv.setWhiteSpace("preserve");
-            fieldValidator.setValidator(sv);
+            IntegerValidator iv = new IntegerValidator();
+            iv.setMinInclusive(1);
+            fieldValidator.setValidator(iv);
         }
-        desc.setValidator(fieldValidator);
-        
-        //-- _type
-        desc = new XMLFieldDescriptorImpl(transaction.configuration.types.Type.class, "_type", "type", NodeType.Attribute);
-        handler = (new XMLFieldHandler() {
-            public Object getValue( Object object ) 
-                throws IllegalStateException
-            {
-                Attribute target = (Attribute) object;
-                return target.getType();
-            }
-            public void setValue( Object object, Object value) 
-                throws IllegalStateException, IllegalArgumentException
-            {
-                try {
-                    Attribute target = (Attribute) object;
-                    target.setType( (transaction.configuration.types.Type) value);
-                }
-                catch (Exception ex) {
-                    throw new IllegalStateException(ex.toString());
-                }
-            }
-            public Object newInstance( Object parent ) {
-                return null;
-            }
-        } );
-        desc.setHandler( new EnumFieldHandler(transaction.configuration.types.Type.class, handler));
-        desc.setImmutable(true);
-        addFieldDescriptor(desc);
-        
-        //-- validation code for: _type
-        fieldValidator = new FieldValidator();
         desc.setValidator(fieldValidator);
         
         //-- initialize element descriptors
         
-    } //-- transaction.configuration.AttributeDescriptor()
+    } //-- transaction.configuration.PerformanceValueTypeDescriptor()
 
 
       //-----------/
@@ -194,7 +174,7 @@ public class AttributeDescriptor extends org.exolab.castor.xml.util.XMLClassDesc
     **/
     public java.lang.Class getJavaClass()
     {
-        return transaction.configuration.Attribute.class;
+        return transaction.configuration.PerformanceValueType.class;
     } //-- java.lang.Class getJavaClass() 
 
     /**

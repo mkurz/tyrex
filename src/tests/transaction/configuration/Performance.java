@@ -1,8 +1,8 @@
 /*
  * This class was automatically generated with 
- * <a href="http://castor.exolab.org">Castor 0.8.10</a>, using an
+ * <a href="http://castor.exolab.org">Castor 0.9.2</a>, using an
  * XML Schema.
- * $Id: Performance.java,v 1.2 2001/02/23 17:17:43 omodica Exp $
+ * $Id: Performance.java,v 1.3 2001/07/10 19:16:19 mohammed Exp $
  */
 
 package transaction.configuration;
@@ -23,7 +23,7 @@ import org.xml.sax.DocumentHandler;
 
 /**
  * 
- * @version $Revision: 1.2 $ $Date: 2001/02/23 17:17:43 $
+ * @version $Revision: 1.3 $ $Date: 2001/07/10 19:16:19 $
 **/
 public class Performance implements java.io.Serializable {
 
@@ -182,10 +182,10 @@ public class Performance implements java.io.Serializable {
 
     /**
      * 
-     * @param vGroup
      * @param index
+     * @param vGroup
     **/
-    public void setGroup(java.lang.String vGroup, int index)
+    public void setGroup(int index, java.lang.String vGroup)
         throws java.lang.IndexOutOfBoundsException
     {
         //-- check bounds for index
@@ -193,7 +193,7 @@ public class Performance implements java.io.Serializable {
             throw new IndexOutOfBoundsException();
         }
         _groupList.setElementAt(vGroup, index);
-    } //-- void setGroup(java.lang.String, int) 
+    } //-- void setGroup(int, java.lang.String) 
 
     /**
      * 
@@ -250,8 +250,8 @@ public class Performance implements java.io.Serializable {
     public void validate()
         throws org.exolab.castor.xml.ValidationException
     {
-        org.exolab.castor.xml.Validator v = new org.exolab.castor.xml.Validator();
-        v.validate(this, null);
+        org.exolab.castor.xml.Validator validator = new org.exolab.castor.xml.Validator();
+        validator.validate(this);
     } //-- void validate() 
 
 }

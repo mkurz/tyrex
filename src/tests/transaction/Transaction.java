@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Transaction.java,v 1.8 2001/06/22 17:52:57 mohammed Exp $
+ * $Id: Transaction.java,v 1.9 2001/07/10 19:12:41 mohammed Exp $
  */
 
 
@@ -58,14 +58,17 @@ import java.io.Reader;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Enumeration;
 import java.util.Vector;
+import javax.sql.DataSource;
 import javax.sql.XAConnection;
 import javax.sql.XADataSource;
+import javax.transaction.HeuristicRollbackException;
 import javax.transaction.Status;
 import javax.transaction.TransactionManager;
 import javax.transaction.xa.XAResource;
@@ -392,7 +395,7 @@ public class Transaction
         Statement statement;
         ArrayList visited;
         TransactionManager transactionManager;
-
+        
         try {
             visited = new ArrayList();
             xaConnection = null;
@@ -403,8 +406,7 @@ public class Transaction
                 
             // make sure we're not in a stray trnasaction
             try {
-           
-                transactionManager.commit();
+           		transactionManager.rollback();
             }
             catch(Exception e) {
             }
@@ -419,53 +421,100 @@ public class Transaction
                     entry = group.getDataSourceEntry(j);
                     
                     if (!visited.contains(entry)) {
-                        try {
-                            
-                            visited.add(entry);
-                            
-                            xaConnection = entry.getXAConnection();
-                            
-                            connection = xaConnection.getConnection();
-                            
-                            statement = connection.createStatement();
-                                                        
-                            transactionManager.begin();
-                            
-                            transactionManager.getTransaction().enlistResource(xaConnection.getXAResource());
-    
-                            try {
-                                statement.execute("drop table " + entry.getTableName());
-                            }
-                            catch(SQLException e) {
-                            }
-                            
-                           
-                            if (create) {
-                                statement.execute( "create table " + entry.getTableName() + 
-                                                   " (" + PRIMARY_KEY_COLUMN_NAME + 
-                                                   " varchar(255) primary key, " + 
-                                                   VALUE_COLUMN_NAME + 
-                                                   " varchar(255))");
-                            }
-    
-                            transactionManager.commit();
-        
-                        }
-                        finally {
-                        
+						visited.add(entry);
+
+						try {
+							if (!entry.getCreateDropTables()) {
+								xaConnection = entry.getXAConnection();
+								
+								connection = xaConnection.getConnection();
+
+								transactionManager.begin();
+
+								transactionManager.getTransaction().enlistResource(xaConnection.getXAResource());
+								
+								statement = connection.createStatement();
+								
+								// ignore if the table exists
+								statement.executeUpdate("delete from " + 
+														entry.getTableName());
+							}
+							else {
+								xaConnection = entry.getXAConnectionForCreation();
+									
+								connection = xaConnection.getConnection();
+								
+								statement = connection.createStatement();
+															
+								transactionManager.begin();
+	
+								transactionManager.getTransaction().enlistResource(xaConnection.getXAResource());
+		
+								try {
+									statement.execute("drop table " + entry.getTableName());
+								}
+								catch(SQLException e) {
+									//e.printStackTrace();
+								}
+								
+								if (create) {
+									try {
+										statement.execute( "create table " + entry.getTableName() + 
+													   " (" + PRIMARY_KEY_COLUMN_NAME + 
+													   " varchar(255) primary key, " + 
+													   VALUE_COLUMN_NAME + 
+													   " varchar(255))");
+									}
+									catch(SQLException e){
+										// hack for oracle 8.1.7
+										transactionManager.rollback();
+	
+										if (null != statement) {
+											try{statement.close();}catch(SQLException e1){}
+											statement = null;
+										}
+										if (null != connection) {
+											try{connection.close();}catch(SQLException e1){}
+											connection = null;
+										}
+										if (null != xaConnection) {
+											try{xaConnection.close();}catch(SQLException e1){}
+											xaConnection = null;
+										}
+	
+										xaConnection = entry.getXAConnection();
+								
+										connection = xaConnection.getConnection();
+	
+										transactionManager.begin();
+	
+										transactionManager.getTransaction().enlistResource(xaConnection.getXAResource());
+										
+										statement = connection.createStatement();
+										
+										statement.executeUpdate("delete from " + 
+																entry.getTableName());
+									}
+								}
+								
+							}
+
+							transactionManager.commit();
+						}
+						finally {
                             if (null != statement) {
-                                try{statement.close();}catch(SQLException e){}
-                                statement = null;
-                            }
-                            if (null != connection) {
-                                try{connection.close();}catch(SQLException e){}
-                                connection = null;
-                            }
-                            if (null != xaConnection) {
-                                try{xaConnection.close();}catch(SQLException e){}
-                                xaConnection = null;
-                            }
-                        }
+								try{statement.close();}catch(SQLException e){}
+								statement = null;
+							}
+							if (null != connection) {
+								try{connection.close();}catch(SQLException e){}
+								connection = null;
+							}
+							if (null != xaConnection) {
+								try{xaConnection.close();}catch(SQLException e){}
+								xaConnection = null;
+							}
+						}
                     }
                 }
             }
@@ -631,6 +680,7 @@ public class Transaction
     private static DataSourceEntry createDataSourceEntry(Datasource datasource) 
         throws  ClassNotFoundException, InstantiationException, IllegalAccessException,
                 NoSuchMethodException, InvocationTargetException {
+		XADataSource creationDataSource;
         XADataSource xaDataSource;
         EnabledDataSource enabledDataSource;
         
@@ -650,14 +700,22 @@ public class Transaction
             xaDataSource = enabledDataSource;
         }
 
+		if ((null == datasource.getCreateClass()) ||
+			(null == datasource.getCreateUri())) {
+			creationDataSource = xaDataSource;
+		}
+		else {
+			enabledDataSource = new EnabledDataSource();
+            enabledDataSource.setDriverName(datasource.getCreateUri());
+            enabledDataSource.setDriverClassName(datasource.getCreateClass());
+            enabledDataSource.setUser(datasource.getUserName());
+            enabledDataSource.setPassword(datasource.getPassword());
+            creationDataSource = enabledDataSource;
+		}
+
         return new DataSourceEntry(xaDataSource, 
-                                   datasource.getName(),
-                                   datasource.getTableName(),
-                                   datasource.getUserName(),
-                                   datasource.getPassword(),
-                                   datasource.getFailSleepTime(),
-                                   datasource.getPerformanceTest(), 
-                                   datasource.getReuseDelistedXaresources());
+								   creationDataSource,
+                                   datasource);
     }
 
     /**
@@ -807,12 +865,12 @@ public class Transaction
         catch(Exception exception) {
             exception.printStackTrace();
         }*/
-		//org.apache.log4j.BasicConfigurator.configure();
-		//org.apache.log4j.BasicConfigurator.disableAll();
-		//tests.VerboseStream.verbose = true;
-        //TestSuite main = new Transaction( "Transaction Test", args[0]);
+		org.apache.log4j.BasicConfigurator.configure();
+		org.apache.log4j.BasicConfigurator.disableAll();
+		tests.VerboseStream.verbose = true;
+        TestSuite main = new Transaction( "Transaction Test", args[0]);
         
-        //junit.textui.TestRunner.run(main);
+        junit.textui.TestRunner.run(main);
     }
     
 }

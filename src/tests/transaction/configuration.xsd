@@ -14,14 +14,14 @@
         <complexType>
             <sequence>
                 <element name="group" type="string" minOccurs="0" maxOccurs="unbounded"/>
-                <element name="one_phase_commit" type="performance" minOccurs="1" maxOccurs="1"/>
-                <element name="two_phase_commit" type="performance" minOccurs="1" maxOccurs="1"/>
-                <element name="rollback" type="performance" minOccurs="1" maxOccurs="1"/>
+                <element name="one_phase_commit" type="performanceValueType" minOccurs="1" maxOccurs="1"/>
+                <element name="two_phase_commit" type="performanceValueType" minOccurs="1" maxOccurs="1"/>
+                <element name="rollback" type="performanceValueType" minOccurs="1" maxOccurs="1"/>
             </sequence>
         </complexType>
     </element>
     
-    <complexType name="performance">
+    <complexType name="performanceValueType">
       <attribute name="iterations" default="1000" type="positiveInteger" minOccurs="0" maxOccurs="1"/>
       <attribute name="value" type="positiveInteger" minOccurs="1" maxOccurs="1"/>
     </complexType>
@@ -31,12 +31,26 @@
             <sequence>
                 <element name="name" type="string" minOccurs="0" maxOccurs="1"/>
                 <element name="class" type="string" minOccurs="1" maxOccurs="1"/>
+                
+                <!--
                 <choice>
-                  <element ref="attribute" minOccurs="0" maxOccurs="unbounded"/>
+                  <sequence>
+                    <element ref="attribute" minOccurs="0" maxOccurs="unbounded"/>
+                    <element name="create_uri" type="string" minOccurs="0" maxOccurs="1"/>
+                    <element name="create_class" type="string" minOccurs="0" maxOccurs="1"/>
+                  </sequence>
                   
-                  <!-- castor bug: minOccurs for uri should be "1" -->
-                  <element name="uri" type="string" minOccurs="0" maxOccurs="1"/>
-                </choice>
+                  <element name="uri" type="string" minOccurs="1" maxOccurs="1"/>
+                </choice> 
+                -->
+                
+                <!-- castor bugs - the above choice should be used -->
+                <element ref="attribute" minOccurs="0" maxOccurs="unbounded"/>
+                <element name="create_uri" type="string" minOccurs="0" maxOccurs="1"/>
+                <element name="create_class" type="string" minOccurs="0" maxOccurs="1"/>
+                <element name="uri" type="string" minOccurs="0" maxOccurs="1"/>
+                
+                <element name="create_drop_tables" default="true" type="boolean" minOccurs="0" maxOccurs="1"/>                                                               
                 <element name="group" type="string" minOccurs="0" maxOccurs="unbounded"/>
                 <element name="user_name" type="string" minOccurs="0" maxOccurs="1"/>
                 <element name="password" type="string" minOccurs="0" maxOccurs="1"/>
@@ -47,7 +61,7 @@
             </sequence>
         </complexType>
     </element>
-
+    
     <element name="attribute">
         <complexType>
           <attribute name="name" type="string" minOccurs="1" maxOccurs="1"/>
@@ -55,6 +69,8 @@
           <attribute name="type" type="type" minOccurs="1" maxOccurs="1"/>
         </complexType>
     </element>
+    
+    
     
   <simpleType name="type">
     <restriction base="string">

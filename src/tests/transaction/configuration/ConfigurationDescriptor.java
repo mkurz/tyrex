@@ -1,8 +1,8 @@
 /*
  * This class was automatically generated with 
- * <a href="http://castor.exolab.org">Castor 0.8.10</a>, using an
+ * <a href="http://castor.exolab.org">Castor 0.9.2</a>, using an
  * XML Schema.
- * $Id: ConfigurationDescriptor.java,v 1.1 2001/02/16 23:47:55 mohammed Exp $
+ * $Id: ConfigurationDescriptor.java,v 1.2 2001/07/10 19:16:20 mohammed Exp $
  */
 
 package transaction.configuration;
@@ -24,7 +24,7 @@ import org.exolab.castor.xml.validators.*;
 
 /**
  * 
- * @version $Revision: 1.1 $ $Date: 2001/02/16 23:47:55 $
+ * @version $Revision: 1.2 $ $Date: 2001/07/10 19:16:20 $
 **/
 public class ConfigurationDescriptor extends org.exolab.castor.xml.util.XMLClassDescriptorImpl {
 
@@ -52,6 +52,9 @@ public class ConfigurationDescriptor extends org.exolab.castor.xml.util.XMLClass
         XMLFieldDescriptorImpl  desc           = null;
         XMLFieldHandler         handler        = null;
         FieldValidator          fieldValidator = null;
+        
+        //-- set grouping compositor
+        setCompositorAsSequence();
         //-- initialize attribute descriptors
         
         //-- initialize element descriptors
@@ -176,7 +179,7 @@ public class ConfigurationDescriptor extends org.exolab.castor.xml.util.XMLClass
     **/
     public org.exolab.castor.xml.TypeValidator getValidator()
     {
-        return null;
+        return this;
     } //-- org.exolab.castor.xml.TypeValidator getValidator() 
 
     /**

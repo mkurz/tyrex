@@ -1,8 +1,8 @@
 /*
  * This class was automatically generated with 
- * <a href="http://castor.exolab.org">Castor 0.8.10</a>, using an
+ * <a href="http://castor.exolab.org">Castor 0.9.2</a>, using an
  * XML Schema.
- * $Id: Attribute.java,v 1.2 2001/02/23 17:17:43 omodica Exp $
+ * $Id: Attribute.java,v 1.3 2001/07/10 19:16:20 mohammed Exp $
  */
 
 package transaction.configuration;
@@ -22,7 +22,7 @@ import transaction.configuration.types.Type;
 
 /**
  * 
- * @version $Revision: 1.2 $ $Date: 2001/02/23 17:17:43 $
+ * @version $Revision: 1.3 $ $Date: 2001/07/10 19:16:20 $
 **/
 public class Attribute implements java.io.Serializable {
 
@@ -35,7 +35,7 @@ public class Attribute implements java.io.Serializable {
 
     private java.lang.String _value;
 
-    private Type _type;
+    private transaction.configuration.types.Type _type;
 
 
       //----------------/
@@ -60,7 +60,7 @@ public class Attribute implements java.io.Serializable {
 
     /**
     **/
-    public Type getType()
+    public transaction.configuration.types.Type getType()
     {
         return this._type;
     } //-- transaction.configuration.types.Type getType() 
@@ -120,7 +120,7 @@ public class Attribute implements java.io.Serializable {
      * 
      * @param _type
     **/
-    public void setType(Type _type)
+    public void setType(transaction.configuration.types.Type _type)
     {
         this._type = _type;
     } //-- void setType(transaction.configuration.types.Type) 
@@ -149,8 +149,8 @@ public class Attribute implements java.io.Serializable {
     public void validate()
         throws org.exolab.castor.xml.ValidationException
     {
-        org.exolab.castor.xml.Validator v = new org.exolab.castor.xml.Validator();
-        v.validate(this, null);
+        org.exolab.castor.xml.Validator validator = new org.exolab.castor.xml.Validator();
+        validator.validate(this);
     } //-- void validate() 
 
 }

@@ -39,13 +39,20 @@
   group - the group this datasource belongs belongs to
   user_name - the user name
   password - the password
-  table_name - the name of the table to be used for testing
+  table_name - the name of the table to be used for testing. The default is test
   fail_sleep_time - ignored for now (Oracle tables must be given some time 
                     to recover when an Oracle XA resource is delisted with TMFAIL.
   performance_test - True if this data source takes part in the performance test
   reuse_delisted_xaresources - True if delisted XA resources (TMSUCCESS) can be reused in another transaction before
                                 the original transaction commits         
-  name - the pretty name of the data source                                           
+  name - the pretty name of the data source
+  create_drop_tables - true if the tables are created and dropped as part of initialization
+  
+  The tables are of the form:
+  create table <table_name> (id varchar(255) primary key, value varchar(255)). In this example
+  the table name would be test
+  
+  For Oracle 8.1.7 the tables must be created before because DDL is not allowed for OracleXADataSource
   
   If attributes are given then the class defines a JDBC 2.0 XADataSource. URI cannot be used in this case
 -->  
@@ -56,14 +63,56 @@
     <attribute name="databaseName" value="name" type="string"/>
     <attribute name="driverType" value="thin" type="string"/>
     <group>test</group>
+    <create_drop_tables>true</create_drop_tables>
     <user_name>user</user_name>
     <password>password</password>
     <table_name>test</table_name>
     <fail_sleep_time>1000</fail_sleep_time>
     <performance_test>true</performance_test>
     <reuse_delisted_xaresources>false</reuse_delisted_xaresources>
-    <name>Oracle</name>
+    <name>Oracle 8.1.6</name>
   </datasource>
+
+<!--
+  class - the class of the data source
+  attribute - javabean propertes to be set on data source
+  group - the group this datasource belongs belongs to
+  user_name - the user name
+  password - the password
+  table_name - the name of the table to be used for testing. The default is test
+  fail_sleep_time - ignored for now (Oracle tables must be given some time 
+                    to recover when an Oracle XA resource is delisted with TMFAIL.
+  performance_test - True if this data source takes part in the performance test
+  reuse_delisted_xaresources - True if delisted XA resources (TMSUCCESS) can be reused in another transaction before
+                                the original transaction commits         
+  name - the pretty name of the data source
+  create_drop_tables - true if the tables are created and dropped as part of initialization
+  
+  The tables are of the form:
+  create table <table_name> (id varchar(255) primary key, value varchar(255)). In this example
+  the table name would be test
+  
+  For Oracle 8.1.7 the tables must be created before because DDL is not allowed for OracleXADataSource
+  
+  If attributes are given then the class defines a JDBC 2.0 XADataSource. URI cannot be used in this case
+-->  
+  <datasource>
+    <class>oracle.jdbc.xa.client.OracleXADataSource</class>
+    <attribute name="serverName" value="server" type="string"/>
+    <attribute name="portNumber" value="port" type="int"/>
+    <attribute name="databaseName" value="name" type="string"/>
+    <attribute name="driverType" value="thin" type="string"/>
+    <group>test</group>
+    <create_drop_tables>false</create_drop_tables>
+    <user_name>user</user_name>
+    <password>password</password>
+    <table_name>test</table_name>
+    <fail_sleep_time>1000</fail_sleep_time>
+    <performance_test>true</performance_test>
+    <reuse_delisted_xaresources>false</reuse_delisted_xaresources>
+    <name>Oracle 8.1.7</name>
+  </datasource>
+
 
 <!--
   class - the class of the JDBC 1.1 driver
@@ -78,6 +127,7 @@
   reuse_delisted_xaresources - True if delisted XA resources (TMSUCCESS) can be reused in another transaction before
                                 the original transaction commits         
   name - the pretty name of the data source                                           
+  create_drop_tables - true if the tables are created and dropped as part of initialization. The default is true.
   
   The specified uri, user name and password are passed to tyrex.jdbc.xa.EnabledDataSource so that the 
   JDBC 1.1 driver can be treated as an XADataSource. Attributes cannot be used for a JDBC 1.1 driver.
@@ -92,6 +142,7 @@
     <fail_sleep_time>0</fail_sleep_time>
     <performance_test>true</performance_test>
     <reuse_delisted_xaresources>false</reuse_delisted_xaresources>
+    <create_drop_tables>true</create_drop_tables>
     <name>Sybase</name>
   </datasource>
   

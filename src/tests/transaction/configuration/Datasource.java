@@ -1,8 +1,8 @@
 /*
  * This class was automatically generated with 
- * <a href="http://castor.exolab.org">Castor 0.8.10</a>, using an
+ * <a href="http://castor.exolab.org">Castor 0.9.2</a>, using an
  * XML Schema.
- * $Id: Datasource.java,v 1.2 2001/02/23 17:17:43 omodica Exp $
+ * $Id: Datasource.java,v 1.3 2001/07/10 19:16:20 mohammed Exp $
  */
 
 package transaction.configuration;
@@ -23,7 +23,7 @@ import org.xml.sax.DocumentHandler;
 
 /**
  * 
- * @version $Revision: 1.2 $ $Date: 2001/02/23 17:17:43 $
+ * @version $Revision: 1.3 $ $Date: 2001/07/10 19:16:20 $
 **/
 public class Datasource implements java.io.Serializable {
 
@@ -38,7 +38,18 @@ public class Datasource implements java.io.Serializable {
 
     private java.util.Vector _attributeList;
 
+    private java.lang.String _createUri;
+
+    private java.lang.String _createClass;
+
     private java.lang.String _uri;
+
+    private boolean _createDropTables = true;
+
+    /**
+     * keeps track of state for field: _createDropTables
+    **/
+    private boolean _has_createDropTables;
 
     private java.util.Vector _groupList;
 
@@ -46,23 +57,23 @@ public class Datasource implements java.io.Serializable {
 
     private java.lang.String _password;
 
-    private java.lang.String _tableName;
+    private java.lang.String _tableName = "test";
 
-    private int _failSleepTime;
+    private int _failSleepTime = 0;
 
     /**
      * keeps track of state for field: _failSleepTime
     **/
     private boolean _has_failSleepTime;
 
-    private boolean _performanceTest;
+    private boolean _performanceTest = true;
 
     /**
      * keeps track of state for field: _performanceTest
     **/
     private boolean _has_performanceTest;
 
-    private boolean _reuseDelistedXaresources;
+    private boolean _reuseDelistedXaresources = false;
 
     /**
      * keeps track of state for field: _reuseDelistedXaresources
@@ -104,6 +115,13 @@ public class Datasource implements java.io.Serializable {
     {
         _groupList.addElement(vGroup);
     } //-- void addGroup(java.lang.String) 
+
+    /**
+    **/
+    public void deleteCreateDropTables()
+    {
+        this._has_createDropTables= false;
+    } //-- void deleteCreateDropTables() 
 
     /**
     **/
@@ -173,6 +191,27 @@ public class Datasource implements java.io.Serializable {
     {
         return _attributeList.size();
     } //-- int getAttributeCount() 
+
+    /**
+    **/
+    public java.lang.String getCreateClass()
+    {
+        return this._createClass;
+    } //-- java.lang.String getCreateClass() 
+
+    /**
+    **/
+    public boolean getCreateDropTables()
+    {
+        return this._createDropTables;
+    } //-- boolean getCreateDropTables() 
+
+    /**
+    **/
+    public java.lang.String getCreateUri()
+    {
+        return this._createUri;
+    } //-- java.lang.String getCreateUri() 
 
     /**
     **/
@@ -273,6 +312,13 @@ public class Datasource implements java.io.Serializable {
 
     /**
     **/
+    public boolean hasCreateDropTables()
+    {
+        return this._has_createDropTables;
+    } //-- boolean hasCreateDropTables() 
+
+    /**
+    **/
     public boolean hasFailSleepTime()
     {
         return this._has_failSleepTime;
@@ -365,10 +411,10 @@ public class Datasource implements java.io.Serializable {
 
     /**
      * 
-     * @param vAttribute
      * @param index
+     * @param vAttribute
     **/
-    public void setAttribute(Attribute vAttribute, int index)
+    public void setAttribute(int index, Attribute vAttribute)
         throws java.lang.IndexOutOfBoundsException
     {
         //-- check bounds for index
@@ -376,7 +422,7 @@ public class Datasource implements java.io.Serializable {
             throw new IndexOutOfBoundsException();
         }
         _attributeList.setElementAt(vAttribute, index);
-    } //-- void setAttribute(Attribute, int) 
+    } //-- void setAttribute(int, Attribute) 
 
     /**
      * 
@@ -393,6 +439,34 @@ public class Datasource implements java.io.Serializable {
 
     /**
      * 
+     * @param _createClass
+    **/
+    public void setCreateClass(java.lang.String _createClass)
+    {
+        this._createClass = _createClass;
+    } //-- void setCreateClass(java.lang.String) 
+
+    /**
+     * 
+     * @param _createDropTables
+    **/
+    public void setCreateDropTables(boolean _createDropTables)
+    {
+        this._createDropTables = _createDropTables;
+        this._has_createDropTables = true;
+    } //-- void setCreateDropTables(boolean) 
+
+    /**
+     * 
+     * @param _createUri
+    **/
+    public void setCreateUri(java.lang.String _createUri)
+    {
+        this._createUri = _createUri;
+    } //-- void setCreateUri(java.lang.String) 
+
+    /**
+     * 
      * @param _failSleepTime
     **/
     public void setFailSleepTime(int _failSleepTime)
@@ -403,10 +477,10 @@ public class Datasource implements java.io.Serializable {
 
     /**
      * 
-     * @param vGroup
      * @param index
+     * @param vGroup
     **/
-    public void setGroup(java.lang.String vGroup, int index)
+    public void setGroup(int index, java.lang.String vGroup)
         throws java.lang.IndexOutOfBoundsException
     {
         //-- check bounds for index
@@ -414,7 +488,7 @@ public class Datasource implements java.io.Serializable {
             throw new IndexOutOfBoundsException();
         }
         _groupList.setElementAt(vGroup, index);
-    } //-- void setGroup(java.lang.String, int) 
+    } //-- void setGroup(int, java.lang.String) 
 
     /**
      * 
@@ -518,8 +592,8 @@ public class Datasource implements java.io.Serializable {
     public void validate()
         throws org.exolab.castor.xml.ValidationException
     {
-        org.exolab.castor.xml.Validator v = new org.exolab.castor.xml.Validator();
-        v.validate(this, null);
+        org.exolab.castor.xml.Validator validator = new org.exolab.castor.xml.Validator();
+        validator.validate(this);
     } //-- void validate() 
 
 }

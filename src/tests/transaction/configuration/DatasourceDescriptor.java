@@ -1,8 +1,8 @@
 /*
  * This class was automatically generated with 
- * <a href="http://castor.exolab.org">Castor 0.8.10</a>, using an
+ * <a href="http://castor.exolab.org">Castor 0.9.2</a>, using an
  * XML Schema.
- * $Id: DatasourceDescriptor.java,v 1.2 2001/06/22 17:53:34 mohammed Exp $
+ * $Id: DatasourceDescriptor.java,v 1.3 2001/07/10 19:16:20 mohammed Exp $
  */
 
 package transaction.configuration;
@@ -24,7 +24,7 @@ import org.exolab.castor.xml.validators.*;
 
 /**
  * 
- * @version $Revision: 1.2 $ $Date: 2001/06/22 17:53:34 $
+ * @version $Revision: 1.3 $ $Date: 2001/07/10 19:16:20 $
 **/
 public class DatasourceDescriptor extends org.exolab.castor.xml.util.XMLClassDescriptorImpl {
 
@@ -52,6 +52,9 @@ public class DatasourceDescriptor extends org.exolab.castor.xml.util.XMLClassDes
         XMLFieldDescriptorImpl  desc           = null;
         XMLFieldHandler         handler        = null;
         FieldValidator          fieldValidator = null;
+        
+        //-- set grouping compositor
+        setCompositorAsSequence();
         //-- initialize attribute descriptors
         
         //-- initialize element descriptors
@@ -167,6 +170,82 @@ public class DatasourceDescriptor extends org.exolab.castor.xml.util.XMLClassDes
         fieldValidator.setMinOccurs(0);
         desc.setValidator(fieldValidator);
         
+        //-- _createUri
+        desc = new XMLFieldDescriptorImpl(java.lang.String.class, "_createUri", "create_uri", NodeType.Element);
+        desc.setImmutable(true);
+        handler = (new XMLFieldHandler() {
+            public Object getValue( Object object ) 
+                throws IllegalStateException
+            {
+                Datasource target = (Datasource) object;
+                return target.getCreateUri();
+            }
+            public void setValue( Object object, Object value) 
+                throws IllegalStateException, IllegalArgumentException
+            {
+                try {
+                    Datasource target = (Datasource) object;
+                    target.setCreateUri( (java.lang.String) value);
+                }
+                catch (Exception ex) {
+                    throw new IllegalStateException(ex.toString());
+                }
+            }
+            public Object newInstance( Object parent ) {
+                return null;
+            }
+        } );
+        desc.setHandler(handler);
+        desc.setMultivalued(false);
+        addFieldDescriptor(desc);
+        
+        //-- validation code for: _createUri
+        fieldValidator = new FieldValidator();
+        { //-- local scope
+            StringValidator sv = new StringValidator();
+            sv.setWhiteSpace("preserve");
+            fieldValidator.setValidator(sv);
+        }
+        desc.setValidator(fieldValidator);
+        
+        //-- _createClass
+        desc = new XMLFieldDescriptorImpl(java.lang.String.class, "_createClass", "create_class", NodeType.Element);
+        desc.setImmutable(true);
+        handler = (new XMLFieldHandler() {
+            public Object getValue( Object object ) 
+                throws IllegalStateException
+            {
+                Datasource target = (Datasource) object;
+                return target.getCreateClass();
+            }
+            public void setValue( Object object, Object value) 
+                throws IllegalStateException, IllegalArgumentException
+            {
+                try {
+                    Datasource target = (Datasource) object;
+                    target.setCreateClass( (java.lang.String) value);
+                }
+                catch (Exception ex) {
+                    throw new IllegalStateException(ex.toString());
+                }
+            }
+            public Object newInstance( Object parent ) {
+                return null;
+            }
+        } );
+        desc.setHandler(handler);
+        desc.setMultivalued(false);
+        addFieldDescriptor(desc);
+        
+        //-- validation code for: _createClass
+        fieldValidator = new FieldValidator();
+        { //-- local scope
+            StringValidator sv = new StringValidator();
+            sv.setWhiteSpace("preserve");
+            fieldValidator.setValidator(sv);
+        }
+        desc.setValidator(fieldValidator);
+        
         //-- _uri
         desc = new XMLFieldDescriptorImpl(java.lang.String.class, "_uri", "uri", NodeType.Element);
         desc.setImmutable(true);
@@ -203,6 +282,45 @@ public class DatasourceDescriptor extends org.exolab.castor.xml.util.XMLClassDes
             sv.setWhiteSpace("preserve");
             fieldValidator.setValidator(sv);
         }
+        desc.setValidator(fieldValidator);
+        
+        //-- _createDropTables
+        desc = new XMLFieldDescriptorImpl(java.lang.Boolean.TYPE, "_createDropTables", "create_drop_tables", NodeType.Element);
+        handler = (new XMLFieldHandler() {
+            public Object getValue( Object object ) 
+                throws IllegalStateException
+            {
+                Datasource target = (Datasource) object;
+                if(!target.hasCreateDropTables())
+                    return null;
+                return new Boolean(target.getCreateDropTables());
+            }
+            public void setValue( Object object, Object value) 
+                throws IllegalStateException, IllegalArgumentException
+            {
+                try {
+                    Datasource target = (Datasource) object;
+                    // if null, use delete method for optional primitives 
+                    if (value == null) {
+                        target.deleteCreateDropTables();
+                        return;
+                    }
+                    target.setCreateDropTables( ((Boolean)value).booleanValue());
+                }
+                catch (Exception ex) {
+                    throw new IllegalStateException(ex.toString());
+                }
+            }
+            public Object newInstance( Object parent ) {
+                return null;
+            }
+        } );
+        desc.setHandler(handler);
+        desc.setMultivalued(false);
+        addFieldDescriptor(desc);
+        
+        //-- validation code for: _createDropTables
+        fieldValidator = new FieldValidator();
         desc.setValidator(fieldValidator);
         
         //-- _groupList
@@ -349,6 +467,7 @@ public class DatasourceDescriptor extends org.exolab.castor.xml.util.XMLClassDes
         { //-- local scope
             StringValidator sv = new StringValidator();
             sv.setWhiteSpace("preserve");
+            //sv.setFixedValue("test");
             fieldValidator.setValidator(sv);
         }
         desc.setValidator(fieldValidator);
@@ -393,6 +512,7 @@ public class DatasourceDescriptor extends org.exolab.castor.xml.util.XMLClassDes
         { //-- local scope
             IntegerValidator iv = new IntegerValidator();
             iv.setMinInclusive(0);
+            //iv.setFixedValue(0);
             fieldValidator.setValidator(iv);
         }
         desc.setValidator(fieldValidator);
@@ -528,7 +648,7 @@ public class DatasourceDescriptor extends org.exolab.castor.xml.util.XMLClassDes
     **/
     public org.exolab.castor.xml.TypeValidator getValidator()
     {
-        return null;
+        return this;
     } //-- org.exolab.castor.xml.TypeValidator getValidator() 
 
     /**
