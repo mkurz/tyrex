@@ -82,7 +82,7 @@ import tyrex.util.Logger;
 /**
  * 
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.11 $
+ * @version $Revision: 1.12 $
  */
 public class Connector
     extends ResourceConfig
@@ -98,9 +98,9 @@ public class Connector
     private static final Class[] EMPTY_CLASSES = new Class[0];
 
     /**
-     * The Castor resolver 
+     * The unmarshaller 
      */
-    private static final ClassDescriptorResolverImpl RESOLVER;
+    private static Unmarshaller UNMARSHALLER = null;
 
     /**
      * The resource, if created.
@@ -118,25 +118,6 @@ public class Connector
      * must be set.
      */
     private MissingConfigurationProperty _missing;
-
-    static {
-        DefaultNaming naming;
-        ClassDescriptorResolverImpl resolver;
-         
-        try {
-            resolver = new ClassDescriptorResolverImpl();
-            naming = new DefaultNaming();
-            naming.setStyle( DefaultNaming.MIXED_CASE_STYLE );
-            resolver.getIntrospector().setNaming( naming );
-        }
-        catch( Exception e ) {
-            Logger.resource.error( "Error in connector. Cannot set Castor resolver.", e );
-
-            resolver = null;
-        }
-
-        RESOLVER = resolver;
-    }
 
     /**
      * Called to set the factory object after it has been configured.
@@ -199,6 +180,38 @@ public class Connector
         }
     }
 
+    /**
+     * Get the unmarshaller for JCA ra.xml
+     *
+     * @return the unmarshaller for JCA ra.xml
+     * @throws IOException if the mappong file could not be read
+     * @throws MappingException if a mapping error occurs
+     */
+    private static Unmarshaller getUnmarshaller() 
+        throws IOException, MappingException {
+        Mapping                 mapping;
+        DefaultNaming           naming;
+        ClassDescriptorResolverImpl resolver;
+
+        synchronized(EMPTY_CLASSES) {
+            if (null == UNMARSHALLER) {
+                mapping = new Mapping();
+                mapping.loadMapping( new InputSource( Connector.class.getResourceAsStream( "mapping.xml" ) ) );
+                
+                UNMARSHALLER = new Unmarshaller( (Class)null );
+    
+                resolver = new ClassDescriptorResolverImpl();
+                naming = new DefaultNaming();
+                naming.setStyle( DefaultNaming.MIXED_CASE_STYLE );
+                resolver.getIntrospector().setNaming( naming );
+    
+                UNMARSHALLER.setResolver( resolver );
+                UNMARSHALLER.setMapping( mapping );
+            }
+
+            return UNMARSHALLER;
+        }
+    }
 
     private Object createFactory_()
         throws ResourceException
@@ -214,8 +227,6 @@ public class Connector
         DDConnector             ddConnector;
         DDResourceAdapter       ddAdapter;
         String                  txSupport;
-        Mapping                 mapping;
-        Unmarshaller            unmarshaller;
         
         name = _name;
         if ( name == null || name.trim().length() == 0 )
@@ -261,18 +272,7 @@ public class Connector
         // Read the connector JAR file and it's deployment descriptor.
         try {
             info = new StringBuffer( "Loading connector " + name + " from " + _jar );
-            
-            mapping = new Mapping();
-            mapping.loadMapping( new InputSource( Connector.class.getResourceAsStream( "mapping.xml" ) ) );
-            
-            unmarshaller = new Unmarshaller( (Class)null );
-
-            if ( null != RESOLVER ) {
-                unmarshaller.setResolver( RESOLVER );
-            }
-            unmarshaller.setMapping( mapping );
-            
-            ddConnector = (DDConnector) unmarshaller.unmarshal( new InputSource( getRAInputStream( urls[ 0 ] ) ) );
+            ddConnector = (DDConnector) getUnmarshaller().unmarshal( new InputSource( getRAInputStream( urls[ 0 ] ) ) );
         } catch ( IOException except ) {
             throw new ResourceException( except );
         } catch ( ValidationException except ) {
