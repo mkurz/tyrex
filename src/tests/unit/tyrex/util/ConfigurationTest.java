@@ -55,18 +55,9 @@ import junit.framework.*;
 import junit.extensions.*;
 
 /**
- * <p>Bounds testing the interface can be done as part of the basic
- * functionality since when inputs are invalid, default values are
- * returned.  Bounds testing the configuration file itself is useful
- * to ensure sensible behavior when the file is corrupted or
- * incorrectly written.</p>
- *
- * <p>This class is expected to change and so tests will not be
- * implemented until after the changes have been made and these
- * documented tests updated accordingly.</p>
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  */
 
 

@@ -55,18 +55,9 @@ import junit.framework.*;
 import junit.extensions.*;
 
 /**
- * <p>Bounds testing the interface can be done as part of the basic
- * functionality since when inputs are invalid, default values are
- * returned.  Bounds testing the configuration file itself is useful
- * to ensure sensible behavior when the file is corrupted or
- * incorrectly written.</p>
- *
- * <p>This class is expected to change and so tests will not be
- * implemented until after the changes have been made and these
- * documented tests updated accordingly.</p>
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 
 
@@ -95,7 +86,12 @@ public class MessagesTest extends TestCase
      * Messages is not required.  Ensure that all methods return
      * the expected values.</p>
      *
-     * @result 
+     * @result Call various instances of Message.format() with no
+     * extra object arguments, 1 argument, 2 args and 3 args.  Ensure
+     * that all the messages are formatted correctly.
+     *
+     * <p>Call it with a message name that does not exist.  The
+     * message name itself should be returned.
      */
 
     public void testBasicFunctionality()
@@ -121,6 +117,8 @@ public class MessagesTest extends TestCase
         assertEquals("Initializing UUID generator: node identifier 1, clock sequence 2, UUIDs pre tick 3",
                      Messages.format("tyrex.uuid.initializing", i1,
                                      i2, i3));
+        assertEquals("tyrex.tx.nonexistent",
+                     Messages.message("tyrex.tx.nonexistent"));
     }
 
 

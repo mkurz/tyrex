@@ -66,7 +66,7 @@ import junit.extensions.*;
  * documented tests updated accordingly.</p>
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 
 
@@ -91,21 +91,16 @@ public class FastThreadLocalTest extends TestCase
 
 
     /**
-     * <p>Using a counter class initialise a runnable class.  Create
-     * an instance of FastThreadLocal using this runnable class and
-     * 200 as arguments.  Start the run.  Each run will delay 200
-     * milliseconds between runs.  The class itself increments the
-     * counter class instance and sleeps 400 milliseconds.  So the
-     * full cycle takes 600 milliseconds.  Get the main class to sleep
-     * 6 seconds.</p>
+     * <p>Create an instance of FastThreadLocal.  Then create an
+     * instance of TestThread using the FastThreadLocal as argument.
+     * The TestThread sets an Integer as its local variable and sleeps
+     * for 4 seconds.  Start the run.</p>
      *
-     * @result Set the local variable for the runnable class to null.
-     * Delay slightly and then run the garbage collector.  The
-     * background thread should die.  During the 6 seconds the
-     * background thread should have been able to run 10 times.
-     * Ensure that the counter has this value.  Delay a further 10
-     * seconds and ensure that the counter is still 10 (i.e. the
-     * background thread has infact stopped).
+     * @result The TestThread should set its variable and sleep 4
+     * seconds.  During this time its local variable should be visible
+     * both internally and externally.  The main thread should sleep a
+     * longer time and then run the garbage collectort.  After this
+     * the local variable should not be retrievable.
      */
 
     public void testBasicFunctionality()
@@ -113,17 +108,17 @@ public class FastThreadLocalTest extends TestCase
     {
         FastThreadLocal ftl = new FastThreadLocal();
         TestThread testThread = new TestThread(ftl);
-        new Thread(testThread).start();
+        testThread.start();
         Thread.sleep(100);
         Integer i = (Integer)ftl.get(testThread);
         assertNotNull(ftl.get(testThread));
         assertEquals("Val", 1, i.intValue());
         Thread.sleep(400);
-        Thread thr = new Thread(ftl);
-        thr.interrupt();
-        Thread.sleep(100);
+//        Thread thr = new Thread(ftl);
+//        thr.interrupt();
         Runtime.getRuntime().gc();
         Thread.sleep(10000);
+        Runtime.getRuntime().gc();
         assertNull(ftl.get(testThread));
     }
 
@@ -159,10 +154,6 @@ public class FastThreadLocalTest extends TestCase
             _ftl.set(i1);
             Integer i2 = (Integer)_ftl.get();
             assertEquals(i1, i2);
-            System.out.println(this.getClass().getName());
-            System.out.println(Thread.currentThread().getClass().getName());
-            System.out.println(this.hashCode());
-            System.out.println(Thread.currentThread().hashCode());
 
             // Don't do much just live a short while then die.
             try

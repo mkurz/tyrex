@@ -55,18 +55,9 @@ import junit.framework.*;
 import junit.extensions.*;
 
 /**
- * <p>Bounds testing the interface can be done as part of the basic
- * functionality since when inputs are invalid, default values are
- * returned.  Bounds testing the configuration file itself is useful
- * to ensure sensible behavior when the file is corrupted or
- * incorrectly written.</p>
- *
- * <p>This class is expected to change and so tests will not be
- * implemented until after the changes have been made and these
- * documented tests updated accordingly.</p>
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 
 
@@ -95,7 +86,16 @@ public class VersionTest extends TestCase
      * Version is not required.  Ensure that all methods return
      * the expected values.</p>
      *
-     * @result 
+     * @result Ensure that various forms of versions where the first
+     * argument is greater than or equal to the second are compatible
+     * (i.e. isCompatibleWith() returns true).  Ensure that otherwise
+     * false is returned.
+     *
+     * <p>"3.2.1"/"3.2.1", "3.2.1"/"2.2.1", "3.2.1"/"3.1.1",
+     * "3.2.1"/"3.2.0", "3.2.1"/"1.0", "3.2.1"/"3.2", "3.2"/"3.2.0",
+     * and "3"/"3.0.0" should all return true.  "3.2.1"/"3.2.2",
+     * "3.2.1"/"3.3.1", "3.2.1"/"4.2.1", "3.2"/"3.2.1" and "3"/"3.2.0"
+     * should return false.</p>
      */
 
     public void testBasicFunctionality()

@@ -56,18 +56,9 @@ import junit.framework.*;
 import junit.extensions.*;
 
 /**
- * <p>Bounds testing the interface can be done as part of the basic
- * functionality since when inputs are invalid, default values are
- * returned.  Bounds testing the configuration file itself is useful
- * to ensure sensible behavior when the file is corrupted or
- * incorrectly written.</p>
- *
- * <p>This class is expected to change and so tests will not be
- * implemented until after the changes have been made and these
- * documented tests updated accordingly.</p>
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  */
 
 
@@ -96,7 +87,18 @@ public class HashIntTableTest extends TestCase
      * associated with various keys.  Remove instances.  Ensure it
      * behaves as expected.</p>
      *
-     * @result 
+     * @result Ensure that after creation that the table is empty.
+     * Add 3 values.  Ensure that the table size is 3 and that the
+     * values are retrievable using get().  Ensure that attempts to
+     * retieve a non-existent value returns the default value of 0.
+     *
+     * <p>Increment on of the values and ensure that it's new value is
+     * retrievable.  Remove a value and ensure that the table size is
+     * suitably reduced.  Call keys() and ensure that the remaining
+     * keys are returned in the enumeration.  Create a new
+     * HashIntTable but this time with a different default value.
+     * Call get() with a non-existent value again and this time ensure
+     * that the new default value is returned.</p>
      */
 
     public void testBasicFunctionality()

@@ -55,18 +55,9 @@ import junit.framework.*;
 import junit.extensions.*;
 
 /**
- * <p>Bounds testing the interface can be done as part of the basic
- * functionality since when inputs are invalid, default values are
- * returned.  Bounds testing the configuration file itself is useful
- * to ensure sensible behavior when the file is corrupted or
- * incorrectly written.</p>
- *
- * <p>This class is expected to change and so tests will not be
- * implemented until after the changes have been made and these
- * documented tests updated accordingly.</p>
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 
 
@@ -91,21 +82,14 @@ public class WeakListTest extends TestCase
 
 
     /**
-     * <p>Since the methods are all static an instance of
-     * WeakList is not required.  Ensure that all methods return
-     * the expected values based on the tyrex.config file.</p>
+     * <p>Add values to the list and ensure that once all other
+     * references are gone and the garbage collector run that the
+     * values have been removed from the list.</p>
      *
-     * @result Call getBoolean(WeakList.PROPERTY_LOG_VERBOSE).  It
-     * should return true.  Calling it
-     * with an unknown configuration name should also return false
-     * (the default).  Call
-     * getInteger(WeakList.PROPERTY_SLEEP_TICKS) and it should
-     * return 10.  Calling it with an unknown configuration name
-     * should return -1.
-     *
-     * <p>Call getProperty("version.vendorName").  It should return
-     * the name of the vendor or null if one does not exist in the
-     * configuration.</p>
+     * @result Add 2 integers.  Ensure that both can be retrieved.
+     * Set the local variable for one of the values to null and run
+     * the garbage collector.  The other value should still be present
+     * in the list but not the one nulled.
      */
 
     public void testBasicFunctionality()
