@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionDomainImpl.java,v 1.12 2001/03/13 03:14:59 arkin Exp $
+ * $Id: TransactionDomainImpl.java,v 1.13 2001/03/14 21:51:05 jdaniel Exp $
  */
 
 
@@ -96,7 +96,7 @@ import tyrex.util.Configuration;
  * Implementation of a transaction domain.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.12 $ $Date: 2001/03/13 03:14:59 $
+ * @version $Revision: 1.13 $ $Date: 2001/03/14 21:51:05 $
  */
 public class TransactionDomainImpl
     extends TransactionDomain
@@ -671,8 +671,8 @@ public class TransactionDomainImpl
             throw new SystemException( "Transaction domain not active" );
 
         otid = pgContext.current.otid;
-        global = new byte[ otid.bequal_length ];
-        for ( int i = otid.bequal_length ; i-- > 0 ; )
+        global = new byte[ otid.bqual_length ];
+        for ( int i = otid.bqual_length ; i-- > 0 ; )
             global[ i ] = otid.tid[ i ];
         xid = (BaseXid) XidUtils.importXid( otid.formatID, global, null );
         timeout = pgContext.timeout;
