@@ -2,7 +2,7 @@
  * This class was automatically generated with 
  * <a href="http://castor.exolab.org">Castor 0.8.10</a>, using an
  * XML Schema.
- * $Id: AttributeDescriptor.java,v 1.1 2001/02/16 23:47:55 mohammed Exp $
+ * $Id: AttributeDescriptor.java,v 1.2 2001/06/22 17:53:34 mohammed Exp $
  */
 
 package transaction.configuration;
@@ -24,7 +24,7 @@ import org.exolab.castor.xml.validators.*;
 
 /**
  * 
- * @version $Revision: 1.1 $ $Date: 2001/02/16 23:47:55 $
+ * @version $Revision: 1.2 $ $Date: 2001/06/22 17:53:34 $
 **/
 public class AttributeDescriptor extends org.exolab.castor.xml.util.XMLClassDescriptorImpl {
 
@@ -86,7 +86,7 @@ public class AttributeDescriptor extends org.exolab.castor.xml.util.XMLClassDesc
         fieldValidator = new FieldValidator();
         { //-- local scope
             StringValidator sv = new StringValidator();
-            sv.setWhiteSpace("preserved");
+            sv.setWhiteSpace("preserve");
             fieldValidator.setValidator(sv);
         }
         desc.setValidator(fieldValidator);
@@ -123,7 +123,7 @@ public class AttributeDescriptor extends org.exolab.castor.xml.util.XMLClassDesc
         fieldValidator = new FieldValidator();
         { //-- local scope
             StringValidator sv = new StringValidator();
-            sv.setWhiteSpace("preserved");
+            sv.setWhiteSpace("preserve");
             fieldValidator.setValidator(sv);
         }
         desc.setValidator(fieldValidator);
