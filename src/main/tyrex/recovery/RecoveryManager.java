@@ -50,7 +50,7 @@ import tyrex.util.Logger;
  * to complete all pending transactions.
  * 
  * @author <a href="mailto:jdaniel@intalio.com">Jerome Daniel &lt;daniel@intalio.com&gt;</a>
- * @version $Revision: 1.1 $ $Date: 2001/01/11 23:26:33 $ 
+ * @version $Revision: 1.2 $ $Date: 2001/02/23 19:19:40 $ 
  */
 public class RecoveryManager
 {
@@ -589,7 +589,7 @@ public class RecoveryManager
          */
         private void print( String from, String msg )
         {
-            tyrex.util.Logger.getSystemLogger().println(from + ": " + msg );
+            tyrex.util.Logger.recovery.debug(from + ": " + msg );
         }
         
         public static void newRecoveryManager( String directory, org.omg.CORBA.ORB orb )

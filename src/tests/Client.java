@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Client.java,v 1.4 2000/09/08 23:03:10 mohammed Exp $
+ * $Id: Client.java,v 1.5 2001/02/23 19:23:58 jdaniel Exp $
  */
 
 
@@ -65,7 +65,7 @@ import org.exolab.testing.Timing;
  *
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.4 $ $Date: 2000/09/08 23:03:10 $
+ * @version $Revision: 1.5 $ $Date: 2001/02/23 19:23:58 $
  */
 public class Client
 {
@@ -75,7 +75,7 @@ public class Client
     {
 	PrintWriter                writer;
 
-	writer = Logger.getSystemLogger();
+	writer = new java.io.PrintWriter( System.out, true );
 
 	//System.setProperty( "java.rmi.server.logCalls", "true" );
 

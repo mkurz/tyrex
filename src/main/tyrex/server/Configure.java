@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Configure.java,v 1.7 2001/01/11 23:26:33 jdaniel Exp $
+ * $Id: Configure.java,v 1.8 2001/02/23 19:19:51 jdaniel Exp $
  */
 
 
@@ -89,7 +89,7 @@ import tyrex.conf.Server;
  *
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.7 $ $Date: 2001/01/11 23:26:33 $
+ * @version $Revision: 1.8 $ $Date: 2001/02/23 19:19:51 $
  */
 public final class Configure
     implements Serializable
@@ -202,22 +202,15 @@ public final class Configure
      */
     //private ResourcePoolManager     _poolManager;
 
-
+    /**
+     * Flag to specify if the logs for recovery are used
+     */
+    private boolean                 _use_log;
+    
     /**
      * The resource limits for the pool manager
      */
     private ResourceLimits          _limits;
-
-
-    /**
-     * The log writer used for dumping messages about transactions.
-     */
-    private transient PrintWriter    _logWriter;
-
-    /**
-     * Is the log activated
-     */
-     private boolean _use_log = false;
      
      /**
       * Log directory
@@ -366,7 +359,7 @@ public final class Configure
 
     public boolean isLogActivated()
     {
-        return _use_log;
+        return tyrex.tm.Tyrex.log();
     }
     
     public String getLogDirectory()
@@ -426,6 +419,7 @@ public final class Configure
      *
      * @param write A suitable print writer
      */
+    /*
     public void setLogWriter( PrintWriter writer )
     {
 	// Make sure we do not set the log writer to null,
@@ -434,7 +428,7 @@ public final class Configure
 	if ( writer == null )
 	    throw new NullPointerException( "Argument 'writer' is null" );
 	_logWriter = writer;
-    }
+    }*/
 
 
     /**
@@ -442,11 +436,11 @@ public final class Configure
      * execution.
      *
      * @return The log writer, null if none was set
-     */
+     *//*
     public PrintWriter getLogWriter()
     {
 	return _logWriter;
-    }
+    }*/
 
 
     /**
@@ -529,8 +523,9 @@ public final class Configure
 	    initCtx = new InitialContext();
 	    initCtx.rebind( Names.TransactionServer, remote );
 	} catch ( Exception except ) {
-	    if ( getLogWriter() != null )
-		getLogWriter().println( Messages.format( "tyrex.server.failedActivate", except ) );
+	   // if ( getLogWriter() != null )
+		//getLogWriter().println( Messages.format( "tyrex.server.failedActivate", except ) );
+            tyrex.util.Logger.server.warn( Messages.format( "tyrex.server.failedActivate", except )  );
 	    throw except;
 	}
     }

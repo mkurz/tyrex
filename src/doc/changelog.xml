@@ -2,8 +2,9 @@
 <document url="http://tyrex.exolab.org/changelog.xml">
   <body>
     <title>Change log</title>
-    <section title="Version 0.9.7.0  January 11 2001"><pre>
-- Replaced the XID branch and global ID generator by an UUID generator.
+    <section title="Version 0.9.7.1  January 11 2001"><pre>
+- Changed the Log system to use Log 4 J.
+- Changed the XID branch and global ID generator by an UUID generator.
     </pre></section>
     <section title="Version 0.9.7.0  January 11 2001"><pre>
 - Added Recovery mechanism. Each transactional event is logged

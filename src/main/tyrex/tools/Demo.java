@@ -59,18 +59,10 @@ public class Demo
 
 	    Configure config;
 	    int       count;
-
-	    if ( hasArgument( args, "log" ) )
-		_writer = new PrintWriter( new FileOutputStream( getArgumentValue( args, "log", "log" ) ) );
-	    else
-		_writer = new PrintWriter( System.out, true );
-
 	    // Create a default configuration for this server.
 	    // --activity will log all the transaction server
 	    // activities to the specified writer.
 	    config = new Configure();
-	    if ( hasArgument( args, "activity" ) )
-		config.setLogWriter( _writer );
 	    config.startServer();
 
 	    if ( hasArgument( args, "choke" ) ) {

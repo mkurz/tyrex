@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: LogWriter.java,v 1.2 2001/02/02 21:08:44 jdaniel Exp $
+ * $Id: LogWriter.java,v 1.3 2001/02/23 19:19:40 jdaniel Exp $
  *
  * Date         Author  Changes
  * 1/5/2001     J.Daniel    First implementation.
@@ -164,7 +164,7 @@ public class LogWriter
 		}
 		catch ( java.io.IOException ex )
 		{ 
-			Logger.getSystemLogger().println("Unable to create a log file.");
+			Logger.recovery.warn("Unable to create a log file.");
 			
 			throw new org.omg.CORBA.INITIALIZE();
 		}
@@ -770,7 +770,7 @@ public class LogWriter
 		catch ( java.io.IOException ex )
 		{
                         ex.printStackTrace();
-			Logger.getSystemLogger().println("Unable to write lock file for log !");
+			Logger.recovery.warn("Unable to write lock file for log !");
 		}
 		
 	}

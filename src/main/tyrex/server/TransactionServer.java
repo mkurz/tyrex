@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionServer.java,v 1.6 2001/01/11 23:26:33 jdaniel Exp $
+ * $Id: TransactionServer.java,v 1.7 2001/02/23 19:19:51 jdaniel Exp $
  */
 
 
@@ -90,7 +90,7 @@ import tyrex.util.Logger;
  *
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.6 $ $Date: 2001/01/11 23:26:33 $
+ * @version $Revision: 1.7 $ $Date: 2001/02/23 19:19:51 $
  * @see Configure
  * @see Tyrex
  * @see TransactionManagerImpl
@@ -223,7 +223,7 @@ public final class TransactionServer
 		start( new Configure() );
 		//*/
 	    } catch ( Exception except ) {
-		    Logger.getSystemLogger().println(
+		    Logger.server.warn(
 		    Messages.format( "tyrex.server.failedInitialize", except ) );
 		    throw new RuntimeException( Messages.format( "tyrex.server.failedInitialize", except ) );
 	    }
@@ -259,9 +259,9 @@ public final class TransactionServer
 	    try {
 		_instance = new TransactionServer();
 	    } catch ( Exception except ) {
-		Logger.getSystemLogger().println(
+		Logger.server.warn(
 		    Messages.format( "tyrex.server.failedInitialize", except ) );
-		except.printStackTrace( Logger.getSystemLogger() );
+		//except.printStackTrace( Logger.getSystemLogger() );
 		throw new RuntimeException( Messages.format( "tyrex.server.failedInitialize", except ) );
 	    }
 	}
@@ -279,7 +279,7 @@ public final class TransactionServer
 		// make sure we are using the same configuration object.
 		
 		if ( _config != null && _config != config ) {
-		    Logger.getSystemLogger().println(
+		    Logger.server.warn(
 		        Messages.message( "tyrex.server.serverNotSameConfig" ) );
 		    throw new SecurityException( Messages.message( "tyrex.server.serverNotSameConfig" ) );
 		}
@@ -287,23 +287,23 @@ public final class TransactionServer
 		_status = Configure.Status.Starting;
 		_config = config;
 		
-		Logger.getSystemLogger().println(
+		Logger.server.info(
 		    Messages.message( "tyrex.server.serverStart" ) );
 		pkg = _instance.getClass().getPackage();
 		if ( pkg != null ) {
-		    Logger.getSystemLogger().println( pkg.getImplementationTitle() +
+		    Logger.server.info( pkg.getImplementationTitle() +
 						      "  Version " +
 						      pkg.getImplementationVersion() );
-		    Logger.getSystemLogger().println( pkg.getImplementationVendor() );
+		    Logger.server.info( pkg.getImplementationVendor() );
 		}
 
 		getTransactionDomain( DefaultDomain, true );
                 
                 tyrex.recovery.LogWriter.newWriter( config.getLogDirectory(), config.getORB(), config.isLogActivated(), config.isRecoveryActivated() );
                 if ( config.isLogActivated() )
-                    Logger.getSystemLogger().println( Messages.message("tyrex.recovery.enable") );
+                    Logger.server.info( Messages.message("tyrex.recovery.enable") );
                 else
-                    Logger.getSystemLogger().println( Messages.message("tyrex.recovery.disable") );     
+                    Logger.server.info( Messages.message("tyrex.recovery.disable") );     
                 
                 tyrex.recovery.RecoveryManager.newRecoveryManager( config.getLogDirectory(), config.getORB() );                
                 if ( config.isRecoveryActivated() )
@@ -318,13 +318,13 @@ public final class TransactionServer
 		// the same configuration object to do that.
 
 		if ( _config != config ) {
-		    Logger.getSystemLogger().println( 
+		    Logger.server.warn( 
 		        Messages.message( "tyrex.server.serverNotSameConfig" ) );
 		    throw new SecurityException( Messages.message( "tyrex.server.serverNotSameConfig" ) );
 		}
 
 		_status = Configure.Status.Starting;
-		Logger.getSystemLogger().println(
+		Logger.server.info(
 		    Messages.message( "tyrex.server.serverRestart" ) );
 
 		// Load new configuration information from disk
@@ -347,7 +347,7 @@ public final class TransactionServer
 	    _instance.notifyAll();
 	}                               
 
-	Logger.getSystemLogger().println(
+	Logger.server.info(
 	    Messages.message( "tyrex.server.serverStarted" ) );
     }
 
@@ -379,7 +379,7 @@ public final class TransactionServer
 	synchronized ( _instance ) {
 	    
 	    if ( config != _config ) {
-		Logger.getSystemLogger().println( 
+		Logger.server.warn( 
 		    Messages.message( "tyrex.server.serverNotSameConfig" ) );
 		throw new SecurityException( Messages.message( "tyrex.server.serverNotSameConfig" ) );
 	    }
@@ -387,7 +387,7 @@ public final class TransactionServer
 		return;
 	    
 	    _status = Configure.Status.Shutdown;
-	    Logger.getSystemLogger().println( 
+	    Logger.server.info( 
 	        Messages.message( "tyrex.server.serverShutdown" ) );
 	    
 	    enum = _txDomains.elements();
@@ -398,7 +398,7 @@ public final class TransactionServer
 	    _status = Configure.Status.Active;
 	}
 
-	Logger.getSystemLogger().println( 
+	Logger.server.info( 
 	  Messages.message( "tyrex.server.serverStopped" ) );
     }
 
@@ -427,9 +427,8 @@ public final class TransactionServer
      * specified for this server.
      */
     static void logMessage( String message )
-    {
-	if ( _config.getLogWriter() != null )
-	    _config.getLogWriter().println( message );
+    {	
+	tyrex.util.Logger.server.info( message );
     }
 
 

@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Server.java,v 1.4 2000/09/08 23:03:11 mohammed Exp $
+ * $Id: Server.java,v 1.5 2001/02/23 19:23:57 jdaniel Exp $
  */
 
 
@@ -65,7 +65,7 @@ import tyrex.tm.*;
  *
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.4 $ $Date: 2000/09/08 23:03:11 $
+ * @version $Revision: 1.5 $ $Date: 2001/02/23 19:23:57 $
  */
 public class Server
 {
@@ -95,15 +95,13 @@ public class Server
 	    System.out.println( "  kt          Timeout - kill thread" );
 	    System.exit ( 1 );
 	}
-	writer = Logger.getSystemLogger();
+	writer = new java.io.PrintWriter( System.out, true );
 	memory = new Memory( "Memory consumption" );
 	debug = ( args.length >= 2 && "debug".startsWith( args[ 1 ] ) );
 
 	Configure config;
 
 	config = new Configure();
-	if ( debug && test != TEST_PERFORMANCE )
-	    config.setLogWriter( writer );
 	config.getResourceLimits().setCheckEvery( 1 );
 	config.startServer();
 	/*

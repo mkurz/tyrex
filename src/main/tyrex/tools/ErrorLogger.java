@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: ErrorLogger.java,v 1.3 2000/12/19 02:21:36 mohammed Exp $
+ * $Id: ErrorLogger.java,v 1.4 2001/02/23 19:23:02 jdaniel Exp $
  */
 
 
@@ -57,36 +57,30 @@ import tyrex.tm.Heuristic;
 /**
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.3 $ $Date: 2000/12/19 02:21:36 $
+ * @version $Revision: 1.4 $ $Date: 2001/02/23 19:23:02 $
  */
 public class ErrorLogger
     implements TransactionInterceptor 
 {
 
 
-    private PrintWriter  _logWriter;
-
-
     public ErrorLogger()
     {
-	_logWriter = Logger.getSystemLogger();
     }
 
 
-    public void setLogWriter( PrintWriter logWriter )
+/*    public void setLogWriter( PrintWriter logWriter )
     {
 	if ( logWriter == null )
 	    throw new IllegalArgumentException( "Argument 'logWriter' is null" );
 	_logWriter = logWriter;
-    }
-
-
+}
     public PrintWriter setLogWriter()
     {
 	return _logWriter;
     }
 
-
+*/
     public void begin( Xid xid )
     {
     }
@@ -106,13 +100,13 @@ public class ErrorLogger
     {
 	switch ( heuristic ) {
 	case Heuristic.TimedOut:
-	    _logWriter.println( xid.toString() + ": timed out and rolled back" );
+	    Logger.tools.info( xid.toString() + ": timed out and rolled back" );
 	    break;
 	case Heuristic.Hazard:
-	    _logWriter.println( xid.toString() + ": reported hazard heuristic" );
+	    Logger.tools.info( xid.toString() + ": reported hazard heuristic" );
 	    break;
 	case Heuristic.Mixed:
-	    _logWriter.println( xid.toString() + ": reported mixed heuristic" );
+	    Logger.tools.info( xid.toString() + ": reported mixed heuristic" );
 	    break;
 	}
     }

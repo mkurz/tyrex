@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Tyrex.java,v 1.2 2000/09/08 23:06:13 mohammed Exp $
+ * $Id: Tyrex.java,v 1.3 2001/02/23 19:22:50 jdaniel Exp $
  */
 
 
@@ -67,11 +67,11 @@ import tyrex.server.TransactionServer;
  *
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $ $Date: 2000/09/08 23:06:13 $
+ * @version $Revision: 1.3 $ $Date: 2001/02/23 19:22:50 $
  */
 public final class Tyrex
 {
-
+    private static boolean _log = false;
 
     private static TransactionDomain    _txDomain =
         TransactionServer.getTransactionDomain( TransactionServer.DefaultDomain, true );
@@ -104,6 +104,15 @@ public final class Tyrex
 	return _txDomain.getUserTransaction();
     }
 
+    public static void log( boolean status )
+    {
+        _log = status;
+    }    
+    
+    public static boolean log()
+    {
+        return _log;
+    }
 
     public static void recycleThread()
 	throws RollbackException

@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: XidImpl.java,v 1.4 2001/02/23 17:30:23 jdaniel Exp $
+ * $Id: XidImpl.java,v 1.5 2001/02/23 19:22:50 jdaniel Exp $
  */
 
 
@@ -83,7 +83,7 @@ import tyrex.util.Logger;
  * 
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.4 $ $Date: 2001/02/23 17:30:23 $
+ * @version $Revision: 1.5 $ $Date: 2001/02/23 19:22:50 $
  *
  * Date     Author      Change
  * 1/8/1    J.Daniel    Added a new constructor to be able to restore an
@@ -433,7 +433,7 @@ public final class XidImpl
 	    }
 	} catch ( UnknownHostException except ) {
 	    addr = 0xFFFFFFFF;
-	    Logger.getSystemLogger().println( Messages.message( "tyrex.server.failedFindHostIP" ) );
+	    Logger.tm.warn( Messages.message( "tyrex.server.failedFindHostIP" ) );
 	}
 	_machineId = new byte[ MACHINE_ID_LENGTH ];
 	for ( i = 0 ; i < MACHINE_ID_LENGTH ; ++i ) {

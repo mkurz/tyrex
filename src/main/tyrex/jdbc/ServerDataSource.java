@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: ServerDataSource.java,v 1.12 2001/01/11 23:26:32 jdaniel Exp $
+ * $Id: ServerDataSource.java,v 1.13 2001/02/23 19:19:24 jdaniel Exp $
  */
 
 
@@ -99,7 +99,7 @@ import tyrex.util.Messages;
  * {@link tyrex.resource.ResourcePool}.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.12 $ $Date: 2001/01/11 23:26:32 $
+ * @version $Revision: 1.13 $ $Date: 2001/02/23 19:19:24 $
  *
  * Date         Author          Changes
  * ?            Assaf Arkin     Created  
@@ -716,9 +716,7 @@ public class ServerDataSource
                 ref.add( new BinaryRefAddr( "dataSource", getDataSourceBytes() ) );
             }
         } catch (NamingException e) {
-            Logger.getSystemLogger().print( "Failed to bind data source" );
-            Logger.getSystemLogger().print( _dataSource );
-            Logger.getSystemLogger().println(e);
+            Logger.jdbc.warn( "Failed to bind data source : " + _dataSource + " / " + e );            
         } catch (IOException e) {
         }
     }

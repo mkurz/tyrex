@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Messages.java,v 1.4 2000/09/08 23:06:38 mohammed Exp $
+ * $Id: Messages.java,v 1.5 2001/02/23 19:23:13 jdaniel Exp $
  */
 
 
@@ -55,7 +55,7 @@ import java.util.*;
  *
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.4 $ $Date: 2000/09/08 23:06:38 $
+ * @version $Revision: 1.5 $ $Date: 2001/02/23 19:23:13 $
  */
 public class Messages
 {
@@ -141,7 +141,7 @@ public class Messages
 	    _formats = new Hashtable();
 	} catch ( Exception except ) {
 	    _messages = new EmptyResourceBundle();
-	    Logger.getSystemLogger().println( "Failed to locate messages resource " +
+	    Logger.util.warn( "Failed to locate messages resource " +
 					      ResourceName );
 	}
     }

@@ -40,20 +40,19 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Logger.java,v 1.7 2000/11/01 00:21:55 mohammed Exp $
+ * $Id: Logger.java,v 1.8 2001/02/23 19:23:13 jdaniel Exp $
  */
 
 
 package tyrex.util;
 
-
 import java.io.OutputStream;
-import java.io.Writer;
-import java.io.PrintWriter;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.Date;
-
+import java.util.Properties;
+import java.util.Enumeration;
+import org.apache.log4j.PatternLayout;
+import org.apache.log4j.Category;
+import org.apache.log4j.Appender;
+import org.apache.log4j.FileAppender;
 
 /**
  * Simple logging facility. This logger extends <tt>PrintWriter</tt>
@@ -64,352 +63,104 @@ import java.util.Date;
  * each printed line and optionally a time stamp, enabling easy
  * post-mortem analysis.
  *
- * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.7 $ $Date: 2000/11/01 00:21:55 $
+ * @author <a href="jdaniel@intalio.com">Jerome DANIEL</a>
+ * @version $Revision: 1.8 $ $Date: 2001/02/23 19:23:13 $
  */
 public class Logger
-    extends PrintWriter
 {
+    public static final Category conf;
+    
+    public static final Category ots;
+    
+    public static final Category jdbc;
+    
+    public static final Category recovery;
+    
+    public static final Category server;
 
+    public static final Category tm;
+    
+    public static final Category tools;
+    
+    public static final Category util;
+    
+    public static final Appender appender;
 
-    /**
-     * The default prefix to show at the beginning of each line.
-     */
-    public static final String Prefix = "Tyrex";
+    static {
+        PatternLayout layout;
+        Category      category;
+        Properties    props;
+        String        name;
+        Enumeration   enum;
+        FileAppender  nullAppender;        
+        
+        layout = new PatternLayout( "%d{dd MMM yyyy HH:mm:ss}:%c:%p %m%n" );
+        
+        nullAppender = new FileAppender( new PatternLayout(""), new DevNull() );
 
-
-    /**
-     * True if the time should be printed on each line.
-     */
-    public static final boolean LogTime = true;
-
-
-    /**
-     * The default system logger.
-     */
-    private static Logger  _system = new Logger( System.out ).setPrefix( Prefix );
-
-
-    /**
-     * True if the time should be printed on each line.
-     */
-    private boolean  _logTime = LogTime;
-
-
-    /**
-     * The prefix to use for this logger, null if lines should not be prefixed.
-     */
-    private String  _prefix;
-
-
-    /**
-     * True if at the beginning of a line.
-     */
-    private boolean _newLine;
-
-
-    /**
-     * Constructs a new logger to use the specified output stream.
-     */
-    public Logger( OutputStream output )
-    {
-	super( output, true );
-	setPrefix( Prefix );
-	_newLine = true;
-    }
-
-
-    /**
-     * Constructs a new logger to use the specified writer.
-     */
-    public Logger( Writer output )
-    {
-	super( output, true );
-	setPrefix( Prefix );
-	_newLine = true;
-    }
-
-
-    /**
-     * Returns the default logger. This logger is used to produce
-     * system messages.
-     */
-    public static Logger getSystemLogger()
-    {
-	return _system;
-    }
-
-
-    /**
-     * Sets the default logger. This logger is used to produce
-     * system messages.
-     */
-    public static void setSystemLogger( PrintWriter system )
-    {
-	if ( system == null )
-	    throw new NullPointerException( "Argument 'system' is null" );
-	_system = system instanceof Logger ? ( Logger )system : new Logger( system ).setPrefix( Prefix );
-    }
-
-
-    /**
-     * Sets the default logger. This logger is used to produce
-     * system messages.
-     */
-    public static void setSystemLogger( Logger system )
-    {
-	if ( system == null )
-	    throw new NullPointerException( "Argument 'system' is null" );
-	_system = system;
-    }
-
-
-    /**
-     * Sets the prefix, a short name to print at the beginning
-     * of each log line. The default is {@link #Prefix}. If a
-     * null is passed, no prefix precedes logged lines.
-     *
-     * @param prefix The prefix to use for each line
-     * @return This logger
-     */
-    public Logger setPrefix( String prefix )
-    {
-	if ( prefix != null && prefix.length() > 0 )
-	    _prefix = "[" + prefix + "] ";
-	else
-	    _prefix = "";
-	return this;
-    }
-
-
-    /**
-     * Determines whether to print the time at the beggining of
-     * each log line. The default is {@link #LogTime}
-     * 
-     * @param logTime True if time should appear at the beggining
-     *   of each log line
-     * @return This logger
-     */
-    public Logger setLogTime( boolean logTime )
-    {
-	_logTime = logTime;
-	return this;
-    }
-
-
-    public void println()
-    {
-	super.println();
-	_newLine = true;
-    }
-
-
-    public void println( boolean value )
-    {
-	prefixLine();
-	super.print( value );
-	super.println();
-	_newLine = true;
-    }
-
-
-    public void print( boolean value )
-    {
-	prefixLine();
-	super.print( value );
-    }
-
-
-    public void println( char value )
-    {
-	prefixLine();
-	super.print( value );
-	super.println();
-	_newLine = true;
-    }
-
-
-    public void print( char value )
-    {
-	prefixLine();
-	super.print( value );
-	_newLine = ( value == '\n' );
-    }
-
-
-    public void println( int value )
-    {
-	prefixLine();
-	super.print( value );
-	super.println();
-	_newLine = true;
-
-    }
-
-
-    public void print( int value )
-    {
-	prefixLine();
-	super.print( value );
-    }
-
-
-    public void println( long value )
-    {
-	prefixLine();
-	super.print( value );
-	super.println();
-	_newLine = true;
-    }
-
-
-    public void print( long value )
-    {
-	prefixLine();
-	super.print( value );
-    }
-
-
-    public void println( float value )
-    {
-	prefixLine();
-	super.print( value );
-	super.println();
-	_newLine = true;
-    }
-
-
-    public void print( float value )
-    {
-	prefixLine();
-	super.print( value );
-    }
-
-
-    public void println( double value )
-    {
-	prefixLine();
-	super.print( value );
-	super.println();
-	_newLine = true;
-    }
-
-
-    public void print( double value )
-    {
-	prefixLine();
-	super.print( value );
-    }
-
-
-    public void println( char[] value )
-    {
-	print( value );
-	super.println();
-	_newLine = true;
-    }
-
-
-    public void print( char[] value )
-    {
-	int i;
-	int offset;
-
-	offset = 0;
-	for ( i = 0 ; i < value.length ; ++i ) {
-	    if ( value[ i ] == '\n' ) {
-		prefixLine();
-		super.write( value, offset, i - offset );
-		super.println();
-		_newLine = true;
-		offset = i + 1;
-	    }
-	}
-	if ( i > offset ) {
-	    prefixLine();
-	    super.write( value, offset, i - offset );
-	    _newLine = false;
-	}
-    }
-
-
-    public void println( String value )
-    {
-	print( value );
-	super.println();
-	_newLine = true;
-    }
-
-
-    public void print( String value )
-    {
-	int i;
-	int offset;
-
-        i = 0;
-	offset = 0;
-        if (null != value) {
-            for ( i = 0 ; i < value.length() ; ++i ) {
-                if ( value.charAt( i ) == '\n' ) {
-                    prefixLine();
-                    super.write( value, offset, i - offset );
-                    super.println();
-                    _newLine = true;
-                    offset = i + 1;
-                }
-            }
+        ots = Category.getInstance( "tyrex.ots" );        
+        conf = Category.getInstance( "tyrex.conf" );
+        jdbc = Category.getInstance( "tyrex.jdbc" );
+        recovery = Category.getInstance( "tyrex.recovery" );
+        server = Category.getInstance( "tyrex.server" );
+        tm = Category.getInstance( "tyrex.tm" );
+        tools = Category.getInstance( "tyrex.tools" );
+        util = Category.getInstance( "tyrex.util" );
+        
+         if ( !tyrex.tm.Tyrex.log() )
+         {        
+            appender = nullAppender;
+            
+            ots.addAppender( nullAppender );
+            conf.addAppender( nullAppender );
+            jdbc.addAppender( nullAppender );
+            recovery.addAppender( nullAppender );
+            server.addAppender( nullAppender );
+            tm.addAppender( nullAppender );
+            tools.addAppender( nullAppender );
+            util.addAppender( nullAppender );
+         }
+        else
+        {
+            appender = new FileAppender( layout, System.out );
+            
+            ots.addAppender( appender );
+            conf.addAppender( appender );
+            jdbc.addAppender( appender );
+            recovery.addAppender( appender );
+            server.addAppender( appender );
+            tm.addAppender( appender );
+            tools.addAppender( appender );
+            util.addAppender( appender );
         }
-	if ( i > offset ) {
-	    prefixLine();
-	    super.write( value, offset, i - offset );
-	    _newLine = false;
-	}
     }
 
 
-    public void println( Object value )
+    static private class DevNull
+        extends OutputStream
     {
-	println( String.valueOf( value ) );
+
+        public void close()
+        {
+        }
+
+        public void flush()
+        {
+        }
+
+        public void write( int value )
+        {
+        }
+
+        public void write( byte[] bytes )
+        {
+        }
+
+        public void write( byte[] bytes, int start, int length )
+        {
+        }
+
     }
-
-
-    public void print( Object value )
-    {
-	prefixLine();
-	println( String.valueOf( value ) );
-    }
-
-
-    public void print( Exception e )
-    {
-    prefixLine();
-    e.printStackTrace(this);
-    }
-
-    public void println( Exception e )
-    {
-    print( e );
-	_newLine = true;
-    }
-
-
-    /**
-     * Called before printing from all of the print methods.
-     * If at the beginning of a new line, the data/time and
-     * prefix will be printed.
-     */
-    protected final void prefixLine()
-    {
-	if ( _newLine ) {
-	    if ( _logTime ) {
-		write( new Date().toString() );
-		write( ' ' );
-	    }
-	    if ( _prefix != null )
-		write( _prefix );
-	}
-    }
-
 
 }
 
