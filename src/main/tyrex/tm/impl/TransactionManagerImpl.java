@@ -40,7 +40,7 @@
  *
  * Copyright 2000,2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionManagerImpl.java,v 1.1 2001/02/27 00:37:52 arkin Exp $
+ * $Id: TransactionManagerImpl.java,v 1.2 2001/02/28 18:28:25 arkin Exp $
  */
 
 
@@ -75,7 +75,7 @@ import tyrex.util.Messages;
  * transaction server.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2001/02/27 00:37:52 $
+ * @version $Revision: 1.2 $ $Date: 2001/02/28 18:28:25 $
  * @see Tyrex#recycleThread
  * @see TransactionDomain
  * @see TransactionImpl
@@ -308,7 +308,7 @@ final class TransactionManagerImpl
 
     
     public void enlistResource( XAResource xaResource )
-	throws SystemException, RollbackException
+	throws SystemException
     {
         ThreadContext   context;
         
@@ -322,13 +322,22 @@ final class TransactionManagerImpl
 	// For the resources all transaction are flat: we always
 	// enlist with the top level transaction.
 	context.add( xaResource );
-	if ( context._tx != null )
-	    context._tx.getTopLevel().enlistResource( xaResource );
+	if ( context._tx != null ) {
+            try {
+                context._tx.getTopLevel().enlistResource( xaResource );
+            } catch ( IllegalStateException except ) {
+                // The transaction is preparing/committing.
+                // We still allow future enlistment.
+            } catch ( RollbackException except ) {
+                // The transaction has rolled back.
+                // We still allow future enlistment.
+            }
+        }
     }
 
 
     public void delistResource( XAResource xaResource, int flag )
-	throws SystemException, RollbackException
+	throws SystemException
     {
         ThreadContext   context;
         
@@ -343,9 +352,15 @@ final class TransactionManagerImpl
         // for the current thread.
         // For the resources all transaction are flat: we always
         // delist with the top level transaction.
-        if ( context._tx != null )
-            context._tx.getTopLevel().delistResource( xaResource, flag );
         context.remove( xaResource );
+        if ( context._tx != null ) {
+            try {
+                context._tx.getTopLevel().delistResource( xaResource, flag );
+            } catch ( IllegalStateException except ) {
+                // The transaction is preparing/committing.
+                // We still need to prevent future enlistment.
+            }
+        }
     }
 
 

@@ -43,51 +43,46 @@
  */
 
 
-package tyrex.tm;
-
-import javax.transaction.RollbackException;
-import javax.transaction.SystemException;
-import javax.transaction.TransactionManager;
-import javax.transaction.xa.XAResource;
+package tyrex.util;
 
 
 /**
- * This interface defines methods that allow a transaction manager to
- * be used by a container like an ejb container. It is an extension of 
- * {@link javax.transaction.TransactionManager}.
+ * This class provides a single service. It returns the next prime number
+ * that is larger than the required value. The prime table ranges between
+ * 11 and 2893249.
  *
- * @author <a href="mohammed@intalio.com">Riad Mohammed</a>
+ * @author <a href="arkin@intalio.com">Assaf Arkin</a>
+ * @version $Revision: 1.1 $ $Date: 2001/02/28 18:28:54 $
  */
-public interface TyrexTransactionManager 
-    extends TransactionManager
+public final class Primes
 {
 
 
-    /**
-     * Called to enlist a resource with the current thread.
-     * If this method is called within an active transaction,
-     * the connection will be enlisted in that transaction.
-     * The connection will be enlisted in any future transaction
-     * associated with the same thread context.
-     *
-     * @param xaRes The XA resource
-     */
-    public void enlistResource( XAResource xaResource )
-        throws SystemException;
+    private static final int[] _primes = new int[] {
+        11, 13, 29, 37, 47, 59, 71, 89, 107, 131, 163, 197, 239, 293,
+        353, 431, 521, 631, 761, 919, 1103, 1327, 1597, 1931, 2333, 2801,
+        3371, 4049, 4861, 5839, 7013, 8419, 10103, 12143, 14591, 17519,
+        21023, 25229, 30293, 36353, 43627, 52361, 62851, 75431, 90523,
+        108631, 130363, 156437, 187751, 225307, 270371, 324449, 389357,
+        467237, 560689, 672827, 807403, 968897, 1162687, 1395263, 1674319,
+        2009191, 2411033, 2893249
+    };
 
-    
-    /**
-     * Called to delist a resource from the current thread.
-     * If this method is called within an active transaction,
-     * the connection will be delisted using the success flag.
-     * The connection will not be enlisted in any future transaction
-     * associated with the same thread context.
-     *
-     * @param xaRes The XA resource
-     * @param flag The delist flag
-     */
-    public void delistResource( XAResource xaResource, int flag )
-        throws SystemException;
-    
 
+    /**
+     * Returns the lowest prime number that is higher than the specified
+     * value.
+     *
+     * @param value The specified value
+     * @return The lowest prime number higher than the value
+     */
+    public static int nextPrime( int value )
+    {
+        for ( int i = 0 ; i < _primes.length ; ++i )
+            if ( value <= _primes[ i ] )
+                return _primes[ i ];
+        return _primes[ _primes.length - 1 ];
+    }
+    
+    
 }

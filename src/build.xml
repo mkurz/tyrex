@@ -72,6 +72,11 @@
         <patternset refid="support.files" />
       </fileset>
     </copy>
+    <copy todir="${build.classes}">
+      <fileset dir="${source.etc}">
+        <include name="*.properties" />
+      </fileset>
+    </copy>
     <copy todir="${build.schema}">
       <fileset dir="${source.schema}">
         <include name="*" />

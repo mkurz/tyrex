@@ -40,7 +40,7 @@
  *
  * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionImpl.java,v 1.1 2001/02/27 00:37:52 arkin Exp $
+ * $Id: TransactionImpl.java,v 1.2 2001/02/28 18:28:25 arkin Exp $
  */
 
 
@@ -89,7 +89,7 @@ import tyrex.util.Messages;
  * they are added.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2001/02/27 00:37:52 $
+ * @version $Revision: 1.2 $ $Date: 2001/02/28 18:28:25 $
  * @see XAResourceHolder
  * @see TransactionManagerImpl
  * @see TransactionDomain
@@ -209,7 +209,7 @@ final class TransactionImpl
      * log and must complete by recording the transaction outcome and
      * forgeting about it.
      */
-    private boolean                    _twoPhase = true;
+    private boolean                    _twoPhase;
 
     
     /**
