@@ -5,19 +5,19 @@
     <header>
       <ul>For FTP access use <url>ftp://ftp.exolab.org/pub</url>.
         <li>The Tyrex JAR<br/>
-            <url>http://ftp.exolab.org/ftp/tyrex/tyrex-$VERSION$/tyrex-$VERSION$.jar</url>
+            <url>ftp://ftp.exolab.org/ftp/tyrex/tyrex-$VERSION$/tyrex-$VERSION$.jar</url>
             <br/>&#xA0;</li>
         <li>The Tyrex JARs, docs, DTDs, command line tools and examples<br/>
-            <url>http://ftp.exolab.org/ftp/tyrex/tyrex-$VERSION$/tyrex-$VERSION$.tgz</url><br/>
-            <url>http://ftp.exolab.org/ftp/tyrex/tyrex-$VERSION$/tyrex-$VERSION$.zip</url>
+            <url>ftp://ftp.exolab.org/ftp/tyrex/tyrex-$VERSION$/tyrex-$VERSION$.tgz</url><br/>
+            <url>ftp://ftp.exolab.org/ftp/tyrex/tyrex-$VERSION$/tyrex-$VERSION$.zip</url>
             <br/>&#xA0;</li>
         <li>Full documentation including all JavaDocs and specs (big)<br/>
-            <url>http://ftp.exolab.org/ftp/tyrex/tyrex-$VERSION$/tyrex-$VERSION$-doc.tgz</url><br/>
-            <url>http://ftp.exolab.org/ftp/tyrex/tyrex-$VERSION$/tyrex-$VERSION$-doc.zip</url>
+            <url>ftp://ftp.exolab.org/ftp/tyrex/tyrex-$VERSION$/tyrex-$VERSION$-doc.tgz</url><br/>
+            <url>ftp://ftp.exolab.org/ftp/tyrex/tyrex-$VERSION$/tyrex-$VERSION$-doc.zip</url>
             <br/>&#xA0;</li>
         <li>Full CVS snapshot: all sources, docs, libraries (big)<br/>
-            <url>http://ftp.exolab.org/ftp/tyrex/tyrex-$VERSION$/tyrex-$VERSION$-src.tgz</url><br/>
-            <url>http://ftp.exolab.org/ftp/tyrex/tyrex-$VERSION$/tyrex-$VERSION$-src.zip</url>
+            <url>ftp://ftp.exolab.org/ftp/tyrex/tyrex-$VERSION$/tyrex-$VERSION$-src.tgz</url><br/>
+            <url>ftp://ftp.exolab.org/ftp/tyrex/tyrex-$VERSION$/tyrex-$VERSION$-src.zip</url>
             <br/>&#xA0;</li>
       </ul>
 
