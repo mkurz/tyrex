@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: EnabledDataSource.java,v 1.3 2001/03/12 19:20:18 arkin Exp $
+ * $Id: EnabledDataSource.java,v 1.4 2001/07/05 22:29:03 mohammed Exp $
  */
 
 
@@ -569,6 +569,7 @@ public class EnabledDataSource
         if ( getIsolationLevelAsString() != null )
             ref.add( new StringRefAddr( "isolationLevel", getIsolationLevelAsString() ) );
         ref.add( new StringRefAddr( "transactionTimeout", Integer.toString( getTransactionTimeout() ) ) );
+		ref.add( new StringRefAddr( "ignoreIsolationLevel", getIgnoreIsolationLevel() ? Boolean.TRUE.toString() : Boolean.FALSE.toString() ) );
         return ref;
     }
 
@@ -611,6 +612,10 @@ public class EnabledDataSource
                 addr = ref.get( "isolationLevel" );
                 if ( addr != null ) {
                     ds.setIsolationLevel( (String) addr.getContent() );
+                }
+				addr = ref.get( "ignoreIsolationLevel" );
+				if ( addr != null ) {
+                    ds.setIgnoreIsolationLevel( Boolean.valueOf( ( (String) addr.getContent() ) ).booleanValue() );
                 }
                 return ds;
             } else

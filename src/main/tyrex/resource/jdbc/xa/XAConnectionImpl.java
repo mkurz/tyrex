@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: XAConnectionImpl.java,v 1.5 2001/05/24 17:31:35 mohammed Exp $
+ * $Id: XAConnectionImpl.java,v 1.6 2001/07/05 22:29:03 mohammed Exp $
  */
 
 
@@ -492,7 +492,9 @@ public final class XAConnectionImpl
                         // is expensive and can use up resources. The Cloudspace 3.5, Sybase 5.2 drivers suffers from this.
                         
                         //if ( _resManager.getIsolationLevel() != _txConn.conn.getTransactionIsolation() )
-                        _txConn.conn.setTransactionIsolation( _resManager.getIsolationLevel() );
+						if ( !_resManager.getIgnoreIsolationLevel() ) {
+							_txConn.conn.setTransactionIsolation( _resManager.getIsolationLevel() );
+						}
                     } catch ( SQLException e ) {
                         // The underlying driver might not support this
                         // isolation level that we use by default.

@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: XADataSourceImpl.java,v 1.4 2001/03/12 19:20:18 arkin Exp $
+ * $Id: XADataSourceImpl.java,v 1.5 2001/07/05 22:29:03 mohammed Exp $
  */
 
 
@@ -65,7 +65,7 @@ import javax.sql.XADataSource;
 import javax.transaction.xa.Xid;
 import tyrex.services.Clock;
 import tyrex.util.BackgroundThread;
-
+import tyrex.util.Logger;
 
 /**
  * Implements a JDBC 2.0 {@link XADataSource} for any JDBC driver
@@ -138,7 +138,13 @@ public abstract class XADataSourceImpl
      */
     private int _isolationLevel = DEFAULT_ISOLATION_LEVEL;
 
-
+	/**
+	 * True if the isolation level is to be ignored. This is useful
+	 * for those JDBC 1.1 drivers that do not support isolation 
+	 * levels at all.
+	 */
+	private boolean _ignoreIsolationLevel = false;
+    
     /**
      * The default isolation level is Read Committed
      */
@@ -365,14 +371,18 @@ public abstract class XADataSourceImpl
                     entry = ( ConnectionEntry )i.next();
                     if ( entry._account.equals( account )) {
                         i.remove();
-                        entry._connection.setTransactionIsolation(_isolationLevel);
+						if ( !_ignoreIsolationLevel ) {
+							entry._connection.setTransactionIsolation( _isolationLevel );
+						}
                         return entry._connection;
                     }
                 }
             }
         }
         connection = getConnection( userName, password );
-        connection.setTransactionIsolation(_isolationLevel);
+		if ( !_ignoreIsolationLevel ) {
+			connection.setTransactionIsolation( _isolationLevel );
+		}
         return connection;
     }
     
@@ -397,23 +407,65 @@ public abstract class XADataSourceImpl
         return (Xid[]) list.toArray( new Xid[ list.size() ] );
     }
     
+
+	/**
+	 * Return true if the isolation level is ignored so that the 
+	 * isolation level is never set on the underlying JDBC connection.
+	 * This is useful for those JDBC connection that do not support
+	 * isolation levels at all. However the transaction isolation
+	 * level can be set directly on the connection which is outside
+	 * of the control of this method, for now.
+	 *
+	 * @return true if the isolation level is ignored
+	 * @see #getIsolationLevel
+	 * @see #setIsolationLevel
+	 */
+	public final boolean getIgnoreIsolationLevel() {
+		return _ignoreIsolationLevel;
+	}
+
+	/**
+	 * Tell the data source whether to ignore the isolation level on the
+	 * underlying JDBC connection. This is useful for those JDBC connection 
+	 * that do not support isolation levels at all. However the transaction 
+	 * isolation level can be set directly on the connection which is outside
+	 * of the control of this method, for now.
+	 *
+	 * @param ignoreIsolationLevel true if the isolation level is ignored
+	 * @see #getIsolationLevel
+	 * @see #setIsolationLevel
+	 */
+	public final void setIgnoreIsolationLevel(boolean ignoreIsolationLevel) {
+		_ignoreIsolationLevel = ignoreIsolationLevel;
+	}
     
     /**
      * Returns the transaction isolation level to use with all newly
-     * created transactions.
+     * created transactions. If the method 
+	 * {@link #getIgnoreIsolationLevel} returns true the isloation 
+	 * level is ignored.
      *
      * @return the transaction isolation level to use with all newly
      * created transactions
-     */
+	 * @see #getIgnoreIsolationLevel
+	 * @see #setIgnoreIsolationLevel
+	 */
     public final int getIsolationLevel()
     {
+		if (_ignoreIsolationLevel) {
+			Logger.resource.info("Isolation level " + 
+								 _isolationLevel + 
+								 " is ignored because getIgnoreIsolationLevel() is true.");	
+		}
         return _isolationLevel;
     }
     
     
     /**
      * Set the transaction isolation level to use with all newly
-     * created transactions.
+     * created transactions. If the method 
+	 * {@link #getIgnoreIsolationLevel} returns true the isloation 
+	 * level is ignored.
      * <p>
      * The isolation level of java.sql.Connection.TRANSACTION_NONE
      * is not supported.
@@ -425,6 +477,8 @@ public abstract class XADataSourceImpl
      * java.sql.Connection.TRANSACTION_READ_COMMITTED,
      * java.sql.Connection.TRANSACTION_REPEATABLE_READ,
      * java.sql.Connection.TRANSACTION_SERIALIZABLE
+	 * @see #getIgnoreIsolationLevel
+	 * @see #setIgnoreIsolationLevel
      */
     public final void setIsolationLevel( int isolationLevel )
     {
@@ -434,6 +488,12 @@ public abstract class XADataSourceImpl
              ( isolationLevel != Connection.TRANSACTION_SERIALIZABLE ) ) {
             throw new IllegalArgumentException("Invalid isolation level " + isolationLevel );
         }
+
+		if (_ignoreIsolationLevel) {
+			Logger.resource.info("Ignoring new isolation level " + 
+								 isolationLevel + 
+								 " because getIgnoreIsolationLevel() is true.");	
+		}
         _isolationLevel = isolationLevel;
     }
     
