@@ -1,0 +1,34 @@
+Tomcat-Tyrex Integration
+------------------------
+
+This package integrates Tomcat with Tyrex to provide full support for
+the J2EE programming model.
+
+This package provides the necessary Tyrex run-time environment,
+default configuration files, a simple example, and a modified Tomcat
+webserver.jar and server.xml.
+
+Please read Tomcat-Tyrex-Howto to learn how to integrate Tyrex
+(and additional J2EE functionality) into Tomcat.
+
+Tyrex is a transaction processing monitor providing support for
+distributed transactions, JDBC connection pooling and the JNDI
+environment naming context.
+
+Tyrex is distributed under an Apache-like license and is license
+compatible with Apache. The binary/source distribution is found at:
+
+  ftp://ftp.exolab.org/pub/jars
+  ftp://ftp.exolab.org/pub/src
+
+Anonymous access to the CVS is available at:
+
+  :pserver:anonymous@www.exolab.org:/home/cvs/cvsroot 
+
+No password required. The repository name is tyrex.
+
+
+
+
+
+

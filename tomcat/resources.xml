@@ -1,0 +1,56 @@
+<!DOCTYPE resources
+  PUBLIC "-//EXOLAB/Tyrex Resources DTD Version 1.0//EN"
+         "http://tyrex.exolab.org/resources.dtd">
+<!--
+     Sample resources file specifies mapping of resources to the
+     running Servlet.
+  -->
+
+<res:resources xmlns:res="http://tyrex.exolab.org/resources">
+
+  <!--
+       The res-name maps to a res-name in the application's Web.xml
+       deployment descriptor. res-type is the class of the actual
+       data source (must be javax.sql.XADataSource).
+
+       Any combination of param attributes can go underneath,
+       depending on the actual data source in use.
+
+       The pool specification apply to the Tyrex pool manager.
+
+       The visibility clause defines which applications see this
+       resource, based on the application's document base. It can be
+       an exact name  or a path name followed by *.
+    -->
+
+  <res:resource res-name="jdbc/mydb" res-type="postgresql.PostgresqlDataSource">
+    <res:param database-name="test" description="PostgreSQL test database"
+           user="test" password="test"/>
+    <res:pool upper-limit="100" desired-size="10"/>
+    <res:visible>
+       <res:app-path>file:/*</res:app-path>
+    </res:visible>
+  </res:resource>
+
+  <!--
+       Overrides the env-entry specified for an application.
+       Typically an application will use the environment entries
+       specified in it's web.xml. However, on occassion it might
+       be better to specify them or override them globally.
+
+       This record format is identical to env-entry in web.xml,
+       but adds the visibility clause which specify which
+       application(s) this entry applies.
+   -->
+
+  <res:env-entry>
+    <res:env-entry-name>text</res:env-entry-name>
+    <res:env-entry-type>java.lang.String</res:env-entry-type>
+    <res:env-entry-value>Just a test</res:env-entry-value>
+    <res:visible>
+       <res:app-path>file:/*</res:app-path>
+    </res:visible>
+  </res:env-entry>
+
+</res:resources>
+

@@ -1,0 +1,75 @@
+$Date: 2000/01/11 00:33:46 $ $Revision: 1.1 $
+
+
+Security Policy For Tyrex
+-------------------------
+
+Tyrex certain security permissions that are required by an application
+server, or one of its components, to perform certain operations on the
+transaction server.
+
+General application access to the transaction server through the
+UserTransaction interface does not require any specific permissions.
+
+The following permissions are defined and should exist in the
+security policy of the application server or any other component
+interacting with the transaction server:
+
+----------------------------------------------------------------------
+| Start the transaction server               | server.start          |
+|                                            |                       |
+----------------------------------------------------------------------
+| Shutdown the transaction server            | server.shutdown       |
+|                                            |                       |
+----------------------------------------------------------------------
+| Run a meter against the transaction server | server.meter          |
+|                                            |                       |
+----------------------------------------------------------------------
+| Terminate an arbitrary transaction         | transaction.terminate |
+|                                            |                       |
+----------------------------------------------------------------------
+| Obtain information about an arbitrary      | transaction.list      |
+| transaction or list all transactions       |                       |
+|                                            |                       |
+----------------------------------------------------------------------
+| Use the TransactionManager interface to    | transaction.manager   |
+| manage transactions                        |                       |
+|                                            |                       |
+----------------------------------------------------------------------
+
+In order to terminate the thread associated with a terminated
+transaction, the RuntimePermission "stopThread" must also be present.
+
+
+The following permissions would be granted to the application server
+or components that control the transaction manager and manage
+transactions on behalf of the application:
+
+grant codebase "file:/appServer/-" {
+    permission java.lang.RuntimePermission "stopThread"
+    permission tyrex.server.TransactionServerPermission "server.start"
+    permission tyrex.server.TransactionServerPermission "server.shutdown"
+    permission tyrex.server.TransactionServerPermission "transaction.manager"
+};
+
+The following permissions would be granted to an administration tool
+reporting about transactions and metering the server:
+
+grant codebase "file:/reportTool/-" {
+  permission tyrex.server.TransactionServerPermission "server.meter"
+  permission tyrex.server.TransactionServerPermission "transaction.list"
+};
+
+The following permissions would be granted to a management thread
+responsible to terminate transactions, e.g. at the event of losing
+connection with the client:
+
+grant codebase "file:/reportTool/-" {
+  permission java.lang.RuntimePermission "stopThread"
+  permission tyrex.server.TransactionServerPermission "transaction.list"
+  permission tyrex.server.TransactionServerPermission "transaction.terminate"
+};
+
+
+
+

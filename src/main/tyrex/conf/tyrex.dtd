@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 
+
+     To use this DTD use the following document type:
+
+       <!DOCTYPE server PUBLIC "-//EXOLAB/Tyrex Configuration DTD Version 1.0//EN"
+                               "http://tyrex.exolab.org/tyrex.dtd">
+     
+
+     The transaction server configuration (config) supports the
+     following attributes:
+
+       thread-terminate     if true, threads are terminated when the
+                            transaction they are associated with times
+			    out
+       nested-transaction   if true, nested transactions are allowed
+       transaction-timeout  specifies the default timeout for all new
+                            transactions
+
+     The relevant attributes for the limits element are active-limit,
+     upper-limit, prune-factor, check-every and wait-timeout.
+
+     For example:
+
+       <server>
+         <config  thread-terminate="true" transaction-timeout="60"/>
+         <limits active-limit="200" upper-limit="300" check-every="10"/>
+         <log-option><log-console></log-option>
+       </server>
+
+
+     The limits configuration supports the following attributes:
+
+       active-limit  The maximum number of active transactions at any
+                     given time
+       upper-limit   The maximum number of transactions (active and
+                     suspended) at any given timea
+       wait-timeout  How long to wait until a transaction is available
+                     when the upper limit has been reached (specified
+                     in seconds)
+       check-every   How often to check for transaction timeout
+                     (specified in seconds)
+
+ -->
+
+<!ELEMENT server (config?|limits?|log-option*)>
+<!ATTLIST server
+    vendor  CDATA #IMPLIED
+    version CDATA #IMPLIED>
+
+<!ELEMENT config EMPTY>
+<!ATTLIST config
+    thread-terminate    (true|false) "false"
+    nested-transaction  (true|false) "false"
+    transaction-timeout CDATA "60">
+
+<!ELEMENT limits EMPTY>
+<!ATTLIST limits
+     active-limit CDATA #IMPLIED
+     upper-limit  CDATA #IMPLIED
+     wait-timeout CDATA #IMPLIED
+     check-every  CDATA #IMPLIED>
+
+<!ELEMENT log-option ( (log-console|log-file|log-server) ,log-header?)>
+<!ATTLIST log-option
+   prefix    CDATA        "Tyrex"
+   errors    (true|false) "true"
+   meter     (true|false) "false">
+
+<!ELEMENT log-console EMPTY>
+<!ELEMENT log-file    (#PCDATA)>
+<!ELEMENT log-server  (#PCDATA)>
+<!ATTLIST log-server
+    port      CDATA #IMPLIED>
+<!ELEMENT log-header  (#PCDATA)>
+
+

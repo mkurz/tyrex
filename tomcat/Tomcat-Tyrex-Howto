@@ -1,0 +1,319 @@
+Tomcat-Tyrex Integration Howto
+------------------------------
+
+Early Release / December 21, 1999
+$Id $
+
+
+General
+-------
+
+This package integrates Tomcat with Tyrex to provide full support for
+the J2EE programming model.
+
+Tyrex is a transaction processing monitor providing support for
+distributed transactions, JDBC connection pooling and the JNDI
+environment naming context.
+
+Tyrex is distributed under an Apache-like license and is license
+compatible with Apache. The binary/source distribution is found at:
+
+  ftp://ftp.exolab.org/pub/jars
+  ftp://ftp.exolab.org/pub/src
+
+Anonymous access to the CVS is available at:
+
+  :pserver:anonymous@www.exolab.org:/home/cvs/cvsroot 
+
+No password required. The repository name is tyrex.
+
+
+For any questions, please contact me directly arkin@exoffice.com.
+
+
+Setting up
+----------
+
+In order to setup Tomcat and Tyrex, you must perform the following steps:
+
+First, install the required libraries on top of an existing version of
+Tomcat. A modified tomcat.sh is provided that includes all these
+libraries in the classpath. tomcat.sh expects the libraries to be
+present in the lib directory.
+
+Second, install the required configuration files either in the current
+directory or in the Java library directory (e.g. /jdk1.2/lib/).
+
+Third, create a Servlet that make uses of the JNDI environment naming
+context and JDBC data sources. A simple Servlet and web.xml descriptor
+are provided in example.
+
+
+Libraries
+---------
+
+The following libraries must be present in the classpath. Since they
+require certain privileges, it is recommended to install them in the
+Tomcat's lib directory.
+
+xerces.jar
+  This is a version of Xerces that implements the new Serializer API.
+  This version is required in order to run Castor and is not presently
+  available from xml.apache.org (the API is still under going testing)
+
+castor-0.6.jar
+  Castor is required for supporting the XML configuration files used
+  in Tyrex
+
+tyrex-0.9.jar
+  Tyrex provides the transaction processing monitor, the JDBC connection
+  pool, and the JNDI environment naming context
+
+postgresql-6.3.jar
+  This is a version of the PostgreSQL driver that implements the
+  XADataSource interface which is used for testing Tomcat-Tyrex
+
+j2ee/jndi.jar, j2ee/jdbc-se2.0.jar, j2ee/jta1.0.1.jar, j2ee/jts.jar
+  J2EE APIs for JNDI, JTA/JTS and JDBC standard extensions.
+
+
+Security Policy
+---------------
+
+The Tomcat-Tyrex connector requires certain permissions to interact with
+the transaction manager and the JNDI environment naming context. If a
+security exception is reported, add permissions to your Tomcat directory
+in the policy.java file, e.g:
+
+grant codeBase "file:/opt/tomcat/-" {
+        permission java.security.AllPermission;
+};
+
+
+Configuration Files
+-------------------
+
+Tyrex makes use of four configuration files that must be set up
+correctly before it can be used. The configuration files supplied in
+this sample use the PostgreSQL data source and are specific to the
+Test example.
+
+server.xml
+  The Tomcat server.xml has been extended to include an Interceptor
+  element providing the link between Tomcat and Tyrex
+
+jndi.properties
+  This file is required to provide and InitialContext and support
+  the java: URL used for the environment naming context
+
+resources.xml
+  Specifies the mapping of resource references appearing in web.xml
+  into actual data sources and connection pool properties for these
+  data sources.
+
+tyrex.xml
+  The Tyrex configuration file specifies the transaction processing
+  policy and overrides the default policy.
+
+
+server.xml
+----------
+
+This file has been extended to include an additional element called
+Interceptor. This element defines an interceptor that will be used by
+default on all new Servlet contexts. The interceptor can be a
+lifecycle or service interceptor. Any number of interceptors may be
+specified, and they must come immediately between the Context and
+Connector elements.
+
+Transaction/ENC support requires that at least one interceptor
+appear in the list:
+
+  <Interceptor className="tyrex.connector.Tomcat"
+               docBase="*" />
+
+
+jndi.properties
+---------------
+
+The JNDI properties file specified a default InitialContext and
+support for the environment naming context (the java: URL). This file
+must be placed either in the local directory from which Tomcat is
+started or in the Java library directory (e.g. /jdk1.2/jre/lib/).
+
+The default JNDI properties file contains:
+
+  java.naming.factory.url.pkgs=tyrex.naming
+  java.naming.factory.initial=tyrex.naming.TyrexContextFactory
+  java.naming.provider.url=
+
+You may replace the initial context factory and URL provider with
+any other JNDI initial context you may want to use, but some initial
+context must be specified otherwise new InitialContext() will throw
+an exception.
+
+The factory.url.pkgs can contain any list of URL factories separated
+by colon, at least one of them must be tyrex.naming to support the
+java: URL convention.
+
+
+resources.xml
+-------------
+
+This is the resources configuration file. It defines the resource
+factories that a Servlet can used, and can override environment
+entries specified in the Servlet's web.xml descriptor. It should be
+placed either in the local directory from which Tomcat is started or
+in the Java library directory (e.g. /jdk1.2/jre/lib/).
+
+In order to use a resource the Servlet must specify the resource name
+in it's web.xml descriptor, the resource must be fully specified in
+the resources.xml file and the mapping must match (name and
+visibility).
+
+Each entry in the resources configuration file has a visibility entry
+that specifies which applications (Servlets, EJBs) this resource applies
+to. The resource is available to the application only if the application
+can be mapped from it's visibility. Multiple resources with the same
+name but different visibility are supported.
+
+This is an example for a resources.xml file that lists the PostgreSQL
+JDBC driver as the resource mydb:
+
+  <res:resources xmlns:res="http://tyrex.exolab.org/resources">
+    <res:resource res-name="jdbc/mydb" res-type="postgresql.PostgresqlDataSource">
+      <res:param database-name="test" description="PostgreSQL test database"
+                 user="test" password="test"/>
+      <res:pool upper-limit="100" desired-size="10"/>
+      <res:visible>
+         <res:app-path>file:/*</res:app-path>
+      </res:visible>
+    </res:resource>
+  </res:resources>
+
+The parameters (res:param) are specific to the PostgreSQL driver and
+would be different for other drivers. In order to be used the driver
+must support the javax.sql.XADataSource interface and the implementation
+class must be specified in the res-type attribute.
+
+The Servlet would then use the resource as follows:
+
+  InitialContext ctx = new InitialContext();
+  DataSource     ds;
+  Connection     conn;
+
+  ds = (DataSource) ctx.lookup( "jndi:/comp/env/jdbc/mydb" );
+  conn = ds.getConnection();
+
+
+tyrex.xml
+---------
+
+This is the Tyrex configuration file. It controls the transaction
+processing policy. It should be placed either in the local directory
+from which Tomcat is started or in the Java library directory
+(e.g. /jdk1.2/jre/lib/). If no tyrex.xml is found in either
+directory, the default properties will be used.
+
+The following sample configures Tyrex for a transaction timeout of
+10 seconds, maximum of 200 active transactions (in progress) and 10
+seconds wait timeout on creation of new transactions when reaching
+the transaction quota:
+
+<tyrex:server xmlns:tyrex="http://tyrex.exolab.org/tyrex">
+  <tyrex:config thread-terminate="false" nested-transaction="false"
+                transaction-timeout="10"/>
+  <tyrex:limits active-limit="200" check-every="10" wait-timeout="10"/>
+</tyrex:server>
+
+
+The Example
+-----------
+
+At the moment the only example is a simple test Servlet that opens
+a connection to the data source named 'mydb', performs an update on
+a single table using the value specified in the environment naming
+context, and rolls back the transaction using the UserTransaction
+interface.
+
+The example is lists on the default home page, the source and
+byte code can be found in webpages/WEB-INF/classes/.
+
+The following web.xml file is used in the example:
+
+<web-app>
+  <servlet>
+    <servlet-name>dbupdate</servlet-name>
+    <servlet-class>DBUpdate</servlet-class>
+  </servlet>
+  <env-entry>
+    <env-entry-name>text</env-entry-name>
+    <env-entry-type>java.lang.String</env-entry-type>
+    <env-entry-value>The quick brown fox</env-entry-value>
+  </env-entry>
+  <resource-ref>
+    <res-ref-name>jdbc/mydb</res-ref-name>
+    <res-type>javax.sql.DataSource</res-type>
+    <res-auth>CONTAINER</res-auth>
+  </resource-ref>
+</web-app>
+
+
+The following code is used in the example:
+
+  public void service(HttpServletRequest request, HttpServletResponse response)
+      throws ServletException, IOException
+  {
+    PrintWriter out = response.getWriter();
+
+    response.setContentType("text/html");
+    out.println("<p>Tomcat-Tyrex Integration Test");
+
+    try {
+      InitialContext  ctx;
+      UserTransaction ut;
+      DataSource      ds;
+      Connection      conn;
+      Statement       st;
+      ResultSet       rs;
+
+      ctx = new InitialContext();
+      ut = (UserTransaction) ctx.lookup( "java:/comp/UserTransaction" );
+      ds = (DataSource) ctx.lookup( "java:/comp/env/jdbc/mydb" );
+      conn = ds.getConnection();
+
+      ut.begin();
+
+      st = conn.createStatement();
+      rs = st.executeQuery( "SELECT text FROM test WHERE id=1" );
+      rs.next();
+      out.println( "<p>Current value: " + rs.getString( 1 ) );
+
+      st.executeUpdate( "UPDATE test SET text='" +
+                        ctx.lookup( "java:/comp/env/text" ) +
+                        "' WHERE id=1" );
+
+      st = conn.createStatement();
+      rs = st.executeQuery( "SELECT text FROM test WHERE id=1" );
+      rs.next();
+      out.println( "<p>Updated to value: " + rs.getString( 1 ) );
+
+      ut.rollback();
+
+      st = conn.createStatement();
+      rs = st.executeQuery( "SELECT text FROM test WHERE id=1" );
+      rs.next();
+      out.println( "<p>Rolledback to value: " + rs.getString( 1 ) );
+    } catch ( Throwable except ) {
+      out.println( "<pre>except" );
+      except.printStackTrace( out );
+      out.println( "</pre>" );
+    }
+  }
+
+
+The following table schema is used in this example:
+
+  CREATE TABLE test ( id INT NOT NULL, text CHAR(20) NOT NULL );
+  INSERT INTO test VALUES ( '1', 'Original text' );
+

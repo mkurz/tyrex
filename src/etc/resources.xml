@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE resources
+  PUBLIC "-//EXOLAB/Tyrex Resources DTD Version 1.0//EN"
+         "http://tyrex.exolab.org/resources.dtd">
+<tyrex:resources xmlns:tyrex="http://tyrex.exolab.org/resources">
+
+  <!--
+  <tyrex:resource res-name="jdbc/mydb" res-type="postgresql.PostgresqlDataSource">
+    <tyrex:param database-name="test" description="PostgreSQL test database"
+           user="test" password="test"/>
+    <tyrex:pool upper-limit="100" desired-size="10"/>
+    <tyrex:visible>
+       <tyrex:app-path>file:/*</tyrex:app-path>
+    </tyrex:visible>
+  </tyrex:resource>
+  -->
+
+</tyrex:resources>
+

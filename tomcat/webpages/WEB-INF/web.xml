@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<!DOCTYPE web-app
+    PUBLIC "-//Sun Microsystems, Inc.//DTD Web Application 2.2//EN"
+    "http://java.sun.com/j2ee/dtds/web-app_2.2.dtd">
+
+<web-app>
+  <servlet>
+    <servlet-name>dbupdate</servlet-name>
+    <servlet-class>DBUpdate</servlet-class>
+  </servlet>
+  <env-entry>
+    <env-entry-name>text</env-entry-name>
+    <env-entry-type>java.lang.String</env-entry-type>
+    <env-entry-value>The quick brown fox</env-entry-value>
+  </env-entry>
+  <resource-ref>
+    <res-ref-name>jdbc/mydb</res-ref-name>
+    <res-type>javax.sql.DataSource</res-type>
+    <res-auth>CONTAINER</res-auth>
+  </resource-ref>
+</web-app>

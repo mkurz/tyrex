@@ -1,0 +1,129 @@
+Version 0.9.1 December 25 1999
+------------------------------
+
+- Added support for a general resource manager architecture based
+  on the JDBC/JMS XA data source implementation. This allows the
+  addition of further resource managers.
+
+- Tomcat now includes build-in Interceptor support, eliminating
+  the need to include webserver.jar in Tomcat-Tyrex distribution.
+
+
+Version 0.9  December 21, 1999
+------------------------------
+
+- Integrated with Tomcat as transaction monitor, DataSource factory
+  and JNDI environment context provider.
+
+- Changed product name from TXM to Tyrex.
+
+- Added resource configuration file (resources.xml) associating actual
+  resources with resource references in deployment descriptor based on
+  application name/partial name. Supercedes previous specification of
+  data sources in txm-conf.xml.
+
+- Full implementation of JNDI environment naming context with java:
+  URL support, read-only semantics and per-thread contexts. All
+  contexts created with TXMContext share same name space, but also
+  supports creating detached contexts. Added ENCHelper to ease
+  supporting environment naming contexts.
+
+- Added DTD and XML schema for txm-conf.xml and entity resolver allows
+  the DTD (but not the schema) to be used with the configuration file.
+  Also added resources.xml, see elsewhere.
+
+- Added OTS support in txm.client. Client's Current will create and
+  demarcate remote transactions. No ORB hooks are provided yet, so
+  this implementation cannot be tested yet.
+
+- OTS changes: Fixed Current.set_timeout to change the time out of the
+  next created transaction and not accepts an int. Created a Current
+  interface and implementation and added them to jts.jar.
+
+
+Version 0.8  December 10, 1999
+------------------------------
+
+- Self installing JAR.
+
+- Implemented support for XML configuration file through
+  txm.conf.Server. Configure can be loaded by default, refreshed
+  and flushed. Added DTD (txm/conf/txm-conf.dtd).
+
+- Initial implementation of memory and thread-specific JNDI SPI
+  including java: URL support.
+
+- Renamed PoolManaged to PooledResources.
+
+- Added support for two-phase aware JDBC connections using the
+  txm.jdbc.xa.TwoPhaseConnection interface. EnabledDataSource is
+  no abstracted and requires minial change to the JDBC driver in
+  order to enable full XA support.
+
+
+Version 0.7  December 3, 1999
+-----------------------------
+
+- Changes to support nested transactions. Nested transactions are
+  not enlisted with the server or considered activated, they are
+  merely resources in their parent transaction. All nested
+  transactions appear flat to their XA resources.
+
+- Added support for RMI/JNDI activation of the transaction server.
+
+- Documented the security permissions and enforced permission
+  on access to the TransactionManager.
+
+- Added ResourceManager static class to decouple datasource from
+  transaction manager. Will be phased out once a generic API is
+  exposed in future EJB specs.
+
+- Added txm.server.Demo class to run a simple demonstration of
+  the server.
+
+
+Version 0.6  December 1, 1999
+-----------------------------
+
+- TransactionServer can now create a top-level transaction or a
+  subordinate transaction and optionally enlist it with the thread.
+  Two different checks are made against the pool manager in the
+  second case. There is a special case for recreating an OTS
+  transaction from the propagation context and creating a remote
+  transaction for RemoteTransactionServer.
+
+- Recreation of TransactionImpl/ControlImpl from OTS propagation
+  context is now working properly through a single call to
+  TransactionServer. The new transaction uses it's own Xid, but
+  remembers the propagation context and behaves as subordinate.
+
+- ControlImpl is now created directly from TransactionImpl and not
+  obtained from TransactionServer. This saves wasted CPU when used
+  through OTS.
+
+- TransactionFactoryImpl added to implement OTS transaction factory,
+  recreation of imported transactions, and support for COS service
+  identification (TSIdentification).
+
+- txm.server.Configure now implements the full server control
+  interface and does not extend Service. txm.util.Service has been
+  faced out, instead adapators will be used to plug Configure into
+  various management solutions (e.g. Avalon).
+
+- Added txm.server.Meter class to obtain performance indicators
+  about the server. Includes a default mechanism for logging them to
+  a writer.
+
+- Phased out DefaultRecoveryLog. There's not enough logic there to
+  really use the log at the moment anyway, so the null one is enough.
+
+- Outside world access to the TransactionServer should occur either
+  through TXM, Configure, Meter or the enlisted UserTransaction and
+  Current.
+
+- Added support for retrieving transaction associated with thread,
+  terminating transaction and listing all transactions registered
+  in server. TXM exposes this functionality and depends on adequate
+  permissions and uses TransactionStatus to report.
+
+
