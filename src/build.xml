@@ -84,10 +84,45 @@
 
   </target>
 
+  <target name="iiop" depends="prepare">
+    <javac srcdir="${source.main}"
+           destdir="${build.classes}"
+           debug="off"
+           includes="tyrex/corba/*"
+           deprecation="${deprecation}">
+    </javac>
+  </target>
 
   <target name="all" depends="clean,jar,tests"
           description="Cleans and builds all the packages and examples" />
 
+  <target name="tests-iiop" depends="prepare" >
+  	<!-- create the builded tests directory -->
+    <mkdir dir="${build.tests}" />
+    <mkdir dir="${build.tests}/gensrc" />
+    
+    <!-- IDL Compiler -->
+    <java classname="org.openorb.compiler.IdlCompiler" fork="yes">
+    	<arg line="${source.tests}/ots/idl/test.idl -d ${build.tests}/gensrc" />
+    </java>
+
+    <!-- build the generated files -->
+    <javac srcdir="${build.tests}/gensrc"
+           destdir="${build.tests}"           
+           debug="on"
+           deprecation="${deprecation}">
+    </javac>
+    
+    <!-- build the java files -->
+    <javac srcdir="${source.tests}"
+           destdir="${build.tests}"           
+           classpath="${java.class.path};${build.tests}"
+           includes="ots/*"
+           debug="on"
+           deprecation="${deprecation}">
+    </javac>
+    
+  </target>
 
   <target name="tests" depends="prepare"
           description="Builds the tests packages (including debugging info)">
@@ -97,12 +132,12 @@
     
     <!-- IDL Compiler -->
     <java classname="org.openorb.compiler.IdlCompiler" fork="yes">
-    	<arg line="${source}/tests/ots/idl/test.idl -d ${build.dir}/tests" />
+    	<arg line="${source.tests}/ots/idl/test.idl -d ${build.tests}" />
     </java>
 
     <!-- build the java files -->
-    <javac srcdir="${source.tests}"
-           destdir="${build.tests}"
+    <javac srcdir="${source.tests};${build.tests}"
+           destdir="${build.tests}"           
            debug="on"
            deprecation="${deprecation}">
     </javac>

@@ -88,8 +88,8 @@
         <td rowspan="4" width="400" valign="top">
           <table cols="2" rows="2" border="0" cellpadding="0" cellspacing="0" width="400">
             <tr>
-              <td valign="top" align="left"><br/><img border="0" height="34" hspace="0"
-                  src="{$project/logo}" vspace="0" width="115"/><br/><img border="0" height="10" hspace="0"
+              <td valign="top" align="left"><br/><img border="0" height="64" hspace="0"
+                  src="{$project/logo}" vspace="0" width="209" /><br/><img border="0" height="10" hspace="0"
                   src="images/dotTrans.gif"/>
               </td>
 	      <td width="120" height="5" valign="top"
