@@ -70,7 +70,7 @@ import java.util.Calendar;
 
 /**
  * This class implements java.sql.Statement so that it returned
- * when prepareStatement is called on {@link ClientConnection}.
+ * when prepareStatement is called on {@link TyrexConnection} object.
  * <p>
  * The reason for this class is for the method java.sql.Statement#getConnection
  * to return the correct connection.

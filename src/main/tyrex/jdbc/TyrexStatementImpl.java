@@ -56,8 +56,8 @@ import java.sql.Statement;
 /////////////////////////////////////////////////////////////////////
 
 /**
- * This class implements java.sql.Statement so that it returned
- * when createStatement is called on a wrapper connection.
+ * This class implements java.sql.Statement so that it is returned
+ * when createStatement is called on a {@link TyrexConnection} object.
  * <p>
  * The reason for this class is for the method java.sql.Statement#getConnection
  * to return the correct connection.
@@ -79,6 +79,12 @@ public class TyrexStatementImpl
      * The underlying statement
      */
     private Statement           _statement;
+
+
+    /**
+     * The current result set
+     */
+    private TyrexResultSetImpl _resultSet;
 
 
     /**
@@ -759,5 +765,17 @@ public class TyrexStatementImpl
         }
 
         return _statement;
+    }
+
+    /**
+     * The specified result set from this statement has been closed
+     *
+     * @param resultSet the result set
+     */
+    synchronized final void resultSetIsClosed(TyrexResultSetImpl resultSet)
+    {
+        if (resultSet == _resultSet) {
+            _resultSet = null;    
+        }
     }
 }

@@ -66,7 +66,7 @@ import java.util.Map;
 
 /**
  * This class implements java.sql.CallableStatement so that it returned
- * when prepareCall is called on {@link ClientConnection}.
+ * when prepareCall is called on {@link TyrexConnection} object
  * <p>
  * The reason for this class is for the method java.sql.Statement#getConnection
  * to return the correct connection.
