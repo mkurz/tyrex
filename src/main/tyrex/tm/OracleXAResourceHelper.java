@@ -86,7 +86,7 @@ public final class OracleXAResourceHelper
         try {
             Class xidClass = Class.forName("oracle.jdbc.xa.OracleXid");
             // is there another way to get the class of an array
-            Class byteArrayClass = new byte[0].getClass();
+            Class byteArrayClass = (new byte[0]).getClass();
             xidConstructor = xidClass.getDeclaredConstructor(new Class[]{Integer.TYPE, byteArrayClass, byteArrayClass});
         } catch (Exception e) {
             //System.out.println("Oracle xid class not found in class path");
