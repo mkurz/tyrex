@@ -53,7 +53,7 @@ import javax.transaction.xa.XAResource;
  * Represents an installed resource.
  * <p>
  * An installed resource has a client factory that is made available to
- * the application, typically for JNDI, allowing it to create new
+ * the application, typically through JNDI, allowing it to create new
  * connections. The client factory type depends on the type of resource
  * in use.
  * <p>
@@ -62,15 +62,15 @@ import javax.transaction.xa.XAResource;
  * {@link #getPoolMetrics}.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  */
 public interface Resource
 {
 
 
     /**
-     * Returns the pool metrics. The pool metrics object can be used to
-     * collect statistical information about the connection pool.
+     * Returns the pool metrics. The pool metrics object can be used
+     * to collect statistical information about the connection pool.
      *
      * @return The pool metrics
      */
@@ -78,9 +78,9 @@ public interface Resource
 
 
     /**
-     * Returns the client connection factory. The client connection factory
-     * is enlisted in the JNDI environment naming context for access by
-     * the application.
+     * Returns the client connection factory. The client connection
+     * factory is enlisted in the JNDI environment naming context for
+     * access by the application.
      *
      * @return The client connection factory
      */
@@ -97,9 +97,10 @@ public interface Resource
 
 
     /**
-     * Returns the XA resource interface. The XA resource is used to manage
-     * transaction enlistment and recovery of the resource. This method returns
-     * null if the resource does not support XA transactions.
+     * Returns the XA resource interface. The XA resource is used to
+     * manage transaction enlistment and recovery of the resource.
+     * This method returns null if the resource does not support
+     * XA transactions.
      *
      * @return The XA resource interface
      */
@@ -108,8 +109,19 @@ public interface Resource
 
     /**
      * Called to destory the resource once it is no longer in use.
+     * After successful return from this method, all open connections
+     * are invalidated and no new connections can be obtained from
+     * the pool.
+     * <p>
+     * The application server must render the connection factory
+     * inaccessible to the application before calling this method.
      */
     public abstract void destroy();
+
+
+    /*
+    public abstract ResourceLimits getResourceLimits();
+    */
 
     
 }

@@ -67,13 +67,13 @@ import tyrex.tm.TransactionDomain;
  * to add and list resource configurations.
  * <p>
  * The application server uses the methods {@link #listResources} and
- * {@link #getResource getResource} to obtain resources and make the client
- * connection factory available to the application.
+ * {@link #getResource getResource} to obtain resources and make the
+ * client connection factory available to the application.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  */
-public class Resources
+public final class Resources
 {
 
 
@@ -212,9 +212,11 @@ public class Resources
 
 
     /**
-     * Removes a resource. After return from this method, the resource
-     * is no longer available and its client connection factory is no
-     * longer useable.
+     * Removes a resource. After return from this method, the
+     * resource is no longer available and its client connection
+     * factory is no longer useable.
+     * <p>
+     * This method automatically calls {@link Resource#destroy}.
      *
      * @param name The resource name
      */

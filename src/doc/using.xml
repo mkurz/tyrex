@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!-- $Id: using.xml,v 1.2 2001/03/14 21:39:27 arkin Exp $ -->
+<!-- $Id: using.xml,v 1.3 2001/03/20 19:29:08 arkin Exp $ -->
 <document>
   <properties>
     <title>Using Tyrex</title>
@@ -10,28 +10,29 @@
 
     <section title="Transaction Domains">
       
-      <p>A <api class="tyrex.tm.TransactionDomain">transaction domain</api> provides centralized
-        management for transactions. A transaction domain defines the policy for all transactions
-        created from that domain, such as default timeout, maximum number of open transactions,
-        IIOP support, and journaling. In addition, the domain maintains resource managers such
-        as JDBC data sources and JCA connectors.</p>
+      <p>A <api>tyrex.tm.TransactionDomain</api> provides centralized management for transactions.
+        A transaction domain defines the policy for all transactions created from that domain,
+        such as default timeout, maximum number of open transactions, IIOP support, and journaling.
+        In addition, the domain maintains resource managers such as JDBC data sources and JCA
+        connectors.</p>
       
-      <p>The application server obtains a transaction manager or user transaction object, and
-        managed resources from the transaction domain.</p>
-      
-      <p>Transaction domains are created from a domain configuration file. For more information about
-        domain configuration files, refer to the relevant documentation and <tt>domain.xsd</tt>.</p>
-      
-    <p>The following code illustrates how to create a new transaction domain:
+      <p>The application server obtains the transaction manager, user transaction and transaction
+        factory from the transaction domain. It also uses the transaction domain to obtain
+        connection factories and place them in the JNDI Environment Naming Context.</p>
+
+      <p>Transaction domains are created from domain configuration files. The structure and
+        values of the domain configuration file is specified in <a href="configuration.html">Tyrex
+          Configuration</a>.</p>
+
+      <p>The following example illustrates how to create a new transaction domain from the
+        domain configuration file <tt>domain.xml</tt> located in the current directory:
         <code>
-InputStream       stream;
 TransactionDomain domain;
 
 <comment>// Create a transaction domain using
 // a domain configuration file</comment>
-stream = new FileInputStream( "domain.xml" )
 try {
-    domain = TransactionDomain.createDomain( stream );
+    domain = TransactionDomain.createDomain( "domain.xml" );
 } catch ( DomainConfigurationException except ) {
     <comment>// Domain cannot be created, handle error</comment>
     . . . 
@@ -40,33 +41,43 @@ try {
 try {
     domain.recover();
 } catch ( RecoveryException except ) {
-    <comment>// Ignore all errors, they are logged
-// to the console</comment>
+    while ( except != null ) {
+        System.out.println( "Recovery error: " + except );
+        except = except.getNextException();
+    }
 }
-<comment>// Domain is now active and ready to use</comment>
+<comment>// Domain is now active and ready for use</comment>
         </code></p>
-
+      
     </section>
 
 
     <section title="Resources">
 
-      <p><api>tyrex.resource.Resource</api> represents an installed resource. An installed resource
-        has a client factory that is made available to the application, typically for JNDI,
-        allowing it to create new connections. The client factory type depends on the type of
-        resource in use.</p>
+      <p>The object <api>tyrex.resource.Resources</api> represents a collection of installed
+        resources managers. Resources, such as JDBC data sources and JCA connectors, are
+        configured based on their specification in the domain configuration file. In addition,
+        resources can be added and removed at run-time.</p>
 
-      <p>An installed resource has a connection pool that manages utilization of the resource.
-        The connection pool metrics can be obtained from <api>tyrex.resource.PoolMetrics</api>.
-        This object records usage metrics for the connection pool, recording such information as
-        the accumulated number of connections created and used, the average time a connection
-        is used by the application or held in the pool, etc.</p>
-      
-      <p><api>tyrex.resource.ResourceLimits</api> represents limits placed on a resource.
-        The limits are read from the configuration file and apply to the connection pool.</p>
+      <p>Each resource manager is represented by an object of type <api>tyrex.resource.Resource</api>.
+        Each such object represents a single installed resource. The application server uses
+        these objects to interact with the resource manager, and expose the resource manager
+        to the client application.</p>
 
-      <p><api>tyrex.resource.Resources</api> represents a collection of installed resources.
-        Resources are obtained from this collection by the name with which they were installed.</p>
+      <p>An installed resource has a client factory that is exposed to the application from
+        the JNDI Environment Naming Context. The client factory type depends on the resource
+        type, e.g. a JDBC <tt>DataSource</tt>, a JCA CCI <tt>ConnectionFactory</tt>, etc.</p>
+
+      <p>An installed resource has a connection pool that manages utilization of connections.
+        The connection pool is not directly accessible to the application, but the usage
+        metrics are accessible from <api>tyrex.resource.PoolMetrics</api>. Usage metrics
+        includes such information as the number of connections created and released over
+        a period of time, average duration for using or holding a connection in the pool, etc.</p>
+
+      <p><api>tyrex.resource.ResourceLimits</api> represents limits placed on the connection
+        pool. These limits restrict the maximum number of connections that can be used at
+        any one time, define the minimum number of connections to retain in the pool, the
+        duration for retaining connections in the pool between uses, and more.</p>
 
     </section>
     
@@ -111,13 +122,19 @@ DataSource     dataSource;
 <comment>// Create a new context</comment>
 runCtx = RuntimeContext.newRuntimeContext();
 
-<comment>// Bind a JDBC DataSource to the JNDI ENC</comment>
-jndiCtx = runCtx.getEnvContext().
-    createSubcontext( "jdbc" );
+<comment>// Create the context 'comp/env/jdbc'</comment>
+jndiCtx = runCtx.getEnvContext();
+jndiCtx = jndiCtx.createSubcontext( "comp" );
+jndiCtx = jndiCtx.createSubcontext( "env" );
+jndiCtx = jndiCtx.createSubcontext( "jdbc" );
+
+<comment>// Obtain resources from the transaction domain
+// Obtain the client factory for 'db1'</comment>
 resources = TransactionDomain.getDomain( "myDomain" ).
     getResources();
-dataSource = (DataSource) resources.getResource( "dataSource" );
-jndiCtx.bind( "myDB", dataSource );
+dataSource = (DataSource) resources.getResource( "db1" );
+<comment>// Bind 'db1' as 'comp/env/jdbc/myDb'</comment>
+jndiCtx.bind( "myDb", dataSource );
 
 . . .
 <comment>// Associate the runtime context with
@@ -133,6 +150,20 @@ RuntimeContext.unsetRuntimeContext();
 <comment>// Discard the runtime context</comment>
 runCtx.cleanup();
         </code></p>
+
+      <p><code>
+InitialContext initCtx;
+String         jndiName;
+DataSource     dataSource;
+Connection     conn;
+
+<comment>// Application code to access the database</comment>
+initCtx = new InitialContext();
+jndiName = "java:comp/env/jdbc/myDb";
+dataSource = (DataSource) initCtx.lookup( jndiName );
+conn = dataSource.getConnection();
+        </code></p>
+
     </section>
 
 

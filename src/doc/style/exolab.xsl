@@ -374,6 +374,12 @@
     </span>
   </xsl:template>
 
+  <xsl:template match="tt">
+    <span class="bodyBlack">
+      <tt><xsl:apply-templates/></tt>
+    </span>
+  </xsl:template>
+
   <xsl:template match="code/comment">
     <span class="bodyGrey">
       <font color="red"><xsl:apply-templates/></font>

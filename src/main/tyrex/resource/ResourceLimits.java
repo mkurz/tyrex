@@ -58,15 +58,18 @@ package tyrex.resource;
  * always available in the pool.</li>
  * <li><tt>initial</tt> The initial connection pool size.</li>
  * <li><tt>maxRetain</tt> The maximum time to retain an unused
- * connection (seconds), zero if no limit is placed on the pool.</li>
+ * connection, specified in seconds, zero if connections are
+ * retained forever.</li>
  * <li><tt>timeout</tt> The timeout when attempting to open a new
- * connection (in seconds), zero to give up immediately.</li>
- * <li><tt>trace</tt> True if connections should write trace
- * information to the log.</li>
+ * connection, specified in seconds, zero to give up immediately.</li>
+ * <li><tt>trace</tt> True to log connection usage information.</li>
  * </ul>
+ * This object is thread-safe and mutable. Modifying the resource
+ * limits associated with an active connection pool will affect the
+ * future behavior of the connection pool.
  * 
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.11 $
+ * @version $Revision: 1.12 $
  */
 public final class ResourceLimits
 {
@@ -306,21 +309,6 @@ public final class ResourceLimits
     public boolean getTrace()
     {
         return _trace;
-    }
-
-
-    public Object clone()
-    {
-        ResourceLimits clone;
-
-        clone = new ResourceLimits();
-        clone._maximum = _maximum;
-        clone._minimum = _minimum;
-        clone._initial = _initial;
-        clone._maxRetain = _maxRetain;
-        clone._timeout = _timeout;
-        clone._trace = _trace;
-        return clone;
     }
 
 

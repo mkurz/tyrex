@@ -7,8 +7,6 @@ Before 0.9.8 release
 - Need to validate that both TransactionManager and TransactionFactory
   provide the proper timeout in seconds.
 
-- Implement destroy() for connection pool, and streamline use of limits and metrics
-
 
 Under consideration for version 0.9.9
 -------------------------------------
@@ -25,3 +23,5 @@ Under consideration for version 0.9.9
 - Have all asynch transactions complete in background thread of TransactionDomain
 
 - Clock API will change to be fully singleton pattern and match new names used in Tyrex configuration file
+
+- Allow ResourceLimits to be obtained and changed from Resource object

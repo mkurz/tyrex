@@ -50,12 +50,12 @@ import tyrex.tm.TransactionDomain;
 
 
 /**
- * Base class for a resource configuration. Different resource implementations
- * extend this class with additional methods for configuring and creating a
- * resource.
+ * Base class for a resource configuration. Different resource
+ * implementations extend this class with additional methods
+ * for configuring and creating a resource.
  * 
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  */
 public abstract class ResourceConfig
 {

@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!-- $Id: configuration.xml,v 1.5 2001/03/19 22:16:24 arkin Exp $ -->
+<!-- $Id: configuration.xml,v 1.6 2001/03/20 19:29:08 arkin Exp $ -->
 <document>
   <properties>
     <title>Tyrex Configuration</title>
@@ -131,275 +131,377 @@ uuid.clockSequence=100</code></p>
 
     <section title="Domain Configuration">
 
-      <p>A transaction domain provides centralized management for transactions. A transaction
-        domain defines the policy for all transactions created from that domain, such as default
-        timeout, maximum number of open transactions, IIOP support, and journaling.</p>
+      <p>A <i>Transaction Domain</i> provides centralized management for transactions.
+        A transaction domain defines the policy for all transactions created from that domain,
+        such as default timeout, maximum number of open transactions, IIOP support, and
+        journaling. In addition, the domain maintains resource managers such as JDBC data
+        sources and JCA connectors.</p>
 
-      <p>The transaction manager and user transaction (JTA), and the transaction factory and
-        IIOP server (OTS) are obtained from the transaction domain. Multiple transaction domains
-        can exist in the same JVM, e.g. to allow application partitioning.</p>
+      <p>Transaction domains are created from domain configuraiton files. The domain configuration
+        file defines the properties for the specific transaction domain, and configures all the
+        JDBC data sources and JCA connectors available in that domain.</p>
 
-      <p>A transaction domain is created from a domain configuration file. The domain configuration
-        file defines all the properties of the transaction domain. In addition, it is used to
-        configure all the resource managers (JDBC, JCA, etc) available to applications using this
-        transaction domain.</p>
+      <p>The transaction domain configuration file is an XML document with the following structure:
+        <table>
+          <tr>
+            <td><tt>domain</tt></td>
+            <td></td>
+            <td>Top level element</td>
+          </tr>
+          <tr>
+            <td><tt>&#160;&#160;name</tt></td>
+            <td><i>required</i></td>
+            <td>The name of the domain</td>
+          </tr>
+          <tr>
+            <td><tt>&#160;&#160;maximum</tt></td>
+            <td><i>optional</i></td>
+            <td>Maximum number of open transactions allowed</td>
+          </tr>
+          <tr>
+            <td><tt>&#160;&#160;timeout</tt></td>
+            <td><i>optional</i></td>
+            <td>Default timeout for transactions, in seconds</td>
+          </tr>
+          <tr>
+            <td><tt>&#160;&#160;journalFactory</tt></td>
+            <td><i>optional</i></td>
+            <td>Implementation of transaction journal factory</td>
+          </tr>
+          <tr>
+            <td><tt>&#160;&#160;resources</tt></td>
+            <td><i>optional</i></td>
+            <td>Top level element for list of JDBC data sources and JCA connectors</td>
+          </tr>
+          <tr>
+            <td><tt>&#160;&#160;&#160;&#160;dataSource</tt></td>
+            <td><i>zero or more</i></td>
+            <td>Specification for a JDBC data source</td>
+          </tr>
+          <tr>
+            <td><tt>&#160;&#160;&#160;&#160;connector</tt></td>
+            <td><i>zero or more</i></td>
+            <td>Specification for a JCA connector</td>
+          </tr>
+        </table>
+      </p>
 
-      <p>Applications do not interact with transaction domains directly. Transaction domains are
-        created and managed by the application server or some other application framework.
-        The application accesses the user transaction, current thread context, and connection
-        factories through JNDI. The application server or application framework are responsible
-        to place these objects in the application's JNDI environment naming context (ENC).</p>
+      <p>One <tt>dataSource</tt> element is used for each configured JDBC data
+        source. The <tt>dataSource</tt> element takes the following strcture:
+        <table>
+          <tr>
+            <td><tt>dataSource</tt></td>
+            <td></td>
+            <td>Top level element for each JDBC data source specification</td>
+          </tr>
+          <tr>
+            <td><tt>&#160;&#160;name</tt></td>
+            <td><i>required</i></td>
+            <td>The name of the data source</td>
+          </tr>
+          <tr>
+            <td><tt>&#160;&#160;jar</tt></td>
+            <td><i>required</i></td>
+            <td>The name of the data source JAR</td>
+          </tr>
+          <tr>
+            <td><tt>&#160;&#160;paths</tt></td>
+            <td><i>optional</i></td>
+            <td>Paths to additional JARs and dependent files</td>
+          </tr>
+          <tr>
+            <td><tt>&#160;&#160;class</tt></td>
+            <td><i>required</i></td>
+            <td>The data source implementation class name</td>
+          </tr>
+          <tr>
+            <td><tt>&#160;&#160;config</tt></td>
+            <td><i>optional</i></td>
+            <td>Configuration for the JDBC data source</td>
+          </tr>
+          <tr>
+            <td><tt>&#160;&#160;limits</tt></td>
+            <td><i>optional</i></td>
+            <td>Resource limit for the JDBC connection pool</td>
+          </tr>
+        </table>
+      </p>
 
-      <p>In order to use a transaction domain, the application server must first create it using
-        <javadoc>tyrex.tm.TransactionDomain</javadoc>. The application can also obtain a previously
-        created transaction domain, or one created automatically based on the <tt>tyrex.domain.file</tt>
-        configuration file property.</p>
+      <p>One <tt>connector</tt> element is used for each configured JCA connector.
+        The <tt>connector</tt> element takes the following strcture:
+        <table>
+          <tr>
+            <td><tt>connector</tt></td>
+            <td></td>
+            <td>Top level element for each JCA connector specification</td>
+          </tr>
+          <tr>
+            <td><tt>&#160;&#160;name</tt></td>
+            <td><i>required</i></td>
+            <td>The name of the connector source</td>
+          </tr>
+          <tr>
+            <td><tt>&#160;&#160;jar</tt></td>
+            <td><i>required</i></td>
+            <td>The name of the connector RAR</td>
+          </tr>
+          <tr>
+            <td><tt>&#160;&#160;paths</tt></td>
+            <td><i>optional</i></td>
+            <td>Paths to additional JARs and dependent files</td>
+          </tr>
+          <tr>
+            <td><tt>&#160;&#160;config</tt></td>
+            <td><i>optional</i></td>
+            <td>Configuration for the connection factory</td>
+          </tr>
+          <tr>
+            <td><tt>&#160;&#160;limits</tt></td>
+            <td><i>optional</i></td>
+            <td>Resource limit for the JCA connection pool</td>
+          </tr>
+        </table>
+      </p>
 
-      <p>The transaction domain configuration file is a standard XML document with the following structure:</p>
+      <p>Connection pool limits are specified using the <tt>limits</tt> element
+        that takes the following strcture:
+        <table>
+          <tr>
+            <td><tt>limits</tt></td>
+            <td></td>
+            <td>Top level element for each connection pool limits specification</td>
+          </tr>
+          <tr>
+            <td><tt>&#160;&#160;maximum</tt></td>
+            <td><i>optional</i></td>
+            <td>Maximum number of connections allowed</td>
+          </tr>
+          <tr>
+            <td><tt>&#160;&#160;minimum</tt></td>
+            <td><i>optional</i></td>
+            <td>Minimum number of connections to keep in the pool</td>>
+          </tr>
+          <tr>
+            <td><tt>&#160;&#160;initial</tt></td>
+            <td><i>optional</i></td>
+            <td>Initial size of pool</td>
+          </tr>
+          <tr>
+            <td><tt>&#160;&#160;maxRetain</tt></td>
+            <td><i>optional</i></td>
+            <td>Maximum duration to retain open connections, in seconds</td>
+          </tr>
+          <tr>
+            <td><tt>&#160;&#160;timeout</tt></td>
+            <td><i>optional</i></td>
+            <td>Maximum timeout waiting for a new connection, in seconds</td>
+          </tr>
+          <tr>
+            <td><tt>&#160;&#160;trace</tt></td>
+            <td><i>optional</i></td>
+            <td>True to enable tracing</td>
+          </tr>
+        </table>
+      </p>
+
+      <section title="Element definition">
+
+      <p>The various elements of the domain configuration file are explained in
+        more detail below.</p>
 
       <h4>domain</h4>
-
-      <p>The top level element <tt>domain</tt> provides the configuration of the transaction domain.
-        A domain configuration file can only define a single transaction domain.</p>
+      
+      <p>The top level element of each domain configuration file. A domain configuration
+        file can specify exactly one transaction domain.</p>
 
       <h4>domain/name</h4>
 
-      <p>Each transaction domain must have a unique name. Tyrex does not allow two transaction
-        domains to be configured with the same name. The domain name is used for logging of errors
-        and other informative messages, and should be kept short.</p>
-
+      <p>Each transaction domain must have a unique name in the system. Tyrex will not
+        allow two transaction domains with the same name to be configured. Domain names
+        are used for logging messages, and should be kept short.</p>
+      
       <h4>domain/maximum</h4>
 
-      <p>Specifies the maximum number of active transactions supported by this domain. If the
-        application attempts to begin a transaction when this limit has been reached it will
-        be blocked until at least one active transaction has committed or rolled back.</p>
+      <p>The maximum number of open transactions supported by this domain. Tyrex will
+        make sure this limit is not exceeded by blocking any attempt to create more
+        transactions than the maximum allowed limit. This limit only applies to concurrently
+        open (not committed or rolledback) top-level transactions.</p>
 
-      <p>If this element is missing, the default value (zero) is used, meaning no limit on the
-        number of concurrent active transactions.</p>
+      <p>If this element is missing, the default value (zero) is assumed, meaning no limit
+        is placed on the number of concurrently open transaction.</p>
 
       <h4>domain/timeout</h4>
 
-      <p>Specifies the default timeout for all transactions. All transactions are subject to
-        a timeout to prevent deadlocks and other race conditions from blocking an application
-        indefinitely.</p>
+      <p>The default timeout for all transactions, specified in seconds. Timeouts are used
+        to detect and cancel blocked transactions. A different value can be specified at
+        runtime using one of the JTA or OTS interfaces.</p>
 
-      <p>The timeout for a transaction can be changed at runtime. In addition, <tt>TransactionManager</tt>
-        allows the timeout of new transactions to be changed to any other value, or reset
-        back to the default value.</p>
-
-      <p>If this element is missing, the default (120 seconds) is used. It is recommended to
-        set this value to a reasonable range that allows all transactions to complete, but
-        prevents blocked transactions for waiting indefinitely.</p>
-
-      <h4>domain/threads</h4>
-
-      <p>Specifies the number of threads in the thread pool. The thread pool is an optional
-        service that can be used by application developers. The thread pool is created with
-        a default thread capacity.</p>
-
-      <p>If this element is missing, the default (no threads) is used. Consult the
-        <javadoc>tyrex.services.ThreadPool</javadoc> Javadocs for more details.</p>
+      <p>If this element is missing, the default (120 seconds) is assumed. It is recommended
+        to set this value to a reasonable range that allows all transactions to complete,
+        but does not allow blocked transactions to lock resources indefinitely.</p>
 
       <h4>domain/journalFactory</h4>
 
-      <p>Specifies the transaction journal factory to use. The transaction journal is used to
-        enable transaction recovery through a journaling mechanism. This element provides the
-        class name for a factory that implements the <javadoc>tyrex.tm.JournalFactory</javadoc>
-        interface.</p>
-
-      <p>If this element is missing, journaling is not supported by the domain.</p>
+      <p>Specifies the transaction journal factory to use. If this element is missing,
+        journaling is not enabled for this transaction domain.</p>
 
       <h4>domain/resources</h4>
 
-      <p>Provides configuration for resource managers (JDBC, JCA, etc) that are available
-        from this transaction domain.</p>
-
-      <p>Resource managers must be configured from within a transaction domain to allow
-        them to be managed by the transaction manager, and automatically enlisted in
-        transactions.</p>
-
-      <p>The <tt>resources</tt> element includes a list of zero or more resource configuration
-        elements. Order is not important. After the domain has been created the resources
-        can be obtained from <javadoc>tyrex.tm.TransactionDomain</javadoc> and listed in the
-        JNDI environment naming context. It's possible to add/remove resources at run time
-        to enable hot-deployment of databases and connectors.</p>
+      <p>Lists zero or more JDBC data sources and JCA connectors that are available as
+        resource managers in this transaction domain. Order is not important.</p>
 
       <h4>resources/dataSource</h4>
 
-      <p>The <tt>dataSource</tt> element configures a JDBC 2.0 (or 3.0) <tt>DataSource</tt>
-        as a resource manager. This element configures the database access properties,
-        and the connection pool limits.</p>
+      <p>The <tt>dataSource</tt> element configures a single JDBC 2.0 (or 3.0) data
+        source as a resource manager in this transaction domain. It provides specification
+        of the JDBC provider, default configuration, and connection pool limits.</p>
 
       <h4>resources/connector</h4>
 
-      <p>The <tt>connector</tt> element configures a JCA 1.0 <tt>ResourceAdapter</tt> as
-        a resource manager. This element configures the connector access properties, the
-        and connection pool limits.</p>
+      <p>The <tt>connector</tt> element configures a single JCA 1.0 connector as a
+        resource manager in this transaction domain. It provides specification
+        of the JCA provider, default configuration, and connection pool limits.</p>
 
       <h4>[dataSource|connector]/name</h4>
 
-      <p>Specifies the name by which the data source or connector will be known. The
-        <javadoc>tyrex.resource.Resource</javadoc> object can be obtained by this name.
-        The name must be unique within a transaction domain. There is no requirement to
-        enlist the resource in JNDI with this specific name.</p>
+      <p>Specifies the name by which the data source or connector resource will be known.
+        The resource name will be used to obtain an instance from the transaction domain
+        and for debugging purposes. It should be short and must be unique within this
+        transaction domain.</p>
+
+      <p>The resource name is different than the JNDI name by which the application will
+        obtain a connection factory from the JNDI Environment Naming Context.</p>
 
       <h4>[dataSource|connector]/jar</h4>
 
-      <p>Provides the file name or URL where the data source or connector JAR can be found.
-        Explicitly naming the JAR allows data sources and connectors to be located in a
-        separate directory than the one used by Tyrex or the application. Only a single JAR
-        can be specified. This must be the main JAR holding the JDBC driver or JCA connector.</p>
+      <p>File name or URL of the JAR file containing the JDBC driver, or the RAR file
+        containing the JCA connector. A relative file name is located in the current working
+        directory. An absolute file name or HTTP/FTP URL can be used as well. Only a single
+        JAR or RAR file can be specified, and must contain the JDBC driver or JCA connector.</p>
 
       <h4>[dataSource|connector]/paths</h4>
 
-      <p>If the data source or connector require additional JARs, libraries or other files,
-        these are specified using the optional <tt>paths</tt> element. This element works
-        like a Java class path and includes a colon or semi-colon separate list of files
-        and directories.</p>
+      <p>List of files names or URLs to additional JARs, libraries and support files required
+        by a JDBC driver of JCA connector. Colon or semi-colon separators can be used.</p>
 
       <h4>dataSource/class</h4>
 
-      <p>The class of the data source implementation must be specified explicitly. For JCA
-        connector, the classes are read from the JCA deployment descriptor (<tt>ra.xml</tt>).
-        When using an XA-capable data source, this should be the class implementing
-        <tt>javax.sql.XADataSource</tt>. When using non-XA capable, poolable, data sources,
-        this should be the class implementing <tt>javax.sql.PoolConnectionDataSource</tt>.
-        Otherwise, it should be a class implementing <tt>javax.sql.DataSource</tt>.</p>
+      <p>The class of the data source implementation for a JDBC driver. When using an XA-capable
+        data source, this should be a class implementing <tt>javax.sql.XADataSource</tt>.
+        When using a non-XA data source, this should be a class implementing <tt>javax.sql.PoolConnectionDataSource</tt>.</p>
+
+      <p>This element is only used for JDBC data sources. JCA connectors specify the connection
+        factory class in a deployment file contained within the JCA RAR.</p>
 
       <h4>[dataSource|connector]/config</h4>
 
-      <p>Defines configuration for the data source or connector. This element contains
-        a list of nested element that match the data source or connector configuration
-        properties. The configuration properties are read from this element and set using
-        the respective <tt>set</tt> method.</p>
-
-      <p>For example, for a <tt>DataSource</tt> that has the methods <tt>setHostName</tt>
-        and <tt>setUser</tt>, use:<code>
-&lt;config&gt;
-  &lt;hostName&gt;host.domain.com&lt;/hostName&gt;
-  &lt;user&gt;myself&lt;/user&gt;
-&lt;/config&gt;</code></p>
+      <p>Configures the JDBC data source or JCA connector. This element contains a list
+        of properties that match to the Bean-like <tt>get/set</tt> methods of the JDBC
+        <tt>DataSource</tt> or JCA <tt>ManagedConnectionFactory</tt>.</p>
 
       <h4>[dataSource|connector]/limits</h4>
 
-      <p>Defines the limits of the connection pool. If this element is missing or is empty,
-        the default limits are used.</p>
+      <p>Defines the connection pool limits placed on a JDBC data source or JCA connector.
+        If this element is missing or empty, the default limits apply.</p>
 
       <h4>limits/maximum</h4>
 
-      <p>The maximum number of open connections allowed. When this limit is reached, the
-        application will block until a connection becomes available or a timeout occurs.
-        Most systems impose a limit on the maximum number of connections that can be used.
-        Setting the pool limit allows Tyrex to block requests for new connections until
-        the pool is able to respond (see also <tt>timeout</tt>), instead of throwing
-        an exception.</p>
+      <p>Maximum number of open connections allowed. Most systems impose a limit on the
+        number of connections that can be open at any one time. When this limit is reached,
+        the application will block until a connection becomes available or a timeout occurs.</p>
 
-      <p>If this element is missing, the default (zero) will be used, implying that no
-        limit is placed on the size of the connection pool.</p>
+      <p>If this element is missing, the default (zero) is assumed, implying that no
+        limit is placed on the number of open connections.</p>
 
       <h4>limits/minimum</h4>
 
-      <p>The minimum number of open connections to retain. When a connection is released
-        by the application and returned to the pool, the pool is allowed to close the
-        connection. The connection pool will retain an unused connection for some
-        maximum time (see <tt>maxRetain</tt>) before discarding it.</p>
-
-      <p>The connection pool will maintain the minimum number of connections specified,
-        even if they have been retained longer than <tt>maxRetain</tt> to guarantee
-        a reasonable response time when new connections are required.</p>
-
-      <p>If this element is missing, the default (zero) will be used, implying no
-        connections need to be retained past the maximum retain duration.</p>
+      <p>Minimum number of connections to keep in the pool. The pool will discard connections
+        that have not been used for more than the specified <tt>maxRetain</tt> duration.
+        Even so, the pool will keep the minimum number of connections specified to guarantee
+        a reasonable respnse time when new connections are required.</p>
+      
+      <p>If this element is missing, the default (zero) is assumed, and the connection pool
+        is allowed to shrink to zero connections.</p>
 
       <h4>limits/initial</h4>
 
-      <p>The initial number of connections to create. When the connection pool is opened,
-        it contains exactly one connection (required for recovery and meta-data access).
-        The <tt>minimum</tt> element tells the connection pool how many connections to
-        keep in the pool, but does not indicate that it should create that number of
-        connections. The <tt>initial</tt> element can be used to request an initial set
-        of connections to exist in the pool.</p>
+      <p>The initial number of connections to create. When the pool is first created it will
+        open up the specified number of connections. Even if this value is zero, one connection
+        will always be created for recovery and access to meta-data information.</p>
 
-      <p>If this element is missing, the default (zero) will be used, and the connection
-        pool will not attempt to create any connections.</p>
+      <p>If this element is missing, the default (zero) is assumed, and only one connection
+        will be created, as required for recovery and meta-data access.</p>
 
       <h4>limits/maxRetain</h4>
 
-      <p>The maximum time (in seconds) to retain an unused connection. When a connection
-        is returned to the pool by the application, it will be retained for that duration
-        before being discarded. The connection pool assumes that the connection might be
-        reused by the application within that duration, hence will not discard it
-        immediately.</p>
+      <p>The maximum duration to retain unused connections, in seconds. When a connection
+        is returned to the pool, it will be retained for that duration before being
+        discarded. The application may obtain the connection from the pool before this
+        time has elapsed.</p>
 
-      <p>When specifying this value, take into consideration any idle timeout on connections,
-        and the requirements of applications running outside this transaction domain.
-        If the connector has an idle timeout on connections, the maximum retain duration
-        must be less than or equal to the idle timeout.</p>
+      <p>A high retain timeout allows the application to response better to changing loads,
+        but may result in resource starvation for other applications using the same resource
+        manager. This value should also take into account any idle timeout imposed on connections.</p>
 
-      <p>A high retain time allows the application to respond better to changing loads,
-        by retaining a large number of open connections over consecutive peak demand.
-        However, a high retain time might cause starvation to applications running outside
-        this transaction domain.</p>
-
-      <p>If this element is missing, the default (zero) will be used, allowing connections
-        to be kept in the pool forever.</p>
+      <p>If this element is missing, the default (zero) is assumed, causing connections to
+        be kept in the pool forever.</p>
 
       <h4>limits/timeout</h4>
 
-      <p>The timeout (in seconds) waiting for a new connection. If the maximum limit has
-        been reached, Tyrex will block the application until a connection becomes available
-        or the timeout has been reached.</p>
+      <p>The timeout waiting for a new connection, in seconds. If the maximum limit has been
+        reached, Tyrex will block the application until a connection becomes available, or
+        the timeout has been reached.</p>
 
-      <p>Setting the timeout value allows the application to deal better with peak loads by
-        blocking temporarily, instead of ending with an exception. A large value, however,
-        will not save the application from resource starvation.</p>
-
-      <p>If this element is missing, the default (zero) will be used, meaning the application
-        will not be blocked and an exception will be thrown if the maximum limit has been
-        reached.</p>
+      <p>If this element is missing, the default (zero) is assumed, meaning that the application
+        will not be blocked and an exception will be thrown immediately if the maximum limit
+        has been reached.</p>
 
       <h4>limits/trace</h4>
 
-      <p>Requests tracing for the data source or connector. If this element is true,
-        Tyrex will provide a log writer to the data source or connector, which they can use
-        to print trace messages.</p>
+      <p>Request tracing. If the value of this element is true, Tyrex will log all usage of
+        the JDBC data source or JCA connector.</p>
         
-      <h4>Example</h4>
+      </section>
 
-      <p>The following example illustrates a domain configuration file using Sybase jConnect 5.2:</p>
-        <code>
+      <section title="Example">
+
+        <p>The following example illustrates a domain configuration file using Sybase jConnect 5.2:
+          <code>
 &lt;domain&gt;
   &lt;name&gt;default&lt;/name&gt;
-  &lt;!-- Limit to 50 concurrent transactions --&gt;
+<comment>  &lt;!-- Limit to 50 concurrent transactions --&gt;</comment>
   &lt;maximum&gt;50&lt;/maximum&gt;
-  &lt;!-- Default transaction timeout: 2 minuts --&gt;
+<comment>  &lt;!-- Default transaction timeout: 2 minutes --&gt;</comment>
   &lt;timeout&gt;120&lt;/timeout&gt;
   &lt;resources&gt;
+<comment>    &lt;!-- Specification for data source myDb --&gt;</comment>
     &lt;dataSource&gt;
       &lt;name&gt;myDb&lt;/name&gt;
       &lt;jar&gt;jconnect_5.2.jar&lt;/jar&gt;
       &lt;class&gt;com.sybase.jdbc2.jdbc.SybXADataSource&lt;/class&gt;
       &lt;config&gt;
-        &lt;!-- Properties defined by SybXADataSource --&gt;
+<comment>        &lt;!-- Configuration for SybXADataSource --&gt;</comment>
         &lt;user&gt;arkin&lt;/user&gt;
         &lt;password&gt;secret&lt;/password&gt;
         &lt;serverName>tyrex.exolab.org&lt;/serverName&gt;
         &lt;postNumber&gt;4100&lt;/portNumber&gt;
       &lt;/config&gt;
       &lt;limits&gt;
-        &lt;!-- Start with 5 connections, never go below 5,
-             and never go above 50 --&gt;
+<comment>        &lt;!-- Start with 5 connections, never go below 5,
+             and never go above 50 --&gt;</comment>
         &lt;maximum&gt;50&lt;/maximum&gt;
         &lt;minimum&gt;5&lt;/minimum&gt;
         &lt;initial&gt;5&lt;/initial&gt;
-        &lt;!-- Discard connections after 5 idle minutes --&gt;
+<comment>        &lt;!-- Discard connections idle for 5 minutes --&gt;</comment>
         &lt;maxRetain&gt;300&lt;/maxRetain&gt;
-        &lt;!-- If maximum reached, block for 10 seconds --&gt;
+<comment>        &lt;!-- If maximum reached, block for 10 seconds --&gt;</comment>
         &lt;timeout&gt;10&lt;/timeout&gt;
       &lt;/limits&gt;
     &lt;/dataSource&gt;
   &lt;/resources&gt;
 &lt;/domain&gt;</code> 
+        </p>
+      </section>
 
     </section>
     

@@ -55,64 +55,65 @@ package tyrex.resource;
  * in the pool, etc.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  */
-public final class PoolMetrics
+public class PoolMetrics
 {
 
 
     /**
      * The accumulated time client connections have been used (ms).
      */
-    private long   _accumUsedTime;
+    private long     _accumUsedTime;
 
     
     /**
      * The accumulated time client connections have been unused (ms).
      */
-    private long   _accumUnusedTime;
+    private long     _accumUnusedTime;
 
 
     /**
      * The accumulated count of managed connections created.
      */
-    private int    _accumCreated;
+    private int      _accumCreated;
 
 
     /**
      * The accumulated count of client connections used.
      */
-    private int    _accumUsed;
+    private int      _accumUsed;
 
 
     /**
      * The accumulated count of client connections released to
      * the pool (unused).
      */
-    private int    _accumUnused;
+    private int      _accumUnused;
 
 
     /**
      * The accumulated count of discarded managed connections.
      */
-    private int    _accumDiscarded;
+    private int      _accumDiscarded;
 
 
     /**
      * The accumulated count of errors in managed connections.
      */
-    private int    _accumErrors;
+    private int      _accumErrors;
 
 
     /**
      * The total number of connections in the pool, both used and unused.
      */
-    private int  _total;
+    protected int    _total;
+
 
     /**
      * The number of connections available in the pool (unused).
      */
-    private int  _available;
+    protected int    _available;
 
 
     /**
@@ -226,60 +227,6 @@ public final class PoolMetrics
 
 
     /**
-     * Record a created managed connection.
-     */
-    public synchronized void recordCreated()
-    {
-        ++_accumCreated;
-        ++_total;
-    }
-
-
-    /**
-     * Record a discarded managed connection.
-     */
-    public synchronized void recordDiscard()
-    {
-        ++_accumDiscarded;
-        --_total;
-    }
-
-
-    /**
-     * Record an error release of a managed connection.
-     */
-    public synchronized void recordError()
-    {
-        ++_accumErrors;
-        --_total;
-    }
-
-
-    /**
-     * Record the duration for using a connection.
-     *
-     * @param ms The duration is milliseconds
-     */
-    public synchronized void recordUsedDuration( int ms )
-    {
-        ++_accumUsed;
-        _accumUsedTime += ms;
-    }
-
-
-    /**
-     * Record the duration for holding a connection.
-     *
-     * @param ms The duration is milliseconds
-     */
-    public synchronized void recordUnusedDuration( int ms )
-    {
-        ++_accumUnused;
-        _accumUnusedTime += ms;
-    }
-
-
-    /**
      * Returns the total number of connections in the pool.
      * The total number includes both used and available connections.
      *
@@ -303,33 +250,6 @@ public final class PoolMetrics
 
 
     /**
-     * Called to change the number of available connections. This method
-     * reflects an increase or decrease in the number of available connections.
-     * If the change results in an available count that is outside the
-     * range zero to total count, this method corrects the count and throws
-     * an <tt>IllegalStateException</tt>.
-     *
-     * @param change The change in available connections (positive or
-     * negative integer)
-     * @throws IllegalStateException Change resulted in an available count
-     * that is outside the range zero to total count
-     */
-    public synchronized void changeAvailable( int change )
-    {
-        change += _available;
-        if ( change > _total ) {
-            _available = _total;
-            throw new IllegalStateException( "Available number of connections higher than total number of connections" );
-        }
-        if ( change < 0 ) {
-            _available = 0;
-            throw new IllegalStateException( "Available number of connections falls below zero" );
-        }
-        _available = change;
-    }
-
-
-    /**
      * Called to reset this metrics object.
      */
     public synchronized void reset()
@@ -341,8 +261,60 @@ public final class PoolMetrics
         _accumUnused = 0;
         _accumDiscarded = 0;
         _accumErrors = 0;
-        _total = 0;
-        _available = 0;
+    }
+
+
+    /**
+     * Record a created managed connection.
+     */
+    protected synchronized void recordCreated()
+    {
+        ++_accumCreated;
+        ++_total;
+    }
+
+
+    /**
+     * Record a discarded managed connection.
+     */
+    protected synchronized void recordDiscard()
+    {
+        ++_accumDiscarded;
+        --_total;
+    }
+
+
+    /**
+     * Record an error release of a managed connection.
+     */
+    protected synchronized void recordError()
+    {
+        ++_accumErrors;
+        --_total;
+    }
+
+
+    /**
+     * Record the duration for using a connection.
+     *
+     * @param ms The duration is milliseconds
+     */
+    protected synchronized void recordUsedDuration( int ms )
+    {
+        ++_accumUsed;
+        _accumUsedTime += ms;
+    }
+
+
+    /**
+     * Record the duration for holding a connection.
+     *
+     * @param ms The duration is milliseconds
+     */
+    protected synchronized void recordUnusedDuration( int ms )
+    {
+        ++_accumUnused;
+        _accumUnusedTime += ms;
     }
 
 

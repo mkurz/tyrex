@@ -3,6 +3,7 @@
                          "http://castor.exolab.org/mapping.dtd">
 <mapping>
 
+
   <class name="tyrex.tm.impl.DomainConfig">
     <map-to xml="domain" />
     <field name="name" type="string" required="true">
@@ -32,6 +33,7 @@
     </field>
   </class>
 
+
   <class name="tyrex.resource.Resources">
     <map-to xml="resources" />
     <field name="dataSource" type="tyrex.resource.jdbc.DataSourceConfig"
@@ -43,6 +45,7 @@
       <bind-xml name="connector" node="element" />
     </field>
   </class>
+
 
   <class name="tyrex.resource.jdbc.DataSourceConfig">
     <map-to xml="dataSource" />
@@ -71,6 +74,7 @@
     </field>
   </class>
 
+
   <class name="tyrex.resource.jca.Connector">
     <map-to xml="connector" />
     <field name="name" type="string" required="true">
@@ -94,6 +98,7 @@
     </field>
   </class>
 
+
   <class name="tyrex.resource.ResourceLimits">
     <map-to xml="limits" />
     <field name="maximum" type="integer">
@@ -115,5 +120,6 @@
       <bind-xml name="trace" node="element" />
     </field>
   </class>
+
 
 </mapping>
