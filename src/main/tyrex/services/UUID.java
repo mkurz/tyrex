@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: UUID.java,v 1.4 2001/03/21 20:02:47 arkin Exp $
+ * $Id: UUID.java,v 1.5 2001/10/18 00:45:13 mohammed Exp $
  */
 
 
@@ -138,7 +138,7 @@ import tyrex.util.Messages;
  * The UUID generator is thread-safe and consumes a single thread.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.4 $ $Date: 2001/03/21 20:02:47 $
+ * @version $Revision: 1.5 $ $Date: 2001/10/18 00:45:13 $
  */
 public final class UUID
 {
@@ -801,6 +801,28 @@ public final class UUID
         return bytes;
     }
 
+
+    /**
+     * Returns true if the UUID was created on this machine.
+     * Determines the source of the UUID based on the node
+     * identifier.
+     *
+     * @param uuid The UUID as a byte array
+     * @return True if created on this machine
+     */
+    public static boolean isLocal( byte[] uuid )
+    {
+        if ( uuid == null )
+            throw new IllegalArgumentException( "Argument uuid is null" );
+        if ( uuid.length != 16 )
+            return false;
+        return ( uuid[ 10 ] == _nodeIdentifierByte[ 0 ] &&
+                 uuid[ 11 ] == _nodeIdentifierByte[ 1 ] &&
+                 uuid[ 12 ] == _nodeIdentifierByte[ 2 ] &&
+                 uuid[ 13 ] == _nodeIdentifierByte[ 3 ] &&
+                 uuid[ 14 ] == _nodeIdentifierByte[ 4 ] &&
+                 uuid[ 15 ] == _nodeIdentifierByte[ 5 ] );
+    }
 
     /**
      * Read the UUID state and set the node identifier and clock
