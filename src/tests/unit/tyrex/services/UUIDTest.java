@@ -59,7 +59,7 @@ import junit.extensions.*;
 /**
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  */
 
 
@@ -171,7 +171,7 @@ public class UUIDTest extends TestCase
      * neighbors.
      */
 
-    public void testUniquness()
+    public void testUniqueness()
         throws Exception
     {
         byte[] bytes;
