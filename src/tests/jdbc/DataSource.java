@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: DataSource.java,v 1.1 2000/09/29 01:25:20 mohammed Exp $
+ * $Id: DataSource.java,v 1.2 2000/09/30 02:21:41 mohammed Exp $
  */
 
 
@@ -56,6 +56,7 @@ import java.sql.Statement;
 import javax.sql.XAConnection;
 import javax.sql.XADataSource;
 import javax.transaction.TransactionManager;
+import jdbc.db.TyrexConnection;
 import jdbc.db.TyrexDriver;
 import org.exolab.jtf.CWTestCategory;
 import org.exolab.jtf.CWTestCase;
@@ -89,6 +90,9 @@ public class DataSource
 
 
         tc = new PruneTest();
+        add( tc.name(), tc, true );
+        
+        tc = new DeadlockTest();
         add( tc.name(), tc, true );
     }
 
@@ -374,6 +378,109 @@ public class DataSource
             return false;
         }
     }
+
+    private class DeadlockTest
+        extends CWTestCase
+    {
+        private DeadlockTest()
+            throws CWClassConstructorException
+        {
+            super( "TC05", "Deadlock" );
+        }
+    
+        public boolean run( CWVerboseStream stream )
+        {
+            int i;
+            try {
+                final TyrexDriver tyrexDriver = getTyrexDriver(stream);
+                Thread thread;
+                final Object lock = new Object();
+                final Object[] result = new Object[1];
+                final TransactionManager transactionManager = Tyrex.getTransactionManager();
+                EnabledDataSource ds = getEnabledDataSource();
+                ds.setTransactionTimeout(3);
+                
+                i = 0;
+
+                try {
+                    final XAConnection xaConnection = ds.getXAConnection();
+
+                    for (; i < 10; i++) {
+                        result[0] = Boolean.FALSE;
+                        thread = new Thread(new Runnable()
+                            {
+                                public void run() 
+                                {
+                                    try {
+                                        Connection connection;
+                                        Statement stmt;
+
+                                        transactionManager.begin();
+
+                                        transactionManager.getTransaction().enlistResource(xaConnection.getXAResource());
+        
+                                        connection = xaConnection.getConnection();
+
+                                        stmt = connection.createStatement();
+                        
+                                        stmt.executeUpdate("update enabled_test set text = '55' where id = 1");
+                        
+                                        stmt.close();
+                                        tyrexDriver.getLastConnection().setCommitWaitTime(7000);
+                                        
+                                        transactionManager.commit();
+                        
+                                        connection.close();
+
+                                        result[0] = Boolean.TRUE;
+
+                                        synchronized (lock)
+                                        {
+                                            lock.notify();
+                                        }
+
+                                        
+                                    }
+                                    catch (Exception e) {
+                                        result[0] = e;
+                                    }
+                                }
+                            });
+
+
+                            thread.start();
+
+                            synchronized (lock)
+                            {
+                                lock.wait(10000);
+                            }
+                            
+                            if ((result[0] instanceof Boolean) && !((Boolean)result[0]).booleanValue()) {
+                                stream.writeVerbose("failed at iteration " + i);
+                                return false;    
+                            }
+                            else if (result[0] instanceof Exception) {
+                                throw (Exception)result[0];    
+                            }
+                    }
+                }
+                catch (Exception e)
+                {
+                    stream.writeVerbose("failed at iteration " + i);
+                    stream.writeVerbose(e.toString());
+                    e.printStackTrace();
+                    return false;
+                }
+    
+                return true;
+            }
+            catch (IOException e) {
+                e.printStackTrace();
+            }
+            return false;
+        }
+    }
+
 
 
     private class XAConnectionTest

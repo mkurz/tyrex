@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: XADataSourceImpl.java,v 1.12 2000/09/29 01:24:17 mohammed Exp $
+ * $Id: XADataSourceImpl.java,v 1.13 2000/09/30 02:19:59 mohammed Exp $
  */
 
 
@@ -471,7 +471,7 @@ public abstract class XADataSourceImpl
         Thread.currentThread().sleep( _txTimeout * 1000 );
         } catch ( InterruptedException except ) {
         }
-
+        
         if (_pruneFactor > 0) {
             synchronized ( _pool ) {
                 try {
@@ -524,7 +524,8 @@ public abstract class XADataSourceImpl
             try {
             Connection underlying;
             
-            synchronized ( txConn ) {
+            //TODO FIX THIS
+            synchronized ( this ) {
                 if ( txConn.conn == null )
                 continue;
                 if ( getLogWriter() != null )
@@ -560,7 +561,6 @@ public abstract class XADataSourceImpl
         }
     	}
     }
-
 
 
     public void debug( PrintWriter writer )

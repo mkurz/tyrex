@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: XAConnectionImpl.java,v 1.11 2000/09/28 01:51:15 mohammed Exp $
+ * $Id: XAConnectionImpl.java,v 1.12 2000/09/30 02:19:59 mohammed Exp $
  */
 
 
@@ -384,11 +384,14 @@ public final class XAConnectionImpl
 	    if ( ! ( _underlying instanceof TwoPhaseConnection ) ||
 		 ! ( (TwoPhaseConnection) _underlying ).isCriticalError( except ) )
 		return;
-	    if ( _txConn.conn == null ||
-		 ! ( _txConn.conn instanceof TwoPhaseConnection ) ||
-		 ! ( (TwoPhaseConnection) _txConn.conn ).isCriticalError( except ) )
-		return;
 	}
+
+    if ( _txConn != null ) {
+        if ( _txConn.conn == null ||
+    		 ! ( _txConn.conn instanceof TwoPhaseConnection ) ||
+    		 ! ( (TwoPhaseConnection) _txConn.conn ).isCriticalError( except ) )
+    		return;    
+    }
 
 	// The client connection is no longer useable, the underlying
 	// connection (if used) is closed, the TxConnection (if used)
@@ -560,7 +563,8 @@ public final class XAConnectionImpl
 	    throw new XAException( XAException.XAER_INVAL );
 	// Note: we could get end with success or failure even it
 	// we were previously excluded from the transaction.
-	if ( _txConn == null && flags == TMSUSPEND ) 
+	if ( ( _txConn == null ) && 
+         ( ( flags == TMSUSPEND ) || ( flags == TMFAIL ) ) ) 
 	    throw new XAException( XAException.XAER_NOTA );
 
 	synchronized ( _resManager ) {
@@ -776,7 +780,7 @@ public final class XAConnectionImpl
 		    txConn.readOnly = true;
 		    if ( txConn.conn instanceof TwoPhaseConnection )
 			( (TwoPhaseConnection) txConn.conn ).enableSQLTransactions( true );
-		    txConn.conn.commit();
+            txConn.conn.commit();
 		} catch ( SQLException except ) {
 		    try {
 			// Unknown error in the connection, better kill it.
