@@ -40,7 +40,7 @@
  *
  * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionDomain.java,v 1.5 2001/02/27 00:34:07 arkin Exp $
+ * $Id: TransactionDomain.java,v 1.6 2001/03/01 20:10:19 arkin Exp $
  */
 
 
@@ -70,7 +70,7 @@ import tyrex.tm.impl.TransactionDomainImpl;
  * domain.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.5 $ $Date: 2001/02/27 00:34:07 $
+ * @version $Revision: 1.6 $ $Date: 2001/03/01 20:10:19 $
  */
 public abstract class TransactionDomain
 {
@@ -133,8 +133,9 @@ public abstract class TransactionDomain
         if ( domain == null ) {
             domain = new TransactionDomainImpl( name, config );
             _domains.put( name, domain );
-        }
-        return domain;
+            return domain;
+        } else
+            throw new SystemException( "Transaction domain " + name + " already exists" );
     }
 
 
@@ -179,6 +180,7 @@ public abstract class TransactionDomain
      * and other resource properties.
      *
      * @return The resource limits assocaited with this transaction domain
+
      */
     public abstract ResourceLimits getResourceLimits();
     

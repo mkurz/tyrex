@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+<!DOCTYPE mapping PUBLIC "-//EXOLAB/Castor Object Mapping DTD Version 1.0//EN"
+                         "http://Castor.exolab.org/mapping.dtd">
+<mapping>
+
+  <class name="tyrex.tm.jca.Connector">
+    <map-to xml="connector" />
+    <field name="name" type="string" required="true">
+      <bind-xml name="name" node="element" />
+    </field>
+    <field name="RAR" type="string" required="true">
+      <bind-xml name="rar" node="element" />
+    </field>
+    <field name="paths" type="string">
+      <bind-xml name="paths" node="element" />
+    </field>
+    <field name="config" create-method="createConfig"
+           set-method="setConfig" type="java.io.Serializable">
+      <bind-xml name="config" node="element" />
+    </field>
+    <field name="limits" type="tyrex.tm.jca.Limits">
+      <bind-xml name="limits" node="element" />
+    </field>
+  </class>
+
+  <class name="tyrex.tm.jca.Limits">
+    <map-to xml="limits" />
+    <field name="maximum" type="integer">
+      <bind-xml name="maximum" node="element" />
+    </field>
+    <field name="minimum" type="integer">
+      <bind-xml name="minimum" node="element" />
+    </field>
+    <field name="initial" type="integer">
+      <bind-xml name="initial" node="element" />
+    </field>
+    <field name="maxRetain" type="integer">
+      <bind-xml name="maxRetain" node="element" />
+    </field>
+    <field name="timeout" type="integer">
+      <bind-xml name="timeout" node="element" />
+    </field>
+    <field name="twoPhase" type="boolean">
+      <bind-xml name="twoPhase" node="element" />
+    </field>
+    <field name="trace" type="boolean">
+      <bind-xml name="trace" node="element" />
+    </field>
+  </class>
+
+</mapping>
