@@ -34,7 +34,7 @@
       <bind-xml name="dataSource" node="element" />
     </field>
     <field name="connector" type="tyrex.resource.jca.Connector"
-           set-method="addConfiguration">
+           set-method="addConfiguration" collection="enumerate">
       <bind-xml name="connector" node="element" />
     </field>
   </class>
