@@ -190,7 +190,7 @@
   <target name="doc" depends="prepare">
     <mkdir    dir="${build}/doc" />
     <style    basedir="${doc}" destdir="${build}/doc" style="style/exolab.xsl"
-              includes="**.xml" excludes="style/**,project.xml" />
+              includes="**.xml" excludes="style/**,project.xml" processor="xslp" />
     <copydir  src="${doc}" dest="${build}/doc" includes="license.txt,document.dtd" />
     <copydir  src="${doc}/images" dest="${build}/doc/images" />
     <copydir  src="${doc}/style/images" dest="${build}/doc/images" includes="*.gif" />
