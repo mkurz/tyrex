@@ -3,6 +3,6 @@ Specification-Title: J2EE (JTA, JTS, JDBC, JNDI, JAAS)
 Specification-Vendor: Sun Microsystems, Inc.
 Specification-Version: 1.2
 Implementation-Title: Tyrex Transaction Monitor
-Implementation-Vendor: Exoffice Technologies Inc.
+Implementation-Vendor: Intalio Inc.
 Implementation-Version: $VERSION$
 

@@ -6,8 +6,8 @@
     <abstract>Explains the J2EE security and authentication model, how security is
               implemented in Servlet and EJB servers, the role of JAAS, and details
               the LDAP security provider.</abstract>
-    <author email="arkin@exoffice.com"
-            ldap="ldap.exoffice.com/uid=arkin,ou=people,dc=exoffice,dc=com">Assaf Arkin</author>
+    <author email="arkin@intalio.com"
+            ldap="ldap.intalio.com/uid=arkin,ou=people,dc=intalio,dc=com">Assaf Arkin</author>
     <status>Preliminary Draft</status>
   </properties>
   <body>

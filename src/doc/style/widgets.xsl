@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 
 <!-- Common Widgets Stylesheet                      -->
-<!-- Ismael Ghalimi ghalimi@exoffice.com            -->
-<!-- Copyright (c) Exoffice Technologies, Inc. 1999 -->
+<!-- Ismael Ghalimi ghalimi@intalio.com            -->
+<!-- Copyright (c) Intalio, Inc. 1999 -->
 
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
 
@@ -12,6 +12,21 @@
 
   <xsl:template match="url">
     <a href="{.}"><xsl:copy-of select="."/></a>
+  </xsl:template>
+
+  <xsl:template name="link-convertor">
+    <xsl:param name="href" select="empty"/>
+    <xsl:choose>
+      <xsl:when test="starts-with($href,'http:')">
+        <xsl:value-of select="$href"/>
+      </xsl:when>
+      <xsl:when test="not(contains($href,'.xml'))">
+        <xsl:value-of select="$href"/>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:value-of select="substring-before($href, '.xml')"/>.html
+      </xsl:otherwise>
+    </xsl:choose>
   </xsl:template>
 
 
@@ -56,7 +71,8 @@
       [
       <a href="mailto:{@manager}@{@server}?subject=subscribe {@name}">Subscribe</a> |
       <a href="mailto:{@manager}@{@server}?subject=unsubscribe {@name}">Unsubscribe</a> |
-      <a href="mailto:{@name}@{@server}">Post</a>
+      <a href="mailto:{@name}@{@server}">Post Message</a> |
+      <a href="{@archive}">Archive</a>
       ]
     </div>
   </xsl:template>
@@ -110,6 +126,44 @@
     <xsl:copy>
       <xsl:apply-templates select="@*|*|text()"/>
     </xsl:copy>
+  </xsl:template>
+
+
+  <xsl:template match="contributors">
+    <xsl:for-each select="type">
+      <xsl:variable name="type" select="@name"/>
+      <p><b><xsl:value-of select="@name"/></b></p>
+      <p><xsl:value-of select="."/></p>
+      <table cellpadding="4" cellspacing="2" width="90%">
+        <tr>
+          <td bgcolor="{$color-epsilon}">
+            <b>Name</b>
+          </td>
+          <td bgcolor="{$color-epsilon}">
+            <b>Contribution</b>
+          </td>
+          <td bgcolor="{$color-epsilon}">
+            <b>Company</b>
+          </td>
+        </tr>
+        <xsl:for-each select="../contributor[@type=$type]">
+           <tr>
+             <td>
+               <a href="mailto:{email}"><xsl:value-of select="name@given"/>&#xA0;<xsl:value-of select="name@surname"/></a>
+             </td>
+             <td>
+               <xsl:value-of select="description"/>
+             </td>
+             <td>
+               <xsl:variable name="company-id" select="company/@id"/>
+               <xsl:variable name="company" select="../company[@id=$company-id]"/>
+               <a href="http://{$company/url}"><xsl:value-of select="$company/name"/></a>
+               &#xA0;
+             </td>
+           </tr>
+        </xsl:for-each>
+      </table>
+    </xsl:for-each>
   </xsl:template>
 
 </xsl:stylesheet>

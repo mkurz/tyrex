@@ -35,7 +35,7 @@ public class LDAPLoginModule
         /**
          * The LDAP URL (<tt>ldap-url</tt>). The URL of the LDAP server includes
          * the server's host name and port number (if not the default), but no
-         * root DN. For example, <tt>ldap://exoffice.com</tt>.
+         * root DN. For example, <tt>ldap://intalio.com</tt>.
          */
         public static final String LDAPUrl = "ldap-url";
         
@@ -43,14 +43,14 @@ public class LDAPLoginModule
         /**
          * The DN mask (<tt>dn-mask</tt>). The mask for constructing a DN given
          * the account name, using an asterisk to represent the account name.
-         * For example, <tt>uid=*,ou=People,dc=exoffice,dc=com</tt>.
+         * For example, <tt>uid=*,ou=People,dc=intalio,dc=com</tt>.
          */
         public static final String DNMask = "dn-mask";
         
         
         /**
          * The roles RDN (<tt>roles-rdn</tt>). The relative DN underneath which
-         * all roles are listed. For example, <tt>ou=Roles,dc=exoffice,dc=com</tt>.
+         * all roles are listed. For example, <tt>ou=Roles,dc=intalio,dc=com</tt>.
          */
         public static final String RolesRDN = "roles-rdn";
         
@@ -59,7 +59,7 @@ public class LDAPLoginModule
          * The name of the realm (<tt>realm</tt>). This module configuration
          * represents a realm and only users in that realm are authenticated.
          * This option may be null if the realm is unknown. For example,
-         * <tt>exoffice.com</tt>.
+         * <tt>intalio.com</tt>.
          */
         public static final String Realm = "realm";
         
@@ -208,7 +208,7 @@ public class LDAPLoginModule
         LDAPAttribute           attr;
         
         conn = new LDAPConnection();
-        // dn = "uid=" + upc.getUser() + ",ou=people,dc=exoffice,dc=com";
+        // dn = "uid=" + upc.getUser() + ",ou=people,dc=intalio,dc=com";
         try {
             conn.connect( ldapCreds.getHost(), ldapCreds.getPort() );
             conn.authenticate( ldapCreds.getDN(), new String( ldapCreds.getPassword() ) );

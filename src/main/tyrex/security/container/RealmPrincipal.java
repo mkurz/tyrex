@@ -10,8 +10,8 @@ import java.security.Principal;
  * The container will use this prinicipal to return the prinicipal's
  * name to the application.
  *
- * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $ $Date: 2000/08/28 19:01:49 $
+ * @author <a href="arkin@intalio.com">Assaf Arkin</a>
+ * @version $Revision: 1.3 $ $Date: 2000/09/08 23:05:51 $
  */
 public final class RealmPrincipal
     implements Principal, Serializable

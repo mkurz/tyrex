@@ -15,8 +15,8 @@ import javax.security.auth.AuthPermission;
  * containers may regard 48-bit SSL as secure, others may require 128-bit and an IPSEC
  * connection, etc.
  *
- * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $ $Date: 2000/08/28 19:01:49 $
+ * @author <a href="arkin@intalio.com">Assaf Arkin</a>
+ * @version $Revision: 1.3 $ $Date: 2000/09/08 23:05:51 $
  */
 public final class SecureConnection
 {

@@ -10,8 +10,8 @@ import tyrex.security.container.RoleCredentials;
  * realms can extend this class and use it to add roles, list members in roles,
  * lookup roles and members in roles, and construct {@link RoleCredentials}.
  *
- * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $ $Date: 2000/08/28 19:01:49 $
+ * @author <a href="arkin@intalio.com">Assaf Arkin</a>
+ * @version $Revision: 1.3 $ $Date: 2000/09/08 23:05:51 $
  */
 public class RolesRealm
 {

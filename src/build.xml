@@ -140,7 +140,7 @@
     <replace  file="${build}/doc/print/download.html" token="$$VERSION$$" value="${version}" />
   </target>
   -->
-  
+  <!--
   <target name="doc" depends="prepare">
     <mkdir    dir="${build}/doc" />
     <style    basedir="${doc}" destdir="${build}/doc" style="style/exolab.xsl"
@@ -161,14 +161,36 @@
     <replace  file="${build}/doc/print/index.html" token="$$VERSION$$" value="${version}" />
     <replace  file="${build}/doc/print/download.html" token="$$VERSION$$" value="${version}" />
   </target>
+  -->
   
+  <target name="doc" depends="prepare">
+    <mkdir    dir="${build}/doc" />
+    <style    basedir="${doc}" destdir="${build}/doc" style="style/exolab.xsl"
+              includes="**.xml" excludes="style/**,project.xml" />
+    <copydir  src="${doc}" dest="${build}/doc" includes="license.txt,document.dtd" />
+    <copydir  src="${doc}/images" dest="${build}/doc/images" />
+    <copydir  src="${doc}/style" dest="${build}/doc/style" includes="images/**,*.css" />
 
+    <mkdir    dir="${build}/doc/print" />
+    <style    basedir="${doc}" destdir="${build}/doc/print" style="style/print.xsl"
+              includes="**.xml" excludes="style/**,project.xml" />
+    <copydir  src="${doc}" dest="${build}/doc/print" includes="license.txt,document.dtd" />
+    <copydir  src="${doc}/images" dest="${build}/doc/print/images" />
+
+    <copydir  src="${schema}" includes="*.dtd,*.xsd" dest="${build}/doc" />
+    <replace  file="${build}/doc/index.html" token="$$VERSION$$" value="${version}" />
+    <replace  file="${build}/doc/print/index.html" token="$$VERSION$$" value="${version}" />
+    <replace  file="${build}/doc/download.html" token="$$VERSION$$" value="${version}" />
+    <replace  file="${build}/doc/print/download.html" token="$$VERSION$$" value="${version}" />
+
+  </target>
+  
   <!-- Build the full JavaDocs -->
   <target name="javadoc" depends="prepare">
     <mkdir    dir="${build}/doc" />
     <mkdir    dir="${build}/doc/javadoc" />
     <property name="copyright"
-              value="Exoffice Technologies, Inc. (C) 2000. All rights reserved  http://tyrex.exolab.org" />
+              value="Intalio, Inc. (C) 2000. All rights reserved  http://tyrex.exolab.org" />
     <javadoc  sourcepath="${main}" destdir="${build}/doc/javadoc" dir="."
               doctitle="Tyrex JavaDoc" windowtitle="Tyrex JavaDoc" bottom="${copyright}"
               package="true" author="true" version="true" noindex="true"
@@ -180,7 +202,7 @@
     <mkdir    dir="${build}/doc" />
     <mkdir    dir="${build}/doc/api" />
     <property name="copyright"
-              value="Exoffice Technologies, Inc. (C) 2000. All rights reserved  http://tyrex.exolab.org" />
+              value="Intalio, Inc. (C) 2000. All rights reserved  http://tyrex.exolab.org" />
     <javadoc  sourcepath="${main}" destdir="${build}/doc/api" dir="."
               doctitle="Tyrex API" windowtitle="Tyrex API" bottom="${copyright}"
               public="true" author="true"
@@ -257,7 +279,7 @@
 
   <!-- Update the sources from the CVS -->
   <target name="cvs" depends="clean">
-    <cvs cvsRoot=":pserver:anoncvs@virtuals.exoffice.com:/cvs/${project}"
+    <cvs cvsRoot=":pserver:anoncvs@virtuals.intalio.com:/cvs/${project}"
          dest="." package="${project}" />
   </target>
 
