@@ -32,6 +32,15 @@
     </description>
   </contributor>
 
+  <contributor type="Contributor">
+    <name surname="Vashevnik" given="Rost"/>
+    <email>metaboss@users.sourceforge.net</email>
+    <description>
+     As of 1 November 2003 Tyrex maintenance and future development has been passed 
+     on to MetaBoss team. Rost is a member of MetaBoss team and contributing to Tyrex by
+     fixing some bugs and keeping Tyrex uptodate with the latest technologies (i.e. JDK, Ant etc...)
+    </description>
+  </contributor>
 
   <!--
       Company Information, so we don't have to duplicate it for
