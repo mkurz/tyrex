@@ -40,24 +40,25 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: UUID.java,v 1.6 2001/10/22 23:26:39 mohammed Exp $
+ * Contributions by MetaBoss team are Copyright (c) 2003-2004, Softaris Pty. Ltd. All Rights Reserved.
+ *
+ * $Id: UUID.java,v 1.7 2004/04/30 06:34:13 metaboss Exp $
  */
 
 
 package tyrex.services;
 
 
-import java.util.Properties;
-import java.util.Random;
-import java.util.Date;
-import java.util.HashSet;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.Properties;
 import java.util.StringTokenizer;
+
 import tyrex.util.Configuration;
-import tyrex.util.Logger;
 import tyrex.util.Messages;
+import tyrex.util.logging.Logger;
 
 
 /**
@@ -138,7 +139,7 @@ import tyrex.util.Messages;
  * The UUID generator is thread-safe and consumes a single thread.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.6 $ $Date: 2001/10/22 23:26:39 $
+ * @version $Revision: 1.7 $ $Date: 2004/04/30 06:34:13 $
  */
 public final class UUID
 {
@@ -652,7 +653,7 @@ public final class UUID
                     while ( clock <= _lastClock ) {
                         // UUIDs generated too fast, suspend for a while.
                         try {
-                            Thread.currentThread().sleep( Clock.getUnsynchTicks() );
+                            Thread.sleep( Clock.getUnsynchTicks() );
                         } catch ( InterruptedException except ) { }
                         clock = Clock.synchronize();
                     }
@@ -763,7 +764,7 @@ public final class UUID
                     while ( clock <= _lastClock ) {
                         // UUIDs generated too fast, suspend for a while.
                         try {
-                            Thread.currentThread().sleep( Clock.getUnsynchTicks() );
+                            Thread.sleep( Clock.getUnsynchTicks() );
                         } catch ( InterruptedException except ) { }
                         clock = Clock.synchronize();
                     }

@@ -40,7 +40,9 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: DaemonMaster.java,v 1.5 2001/08/22 21:03:57 jdaniel Exp $
+ * Contributions by MetaBoss team are Copyright (c) 2003-2004, Softaris Pty. Ltd. All Rights Reserved.
+ *
+ * $Id: DaemonMaster.java,v 1.6 2004/04/30 06:34:14 metaboss Exp $
  */
 
 
@@ -48,9 +50,10 @@ package tyrex.services;
 
 
 import java.io.PrintWriter;
+
 import tyrex.util.Configuration;
 import tyrex.util.Messages;
-import tyrex.util.Logger;
+import tyrex.util.logging.Logger;
 
 
 /**
@@ -73,7 +76,7 @@ import tyrex.util.Logger;
  * The daemon master is thread-safe and consumes a single thread.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  */
 public class DaemonMaster
     extends ThreadGroup

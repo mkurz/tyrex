@@ -40,7 +40,9 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionDomainImpl.java,v 1.32 2003/11/14 01:36:35 metaboss Exp $
+ * Contributions by MetaBoss team are Copyright (c) 2003-2004, Softaris Pty. Ltd. All Rights Reserved.
+ *
+ * $Id: TransactionDomainImpl.java,v 1.33 2004/04/30 06:35:47 metaboss Exp $
  */
 
 
@@ -62,7 +64,6 @@ import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 
-import org.apache.log4j.Category;
 import org.omg.CORBA.ORB;
 import org.omg.CORBA.TSIdentification;
 import org.omg.CosTransactions.Inactive;
@@ -86,13 +87,14 @@ import tyrex.tm.xid.BaseXid;
 import tyrex.tm.xid.XidUtils;
 import tyrex.util.Configuration;
 import tyrex.util.Messages;
+import tyrex.util.logging.Category;
 
 
 /**
  * Implementation of a transaction domain.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.32 $ $Date: 2003/11/14 01:36:35 $
+ * @version $Revision: 1.33 $ $Date: 2004/04/30 06:35:47 $
  */
 public class TransactionDomainImpl
     extends TransactionDomain

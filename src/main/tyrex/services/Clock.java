@@ -40,7 +40,9 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Clock.java,v 1.4 2001/03/21 20:02:47 arkin Exp $
+ * Contributions by MetaBoss team are Copyright (c) 2003-2004, Softaris Pty. Ltd. All Rights Reserved.
+ *
+ * $Id: Clock.java,v 1.5 2004/04/30 06:34:14 metaboss Exp $
  */
 
 
@@ -49,7 +51,7 @@ package tyrex.services;
 
 import tyrex.util.Configuration;
 import tyrex.util.Messages;
-import tyrex.util.Logger;
+import tyrex.util.logging.Logger;
 
 
 /**
@@ -63,7 +65,7 @@ import tyrex.util.Logger;
  * The clock is thread-safe and consumes a single thread.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  */
 public final class Clock
     extends Thread

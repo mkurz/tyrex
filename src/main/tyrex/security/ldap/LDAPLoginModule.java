@@ -40,34 +40,33 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: LDAPLoginModule.java,v 1.5 2001/03/19 17:39:02 arkin Exp $
+ * Contributions by MetaBoss team are Copyright (c) 2003-2004, Softaris Pty. Ltd. All Rights Reserved.
+ *
+ * $Id: LDAPLoginModule.java,v 1.6 2004/04/30 06:33:03 metaboss Exp $
  */
 
 
 package tyrex.security.ldap;
 
 
-import java.util.Vector;
-import java.util.Map;
 import java.util.Iterator;
-import java.net.MalformedURLException;
-import netscape.ldap.LDAPUrl;
+import java.util.Map;
+import java.util.Vector;
+
+import javax.security.auth.Subject;
+import javax.security.auth.callback.CallbackHandler;
+import javax.security.auth.login.FailedLoginException;
+import javax.security.auth.login.LoginException;
+import javax.security.auth.spi.LoginModule;
+
+import netscape.ldap.LDAPAttribute;
 import netscape.ldap.LDAPConnection;
 import netscape.ldap.LDAPEntry;
 import netscape.ldap.LDAPException;
-import netscape.ldap.LDAPAttribute;
-import netscape.ldap.LDAPv2;
-import javax.security.auth.Subject;
-import javax.security.auth.spi.LoginModule;
-import javax.security.auth.login.LoginException;
-import javax.security.auth.login.FailedLoginException;
-import javax.security.auth.callback.CallbackHandler;
-import tyrex.security.container.RoleCredentials;
-import tyrex.security.container.RealmPrincipal;
-import tyrex.security.container.helper.EmailPrincipal;
 import tyrex.security.NamePasswordCredentials;
-import tyrex.security.NamePasswordCallback;
-import tyrex.util.Logger;
+import tyrex.security.container.RoleCredentials;
+import tyrex.security.container.helper.EmailPrincipal;
+import tyrex.util.logging.Logger;
 
 
 public class LDAPLoginModule

@@ -40,31 +40,35 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionDomain.java,v 1.23 2001/06/26 21:01:13 mohammed Exp $
+ * Contributions by MetaBoss team are Copyright (c) 2003-2004, Softaris Pty. Ltd. All Rights Reserved.
+ *
+ * $Id: TransactionDomain.java,v 1.24 2004/04/30 06:35:00 metaboss Exp $
  */
 
 
 package tyrex.tm;
 
 
-import java.io.PrintWriter;
 import java.io.InputStream;
 import java.util.StringTokenizer;
-import org.omg.CosTransactions.TransactionFactory;
-import org.xml.sax.InputSource;
-import org.exolab.castor.xml.Unmarshaller;
-import org.exolab.castor.xml.util.ClassDescriptorResolverImpl;
-import org.exolab.castor.mapping.Mapping;
+
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 import javax.transaction.UserTransaction;
 import javax.transaction.xa.Xid;
-import tyrex.resource.castor.ResourceMappingLoader;
-import tyrex.tm.impl.TransactionDomainImpl;
-import tyrex.tm.impl.DomainConfig;
+
+import org.exolab.castor.mapping.Mapping;
+import org.exolab.castor.xml.Unmarshaller;
+import org.exolab.castor.xml.util.ClassDescriptorResolverImpl;
+import org.omg.CosTransactions.TransactionFactory;
+import org.xml.sax.InputSource;
+
 import tyrex.resource.Resources;
+import tyrex.resource.castor.ResourceMappingLoader;
+import tyrex.tm.impl.DomainConfig;
+import tyrex.tm.impl.TransactionDomainImpl;
 import tyrex.util.Configuration;
-import tyrex.util.Logger;
+import tyrex.util.logging.Logger;
 
 
 /**
@@ -88,7 +92,7 @@ import tyrex.util.Logger;
  * {@link #terminate terminate}.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.23 $ $Date: 2001/06/26 21:01:13 $
+ * @version $Revision: 1.24 $ $Date: 2004/04/30 06:35:00 $
  */
 public abstract class TransactionDomain
 {
