@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: EnabledDataSource.java,v 1.14 2001/01/11 23:26:32 jdaniel Exp $
+ * $Id: EnabledDataSource.java,v 1.15 2001/02/13 00:36:13 mohammed Exp $
  */
 
 
@@ -505,7 +505,7 @@ public class EnabledDataSource
 	else if ( level.equals( "ReadCommitted" ) )
 	    setIsolationLevel(Connection.TRANSACTION_READ_COMMITTED);
 	else if ( level.equals( "RepeatableRead" ) )
-	    setIsolationLevel(Connection.TRANSACTION_SERIALIZABLE);
+	    setIsolationLevel(Connection.TRANSACTION_REPEATABLE_READ);
 	else if ( level.equals( "Serializable" ) )
 	    setIsolationLevel(Connection.TRANSACTION_SERIALIZABLE);
 	else
@@ -607,10 +607,11 @@ public class EnabledDataSource
 		    ds._password = (String) addr.getContent();
 		addr = ref.get( "transactionTimeout" );
 		if ( addr != null )
-		    setTransactionTimeout( Integer.parseInt( (String) addr.getContent() ) );
+		    ds.setTransactionTimeout( Integer.parseInt( (String) addr.getContent() ) );
 		addr = ref.get( "isolationLevel" );
-		if ( addr != null )
-		    setIsolationLevel( (String) addr.getContent() );
+		if ( addr != null ) {
+                    ds.setIsolationLevel( (String) addr.getContent() );
+                }
 		return ds;
 
 	    } else
