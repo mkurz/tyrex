@@ -40,20 +40,22 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Configuration.java,v 1.8 2001/09/24 18:28:53 mohammed Exp $
+ * Contributions by MetaBoss team are Copyright (c) 2003-2004, Softaris Pty. Ltd. All Rights Reserved.
+ *
+ * $Id: Configuration.java,v 1.9 2004/04/30 06:09:06 metaboss Exp $
  */
 
 
 package tyrex.util;
 
 
-import java.util.Properties;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.io.IOException;
-import java.util.Random;
 import java.security.SecureRandom;
+import java.util.Properties;
+import java.util.Random;
+
+import tyrex.util.logging.Logger;
 
 
 /**
@@ -62,7 +64,7 @@ import java.security.SecureRandom;
  * rely on this configuration file.
  *
  * @author <a href="mailto:arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.8 $ $Date: 2001/09/24 18:28:53 $
+ * @version $Revision: 1.9 $ $Date: 2004/04/30 06:09:06 $
  */
 public final class Configuration
 {
