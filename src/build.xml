@@ -85,6 +85,9 @@
     <javac srcdir="${main}" destdir="${classes}" 
            excludes="**/package.html,**/*.disabled,**/*.disable,**/*.old,tyrex/tools/Tomcat.java,tyrex/jdbc/util/*,tyrex/corba/*"
            classpath="${classpath}" debug="on" deprecation="off" />
+    <copy todir="${classes}/tyrex/conf">
+       <fileset dir="${main}/tyrex/conf" includes="*.xsd,*.dtd,*.xml" />
+    </copy>
   </target>
 
   <!-- Same as main, but also cleans and additional targets -->
