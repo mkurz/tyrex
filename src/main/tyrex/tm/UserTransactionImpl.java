@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: UserTransactionImpl.java,v 1.2 2000/09/08 23:06:13 mohammed Exp $
+ * $Id: UserTransactionImpl.java,v 1.3 2000/09/23 00:10:50 mohammed Exp $
  */
 
 
@@ -66,7 +66,7 @@ import javax.transaction.xa.*;
  *
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $ $Date: 2000/09/08 23:06:13 $
+ * @version $Revision: 1.3 $ $Date: 2000/09/23 00:10:50 $
  */
 public final class UserTransactionImpl
     implements UserTransaction
@@ -87,7 +87,7 @@ public final class UserTransactionImpl
     {
 	if ( txManager == null )
 	    throw new IllegalArgumentException( "Argument 'txManager' is null" );
-	_txManager = _txManager;
+	_txManager = txManager;
     }
 
 

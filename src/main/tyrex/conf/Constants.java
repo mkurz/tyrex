@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Constants.java,v 1.3 2000/09/08 23:18:51 mohammed Exp $
+ * $Id: Constants.java,v 1.4 2000/09/23 00:10:50 mohammed Exp $
  */
 
 
@@ -50,7 +50,7 @@ package tyrex.conf;
 
 /**
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.3 $ $Date: 2000/09/08 23:18:51 $
+ * @version $Revision: 1.4 $ $Date: 2000/09/23 00:10:50 $
  */
 public abstract class Constants
 {
@@ -85,8 +85,7 @@ public abstract class Constants
 	    "/tyrex/conf/tyrex.dtd";
 
     }
-
-
+    
     public static class Schema
     {
 
@@ -176,5 +175,15 @@ public abstract class Constants
 
     public static final String ResourceName = "/tyrex.xml";
 
+    /**
+	 * The mapping file used by Castor to unmarshall
+     * objects from xml files:
+	 * <tt>/tyrex/conf/mapping.xml</tt>.
+     * <p>
+     * {@link tyrex.conf.Resources} and {@link tyrex.conf.Server}
+     * are supported by the mapping file.
+	 */
+	public static final String Mapping =
+	    "tyrex/conf/mapping.xml";
 
 }

@@ -40,13 +40,19 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: ServerDataSource.java,v 1.5 2000/09/08 23:07:26 mohammed Exp $
+ * $Id: ServerDataSource.java,v 1.6 2000/09/23 00:10:50 mohammed Exp $
  */
 
 
 package tyrex.jdbc;
 
-
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.io.Serializable;
 import java.util.Hashtable;
@@ -66,6 +72,7 @@ import javax.sql.ConnectionEventListener;
 import javax.transaction.SystemException;
 import javax.transaction.RollbackException;
 import javax.transaction.xa.XAResource;
+import javax.naming.BinaryRefAddr;
 import javax.naming.Referenceable;
 import javax.naming.Reference;
 import javax.naming.RefAddr;
@@ -74,6 +81,7 @@ import javax.naming.NamingException;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.Name;
+import javax.naming.spi.ObjectFactory;
 import tyrex.tm.ResourceManager;
 import tyrex.resource.ResourceLimits;
 import tyrex.resource.ResourcePool;
@@ -91,7 +99,7 @@ import tyrex.util.Messages;
  * {@link tyrex.resource.ResourcePool}.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.5 $ $Date: 2000/09/08 23:07:26 $
+ * @version $Revision: 1.6 $ $Date: 2000/09/23 00:10:50 $
  *
  * Date         Author          Changes
  * ?            Assaf Arkin     Created  
@@ -100,7 +108,7 @@ import tyrex.util.Messages;
  */
 public class ServerDataSource
     implements DataSource, ConnectionEventListener,
-	       Referenceable, Serializable, ResourcePool
+	       ObjectFactory, Referenceable, Serializable, ResourcePool
 {
 
 
@@ -684,9 +692,69 @@ public class ServerDataSource
 	ref.add( new StringRefAddr( "loginTimeout", Integer.toString( _timeout ) ) );
 	if ( _description != null )
 	    ref.add( new StringRefAddr( "description", _description ) );
+    
 	if ( _dataSourceName != null )
 	    ref.add( new StringRefAddr( "dataSourceName", _dataSourceName ) );
+    else if ( _dataSource != null ) {
+        if ( _dataSource instanceof Serializable ) {
+            try {
+                ref.add( new BinaryRefAddr( "dataSource", getDataSourceBytes() ) );
+            } catch (IOException e) {
+                System.out.println("Cannot bind data source " + _dataSource );
+                System.out.println(e);
+            }
+        }
+        else {
+            System.out.println("Cannot bind data source " + _dataSource );
+        }
+    }
  	return ref;
+    }
+
+    /**
+     * Return the byte array containing the bytes of the
+     * data source. 
+     * <p>
+     * It is assumed that the data source is not null.
+     *
+     * @return the byte array containing the bytes of the
+     *      data source.
+     * @throws IOException if there is a problem getting the
+     *      data source bytes.
+     */
+    private byte[] getDataSourceBytes()
+        throws IOException
+    {
+        ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
+        ObjectOutputStream output = new ObjectOutputStream(new BufferedOutputStream(byteStream));
+
+        output.writeObject(_dataSource);
+        output.flush();
+        output.close();
+
+        return byteStream.toByteArray();
+    }
+
+
+    /**
+     * Return data source unmarshalled from the specified byte array. 
+     *
+     * @param bytes the array of bytes
+     * @return data source unmarshalled from the specified byte array. 
+     * @throws ClassNotFoundException if the class of the data source
+     *      is not found.
+     * @throws IOException if there is a problem getting the
+     *      data source bytes.
+     */
+    private Object getDataSourceFromBytes(byte[] bytes)
+        throws ClassNotFoundException, IOException
+    {
+        ObjectInputStream input = new ObjectInputStream(new BufferedInputStream(new ByteArrayInputStream(bytes)));
+
+        Object object = input.readObject();
+        input.close();
+
+        return object;
     }
 
 
@@ -712,6 +780,16 @@ public class ServerDataSource
 		addr = ref.get( "dataSourceName" );
 		if ( addr != null )
 		    ds._dataSourceName = (String) addr.getContent();
+        else {
+            addr = ref.get( "dataSource" );
+            if ( addr != null ) {
+                try {
+                    ds._dataSource = getDataSourceFromBytes( ( byte[] ) addr.getContent() );
+                } catch ( Exception e ) {
+                    throw new NamingException( e.toString() );
+                }
+            }
+        }
 		return ds;
 
 	    } else

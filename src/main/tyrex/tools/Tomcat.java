@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Tomcat.java,v 1.3 2000/09/22 01:18:38 mohammed Exp $
+ * $Id: Tomcat.java,v 1.4 2000/09/23 00:10:51 mohammed Exp $
  */
 
 
@@ -73,20 +73,19 @@ import tyrex.naming.EnvContext;
 //import tyrex.naming.ENCHelper;
 import org.apache.tomcat.core.Request;
 import org.apache.tomcat.core.Response;
+import org.apache.tomcat.util.URLUtil;
 
 
 /**
  *
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.3 $ $Date: 2000/09/22 01:18:38 $
+ * @version $Revision: 1.4 $ $Date: 2000/09/23 00:10:51 $
  */
 public final class Tomcat
     extends BaseInterceptor
     implements RequestInterceptor, ServiceInterceptor
 {
-
-
     private Hashtable  _memoryContexts = new Hashtable();
 
 
@@ -165,6 +164,7 @@ public final class Tomcat
 	memoryContext = (MemoryContext) _memoryContexts.get( context );
 	if ( memoryContext == null ) {
         javax.naming.Context ctx;
+        String appName;
 
 	    memoryContext = TomcatContextHelper.createMemoryContext();
         _memoryContexts.put( context, memoryContext );
@@ -173,56 +173,13 @@ public final class Tomcat
 		TomcatContextHelper.addUserTransaction( memoryContext, Tyrex.getUserTransaction() );
 	    } catch ( Exception except ) {
 	    }
-
-	    WebApplicationDescriptor appDesc;
-	    URL         url;
-	    String      base;
-	    InputStream is;
-
-	    base = context.getDocumentBase().toString();
-	    if ( context.getDocumentBase().getProtocol().equalsIgnoreCase(
-		     Constants.Protocol.WAR.PACKAGE ) ) {
-		if ( base.endsWith( "/" ) ) {
-		    base = base.substring( 0, base.length() - 1 );
-		}
-		base += "!/";
-	    }
-	    try {
-		url = new URL( base + Constants.Server.ConfigFile );
-		is = url.openConnection().getInputStream();
-		appDesc = new WebApplicationReader().
-		    getDescriptor( is,  new WebDescriptorFactoryImpl(),
-				   context.isWARValidated() );
-
-		Enumeration       enum;
-		EnvironmentEntry  envEntry;
-		ResourceReference resRef;
-
-		enum = appDesc.getEnvironmentEntries();
-		while ( enum.hasMoreElements() ) {
-		    envEntry = (EnvironmentEntry) enum.nextElement();
-		    try {
-			TomcatContextHelper.addEnvEntry( memoryContext, envEntry.getName(), envEntry.getType(), envEntry.getValue() );
-		    } catch ( NamingException except ) { }
-		}
-
-		enum = appDesc.getResourceReferences();
-		while ( enum.hasMoreElements() ) {
-		    resRef = (ResourceReference) enum.nextElement();
-		    TomcatContextHelper.addResource( memoryContext, context.getDocumentBase().toString(), resRef.getName(),
-				     resRef.getType(), 
-				     ResourceReference.APPLICATION_AUTHORIZATION.equals( resRef.getAuthorization() ) );
-		}
-
-	    } catch ( Exception except ) {
-		System.out.println( except );
-		except.printStackTrace();
-	    }
-	    TomcatContextHelper.addEnvEntries( memoryContext, context.getDocumentBase().toString() );
-	}
+        appName = context.getDocBase();
+        TomcatContextHelper.addEnvEntries( memoryContext, appName );
+        TomcatContextHelper.addResources( memoryContext, appName );
+    } 
 	return memoryContext;
     }
-
+    
     /*
     protected ENCHelper getENCHelper( Context context )
     {

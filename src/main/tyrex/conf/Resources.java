@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Resources.java,v 1.5 2000/09/08 23:18:51 mohammed Exp $
+ * $Id: Resources.java,v 1.6 2000/09/23 00:10:50 mohammed Exp $
  */
 
 
@@ -59,6 +59,7 @@ import java.io.Writer;
 import java.net.URL;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
+import org.exolab.castor.mapping.Mapping;
 import org.exolab.castor.xml.Unmarshaller;
 import org.exolab.castor.xml.Marshaller;
 import org.exolab.castor.xml.MarshalException;
@@ -70,7 +71,7 @@ import tyrex.util.Logger;
  *
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.5 $ $Date: 2000/09/08 23:18:51 $
+ * @version $Revision: 1.6 $ $Date: 2000/09/23 00:10:50 $
  */
 public class Resources
     implements Serializable
@@ -310,14 +311,20 @@ public class Resources
     public static Resources load( Reader reader )
 	throws IOException
     {
-	Unmarshaller unmarshaller;
+    Unmarshaller unmarshaller;
+    Mapping mapping;
+    ClassLoader loader;
 
 	try {
-	    unmarshaller = new Unmarshaller( Resources.class );
-	    if ( debug )
+        loader = Resources.class.getClassLoader();
+        mapping = new Mapping(loader);
+        mapping.loadMapping(loader.getResource(Constants.Mapping));
+        unmarshaller = new Unmarshaller(mapping);
+        //unmarshaller = new Unmarshaller( Resources.class );
+        if ( debug )
 		unmarshaller.setLogWriter( Logger.getSystemLogger() );
 	    unmarshaller.setEntityResolver( new SchemaEntityResolver() );
-	    return (Resources) unmarshaller.unmarshal( reader );
+        return (Resources) unmarshaller.unmarshal( reader );
 	} catch ( MarshalException except ) {
 	    Logger.getSystemLogger().println( Messages.format( "tyrex.conf.loadingResourcesError", except ) );
 	    throw new IOException( except.toString() );
@@ -325,6 +332,7 @@ public class Resources
 	    Logger.getSystemLogger().println( Messages.format( "tyrex.conf.loadingResourcesError", except ) );
 	    throw new IOException( "Nested exception: " + except.toString() );
 	}
+    
     }
 
 

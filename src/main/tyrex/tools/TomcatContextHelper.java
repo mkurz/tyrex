@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Technologies Inc. All Rights Reserved.
  *
- * $Id: TomcatContextHelper.java,v 1.1 2000/09/22 01:18:38 mohammed Exp $
+ * $Id: TomcatContextHelper.java,v 1.2 2000/09/23 00:10:51 mohammed Exp $
  */
 
 
@@ -71,7 +71,7 @@ import tyrex.util.Messages;
  *
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2000/09/22 01:18:38 $
+ * @version $Revision: 1.2 $ $Date: 2000/09/23 00:10:51 $
  */
 public final class TomcatContextHelper
 {
@@ -170,8 +170,7 @@ public final class TomcatContextHelper
     }
     
     
-    static void addResource( Context ctx, String appName, String resName, String resType,
-			     boolean appAuth )
+    static void addResources( Context ctx, String appName )
     {
 	Enumeration enum;
 	Resource    resource;
@@ -181,18 +180,10 @@ public final class TomcatContextHelper
 	while ( enum.hasMoreElements() ) {
 	    resource = (Resource) enum.nextElement();
 	    
-	    if ( resource.getResName().equals( resName ) &&
-		 resource.isApplicationAuth() == appAuth ) {
-		if ( resource.isVisible( appName ) ) {
+        if ( resource.isVisible( appName ) ) {
 		    
-		    if ( resType.equals( "javax.sql.DataSource" ) ) {
-
-			factory = resource.createResourceFactory();
-			if ( factory == null || ! ( factory instanceof DataSource ) ) {
-			    Logger.getSystemLogger().println(
-			        Messages.format( "tyrex.enc.resourceNotSameType",
-						 resType, resource.getResType() ) );
-			} else {
+		    factory = resource.createResourceFactory();
+            if ( factory instanceof DataSource ) {
 			    try {
 				addDataSource( ctx, resource.getResName(),
 					       (DataSource) factory );
@@ -206,15 +197,8 @@ public final class TomcatContextHelper
 						     resource.getResName(), except ) );
 			    }
 			}
-
-		    } else {
-			Logger.getSystemLogger().println( 
-			    Messages.format( "tyrex.enc.resourceNotSupported",
-		            resource.getResName(), resource.getResType() ) );
-		    }
-		    
-		}
-	    }
+        }
+	    
 	}
     }
 
@@ -226,8 +210,7 @@ public final class TomcatContextHelper
 	Name    comp;
 	int     i;
 	Object  obj;
-
-	comp = new CompositeName( name );
+    comp = new CompositeName( name );
 	while ( ! comp.isEmpty() && comp.get( 0 ).length() == 0 )
 	    comp = comp.getSuffix( 1 );
 	if ( comp.isEmpty() )
