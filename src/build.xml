@@ -1,5 +1,5 @@
-<project name="Castor" default="main" basedir=".">
-  <property name="project" value="castor" />
+<project name="Tyrex" default="main" basedir=".">
+  <property name="project" value="tyrex" />
 
   <property name="source" value="src" />
   <property name="etc" value="src/etc" />
@@ -9,7 +9,7 @@
   <property name="lib" value="lib" />
   <property name="doc" value="src/doc" />
 
-  <property name="classpath" value="${classpath}:${classes}" />
+  <property name="classpath" value="c:\cvs\tyrex\lib\jts.jar:${classpath}:${classes}" />
   <property name="build.compiler" file="classic" />
   <property name="deprecation" value="true" />
   <property file="${etc}/VERSION" />
@@ -57,7 +57,7 @@
   </target>
 
   <!-- Same as main, but also cleans and additional targets -->
-  <target name="all" depends="clean,main,examples,tests"/>
+  <target name="all" depends="clean,main,tests"/>
 
   <!-- Same as main, but no debug and no deprecation -->
   <target name="no-debug" depends="prepare">
@@ -105,7 +105,7 @@
   <!-- Build the documentation -->
   <target name="doc" depends="prepare">
     <mkdir dir="${build}/doc" />
-    <style basedir="${doc}" destdir="${build}/doc" style="style/exolab.xsl"
+    <style basedir="${build}/{doc}" destdir="${build}/doc" style="style/exolab.xsl"
            includes="**.xml" excludes="style/**,project.xml"/>
     <copydir  src="${doc}/images" dest="${build}/doc/images"/>
     <copydir  src="${doc}/style/images" dest="${build}/doc/style/images"/>
@@ -132,8 +132,8 @@
   <target name="source" depends="prepare">
     <delete file="${dist}/${archive}-src.tgz" />
     <delete file="${dist}/${archive}-src.zip" />
-    <tar includes="*.sh, *.bat ${source}/** ${lib}/**"
-         output="${dist}/${archive}-src.tar" defaultexcludes="true" />	  
+    <tar includes="*.sh, *.bat ${source}/** ${lib}/**" basedir="${build}"
+         tarfile="${dist}/${archive}-src.tar" defaultexcludes="true" />	  
     <gzip src="${dist}/${archive}-src.tar" zipfile="${dist}/${archive}-src.tgz"/>
     <delete file="${dist}/${archive}-src.tar" />
     <zip zipfile="${dist}/${archive}-src.zip" basedir="." includes="*.sh *.bat ${source}/** ${lib}/**"
@@ -142,7 +142,7 @@
 
 
   <!-- Build the tarball including JAR and all dependent packages -->
-  <target name="tarball" depends="prepare,jar,examples">
+  <target name="tarball" depends="prepare,jar">
     <property name="bin" value="${build}/${archive}" />
     <delete   file="${dist}/${archive}.tgz" />
     <delete   file="${dist}/${archive}.zip" />
@@ -171,8 +171,8 @@
               dest="${bin}/jta1.0.1.jar" />
     <copydir  src="${source}/schema" dest="${bin}/schema" />
 
-    <tar includes="${archive}/**" chdir="${build}"
-         output="${dist}/${archive}.tar" defaultexcludes="true" />	  
+    <tar includes="${archive}/**" basedir="${build}"
+         tarfile="${dist}/${archive}.tar" defaultexcludes="true" />	  
     <gzip src="${dist}/${archive}.tar" zipfile="${dist}/${archive}.tgz"/>
     <delete file="${dist}/${archive}.tar" />
 
