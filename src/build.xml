@@ -111,13 +111,16 @@
            deprecation="${deprecation}">
     </javac>
   </target>
-  
+ 
+  <path id="project.class.path" >
+     <pathelement path="${java.class.path}" />
+  </path> 
   
   <target name="tests-iiop" depends="prepare">
     <mkdir dir="${build.tests}" />
     <java classname="org.openorb.compiler.IdlCompiler" fork="yes">
     	<arg line="${source.tests}/ots/idl/test.idl -d ${build.tests}" />
-	<classpath refid="${java.class.path}" />
+	<classpath refid="project.class.path" />
     </java>
     <javac srcdir="${build.tests}" destdir="${build.tests}"
            classpath="${classpath}:${build.tests}" debug="on" deprecation="${deprecation}" 
