@@ -43,7 +43,11 @@
  */
 
 
-package tyrex.tm.jdbc;
+package tyrex.resource;
+
+
+import java.io.Serializable;
+import tyrex.tm.TransactionDomain;
 
 
 /**
@@ -51,46 +55,68 @@ package tyrex.tm.jdbc;
  * @author <a href="jdaniel@intalio.com">Jerome Daniel</a>
  * @version $Revision: 1.1 $
  */
-public class DataSourceConfig
-    implements java.io.Serializable
+public abstract class BaseConfiguration
+    implements Serializable
 {
 
 
     /**
-     * The driver name.
+     * The resource name.
      */
-    protected String               _name;
+    private String               _name;
 
 
     /**
      * The JAR file name.
      */
-    protected String               _jar;
+    private String               _jar;
 
 
     /**
      * Additional class paths for dependent files.
      */
-    protected String               _paths;
+    private String               _paths;
 
 
     /**
-     * The data source class.
+     * The connection pool resource limits.
      */
-    protected String               _className;
+    private ResourceLimits       _limits;
 
 
     /**
-     * The connection pool limits.
+     * True if two-phase commit is supported.
      */
-    protected Limits               _limits;
+    private boolean              _twoPhase = true;
 
 
     /**
-     * Sets the name for this driver. The name is used for logging and
-     * by visual tools. It must be short and unique amongst drivers.
+     * The configured resource manager factory.
+     */
+    private Object               _factory;
+
+
+    /**
+     * The transaction domain for which this configuration is loaded.
+     */
+    private TransactionDomain    _txDomain;
+
+
+    public BaseConfiguration()
+    {
+        try {
+            _txDomain = TransactionDomain.createDomain( "default", null );
+        } catch ( Exception except ) {
+            System.out.println( except );
+        }
+    }
+
+
+    /**
+     * Sets the name for this resource manager. The name is used for logging
+     * and by visual tools. It must be short and unique.
      *
-     * @param name The driver name
+     * @param name The resource manager name
      */
     public void setName( String name )
     {
@@ -99,9 +125,9 @@ public class DataSourceConfig
 
 
     /**
-     * Returns the name for this driver.
+     * Returns the name for this resource manager.
      *
-     * @return The driver name
+     * @return The resource manager name
      */
     public String getName()
     {
@@ -135,7 +161,7 @@ public class DataSourceConfig
     /**
      * Sets additional path names. This is a colon separated list of paths
      * that point to directories and JARs containing dependent files and
-     * resources used by the driver.
+     * resources used by the resource manager.
      *
      * @param paths Additional path names
      */
@@ -158,38 +184,13 @@ public class DataSourceConfig
 
     /**
      * Sets the connection pool limist. This is an optimal element that
-     * is used to configure the connection pool, and specify the
-     * transactional behavior.
+     * is used to configure the connection pool,
      *
      * @param limits The connection pool limits
      */
-    public void setLimits( Limits limits )
+    public void setLimits( ResourceLimits limits )
     {
         _limits = limits;
-    }
-
-
-    /**
-     * Sets the name for the data source class. The data source will be
-     * constructed from this class. It can implement <tt>DataSource</tt>,
-     * <tt>XADataSource</tt> or <tt>PooledConnectionDataSource</tt>.
-     *
-     * @param name The data source class name
-     */
-    public void setClassName( String className )
-    {
-        _className = className;
-    }
-
-
-    /**
-     * Returns the name for the data source class.
-     *
-     * @return The data source class
-     */
-    public String getClassName()
-    {
-        return _className;
     }
 
 
@@ -198,33 +199,65 @@ public class DataSourceConfig
      *
      * @return The connection pool limits
      */
-    public Limits getLimits()
+    public ResourceLimits getLimits()
     {
         return _limits;
     }
 
-    private Object _object;
 
-
-    public Object getConfig()
+    /**
+     * Sets the two-phase commit support flag. If this value is true,
+     * connections support two-phase commit.
+     * <p>
+     * This flag is valid only if connections support the XA interface for
+     * distributed transaction demarcation. The default is always true.
+     *
+     * @param twoPhase True if connections support two-phase commit
+     */
+    public void setTwoPhase( boolean twoPhase )
     {
-        System.out.println( "getConfig" );
-        return _object;
-    }
-
-    public void setConfig( Object object )
-    {
-        System.out.println( "setConfig" );
-        _object = object;
-    }
-
-    public Object createConfig()
-    {
-        System.out.println( "createConfig" );
-        return new com.sybase.jdbc2.jdbc.SybDataSource();
+        _twoPhase = twoPhase;
     }
 
 
+    /**
+     * Returns the two-phase commit support flag. If this value is true,
+     * connections support two-phase commit.
+     *
+     * @return True if connections support two-phase commit
+     */
+    public boolean getTwoPhase()
+    {
+        return _twoPhase;
+    }
+
+
+    public Object getFactory()
+    {
+        return _factory;
+    }
+
+
+    public void setFactory( Object factory )
+    {
+        _factory = factory;
+    }
+
+
+    public abstract Object createFactory()
+        throws Exception;
+
+
+    public TransactionDomain getTransactionDomain()
+    {
+        return _txDomain;
+    }
+
+
+    public void setTransactionDomain( TransactionDomain txDomain )
+    {
+        _txDomain = txDomain;
+    }
 
 
 }

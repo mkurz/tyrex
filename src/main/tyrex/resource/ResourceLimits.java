@@ -43,7 +43,7 @@
  */
 
 
-package tyrex.tm.jdbc;
+package tyrex.resource;
 
 
 /**
@@ -58,61 +58,53 @@ package tyrex.tm.jdbc;
  * connection (seconds), zero if no limit is placed on the pool.</li>
  * <li><tt>timeout</tt> The timeout when attempting to open a new
  * connection (in seconds), zero to give up immediately.</li>
- * <li><tt>twoPhase</tt> True if the JDBC driver supports distributed
- * transactions with two-phase commit. The default is true.</li>
- * <li><tt>trace</tt> True if the JDBC driver should write trace
+ * <li><tt>trace</tt> True if connections should write trace
  * information to the log.</li>
  * </ul>
  * 
  * @author <a href="jdaniel@intalio.com">Jerome Daniel</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.6 $
  */
-public final class Limits
+public final class ResourceLimits
 {
 
 
     /**
      * The maximum number of connections supported, or zero.
      */
-    protected int           _maximum;
+    private int           _maximum;
 
 
     /**
      * The minimum number of connections required.
      */
-    protected int           _minimum;
+    private int           _minimum;
 
 
     /**
      * The initial pool size.
      */
-    protected int           _initial;
+    private int           _initial;
 
 
     /**
      * The maximum time to retain an unused connection (in seconds),
      * or zero.
      */
-    protected int           _maxRetain;
+    private int           _maxRetain;
 
 
     /**
      * The timeout when attempting to open a new connection (in seconds),
      * or zero.
      */
-    protected int           _timeout;
-
-
-    /**
-     * True if connections support two-phase commit.
-     */
-    protected boolean       _twoPhase;
+    private int           _timeout;
 
 
     /**
      * True to enable tracing of connections.
      */
-    protected boolean       _trace;
+    private boolean       _trace;
 
 
     /**
@@ -120,7 +112,9 @@ public final class Limits
      * no limit is placed on the connection pool. 
      * <p>
      * If this value is non-zero, the connection pool will not allow more
-     * connections to be opened than this upper limit.
+     * connections to be opened than this upper limit. If this value is higher
+     * than the maximum connections reported by the resource manager, the
+     * latter will be used.
      *
      * @param maximum The maximum number of connections supported, or zero
      */
@@ -177,8 +171,9 @@ public final class Limits
 
 
     /**
-     * Sets the initial connection pool size. When the JDBC driver is loaded,
-     * the connection pool will attempt to create that number of connections.
+     * Sets the initial connection pool size. When the resource manager
+     * is loaded, the connection pool will attempt to create that number
+     * of connections.
      *
      * @param initial The initial pool size
      */
@@ -191,8 +186,8 @@ public final class Limits
 
 
     /**
-     * Returns the initial pool size. When the JDBC driver is loaded, the connection
-     * pool will attempt to create that number of connections.
+     * Returns the initial pool size. When the resource manager is loaded,
+     * the connection pool will attempt to create that number of connections.
      *
      * @return The initial pool size
      */
@@ -273,37 +268,11 @@ public final class Limits
 
 
     /**
-     * Sets the two-phase commit support flag. If this value is true, connections support
-     * two-phase commit.
-     * <p>
-     * This flag is valid only if an XA data source is used. The default is always true.
+     * Sets the tracing flag. If this value is true, the resource manager
+     * will be asked to write trace information to the log.
      *
-     * @param twoPhase True if connections support two-phase commit
-     */
-    public void setTwoPhase( boolean twoPhase )
-    {
-        _twoPhase = twoPhase;
-    }
-
-
-    /**
-     * Returns the two-phase commit support flag. If this value is true, connections support
-     * two-phase commit.
-     *
-     * @return True if connections support two-phase commit
-     */
-    public boolean getTwoPhase()
-    {
-        return _twoPhase;
-    }
-
-
-    /**
-     * Sets the tracing flag. If this value is true, the JDBC driver will be
-     * asked to write trace information to the log.
-     *
-     * @param trace True if JDBC driver should write trace information to
-     * the log
+     * @param trace True if resource manager should write trace information
+     * to the log
      */
     public void setTrace( boolean trace )
     {
@@ -312,10 +281,10 @@ public final class Limits
 
 
     /**
-     * Returns the tracing flag. If this value is true, the JDBC driver will
-     * be asked to write trace information to the log.
+     * Returns the tracing flag. If this value is true, the resource manager
+     * will be asked to write trace information to the log.
      *
-     * @return True if JDBC driver should write trace information to
+     * @return True if resource manager should write trace information to
      * the log
      */
     public boolean getTrace()
@@ -326,15 +295,14 @@ public final class Limits
 
     public Object clone()
     {
-        Limits clone;
+        ResourceLimits clone;
 
-        clone = new Limits();
+        clone = new ResourceLimits();
         clone._maximum = _maximum;
         clone._minimum = _minimum;
         clone._initial = _initial;
         clone._maxRetain = _maxRetain;
         clone._timeout = _timeout;
-        clone._twoPhase = _twoPhase;
         clone._trace = _trace;
         return clone;
     }

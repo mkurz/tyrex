@@ -43,7 +43,7 @@
  */
 
 
-package tyrex.tm.jdbc;
+package tyrex.resource.jdbc;
 
 
 import java.io.File;
@@ -64,6 +64,7 @@ import org.exolab.castor.xml.ValidationException;
 import org.exolab.castor.xml.MarshalException;
 import tyrex.tm.TyrexTransactionManager;
 import tyrex.tm.TransactionDomain;
+import tyrex.resource.PoolMetrics;
 import tyrex.util.Configuration;
 
 

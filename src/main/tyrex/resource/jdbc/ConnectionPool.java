@@ -43,7 +43,7 @@
  */
 
 
-package tyrex.tm.jdbc;
+package tyrex.resource.jdbc;
 
 
 import java.io.PrintWriter;
@@ -70,6 +70,9 @@ import javax.transaction.xa.Xid;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.XAException;
 import tyrex.tm.TyrexTransactionManager;
+import tyrex.resource.ResourceLimits;
+import tyrex.resource.PoolMetrics;
+import tyrex.resource.Resource;
 import tyrex.services.Clock;
 import tyrex.util.Primes;
 import tyrex.util.Configuration;
@@ -82,7 +85,7 @@ import tyrex.util.LoggerPrintWriter;
  * @version $Revision: 1.1 $
  */
 final class ConnectionPool
-    implements DataSource, ConnectionEventListener
+    implements Resource, DataSource, ConnectionEventListener
 {
 
 
@@ -113,9 +116,9 @@ final class ConnectionPool
 
 
     /**
-     * The connector limits.
+     * The resource limits.
      */
-    private final Limits                  _limits;
+    private final ResourceLimits          _limits;
 
 
 
@@ -161,7 +164,8 @@ final class ConnectionPool
     private final ConnectionPoolDataSource _poolDataSource;
 
 
-    ConnectionPool( String name, Limits limits, XADataSource xaDataSource,
+    ConnectionPool( String name, ResourceLimits limits,
+                    XADataSource xaDataSource,
                     ConnectionPoolDataSource poolDataSource,
                     TyrexTransactionManager txManager, Category category )
         throws SQLException
@@ -170,8 +174,6 @@ final class ConnectionPool
 
         if ( name == null )
             throw new IllegalArgumentException( "Argument name is null" );
-        if ( limits == null )
-            throw new IllegalArgumentException( "Argument limits is null" );
         if ( xaDataSource == null && poolDataSource == null )
             throw new IllegalArgumentException( "Arguments xaDataSource and poolDataSource are null" );
         if ( txManager == null )
@@ -191,18 +193,22 @@ final class ConnectionPool
 
         // Clone object to prevent changes by caller from affecting the
         // behavior of the pool.
-        _limits = (Limits) limits.clone();
-        if ( _limits._trace ) {
-            if ( _xaDataSource != null )
-                _xaDataSource.setLogWriter( _logWriter );
-            else
-                _poolDataSource.setLogWriter( _logWriter );
+        if ( limits == null )
+            _limits = new ResourceLimits();
+        else {
+            _limits = (ResourceLimits) limits.clone();
+            if ( _limits.getTrace() ) {
+                if ( _xaDataSource != null )
+                    _xaDataSource.setLogWriter( _logWriter );
+                else
+                    _poolDataSource.setLogWriter( _logWriter );
+            }
         }
 
         // Set the pool table to the optimum size based on the maximum
         // number of connections expected, or a generic size.
-        if ( _limits._maximum > 0 )
-            _pool = new PoolEntry[ Primes.nextPrime( _limits._maximum ) ];
+        if ( _limits.getMaximum() > 0 )
+            _pool = new PoolEntry[ Primes.nextPrime( _limits.getMaximum() ) ];
         else
             _pool = new PoolEntry[ TABLE_SIZE ];
 
@@ -223,35 +229,23 @@ final class ConnectionPool
 
         // Allocate as many connection as specified for the initial size
         // (excluding the one we always create before we reach this point).
-        for ( int i = _limits._initial - 1 ; i-- > 0 ; ) {
+        for ( int i = _limits.getInitial() - 1 ; i-- > 0 ; ) {
             pooled = createPooledConnection( null, null );
             allocate( pooled, null, null, false );
         }
         _category.info( "Created connection pool for data source " + name +
-                        " with initial size " + _limits._initial +
-                        " and maximum size " + _limits._maximum );
+                        " with initial size " + _limits.getInitial() +
+                        " and maximum size " + _limits.getMaximum() );
     }
 
 
-    /**
-     * Returns the pool metrics. The pool metrics object can be used to
-     * collect statistical information about the connection pool.
-     *
-     * @return The pool metrics
-     */
     public PoolMetrics getPoolMetrics()
     {
         return _metrics;
     }
 
 
-    /**
-     * Returns the client data source. The client data source is enlisted
-     * in the JNDI environment naming context for access by the application.
-     *
-     * @return The client data source
-     */
-    public DataSource getDataSource()
+    public Object getClientFactory()
     {
         return this;
     }
@@ -263,12 +257,7 @@ final class ConnectionPool
     }
 
     
-    /**
-     * This method is used during recovery from an XA resource.
-     * If the connector does not support the XA interface, it
-     * returns an empty array of Xids.
-     */
-    protected Xid[] recover( int flags )
+    public Xid[] recover( int flags )
         throws XAException
     {
         if ( _xaResource == null )
@@ -358,7 +347,7 @@ final class ConnectionPool
         long              clock;
         long              timeout;
         
-        timeout = _limits._timeout * 1000;
+        timeout = _limits.getTimeout() * 1000;
         // We repeat this loop until we either get a connection, or we time out.
         // We will keep getting notified as connections are made available to the
         // pool, or discarded.
@@ -367,7 +356,7 @@ final class ConnectionPool
             // If any connections are available we keep trying to match an
             // existing connection. It's possible that a matched connection
             // will not be useable, so we repeat until one (or none) is found.
-            while ( _metrics._available > 0 ) {
+            while ( _metrics.getAvailable() > 0 ) {
                 pooled = matchPooledConnections( user, password );
                 // No matched connection, exit loop so we will attempt
                 // to create a new one.
@@ -386,7 +375,7 @@ final class ConnectionPool
             // No matched connections, need to create a new one.
             // If we have more room for a new connection, we create
             // a new connection.
-            if ( _limits._maximum == 0 && _metrics._total < _limits._maximum ) {
+            if ( _limits.getMaximum() == 0 && _metrics.getTotal() < _limits.getMaximum() ) {
                 pooled = createPooledConnection( user, password );
                 // Need to allocate the connection. It is an error if the
                 // pooled connection is already in the pool.
@@ -399,7 +388,7 @@ final class ConnectionPool
             
             // If we have a connection we do not use (and cannot be matched),
             // release it and make room for a new connection to be created.
-            if ( _metrics._available > 0 && discardNext() ) {
+            if ( _metrics.getAvailable() > 0 && discardNext() ) {
                 pooled = createPooledConnection( user, password );
                 // Need to allocate the connection. It is an error if the
                 // pooled connection is already in the pool.
@@ -416,7 +405,7 @@ final class ConnectionPool
             if ( timeout <= 0 )
                 throw new SQLException( "Cannot allocate new connection for " +
                                         _name + ": reached limit of " +
-                                        _limits._maximum + " connections" );
+                                        _limits.getMaximum() + " connections" );
             clock = Clock.clock();
             try {
                 wait ( timeout );
@@ -429,7 +418,7 @@ final class ConnectionPool
             if ( timeout <= 0 )
                 throw new SQLException( "Cannot allocate new connection for " +
                                         _name + ": reached limit of " +
-                                        _limits._maximum + " connections" );
+                                        _limits.getMaximum() + " connections" );
         }
         // We never reach this point;
         // throw new ApplicationServerInternalException( "Internal error" );
@@ -590,13 +579,17 @@ final class ConnectionPool
         _metrics.recordCreated();
         if ( ! reserve ) {
             entry._available = true;
-            ++_metrics._available;
+            try {
+                _metrics.changeAvailable( 1 );
+            } catch ( IllegalStateException except ) {
+                _category.error( "Internal error in connection pool " + this + ": " + except.getMessage() );
+            }
         }
         // Calculate the next expiration time based on this connection.
         // If the next expiration time is soon, we notify the background
         // thread.
-        if ( _limits._maxRetain > 0 ) {
-            nextExpiration = entry._timeStamp + ( _limits._maxRetain * 1000 );
+        if ( _limits.getMaxRetain() > 0 ) {
+            nextExpiration = entry._timeStamp + ( _limits.getMaxRetain() * 1000 );
             if ( _nextExpiration == 0 || _nextExpiration > nextExpiration ) {
                 _nextExpiration = nextExpiration;
                 notifyAll();
@@ -632,7 +625,11 @@ final class ConnectionPool
             entry = entry._nextEntry;
         if ( entry != null && entry._available ) {
             entry._available = false;
-            --_metrics._available;
+            try {
+                _metrics.changeAvailable( -1 );
+            } catch ( IllegalStateException except ) {
+                _category.error( "Internal error in connection pool " + this + ": " + except.getMessage() );
+            }
             clock = Clock.clock();
             _metrics.recordUnusedDuration( (int) ( clock - entry._timeStamp ) );
             entry._timeStamp = clock;
@@ -702,11 +699,15 @@ final class ConnectionPool
             if ( entry._xaResource != null )
                 _txManager.delistResource( entry._xaResource, success ? XAResource.TMSUCCESS : XAResource.TMFAIL );
             if ( success ) {
-                ++_metrics._available;
+                try {
+                    _metrics.changeAvailable( 1 );
+                } catch ( IllegalStateException except ) {
+                    _category.error( "Internal error in connection pool " + this + ": " + except.getMessage() );
+                }
 
                 // Calculate the next expiration time based on this connection.
-                if ( _limits._maxRetain > 0 ) {
-                    nextExpiration = entry._timeStamp + ( _limits._maxRetain * 1000 );
+                if ( _limits.getMaxRetain() > 0 ) {
+                    nextExpiration = entry._timeStamp + ( _limits.getMaxRetain() * 1000 );
                     if ( _nextExpiration == 0 || _nextExpiration > nextExpiration )
                         _nextExpiration = nextExpiration;
                 }
@@ -885,7 +886,7 @@ final class ConnectionPool
         long       nextExpiration;
 
         // Without maxRetain we do not attempt to expire connections.
-        if ( _limits._maxRetain == 0 )
+        if ( _limits.getMaxRetain() == 0 )
             return 0;
         // We don't enter the loop if no connection is subject to expire.
         // We know a connection is about to expire if the system clock
@@ -893,7 +894,7 @@ final class ConnectionPool
         // for available connections).
         clock = Clock.clock();
         if ( clock >= _nextExpiration ) {
-            oldest = clock - ( _limits._maxRetain * 1000 );
+            oldest = clock - ( _limits.getMaxRetain() * 1000 );
             nextExpiration = 0;
             for ( int i = _pool.length ; i-- > 0 ; ) {
                 entry = null;
@@ -932,7 +933,7 @@ final class ConnectionPool
             // We calculate the next expiraiton time base on the timeStamp,
             // so we need to add maxRetain to get the actual clock time.
             if ( nextExpiration != 0 )
-                nextExpiration += ( _limits._maxRetain * 1000 );
+                nextExpiration += ( _limits.getMaxRetain() * 1000 );
             _nextExpiration = nextExpiration;
         }
         // If no connection was subject to expire, we return the same

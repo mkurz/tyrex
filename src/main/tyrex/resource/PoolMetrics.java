@@ -43,7 +43,7 @@
  */
 
 
-package tyrex.tm.jca;
+package tyrex.resource;
 
 
 /**
@@ -107,12 +107,12 @@ public final class PoolMetrics
     /**
      * The total number of connections in the pool, both used and unused.
      */
-    protected int  _total;
+    private int  _total;
 
     /**
      * The number of connections available in the pool (unused).
      */
-    protected int  _available;
+    private int  _available;
 
 
     /**
@@ -228,7 +228,7 @@ public final class PoolMetrics
     /**
      * Record a created managed connection.
      */
-    protected synchronized void recordCreated()
+    public synchronized void recordCreated()
     {
         ++_accumCreated;
         ++_total;
@@ -238,7 +238,7 @@ public final class PoolMetrics
     /**
      * Record a discarded managed connection.
      */
-    protected synchronized void recordDiscard()
+    public synchronized void recordDiscard()
     {
         ++_accumDiscarded;
         --_total;
@@ -248,7 +248,7 @@ public final class PoolMetrics
     /**
      * Record an error release of a managed connection.
      */
-    protected synchronized void recordError()
+    public synchronized void recordError()
     {
         ++_accumErrors;
         --_total;
@@ -260,7 +260,7 @@ public final class PoolMetrics
      *
      * @param ms The duration is milliseconds
      */
-    protected synchronized void recordUsedDuration( int ms )
+    public synchronized void recordUsedDuration( int ms )
     {
         ++_accumUsed;
         _accumUsedTime += ms;
@@ -272,10 +272,60 @@ public final class PoolMetrics
      *
      * @param ms The duration is milliseconds
      */
-    protected synchronized void recordUnusedDuration( int ms )
+    public synchronized void recordUnusedDuration( int ms )
     {
         ++_accumUnused;
         _accumUnusedTime += ms;
+    }
+
+
+    /**
+     * Returns the total number of connections in the pool.
+     * The total number includes both used and available connections.
+     *
+     * @return The total number of connections in the pool
+     */
+    public int getTotal()
+    {
+        return _total;
+    }
+
+
+    /**
+     * Returns the number of connections available to the pool.
+     *
+     * @return The number of available connections
+     */
+    public int getAvailable()
+    {
+        return _available;
+    }
+
+
+    /**
+     * Called to change the number of available connections. This method
+     * reflects an increase or decrease in the number of available connections.
+     * If the change results in an available count that is outside the
+     * range zero to total count, this method corrects the count and throws
+     * an <tt>IllegalStateException</tt>.
+     *
+     * @param change The change in available connections (positive or
+     * negative integer)
+     * @throws IllegalStateException Change resulted in an available count
+     * that is outside the range zero to total count
+     */
+    public synchronized void changeAvailable( int change )
+    {
+        change += _available;
+        if ( change > _total ) {
+            _available = _total;
+            throw new IllegalStateException( "Available number of connections higher than total number of connections" );
+        }
+        if ( change < 0 ) {
+            _available = 0;
+            throw new IllegalStateException( "Available number of connections falls below zero" );
+        }
+        _available = change;
     }
 
 

@@ -43,11 +43,10 @@
  */
 
 
-package tyrex.tm.jca;
+package tyrex.resource.jdbc;
 
 
-import javax.resource.spi.ManagedConnection;
-import javax.resource.spi.LocalTransaction;
+import javax.sql.PooledConnection;
 import javax.transaction.xa.XAResource;
 import tyrex.services.Clock;
 
@@ -63,9 +62,9 @@ final class PoolEntry
     
     
     /**
-     * The managed connection associated with this entry.
+     * The pooled connection associated with this entry.
      */
-    protected final ManagedConnection  _managed;
+    protected final PooledConnection   _pooled;
     
     
     /**
@@ -93,39 +92,47 @@ final class PoolEntry
     
     
     /**
-     * The local transaction associated with this connection. May be null.
-     */
-    protected final LocalTransaction   _localTx;
-    
-    
-    /**
      * The timestamp for a used connection returns the clock time at which
      * the connection was made available to the application. The timestamp
      * for an unused connection returns the clock time at which the
      * connection was placed in the pool.
      */
     protected long                     _timeStamp;
+
+
+    /**
+     * The user name.
+     */
+    protected final String             _user;
     
     
+    /**
+     * The password.
+     */
+    protected final String             _password;
+
+
     /**
      * Constructs a new pool entry. A new pool entry is not available by
      * default. The <tt>available</tt> variable must be set to false to
      * make it available.
      *
-     * @param managed The managed connection
+     * @param pooled The pooled connection
      * @param hashCode The managed connection hash code
      * @param xaResource The XA resource interface, or null
-     * @param localTx The local transaction interface, or null
-     */
-    protected PoolEntry( ManagedConnection managed, int hashCode,
-                         XAResource xaResource, LocalTransaction localTx )
+     * @param user The user name or null
+     * @param password The password or null
+      */
+    protected PoolEntry( PooledConnection pooled, int hashCode,
+                         XAResource xaResource, String user, String password )
     {
-        if ( managed == null )
-            throw new IllegalArgumentException( "Argument managed is null" );
-        _managed = managed;
+        if ( pooled == null )
+            throw new IllegalArgumentException( "Argument pooled is null" );
+        _pooled = pooled;
         _hashCode = hashCode;
         _xaResource = xaResource;
-        _localTx = localTx;
+        _user = user;
+        _password = password;
         _available = false;
         _timeStamp = Clock.clock();
     }
