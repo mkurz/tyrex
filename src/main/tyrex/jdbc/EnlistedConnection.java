@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: EnlistedConnection.java,v 1.3 2000/08/28 19:01:48 mohammed Exp $
+ * $Id: EnlistedConnection.java,v 1.4 2000/08/31 00:29:08 mohammed Exp $
  */
 
 
@@ -117,14 +117,18 @@ public class EnlistedConnection
      * @throws SQLException if the auto-commit cannot be
      *      turned off in the underlying connection.
      */
-    EnlistedConnection( Connection underlying, XAResource xaRes )
+    public EnlistedConnection( Connection underlying, XAResource xaRes )
         throws SQLException
     {
 	_underlying = underlying;
 	_xaRes = xaRes;
     if ( _underlying.getAutoCommit() ) {
         // make sure the underlying connection is not auto commit
-        _underlying.setAutoCommit(false);
+        try {
+            _underlying.setAutoCommit( false );
+        } catch ( SQLException e ) {
+            // ignore
+        }
     }
     enlist();
     }
