@@ -1,22 +1,31 @@
-Version 0.9.8  Mar 2, 2000
---------------------------
+Version 0.9.8  Mar 12, 2000
+---------------------------
 
 - Improved performance and reduced overhead of the transaction manager.
   Transactions and resources are now more efficiently stored, accessed
   and discarded to reduce the overhead associated with transaction
   management.
 
+- Improved performance of JNDI ENC and MemoryContext.
+
+- Revised the TransactionDomain design to allow more effective
+  management of multiple transaction domains.
+
+- Added RuntimeContext interface to allow context management for
+  component containers (EJB, Servlet). Provides support for connection
+  use across method invocation, JAAS security subject, and JNDI ENC.
+
+- Added JCA connector manager supporting connection pooling and
+  XA resources.
+
+- New transaction domain configuration file.
+
 - Improved Xid management to reduce memory consumption and enable
   consistent textual representation of Xids. Four Xid implementations
   are provided for global, branch, local and external Xids.
 
-- Improved performance of JNDI ENC and MemoryContext.
-
 - Added services package that includes internal clock, UUID generator
   and daemon master.
-
-- Revised the TransactionDomain design to allow more effective
-  management of multiple transaction domains.
 
 - Added a configuration file (tyrex.config) for controlling the new
   services and providing alternative location for the resource

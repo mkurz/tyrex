@@ -1,0 +1,154 @@
+<?xml version="1.0"?>
+<!-- $Id: using.xml,v 1.1 2001/03/13 03:15:21 arkin Exp $ -->
+<document>
+  <properties>
+    <title>Using Tyrex</title>
+    <author email="arkin@intalio.com">Assaf Arkin</author>
+  </properties>
+
+  <body>
+
+    <section title="Transaction Domains">
+      
+      <p>A <api class="tyrex.tm.TransactionDomain">transaction domain</api> provides centralized
+        management for transactions. A transaction domain defines the policy for all transactions
+        created from that domain, such as default timeout, maximum number of open transactions,
+        IIOP support, and journaling. In addition, the domain maintains resource managers such
+        as JDBC data sources and JCA connectors.</p>
+      
+      <p>The application server obtains a transaction manager or user transaction object, and
+        managed resources from the transaction domain.</p>
+      
+      <p>Transaction domains are created from a domain configuration file. For more information about
+        domain configuration files, refer to the relevant documentation and <tt>domain.xsd</tt>.</p>
+      
+    <p>The following code illustrates how to create a new transaction domain:
+        <code>
+InputStream       stream;
+TransactionDomain domain;
+
+<comment>// Create a transaction domain using a domain configuration file</comment>
+stream = new FileInputStream( "domain.xml" )
+try {
+    domain = TransactionDomain.createDomain( stream );
+} catch ( DomainConfigurationException except ) {
+    <comment>// Domain cannot be created, handle error</comment>
+    . . . 
+}
+<comment>// Recover all resources used in the domain</comment>
+try {
+    domain.recover();
+} catch ( RecoveryException except ) {
+    <comment>// Ignore all errors, they are logged to the console.</comment>
+}
+<comment>// Domain is now active and ready to use</comment>
+        </code></p>
+
+    </section>
+
+
+    <section title="Resources">
+
+      <p><api>tyrex.resource.Resource</api> represents an installed resource. An installed resource
+        has a client factory that is made available to the application, typically for JNDI,
+        allowing it to create new connections. The client factory type depends on the type of
+        resource in use.</p>
+
+      <p>An installed resource has a connection pool that manages utilization of the resource.
+        The connection pool metrics can be obtained from <api>tyrex.resource.PoolMetrics</api>.
+        This object records usage metrics for the connection pool, recording such information as
+        the accumulated number of connections created and used, the average time a connection
+        is used by the application or held in the pool, etc.</p>
+      
+      <p><api>tyrex.resource.ResourceLimits</api> represents limits placed on a resource.
+        The limits are read from the configuration file and apply to the connection pool.</p>
+
+      <p><api>tyrex.resource.Resources</api> represents a collection of installed resources.
+        Resources are obtained from this collection by the name with which they were installed.</p>
+
+    </section>
+    
+
+    <section title="The Runtime Context">
+
+      <p>The <api class="tyrex.tm.RuntimeContext">runtime context</api> provides an association
+        between a component or client, the current thread, and resources used by the application.</p>
+      
+      <p>The runtime context keeps track of active transaction, JNDI ENC, security subject, and open
+        connections. It is associated with a component or client, and can be preserved across method
+        invocations by associating it with the current thread.</p>
+      
+      <p>Each thread is associated with a runtime context, whether explicitly or implicitly. A thread can
+        be associated with a particular runtime context by calling <tt>setRuntimeContext()</tt>.
+        If this method was not called, a default runtime context is created on demand.</p>
+      
+      <p>A new runtime context can be created with one of the <tt>newRuntimeContext()</tt> methods and
+        populated with JNDI bindings and security context. The runtime context is then associated with
+        the current thread across method invocations belonging to the same component or client.</p>
+
+      <p>The runtime context keeps track of the current active transaction. When the runtime context
+        is associated with the current thread, this is the same transaction available from
+        <tt>TransactionManager</tt>.</p>
+
+      <p>The runtime context keeps track of the JNDI environment naming context. The JNDI bindings are accessible
+        from the <tt>java:</tt> URL when the runtime context is associated with the current thread.</p>
+      
+      <p>The runtime context keeps track of the security subject used for authentication and authorization when
+        the runtime context is associated with the current thread.</p>
+      
+      <p>The runtime context keeps track of all connections obtained from the environment naming context.
+        Open connections can be retained across method invocations.</p>
+      
+      <p>The following example illustrates how to create and use a runtime context:
+        <code>
+RuntimeContext runCtx;
+Context        jndiCtx;
+Resources      resources;
+DataSource     dataSource;
+
+<comment>// Create a new context</comment>
+runCtx = RuntimeContext.newRuntimeContext();
+
+<comment>// Bind a JDBC DataSource to the JNDI ENC</comment>
+jndiCtx = runCtx.getEnvContext().createSubcontext( "jdbc" );
+resources = TransactionDomain.getDomain( "myDomain" ).getResources();
+dataSource = (DataSource) resources.getResource( "dataSource" );
+jndiCtx.bind( "myDB", dataSource );
+
+. . .
+<comment>// Associate the runtime context with the current thread</comment>
+RuntimeContext.setRuntimeContext( runCtx );
+
+. . .
+<comment>// Dissociate the runtime context with the current thread</comment>
+RuntimeContext.unsetRuntimeContext();
+
+. . .
+<comment>// Discard the runtime context</comment>
+runCtx.cleanup();
+        </code></p>
+    </section>
+
+
+    <section title="JTA Extended Interfaces">
+
+      <p>All Tyrex transactions implement the interface <api>tyrex.tm.TyrexTransaction</api>,
+        which supports asynchronous commit and rollback, and one phase commit.</p>
+
+      <p>All Tyrex transaction managed implement the interface <api>tyrex.tm.TyrexTransactionManager</api>,
+        which supports transaction resolving from an Xid, and means to obtain extended transaction
+        status.</p>
+      
+      <p><api>tyrex.tm.TransactionStatus</api> provide additional information about a
+        transaction in addition to that provided by <tt>Transaction</tt>, including the transaction
+        identifier (Xid), start time and timeout, resources and thread association.</p>
+
+      <p>Interceptors allow an external engine to hook up into the transaction monitor and either record
+        the outcome of transactions or affect them. The interceptor is notified when transactions are
+        created, attempt to commit, rolled back, and when they are resumed or suspended from threads.</p>
+
+    </section>
+
+
+  </body>
+</document>

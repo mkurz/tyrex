@@ -1,6 +1,6 @@
 Tyrex J2EE Service Provider
 
-Copyright (c) 2001, 2000, 1999, Intalio, Inc.
+Copyright (c) 1999-2001, Intalio, Inc.
 
 
 Supported Features
@@ -16,7 +16,7 @@ Supported Features
 
 * JDBC pooling and automatic JDBC resource enlistment
 
-* Connector architecture
+* JCA connector support
 
 * XML based configuration
 
@@ -25,111 +25,13 @@ Supported Features
 * Tomcat 3.0 connector
 
 
-Security Considerations
------------------------
+Note about required packages
+----------------------------
 
-The application server requires certain permissions to operate the
-transaction server. These permissions are describe in the accompanying
-file SecurityPolicy.
+Tyrex requires the JCA (Java Connector Architecture) API version 1.0
+and the JAAS (Java Authentication & Authorization Service) API version
+1.0.
 
-
-Test Packages
--------------
-
-Each package contains a Test class that can be used to test the
-features implemented in that package:
-
-tyrex.server.Test perf
-  Performance test on the transaction server for local transactions,
-  recording throughput and memory utilization.
-
-tyrex.server.Test tm (debug)
-  Tests transaction termination on timeout.
-
-tyrex.server.Test kt (debug)
-  Tests transaction termination on timeout and termination of thread
-  in transaction.
-
-tyrex.client.Test
-  Performance test on the transaction server for remote transactions
-  (client to server over RMI). RMI registry must be up and running to
-  conduct this test.
-
-tyrex.jdbc.Test perf
-  Performance test on JDBC connections managed through the transaction
-  server.
-
-tyrex.jdbc.Test integrity (debug)
-  Integrity test on JDBC connections managed through the transaction
-  server.
-
-tyrex.jdbc.Test tm (debug)
-  Tests transaction termination on timeout.
-
-tyrex.jdbc.Test db (debug)
-  Tests transaction termination on timeout at the JDBC layer.
-
-tyrex.conf.Test
-  Tests the usage of XML configuration files.
-
-tyrex.naming.Test
-  Tests the JNDI environment naming context
-
-The database tests require PostgreSQL 6.5 with the JDBC 2.0 driver.
-Use the following SQL to create the initial test table on a database
-called test:
-
-  create table test ( id int not null, text char(20) not null );
-  insert into test values (1, '');
-
-
-Notes About Use In Application Servers
---------------------------------------
-
-The client creates transactions through a UserTransaction interface
-(tyrex.client.ClientUserTransaction) that links to a remote server.
-The transactions are created on the server itself, the client only
-attains the transaction's global identifier. The client cannot use the
-transaction for any purpose other than running beans and cannot
-commit/rollback a transaction while a bean is executing.
-
-The transaction identifier is sent to the server in each remote
-invocation through the MethodInvocation mechanism. The identifier is
-exactly 12 bytes long and identifies the transaction itself and the
-server which generated it.
-
-Once an invocation occurs on the server, the server resolves the
-identifier into a transaction and runs in the context of that
-transaction. If the transaction was created on the same server (i.e.
-same JVM), it will be retrieved locally. If the transaction was created
-on a different server, a local transaction will be created that will
-run under the context of the global remote transaction.
-
-Resources created during method invocation (e.g. JDBC connections)
-are managed by the transaction server. They are automatically enlisted
-with the current (or any future) transaction associated with the
-calling thread. This also applies to connections that are reused over
-method invocations occuring in arbitrary threads.
-
-To support that, all JDBC connections must be obtained through the
-tyrex.jdbc.ServerDataSource data source which itself uses a JDBC 2.0
-data source to obtain the underlying JDBC connection. In addition,
-the transaction server must be notified when a thread is being reused
-on behalf of a different method invocation with a call to reuseThread.
-
-The transaction timeout is used to terminate a thread in progress that
-takes too long to complete. A transaction is most likely to timeout in
-cases like broken connections, database deadlocks, and code logic that
-causes an infinite loop. Rolling back the transaction is not
-sufficient in any of these cases, the only remedy is to terminate the
-connection.
-
-The transaction monitor will stop the thread by throwing a
-TransactionTimeoutException. An EJB server should catch this exception,
-terminate the method invocation properly and return a suitable error
-to the client. The actual thread may be reused with subsequent method
-invocations.
-
-A suitable RollbackException will be thrown when attempting to restore
-a suspended transaction that has rolled back.
-
+Both JARs are not available for distribution. Tyrex users must download
+these JARs from the Sun Microsystems (http://java.sun.com) before
+building or deploying Tyrex.

@@ -40,43 +40,68 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: JournalFactory.java,v 1.4 2001/03/13 03:14:58 arkin Exp $
+ * $Id: RecoveryException.java,v 1.1 2001/03/13 03:15:21 arkin Exp $
  */
 
 
 package tyrex.tm;
 
 
-import javax.transaction.SystemException;
+import tyrex.util.NestedException;
 
 
 /**
- * Interface for a journal factory. A journal factory is used to open
- * journals for the purpose of transactional recovery. The journal
- * factory is an external service that is associated with a transaction
- * domain using the domain configuration file.
+ * Indicates an error occuring during recovery. Recovery exceptions
+ * wrap underlying exceptions and are chained together.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.1 $ $Date: 2001/03/13 03:15:21 $
  */
-public interface JournalFactory
+public class RecoveryException
+    extends NestedException
 {
 
 
     /**
-     * Opens a new journal with the specified name. The journal name
-     * is always the transaction domain name.
-     * <p>
-     * The journal name is not guaranteed to be a valid name. The journal
-     * name must map to the same journal across server restarts.
-     *
-     * @param name The journal name
-     * @throws SystemException An error occured while attempting to
-     * open the journal
+     * Reference to the next recovery exception.
      */
-    public Journal openJournal( String name )
-        throws SystemException;
+    private RecoveryException  _next;
+
+
+    public RecoveryException( Exception except )
+    {
+        super( except );
+    }
+
+
+    public RecoveryException( String message )
+    {
+        super( message );
+    }
+
+
+    /**
+     * Returns the next recovery exception. If more than one exception
+     * occured during recovery, this method returns the exceptions in
+     * the chain.
+     *
+     * @return The next recovery exception, or null
+     */
+    public RecoveryException getNextException()
+    {
+        return _next;
+    }
+
+
+    /**
+     * Sets the next recovery exception.
+     *
+     * @param except The next recovery exception
+     */
+    public void setNextException( RecoveryException except )
+    {
+        _next = except;
+    }
 
 
 }
-

@@ -67,11 +67,11 @@ import tyrex.tm.TransactionDomain;
  * to add and list resource configurations.
  * <p>
  * The application server uses the methods {@link #listResources} and
- * {@link #getResource} to obtain resources and make the client
+ * {@link #getResource getResource} to obtain resources and make the client
  * connection factory available to the application.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  */
 public class Resources
 {

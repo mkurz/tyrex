@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionDomainImpl.java,v 1.11 2001/03/12 19:20:20 arkin Exp $
+ * $Id: TransactionDomainImpl.java,v 1.12 2001/03/13 03:14:59 arkin Exp $
  */
 
 
@@ -51,6 +51,7 @@ import java.io.PrintWriter;
 import java.util.Enumeration;
 import java.util.Properties;
 import java.util.Iterator;
+import java.util.ArrayList;
 import java.security.AccessController;
 import org.apache.log4j.Category;
 import org.omg.CosTransactions.otid_t;
@@ -76,13 +77,15 @@ import tyrex.tm.TransactionDomain;
 import tyrex.tm.TransactionInterceptor;
 import tyrex.tm.TransactionStatus;
 import tyrex.tm.TransactionTimeoutException;
-import tyrex.tm.DomainException;
+import tyrex.tm.DomainConfigurationException;
 import tyrex.tm.Journal;
 import tyrex.tm.JournalFactory;
+import tyrex.tm.RecoveryException;
 import tyrex.tm.xid.BaseXid;
 import tyrex.tm.xid.XidUtils;
 import tyrex.resource.Resource;
 import tyrex.resource.Resources;
+import tyrex.resource.ResourceException;
 import tyrex.services.Clock;
 import tyrex.services.DaemonMaster;
 import tyrex.util.Messages;
@@ -93,7 +96,7 @@ import tyrex.util.Configuration;
  * Implementation of a transaction domain.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.11 $ $Date: 2001/03/12 19:20:20 $
+ * @version $Revision: 1.12 $ $Date: 2001/03/13 03:14:59 $
  */
 public class TransactionDomainImpl
     extends TransactionDomain
@@ -238,27 +241,35 @@ public class TransactionDomainImpl
 
 
     /**
+     * The state of the transaction domain.
+     */
+    private int                            _state;
+
+
+    /**
+     * Records errors reported during recovery.
+     */
+    private RecoveryException              _recoveryErrors;
+
+
+    /**
      * Constructs a new transaction domain.
      *
      * @param config The domain configuration object
-     * @throws DomainException Failed to create the transaction domain
+     * @throws DomainConfigurationException Failed to create the transaction domain
      */
     public TransactionDomainImpl( DomainConfig config )
-        throws DomainException
+        throws DomainConfigurationException
     {
         String         domainName;
         JournalFactory factory;
         String         factoryName;
-        Resource[]     resources;
-        XAResource[]   xaResources;
-        int            count;
-        Iterator       iterator;
 
         if ( config == null )
             throw new IllegalArgumentException( "Argument config is null" );
         domainName = config.getName();
         if ( domainName == null || domainName.trim().length() == 0 )
-            throw new DomainException( "The domain name is missing" );
+            throw new DomainConfigurationException( "The domain name is missing" );
         _domainName = domainName.trim();
         _maximum = config.getMaximum();
         _txTimeout = config.getTimeout();
@@ -268,10 +279,13 @@ public class TransactionDomainImpl
             try {
                 factory = (JournalFactory) getClass().getClassLoader().loadClass( factoryName ).newInstance();
             } catch ( Exception except ) {
-                throw new DomainException( "Error obtaining transaction journal factory " + factoryName, except );
+                throw new DomainConfigurationException( "Error obtaining transaction journal factory " + factoryName, except );
             }
-            // Throws DomainException if failed to open journal
-            _journal = factory.openJournal( _domainName );
+            try {
+                _journal = factory.openJournal( _domainName );
+            } catch ( SystemException except ) {
+                throw new DomainConfigurationException( except );
+            }
         } else
             _journal = null;
 
@@ -289,29 +303,15 @@ public class TransactionDomainImpl
             try {
                 _resources = config.getResources();
                 _resources.setTransactionDomain( this );
-                iterator = _resources.listResources();
-                for ( count = 0 ; iterator.hasNext() ; ++count )
-                    iterator.next();
-                resources = new Resource[ count ];
-                xaResources = new XAResource[ count ];
-                iterator = _resources.listResources();
-                for ( count = 0 ; iterator.hasNext() ; ++count ) {
-                    resources[ count ] = _resources.getResource( (String) iterator.next() );
-                    xaResources[ count ] = resources[ count ].getXAResource();
-                }
             } catch ( Exception except ) {
-                throw new DomainException( except );
+                throw new DomainConfigurationException( except );
             }
-        } else {
+        } else
             _resources = new Resources();
-            xaResources = null;
-        }
         
-        // Obtain a transaction journal with the domain name.
-        recover( _journal, xaResources );
-
         // starts the background thread
         DaemonMaster.addDaemon( this, "Transaction Domain " + _domainName );
+        _state = READY;
     }
 
 
@@ -392,8 +392,9 @@ public class TransactionDomainImpl
     }
 
 
-    public void shutdown()
+    public void terminate()
     {
+        _state = TERMINATED;
         DaemonMaster.removeDaemon( this );
     }
 
@@ -413,6 +414,49 @@ public class TransactionDomainImpl
     public Resources getResources()
     {
         return _resources;
+    }
+
+
+    public int getState()
+    {
+        return _state;
+    }
+
+
+    public synchronized void recover()
+        throws RecoveryException
+    {
+        ArrayList         array;
+        Resource          resource;
+        XAResource        xaResource;
+        XAResource[]      xaResources;
+        Iterator          iterator;
+        RecoveryException errors;
+
+        if ( _state == READY ) {
+            _state = RECOVERING;
+            array = new ArrayList();
+            iterator = _resources.listResources();
+            while ( iterator.hasNext() ) {
+                try {
+                    resource = _resources.getResource( (String) iterator.next() );
+                    if ( resource != null ) {
+                        xaResource = resource.getXAResource();
+                        if ( xaResource != null )
+                            array.add( xaResource );
+                    }
+                } catch ( ResourceException except ) {
+                    recoveryError( new RecoveryException( except ) );
+                }
+            }
+            xaResources = (XAResource[]) array.toArray( new XAResource[ array.size() ] );
+            recover( _journal, xaResources );
+            _state = ACTIVE;
+            errors = _recoveryErrors;
+            _recoveryErrors = null;
+            if ( errors != null )
+                throw errors;
+        }
     }
 
 
@@ -498,7 +542,10 @@ public class TransactionDomainImpl
         BaseXid         xid;
         int             hashCode;
         int             index;
-        
+
+        if ( _state != ACTIVE )
+            throw new SystemException( "Transaction domain not active" );
+
         // Create a new transaction with a new Xid. At the moment,
         // this also works for nested transactions.
         xid = (BaseXid) XidUtils.newGlobal();
@@ -619,6 +666,10 @@ public class TransactionDomainImpl
             throw new IllegalArgumentException( "Argument pgContext is null" );
         if ( pgContext.current == null || pgContext.current.otid == null )
             throw new SystemException( "Propagation context missing otid in current transaction identifier" );
+
+        if ( _state != ACTIVE )
+            throw new SystemException( "Transaction domain not active" );
+
         otid = pgContext.current.otid;
         global = new byte[ otid.bequal_length ];
         for ( int i = otid.bequal_length ; i-- > 0 ; )
@@ -1202,17 +1253,16 @@ public class TransactionDomainImpl
         long            clock;
         int             commit = 0;
         int             rollback = 0;
+        int             count;
 
         if ( Configuration.verbose )
             _category.info( "Initiating transaction recovery for domain " + _domainName );
         clock = Clock.clock();
 
         if ( journal != null ) {
-            try {
-                recoverJournal( journal );
-            } catch ( DomainException except ) {
-                _category.info( "Error occured reading the transaction journal for domain " + _domainName, except );
-            }
+            count = recoverJournal( journal );
+            if ( count > 0 && Configuration.verbose )
+                _category.info( "Loaded " + count + " records from transaction journal." );
         }
         if ( resources != null )
             recoverResources( resources );
@@ -1231,6 +1281,7 @@ public class TransactionDomainImpl
                             entry.commit();
                             ++commit;
                         } catch ( Exception except ) {
+                            recoveryError( new RecoveryException( except ) );
                             ++rollback;
                         }
                     } else if ( entry._status == Status.STATUS_COMMITTED ) {
@@ -1278,31 +1329,30 @@ public class TransactionDomainImpl
      * recover}.
      *
      * @param journal The transaction journal
-     * @throws DomainException An error occured trying to read the journal
+     * @return The number of records read from the journal
      */
-    private void recoverJournal( Journal journal )
-        throws DomainException
+    private int recoverJournal( Journal journal )
     {
         Journal.RecoveredTransaction[] recovered;
 
         try {
             recovered = journal.recover();
         } catch ( SystemException except ) {
-            throw new DomainException( except );
+            recoveryError( new RecoveryException( except ) );
+            return 0;
         }
         if ( recovered != null && recovered.length > 0 ) {
             for ( int i = recovered.length ; i-- > 0 ; ) {
                 if ( recovered[ i ] != null ) {
                     try {
                         recoverRecord( recovered[ i ] );
-                    } catch ( DomainException except ) {
-                        _category.error( "Recovery record " + i + " is invalid: " + except.getMessage() );
+                    } catch ( RecoveryException except ) {
+                        recoveryError( except );
                     }
                 }
             }
-            if ( Configuration.verbose )
-                _category.info( "Loaded " + recovered.length + " records from transaction journal." );
         }
+        return recovered.length;
     }
 
 
@@ -1314,10 +1364,10 @@ public class TransactionDomainImpl
      * or rollback.
      *
      * @param recovered The recovered transaction record
-     * @throw DomainException The recovered transaction record is invalid
+     * @throw RecoveryException The recovered transaction record is invalid
      */
     private void recoverRecord( Journal.RecoveredTransaction recovered )
-        throws DomainException
+        throws RecoveryException
     {
         TransactionImpl newTx;
         TransactionImpl entry;
@@ -1328,7 +1378,7 @@ public class TransactionDomainImpl
 
         xid = recovered.getXid();
         if ( xid == null )
-            throw new DomainException( "Transaction recovery record missing Xid" );
+            throw new RecoveryException( "Transaction recovery record missing Xid" );
         // Create a transaction with the specified properties and
         // add it to the transaction list.
         newTx = new TransactionImpl( (BaseXid) XidUtils.importXid( xid ), recovered.getHeuristic(), this );
@@ -1341,7 +1391,7 @@ public class TransactionDomainImpl
             next = entry._nextEntry;
             while ( next != null ) {
                 if ( next._hashCode == hashCode && next._xid.equals( xid ) )
-                    throw new DomainException( "A transaction with the identifier " + xid.toString() + " already exists" );
+                    throw new RecoveryException( "A transaction with the identifier " + xid.toString() + " already exists" );
                 entry = next;
                 next = next._nextEntry;
             }
@@ -1372,8 +1422,8 @@ public class TransactionDomainImpl
             try {
                 xids = resources[ i ].recover( XAResource.TMNOFLAGS );
             } catch ( XAException except ) {
-                _category.error( "Resource manager " + resources[ i ] +
-                                 " failed to recover: " + Util.getXAException( except ), except );
+                recoveryError( new RecoveryException( "Resource manager " + resources[ i ] +
+                                                      " failed to recover: " + Util.getXAException( except ) ) );
             }
             if ( xids != null )
                 for ( int j = xids.length ; j-- > 0 ; ) {
@@ -1390,14 +1440,41 @@ public class TransactionDomainImpl
                             // result.
                             try {
                                 resources[ i ].commit( xid, true );
-                            } catch ( XAException except ) { }
-                        } else
+                            } catch ( XAException except ) {
+                                recoveryError( new RecoveryException( Util.getXAException( except ) ) );
+                            }
+                        } else {
                             // We have a transaction, we enlist the resource
                             // in that transaction so we can communicate the
                             // transaction completion.
                             tx.addRecovery( resources[ i ], xid );
+                        }
                     }
                 }
+        }
+    }
+
+
+    /**
+     * Records a recovery exception.
+     *
+     * @param except The recovery exception
+     */
+    private void recoveryError( RecoveryException except )
+    {
+        RecoveryException last;
+
+        if ( except != null ) {
+            last = _recoveryErrors;
+            if ( last == null )
+                _recoveryErrors = except;
+            else {
+                while ( last.getNextException() != null )
+                    last = last.getNextException();
+                last.setNextException( except );
+            }
+            _category.info( "Transaction recovery for domain " + _domainName +
+                            " reported: " + except.getMessage());
         }
     }
 

@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionDomain.java,v 1.14 2001/03/12 19:20:19 arkin Exp $
+ * $Id: TransactionDomain.java,v 1.15 2001/03/13 03:14:59 arkin Exp $
  */
 
 
@@ -69,7 +69,8 @@ import tyrex.resource.Resources;
  * <p>
  * A transaction domain defines the policy for all transactions created
  * from that domain, such as default timeout, maximum number of open
- * transactions, IIOP support, and journaling.
+ * transactions, IIOP support, and journaling. In addition, the domain
+ * maintains resource managers such as JDBC data sources and JCA connectors.
  * <p>
  * The application server obtains a transaction manager or user transaction
  * object, and managed resources from the transaction domain.
@@ -77,12 +78,30 @@ import tyrex.resource.Resources;
  * Transaction domains are created from a domain configuration file.
  * For more information about domain configuration files, refer to the
  * relevant documentation and <tt>domain.xsd</tt>.
+ * <p>
+ * A newly created transaction domain is in the state {@link #READY}.
+ * The {@link #recover recover} method must be called in order to make it
+ * active ({@link #ACTIVE}). The domain can be deactivated by calling
+ * {@link #terminate terminate}.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.14 $ $Date: 2001/03/12 19:20:19 $
+ * @version $Revision: 1.15 $ $Date: 2001/03/13 03:14:59 $
  */
 public abstract class TransactionDomain
 {
+
+
+    public static final int  READY      = 0;
+
+
+    public static final int  RECOVERING = 1;
+
+
+    public static final int  ACTIVE     = 2;
+
+
+    public static final int  TERMINATED = 3;
+
 
 
     /**
@@ -116,11 +135,11 @@ public abstract class TransactionDomain
      *
      * @param url URL for the transaction domain configuration file
      * @return A new transaction domain
-     * @throw DomainException An error occured while attempting
-     * to create the domain
+     * @throw DomainConfigurationException An error occured while
+     * attempting to create the domain
      */
     public static TransactionDomain createDomain( String url )
-        throws DomainException
+        throws DomainConfigurationException
     {
         if ( url == null )
             throw new IllegalArgumentException( "Argument url is null" );
@@ -138,11 +157,11 @@ public abstract class TransactionDomain
      *
      * @param steam Input stream for the transaction domain configuration file
      * @return A new transaction domain
-     * @throw DomainException An error occured while attempting
-     * to create the domain
+     * @throw DomainConfigurationException An error occured while
+     * attempting to create the domain
      */
     public static TransactionDomain createDomain( InputStream stream )
-        throws DomainException
+        throws DomainConfigurationException
     {
         if ( stream == null )
             throw new IllegalArgumentException( "Argument stream is null" );
@@ -161,11 +180,11 @@ public abstract class TransactionDomain
      * @param source SAX input source for the transaction domain
      * configuration file
      * @return A new transaction domain
-     * @throw DomainException An error occured while attempting
-     * to create the domain
+     * @throw DomainConfigurationException An error occured while
+     * attempting to create the domain
      */
     public synchronized static TransactionDomain createDomain( InputSource source )
-        throws DomainException
+        throws DomainConfigurationException
     {
         TransactionDomain domain;
         DomainConfig      config;
@@ -180,17 +199,40 @@ public abstract class TransactionDomain
             unmarshaller = new Unmarshaller( (Class) null );
             unmarshaller.setMapping( mapping );
             config = (DomainConfig) unmarshaller.unmarshal( source );
-            domain = config.getDomain();
         } catch ( Exception except ) {
-            throw new DomainException( except );
+            throw new DomainConfigurationException( except );
         }
-        if ( _domains.containsKey( domain.getDomainName() ) ) {
-            domain.shutdown();
-            throw new DomainException( "Transaction domain " + domain.getDomainName() + " already exists" );
-        }
+        if ( _domains.containsKey( config.getName() ) )
+            throw new DomainConfigurationException( "Transaction domain " + config.getName() + " already exists" );
+        domain = config.getDomain();
         _domains.put( domain.getDomainName(), domain );
         return domain;
     }
+
+
+    /**
+     * Returns the transaction domain state.
+     * <p>
+     * The initial state for a transaction domain is {@link #READY}. The domain
+     * transitions to {@link #ACTIVE} after recovery has completed by calling
+     * {@link #recover recover}.
+     * <p>
+     * The domain transitions to {@link #TERMINATED} after it has been terminated
+     * by calling {@link #terminate terminate}.
+     *
+     * @return The transaction domain state
+     */
+    public abstract int getState();
+
+
+    /**
+     * Called to initiate recovery. This method must be called before the
+     * transaction domain is active and can be used to create new transactions.
+     *
+     * @throws RecoveryException A chain of errors reported during recovery
+     */
+    public abstract void recover()
+        throws RecoveryException;
 
 
     /**
@@ -312,11 +354,11 @@ public abstract class TransactionDomain
 
 
     /**
-     * Shuts down the transaction domain. After this method returns, the
+     * Terminates the transaction domain. After this method returns, the
      * transaction manager is no longer able to begin new transactions in
      * this domain.
      */
-    public abstract void shutdown();
+    public abstract void terminate();
 
 
     /**

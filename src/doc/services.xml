@@ -1,0 +1,104 @@
+<?xml version="1.0"?>
+<!-- $Id: services.xml,v 1.1 2001/03/13 03:15:21 arkin Exp $ -->
+<document>
+  <properties>
+    <title>Services</title>
+    <author email="arkin@intalio.com">Assaf Arkin</author>
+  </properties>
+
+  <body>
+
+    <section title="Locks">
+    
+      <p>The lock service enables applications to assure concurrent access to
+        resources such that the resources are not compromised when accessed by
+        concurrently executing transactions.</p>
+
+      <p>The lock service API is located in the package <api package="tyrex.lock">tyrex.lock</api>.</p>
+
+      <p>The concurrency service ensures that transactional and non-transactional
+        access is serialized, as long as the caller can be uniquely identified through
+        transaction or thread.</p>
+      
+      <p>If a lock is acquired within a transaction, the lock is associated with that
+        transaction and will be released after the transaction commits or aborts.
+        If the transaction is a nested transaction the lock is released when the nested
+        transaction aborts, or when the top-level transaction commits.</p>
+      
+      <p>If a lock is acquired outside a transaction, the lock is associated with the
+        runtime context. The lock must be released explicitly, either by unlocking or
+        by using a lock coordinator.</p>
+      
+      <p>A lock set is associated with a resource in an application specific way.
+        The lock set can be used to acquire multiple locks on behalf of multiple owners.</p>
+      
+      <p>Lock sets support five lock modes:
+        <ul>
+          <li><tt>READ_INTENT</tt> Read intention lock, acquired to signal an intention
+            to acquire a read lock.</li>
+          <li><tt>READ</tt> Read locks conflict with any write locks, but multiple read
+            locks by different owners are allowed.</li>
+          <li><tt>UPGRADE</tt> Upgrade locks are read locks that conflict with each other.
+            Read and upgrade locks are allowed at the same time, but multiple upgrade locks
+            are not.</li>
+          <li><tt>WRITE_INTENT</tt> Write intention lock, acquired to signal an intention
+            to acquire a write lock.</li>
+          <li><tt>WRITE</tt> Write locks conflicts with read and write locks. They are
+            exclusive locks.</li>
+        </ul>
+      </p>
+
+      <p>Compatible lock modes can be acquired by multiple owners, while incompatible
+        lock modes provide exclusive locking for a single owner. The same owner is allowed
+        to acquire incompatible lock modes, if they do not conflict with locks held by other
+        owners (e.g. both read and write locks).</p>
+      
+      <p>The following example creates a new lock set, acquires a read lock and upgrades
+        it to a write lock:
+        <code>
+LockSet        lockSet;
+LodkSetFactory factory;
+
+lockSet = factory.create();
+<comment>// Acquire a read lock</comment>
+lockSet.lock( LockSet.READ );
+<comment>// Do something</comment>
+. . .
+<comment>// Need to update resource, upgrade to write lock</comment>
+if ( ! lockSet.trylock( LockSet.UPGRADE ) )
+    throw new Exception( "Possible deadlock detected" );
+lockSet.changeMode( LockSet.READ, LockSet.WRITE );
+lockSet.unlock( LockSet.UPGRADE );
+. . .
+<comment>// Lock will be released at end of transaction</comment>
+<comment>// If not transactional, release it explicitly</comment>
+lockSet.getCoordinator().dropLocks();
+        </code></p>
+
+    </section>
+
+
+    <section title="Clock and UUID">
+    
+      <p><api>tyrex.services.Clock</api> provides an efficient mechanism for
+        obtaining the current time and date. Uses a background thread to automatically
+        increment an internal clock and periodically synchronize with the system clock.
+        The method <tt>tyrex.services.Clock.clock()</tt> is more efficient than
+        <tt>java.lang.System.currentTimeMillis()</tt> and also allows the clock to be
+        artificially advanced for testing purposes.</p>
+
+      <p><api>tyrex.services.UUID</api> is a Universally Unique Identifier (UUID)
+        generator. A UUID is an identifier that is unique across both space and time, with
+        respect to the space of all UUIDs. A UUID can be used for objects with an extremely
+        short lifetime, and to reliably identifying very persistent objects across a network.
+        UUIDs are 128 bit values and encoded into 36 characters.</p>
+
+      <p>This generator produces time-based UUIDs based on the varient specified in an IETF
+        draft from February 4, 1998. Identifiers can be created in string form with and
+        without a prefix, and as byte arrays. Convenience methods are also provided for
+        converting an identifier to and from an array of bytes.</p>
+
+    </section>    
+    
+  </body>
+</document>

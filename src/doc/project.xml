@@ -57,6 +57,14 @@
         <display>Configuration</display>
       </navLink>
       <navLink>
+        <url>using.xml</url>
+        <display>Using Tyrex</display>
+      </navLink>
+      <navLink>
+        <url>services.xml</url>
+        <display>Services</display>
+      </navLink>
+      <navLink>
         <url>tpmonitor.xml</url>
         <display>TP Monitoring</display>
       </navLink>

@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: LockSet.java,v 1.1 2001/03/12 19:39:15 arkin Exp $
+ * $Id: LockSet.java,v 1.2 2001/03/13 03:14:57 arkin Exp $
  */
 
 
@@ -103,11 +103,12 @@ import tyrex.services.UUID;
  * and all its child transactions are released. Locks held by transactions are
  * released automatically, or can be released using {@link LockCoordinator}.
  * <p>
- * Each lock set has a unique identifier that can be used for correlation. The lock
- * set identifier can be obtained by {@link #toString}.
+ * Each lock set has an identifier that can be used for correlation. The identifier
+ * can be obtained by calling {@link #toString}. If no identifier is provided when
+ * creating a new lock set, a unique identifier is assigned to the lock set.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2001/03/12 19:39:15 $
+ * @version $Revision: 1.2 $ $Date: 2001/03/13 03:14:57 $
  */
 public final class LockSet
     implements Synchronization, Serializable
@@ -217,14 +218,17 @@ public final class LockSet
      * Construct a new lock set. The related lock set is
      * specified, if known.
      */
-    protected LockSet( LockSet related )
+    protected LockSet( String identifier, LockSet related )
     {
         if ( related != null ) {
             synchronized ( related ) {
                 related._subordinate = new Subordinate( this, related._subordinate );
             }
         }
-        _identifier = UUID.create( "lock:" );
+        if ( identifier != null )
+            _identifier = identifier;
+        else
+            _identifier = UUID.create( "lock:" );
     }
 
 

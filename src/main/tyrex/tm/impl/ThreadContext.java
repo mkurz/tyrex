@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: ThreadContext.java,v 1.2 2001/03/12 19:20:20 arkin Exp $
+ * $Id: ThreadContext.java,v 1.3 2001/03/13 03:14:59 arkin Exp $
  */
 
 
@@ -60,25 +60,10 @@ import tyrex.util.FastThreadLocal;
 
 
 /**
- * A thread context is used to associate the thread with a transaction
- * and various resources across method invocations.
- * <p>
- * The thread context is used across method invocations to remember
- * the resources opened within that particular context. During its
- * life time, the context may be associated with multiple threads,
- * but may only be associated with a single thread at any one time.
- * <p>
- * The transaction manager automatically creates a thread context
- * for the current thread to remember which transaction is used
- * by that thread.
- * <p>
- * An application server may create thread contexts and associate
- * them with the current thread directly. The thread context follows
- * a stack pattern that allows contexts to be pushed/popped across
- * method invocations occuring in the same thread.
+ * Implementation of {@link RuntimeContext}.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $ $Date: 2001/03/12 19:20:20 $
+ * @version $Revision: 1.3 $ $Date: 2001/03/13 03:14:59 $
  */
 public class ThreadContext
     extends RuntimeContext

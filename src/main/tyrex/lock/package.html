@@ -1,68 +1,82 @@
-<!-- $Id: package.html,v 1.1 2001/03/12 19:39:15 arkin Exp $ -->
+<!-- $Id: package.html,v 1.2 2001/03/13 03:14:57 arkin Exp $ -->
 <html>
   <body>
     <h1><b>Lock Service</b></h1>
     
     <dl>
-      <dt><b>Version: </b></dt><dd>$Revision: 1.1 $ $Date: 2001/03/12 19:39:15 $</dd>
+      <dt><b>Version: </b></dt><dd>$Revision: 1.2 $ $Date: 2001/03/13 03:14:57 $</dd>
       <dt><b>Author: </b></dt><dd><a href="mailto:arkin@intalio.com">Assaf Arkin</a></dd>
     </dl>
+
+    <h2>Locks</h2>
     
     <p>The lock service enables applications to assure concurrent access to
        resources such that the resources are not compromised when accessed by
        concurrently executing transactions.</p>
 
-    <p>The concurrency service consists of multiple interfaces that support both
-       transactional and non-transactional modes of operation. The user of the concurrency
-       service can choose to acquire locks in one of two ways:</p>
-       <ul>
-         <li>On behalf of a transaction (transactional mode) - the transaction service is
-             responsible for the release of locks as the transaction commits or aborts.</li>
-         <li>By acquiring locks on behalf of the current thread. The responsibility for
-             dropping locks becomes the responsibility of the user.</li>
-       </ul>
-       
-
     <p>The concurrency service ensures that transactional and non-transactional
        access is serialized, as long as the caller can be uniquely identified through
        transaction or thread.</p>
 
-    <p>The concurrency service supports seven lock modes (read intent, read,
-       upgrade, write intent and write), multiple non-conflicting modes, and multiple locking
-       by the same transaction (and its subtransaction) or conflicting modes. Deadlock
-       detection is tracked through upgrade locks, and granularity is enabled through
-       intent locks.</p>
+    <p>If a lock is acquired within a transaction, the lock is associated with that
+      transaction and will be released after the transaction commits or aborts.
+      If the transaction is a nested transaction the lock is released when the nested
+      transaction aborts, or when the top-level transaction commits.</p>
 
-    <p>The concurrency service is based on the OMG Concurrency Control Service
-       specification. This package provides pure Java APIs. The package <tt>engine</tt>
-       provides an implementation and the package <tt>corba</tt> provides the CORBA
-       interfaces.</p>
+    <p>If a lock is acquired outside a transaction, the lock is associated with the
+      runtime context. The lock must be released explicitly, either by unlocking or
+      by using a lock coordinator.</p>
 
-    <p>The Tyrex <a href="LockSetFactory.html">LockSetFactory</a> is listed in the JNDI
-       namespace under <tt>java:services/LockSetFactory</tt>.</p>
 
-    <p>The following sample creates a lock set, acquires a read lock and upgrade to a
-       write lock:</p>
+    <h2>LockSet</h2>
+
+    <p>A lock set is associated with a resource in an application specific way.
+      The lock set can be used to acquire multiple locks on behalf of multiple owners.</p>
+
+    <p>Lock sets support five lock modes:
+      <ul>
+        <li>{@link tyrex.lock.LockSet#READ_INTENT} Read intention lock, acquired to
+          signal an intention to acquire a read lock.</li>
+        <li>{@link tyrex.lock.LockSet#READ} Read locks conflict with any write locks,
+          but multiple read locks by different owners are allowed.</li>
+        <li>{@link tyrex.lock.LockSet#UPGRADE} Upgrade locks are read locks that
+          conflict with each other. Read and upgrade locks are allowed at the same time,
+          but multiple upgrade locks are not.</li>
+        <li>{@link tyrex.lock.LockSet#WRITE_INTENT} Write intention lock, acquired
+          to signal an intention to acquire a write lock.</li>
+        <li>{@link tyrex.lock.LockSet#WRITE} Write locks conflicts with read and
+          write locks. They are exclusive locks.</li>
+      </ul>
+    </p>
+
+    <p>Compatible lock modes can be acquired by multiple owners, while incompatible
+      lock modes provide exclusive locking for a single owner. The same owner is allowed
+      to acquire incompatible lock modes, if they do not conflict with locks held by other
+      owners (e.g. both read and write locks).</p>
+
+    <p>The following example creates a new lock set, acquires a read lock and upgrades
+      it to a write lock:</p>
 
 <pre>
-  LockSet        lockSet;
-  LodkSetFactory factory;
+LockSet        lockSet;
+LodkSetFactory factory;
 
-  lockSet = factory.create();
-  <font color="ref">// Acquire a read lock</font>
-  lockSet.lock( LockSet.READ );
-  <font color="ref">// Do something</font>
-  . . .
-  <font color="ref">// Need to update resource, upgrade to write lock</font>
-  if ( ! lockSet.trylock( LockSet.UPGRADE ) )
+lockSet = factory.create();
+<font color="ref">// Acquire a read lock</font>
+lockSet.lock( LockSet.READ );
+<font color="ref">// Do something</font>
+. . .
+<font color="ref">// Need to update resource, upgrade to write lock</font>
+if ( ! lockSet.trylock( LockSet.UPGRADE ) )
     throw new Exception( "Possible deadlock detected" );
-  lockSet.changeMode( LockSet.READ, LockSet.WRITE );
-  lockSet.unlock( LockSet.UPGRADE );
-  . . .
-  <font color="ref">// Lock will be released at end of transaction</font>
-  <font color="ref">// If not transactional, release it explicitly</font>
-  lockSet.getCoordinator().dropLocks();
+lockSet.changeMode( LockSet.READ, LockSet.WRITE );
+lockSet.unlock( LockSet.UPGRADE );
+. . .
+<font color="ref">// Lock will be released at end of transaction</font>
+<font color="ref">// If not transactional, release it explicitly</font>
+lockSet.getCoordinator().dropLocks();
 </pre>
+
 
   </body>
 </html>

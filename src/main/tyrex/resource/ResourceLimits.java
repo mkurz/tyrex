@@ -48,7 +48,7 @@ package tyrex.resource;
 
 /**
  * Represents limits placed on a resource. The limits are read from
- * the resource configuration file and apply to the connection pool.
+ * the configuration file and apply to the connection pool.
  * <p>
  * The following XML elements are used to specify the resource limits:
  * <ul>
@@ -66,7 +66,7 @@ package tyrex.resource;
  * </ul>
  * 
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.10 $
+ * @version $Revision: 1.11 $
  */
 public final class ResourceLimits
 {

@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: DomainException.java,v 1.2 2001/03/12 19:20:19 arkin Exp $
+ * $Id: DomainConfigurationException.java,v 1.1 2001/03/13 03:15:21 arkin Exp $
  */
 
 
@@ -54,9 +54,9 @@ import tyrex.util.NestedException;
  * A general exception associated with transaction domains.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.1 $
  */
-public class DomainException
+public class DomainConfigurationException
     extends NestedException
 {
 
@@ -66,7 +66,7 @@ public class DomainException
      *
      * @param message The message text
      */
-    public DomainException( String message )
+    public DomainConfigurationException( String message )
     {
         super( message );
     }
@@ -77,7 +77,7 @@ public class DomainException
      *
      * @param except The underlying exception
      */
-    public DomainException( Exception except )
+    public DomainConfigurationException( Exception except )
     {
         super( except );
     }
@@ -89,7 +89,7 @@ public class DomainException
      * @param message The message text
      * @param except The underlying exception
      */
-    public DomainException( String message, Exception except )
+    public DomainConfigurationException( String message, Exception except )
     {
         super( message, except );
     }

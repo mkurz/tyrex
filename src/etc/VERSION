@@ -2,7 +2,7 @@ project=tyrex
 version=0.9.8
 title=Tyrex
 
-api.packages=tyrex.tm,tyrex.resource,tyrex.services,tyrex.naming
+api.packages=tyrex.tm,tyrex.resource,tyrex.services,tyrex.lock
 all.packages=tyrex.*
 
 vendor.name=Intalio Inc
