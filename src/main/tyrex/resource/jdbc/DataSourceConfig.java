@@ -62,13 +62,14 @@ import tyrex.resource.ResourceConfig;
 import tyrex.resource.Resource;
 import tyrex.resource.ResourceException;
 import tyrex.resource.PoolMetrics;
+import tyrex.resource.PoolLimits;
 import tyrex.util.Logger;
 
 
 /**
  * 
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.7 $
  */
 public class DataSourceConfig
     extends ResourceConfig
@@ -242,16 +243,20 @@ public class DataSourceConfig
     {
 
 
-        private final PoolMetrics  _metrics;
+        private final PoolMetrics   _metrics;
 
 
-        private final DataSource   _dataSource;
+        private final DataSource    _dataSource;
+
+
+        private final PoolLimits    _limits;
 
 
         DataSourceResource( DataSource dataSource )
         {
             _metrics = new PoolMetrics();
             _dataSource = dataSource;
+            _limits = new PoolLimits();
         }
 
 
@@ -276,6 +281,12 @@ public class DataSourceConfig
         public XAResource getXAResource()
         {
             return null;
+        }
+
+
+        public PoolLimits getPoolLimits()
+        {
+            return _limits;
         }
 
 

@@ -70,7 +70,7 @@ import javax.transaction.xa.Xid;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.XAException;
 import tyrex.tm.TyrexTransactionManager;
-import tyrex.resource.ResourceLimits;
+import tyrex.resource.PoolLimits;
 import tyrex.resource.PoolMetrics;
 import tyrex.resource.Resource;
 import tyrex.resource.ResourceException;
@@ -83,7 +83,7 @@ import tyrex.util.LoggerPrintWriter;
 /**
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.8 $
+ * @version $Revision: 1.9 $
  */
 final class ConnectionPool
     extends PoolMetrics
@@ -112,9 +112,9 @@ final class ConnectionPool
 
 
     /**
-     * The resource limits.
+     * The pool limits.
      */
-    private final ResourceLimits           _limits;
+    private final PoolLimits               _limits;
 
 
 
@@ -172,7 +172,7 @@ final class ConnectionPool
     private boolean                        _destroyed;
 
 
-    ConnectionPool( String name, ResourceLimits limits,
+    ConnectionPool( String name, PoolLimits limits,
                     ClassLoader loader, XADataSource xaDataSource,
                     ConnectionPoolDataSource poolDataSource,
                     TyrexTransactionManager txManager, Category category )
@@ -204,7 +204,7 @@ final class ConnectionPool
             // Clone object to prevent changes by caller from affecting the
             // behavior of the pool.
             if ( limits == null ) {
-                _limits = new ResourceLimits();
+                _limits = new PoolLimits();
                 _logWriter = null;
             }
             else {
@@ -269,7 +269,7 @@ final class ConnectionPool
     }
 
 
-    public ResourceLimits getResourceLimits()
+    public PoolLimits getPoolLimits()
     {
         return _limits;
     }

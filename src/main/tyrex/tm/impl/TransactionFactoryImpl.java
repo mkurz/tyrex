@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionFactoryImpl.java,v 1.6 2001/03/17 03:34:54 arkin Exp $
+ * $Id: TransactionFactoryImpl.java,v 1.7 2001/03/21 20:02:48 arkin Exp $
  */
 
 
@@ -72,7 +72,7 @@ import org.omg.CosTSPortability.Receiver;
  * of remote transactions.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.6 $ $Date: 2001/03/17 03:34:54 $
+ * @version $Revision: 1.7 $ $Date: 2001/03/21 20:02:48 $
  * @see TransactionImpl
  *
  * Changes 
@@ -102,15 +102,16 @@ final class TransactionFactoryImpl
     public Control create( int timeout )
     {
         TransactionImpl tx;
+        Control         control;
         
         // Create a new transaction and return the control
         // interface of that transaction.
         try {
             tx = _txDomain.createTransaction( null, timeout );
-            Control ctrl = tx.getControl();
+            control = tx.getControl();
             if ( _txDomain._orb != null )
-            	_txDomain._orb.connect( ctrl );
-            return ctrl;
+            	_txDomain._orb.connect( control );
+            return control;
         } catch ( Exception except ) {
             throw new INVALID_TRANSACTION();
         }
@@ -120,13 +121,14 @@ final class TransactionFactoryImpl
     public Control recreate( PropagationContext pgContext )
     {
         TransactionImpl tx;
+        Control         control;
         
         try {
             tx = _txDomain.recreateTransaction( pgContext );
-            Control ctrl = tx.getControl();
+            control = tx.getControl();
             if ( _txDomain._orb != null )
-            	_txDomain._orb.connect( ctrl );
-            return ctrl;
+            	_txDomain._orb.connect( control );
+            return control;
         } catch ( Exception except ) {
             throw new INVALID_TRANSACTION();
         }
@@ -143,7 +145,7 @@ final class TransactionFactoryImpl
         txImpl = (TransactionImpl) _txDomain._txManager.getTransaction();
         if ( txImpl == null )
             throw new TRANSACTION_REQUIRED();
-        pgxh.value = txImpl.getControl().getPropagationContext();
+        pgxh.value = ( (ControlImpl) txImpl.getControl() ).getPropagationContext();
     }
 
 
@@ -226,7 +228,7 @@ final class TransactionFactoryImpl
         // Note that an exception can be an error on both side, but
         // we do not deal with asynchronous transactions here.
         txImpl = (TransactionImpl) _txDomain._txManager.getTransaction();
-        if ( txImpl == null || txImpl.getControl().getCoordinator() != pgContext.current.coord )
+        if ( txImpl == null || ( (ControlImpl) txImpl.getControl() ).getCoordinator() != pgContext.current.coord )
             throw new WrongTransaction();
     }
 

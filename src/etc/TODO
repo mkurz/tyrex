@@ -7,10 +7,6 @@ Before 0.9.8 release
 - Need to validate that both TransactionManager and TransactionFactory
   provide the proper timeout in seconds.
 
-- Clock API will change to be fully singleton pattern and match new names used in Tyrex configuration file
-
-- Need a way to remove changeActive() from DomainConfig
-
 
 Under consideration for version 0.9.9
 -------------------------------------
@@ -21,18 +17,4 @@ Under consideration for version 0.9.9
 - ThreadPool to use Runnable but add stop() method
 
 - Have all asynch transactions complete in background thread of TransactionDomain
-
-
-API Changes for 0.9.8
----------------------
-
-- TransactionStatus will be consolidated with TyrexTransaction
-
-- TyrexTransactionManager gets additional getTransaction method and loses TransactionStatus returning methods
-
-- LockSet gets tryLock() method
-
-- ResourceLimits can be returned from Resource object, and changed
-
-- Clock sleepTicks changes to unsynchTicks
 

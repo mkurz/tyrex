@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionManagerImpl.java,v 1.9 2001/03/17 03:34:54 arkin Exp $
+ * $Id: TransactionManagerImpl.java,v 1.10 2001/03/21 20:02:48 arkin Exp $
  */
 
 
@@ -62,7 +62,6 @@ import javax.transaction.xa.Xid;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.XAException;
 import tyrex.tm.TyrexTransactionManager;
-import tyrex.tm.TransactionStatus;
 import tyrex.util.Messages;
 
 
@@ -77,7 +76,7 @@ import tyrex.util.Messages;
  * transaction server.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.9 $ $Date: 2001/03/17 03:34:54 $
+ * @version $Revision: 1.10 $ $Date: 2001/03/21 20:02:48 $
  * @see Tyrex#recycleThread
  * @see TransactionDomain
  * @see TransactionImpl
@@ -294,22 +293,9 @@ final class TransactionManagerImpl
     }
 
 
-    public TransactionStatus getTransactionStatus( Thread thread )
+    public Transaction getTransaction( String xid )
     {
-        TransactionImpl tx;
-
-        if ( thread == null )
-            throw new IllegalArgumentException( "Argument tx is null" );
-        tx = (TransactionImpl) getTransaction( thread );
-        if ( tx == null )
-            return null;
-        return new TransactionStatusImpl( tx );
-    }
-
-
-    public TransactionStatus[] listTransactions()
-    {
-        return _txDomain.listTransactions();
+        return _txDomain.findTransaction( xid );
     }
 
 

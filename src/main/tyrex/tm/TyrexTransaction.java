@@ -46,11 +46,13 @@
 package tyrex.tm;
      
 
+import org.omg.CosTransactions.Control;
 import javax.transaction.HeuristicMixedException;
 import javax.transaction.HeuristicRollbackException;
 import javax.transaction.RollbackException;
 import javax.transaction.SystemException;
 import javax.transaction.Transaction;
+import javax.transaction.xa.Xid;
 
 
 /**
@@ -149,6 +151,39 @@ public interface TyrexTransaction
      * @return The top level transaction
      */ 
     public Transaction getTopLevel();
+
+
+    /**
+     * Returns the control interface of the underlying transaction.
+     *
+     * @return The control interface
+     */
+    public Control getControl();
+
+
+    /**
+     * Returns the timeout for the tranasction. This is the system clock
+     * at which the transaction will time out.
+     *
+     * @return The timeout for the tranasction
+     */
+    public long getTimeout();
+
+
+    /**
+     * Returns the start time of the tranasction.
+     *
+     * @return The start time of the tranasction
+     */
+    public long getStarted();
+
+
+    /**
+     * Returns the Xid of the transaction.
+     *
+     * @return The Xid of the transaction
+     */
+    public Xid getXid();
 
 
 }

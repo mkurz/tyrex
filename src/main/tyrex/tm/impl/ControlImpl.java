@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: ControlImpl.java,v 1.3 2001/03/12 19:20:20 arkin Exp $
+ * $Id: ControlImpl.java,v 1.4 2001/03/21 20:02:48 arkin Exp $
  */
 
 
@@ -75,7 +75,7 @@ import javax.transaction.xa.Xid;
  * and indirectly by {@link TransactionFactory}.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.3 $ $Date: 2001/03/12 19:20:20 $
+ * @version $Revision: 1.4 $ $Date: 2001/03/21 20:02:48 $
  * @see TransactionImpl
  *
  * Changes 
@@ -166,7 +166,7 @@ final class ControlImpl
         // on the parents of the transaction.
         if ( tx.getParent() != null ) {
             tx = (TransactionImpl) tx.getParent();
-            parent = tx.getControl();
+            parent = (ControlImpl) tx.getControl();
             if ( parent._parents == null ) {
                 // Parent is a top-level one, this control has
                 // one parent.

@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Naming.java,v 1.6 2001/03/19 17:39:03 arkin Exp $
+ * $Id: Naming.java,v 1.7 2001/03/21 20:02:50 arkin Exp $
  */
 
 
@@ -65,6 +65,7 @@ import tyrex.tm.RuntimeContext;
  */
 public class Naming extends TestSuite
 {
+
     public Naming( String name )
     {
         super( name );
@@ -126,9 +127,9 @@ public class Naming extends TestSuite
                 // Construct the same context from two perspsective
                 // and compare bound values
                 stream.writeVerbose( "Constructing same context in two different ways and comparing bound values" );
-                initCtx = Naming.getInitialContext( name );
+                initCtx = Naming.getInitialContext( "root/" + name );
                 ctx1 = initCtx;
-                initCtx = Naming.getInitialContext( "" );
+                initCtx = Naming.getInitialContext( "root" );
                 ctx2 = (Context) initCtx.lookup( name );
                 ctx1.bind( name, value );
                 if ( ctx2.lookup( name ) != value ) {
@@ -168,6 +169,7 @@ public class Naming extends TestSuite
 
             } catch ( NamingException except ) {
                 System.out.println( except );
+                except.printStackTrace();
             }
         }
 
@@ -293,7 +295,6 @@ public class Naming extends TestSuite
                     enc = (Context) ois.readObject();
                 } catch ( Exception except ) {
                     fail( "Error: Failed to (de)serialize: " + except );
-                    System.out.println( except );
                 }
                 RuntimeContext.unsetRuntimeContext();
                 try {

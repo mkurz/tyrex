@@ -82,38 +82,7 @@ public interface TyrexTransactionManager
      * @param xid The transaction identifier
      * @return The transaction, or null if no such transaction exists
      */
-    /*
     public abstract Transaction getTransaction( String xid );
-    */
-
-
-    /**
-     * Returns the status of the transaction associated with the given thread.
-     * Returns null if the thread is not associated with any transaction
-     * created by this transaction manager.
-     * <p>
-     * This method is equivalent to calling {@link
-     * TransactionManager#getTransaction getTransaction} from within the thread.
-     *
-     * @param thread The thread
-     * @return Status of the transaction currently associated with that thread,
-     * or null
-     * @deprecated This method will not be supported in version 0.9.8
-     */
-    public abstract TransactionStatus getTransactionStatus( Thread thread );
-
-
-    /**
-     * Returns the status of all active transactions created by this
-     * transaction manager.
-     * <p>
-     * Each element of the array is a {@link TransactionStatus} providing
-     * information about the transaction, its resources, state and timeout.
-     *
-     * @return Status of all transactions created by this transaction manager
-     * @deprecated This method will not be supported in version 0.9.8
-     */
-    public abstract TransactionStatus[] listTransactions();
 
 
     /**

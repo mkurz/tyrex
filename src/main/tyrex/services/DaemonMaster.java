@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: DaemonMaster.java,v 1.3 2001/03/12 19:20:19 arkin Exp $
+ * $Id: DaemonMaster.java,v 1.4 2001/03/21 20:02:47 arkin Exp $
  */
 
 
@@ -58,9 +58,7 @@ import tyrex.util.Logger;
  * daemon thread.
  * <p>
  * A daemon thread is a thread that is kept live for the duration of the server's
- * life and is only terminated when the server is stopped. Daemon threads perform
- * various background activities, such as asynchronous dispatching, notification
- * and cleaning services.
+ * life and is only terminated when the server is stopped.
  * <p>
  * A sudden termination of a daemon thread is an unwelcome occurance in the
  * life time of the system. The daemon master protects the system from the sudden
@@ -72,11 +70,10 @@ import tyrex.util.Logger;
  * daemon master will be informed and attempt to restart the daemon with a new
  * thread.
  * <p>
- * The daemon master is a singleton that is accessible to all components in the
- * server. The daemon master is thread-safe and consumes a single thread.
+ * The daemon master is thread-safe and consumes a single thread.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  */
 public class DaemonMaster
     extends ThreadGroup

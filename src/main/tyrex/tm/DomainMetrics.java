@@ -49,39 +49,15 @@ package tyrex.tm;
 /**
  * Holds metrics associated with a transaction domain.
  * <p>
- * This object records usage metrics for transaction, recording such information
- * as the accumulated number of transactions committed and rolledback, the
- * average duration of a transaction, etc.
+ * This object records usage metrics for transaction, recording such
+ * information as the accumulated number of transactions committed
+ * and rolledback, the average duration of a transaction, etc.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  */
-public final class DomainMetrics
+public interface DomainMetrics
 {
-
-
-    /**
-     * The accumulated transaction time.
-     */
-    private long   _accumTime;
-
-    
-    /**
-     * The accumulated count of committed transactions.
-     */
-    private int    _accumCommitted;
-
-
-    /**
-     * The accumulated count of rollback transactions.
-     */
-    private int    _accumRolledback;
-
-
-    /**
-     * The number of active transactions.
-     */
-    private int    _active;
 
 
     /**
@@ -89,10 +65,7 @@ public final class DomainMetrics
      *
      * @return The total number of committed transactions
      */
-    public int getTotalCommitted()
-    {
-        return _accumCommitted;
-    }
+    public int getTotalCommitted();
 
 
     /**
@@ -100,10 +73,7 @@ public final class DomainMetrics
      *
      * @return The total number of rolled back transactions
      */
-    public int getTotalRolledback()
-    {
-        return _accumRolledback;
-    }
+    public int getTotalRolledback();
 
 
     /**
@@ -114,34 +84,7 @@ public final class DomainMetrics
      *
      * @return The average duration for active transactions
      */
-    public synchronized float getAvgDuration()
-    {
-        return ( (float) ( _accumTime ) / (float) _accumCommitted + _accumRolledback ) / 10000;
-    }
-
-
-    /**
-     * Record the duration for a committed transaction.
-     *
-     * @param ms The duration is milliseconds
-     */
-    public synchronized void recordCommitted( int ms )
-    {
-        ++_accumCommitted;
-        _accumTime += ms;
-    }
-
-
-    /**
-     * Record the duration for a rolled back transaction.
-     *
-     * @param ms The duration is milliseconds
-     */
-    public synchronized void recordRolledback( int ms )
-    {
-        ++_accumRolledback;
-        _accumTime += ms;
-    }
+    public float getAvgDuration();
 
 
     /**
@@ -149,43 +92,13 @@ public final class DomainMetrics
      *
      * @return The current number of active transactions
      */
-    public int getActive()
-    {
-        return _active;
-    }
-
-
-    /**
-     * Called to change the number of active transactions. This method
-     * reflects an increase or decrease in the number of active transactions.
-     * If the change results in a negative total count, this method corrects
-     * the count and throws an <tt>IllegalStateException</tt>.
-     *
-     * @param change The change in active transactions (positive or
-     * negative integer)
-     * @throws IllegalStateException Change resulted in an negative count
-     */
-    public synchronized void changeActive( int change )
-    {
-        change += _active;
-        if ( change < 0 ) {
-            _active = 0;
-            throw new IllegalStateException( "Count of active transactions is negative" );
-        }
-        _active = change;
-    }
+    public int getActive();
 
 
     /**
      * Called to reset this metrics object.
      */
-    public synchronized void reset()
-    {
-        _accumTime = 0;
-        _accumCommitted = 0;
-        _accumRolledback = 0;
-        _active = 0;
-    }
+    public void reset();
 
 
 }

@@ -37,9 +37,6 @@
            set-method="addConfiguration">
       <bind-xml name="connector" node="element" />
     </field>
-    <field name="anyResource" type="java.util.Iterator"
-           get-method="listConfigurations" />
-      <bind-xml node="element" />
   </class>
 
 
@@ -58,14 +55,11 @@
            get-method="getClassName" set-method="setClassName">
       <bind-xml name="class" node="element" />
     </field>
-    <field name="twoPhase" type="boolean">
-      <bind-xml name="twoPhase" node="element" />
-    </field>
     <field name="config" create-method="createFactory"
            set-method="setFactory" type="java.io.Serializable">
       <bind-xml name="config" node="element" />
     </field>
-    <field name="limits" type="tyrex.resource.ResourceLimits">
+    <field name="limits" type="tyrex.resource.PoolLimits">
       <bind-xml name="limits" node="element" />
     </field>
   </class>
@@ -82,20 +76,17 @@
     <field name="paths" type="string">
       <bind-xml name="paths" node="element" />
     </field>
-    <field name="twoPhase" type="boolean">
-      <bind-xml name="twoPhase" node="element" />
-    </field>
     <field name="config" create-method="createFactory"
            set-method="setFactory" type="java.io.Serializable">
       <bind-xml name="config" node="element" />
     </field>
-    <field name="limits" type="tyrex.resource.ResourceLimits">
+    <field name="limits" type="tyrex.resource.PoolLimits">
       <bind-xml name="limits" node="element" />
     </field>
   </class>
 
 
-  <class name="tyrex.resource.ResourceLimits">
+  <class name="tyrex.resource.PoolLimits">
     <map-to xml="limits" />
     <field name="maximum" type="integer">
       <bind-xml name="maximum" node="element" />

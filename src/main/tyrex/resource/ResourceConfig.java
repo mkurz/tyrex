@@ -55,7 +55,7 @@ import tyrex.tm.TransactionDomain;
  * for configuring and creating a resource.
  * 
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  */
 public abstract class ResourceConfig
 {
@@ -80,9 +80,9 @@ public abstract class ResourceConfig
 
 
     /**
-     * The connection pool resource limits.
+     * The connection pool limits.
      */
-    protected ResourceLimits       _limits;
+    protected PoolLimits           _limits;
 
 
     /**
@@ -173,7 +173,7 @@ public abstract class ResourceConfig
      *
      * @param limits The connection pool limits
      */
-    public void setLimits( ResourceLimits limits )
+    public void setLimits( PoolLimits limits )
     {
         _limits = limits;
     }
@@ -184,7 +184,7 @@ public abstract class ResourceConfig
      *
      * @return The connection pool limits
      */
-    public ResourceLimits getLimits()
+    public PoolLimits getLimits()
     {
         return _limits;
     }

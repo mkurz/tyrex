@@ -71,7 +71,7 @@ import tyrex.tm.TyrexTransactionManager;
 import tyrex.tm.impl.ThreadContext;
 import tyrex.resource.Resource;
 import tyrex.resource.PoolMetrics;
-import tyrex.resource.ResourceLimits;
+import tyrex.resource.PoolLimits;
 import tyrex.services.Clock;
 import tyrex.services.DaemonMaster;
 import tyrex.util.Primes;
@@ -81,7 +81,7 @@ import tyrex.util.LoggerPrintWriter;
 /**
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  */
 final class ConnectionPool
     extends PoolMetrics
@@ -110,9 +110,9 @@ final class ConnectionPool
 
  
     /**
-     * The resource limits.
+     * The pool limits.
      */
-    private final ResourceLimits          _limits;
+    private final PoolLimits              _limits;
 
 
     /**
@@ -163,7 +163,7 @@ final class ConnectionPool
     private boolean                       _destroyed;
 
 
-    ConnectionPool( String name, ResourceLimits limits, ConnectorLoader loader,
+    ConnectionPool( String name, PoolLimits limits, ConnectorLoader loader,
                     TyrexTransactionManager txManager, Category category )
         throws ResourceException
     {
@@ -192,7 +192,7 @@ final class ConnectionPool
         // Clone object to prevent changes by caller from affecting the
         // behavior of the pool.
         if ( limits == null ) {
-            _limits = new ResourceLimits();
+            _limits = new PoolLimits();
             _logWriter = null;
         } else {
             _limits = limits;
@@ -268,7 +268,7 @@ final class ConnectionPool
     }
 
 
-    public ResourceLimits getResourceLimits()
+    public PoolLimits getPoolLimits()
     {
         return _limits;
     }

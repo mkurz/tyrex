@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: LockSet.java,v 1.3 2001/03/19 17:39:00 arkin Exp $
+ * $Id: LockSet.java,v 1.4 2001/03/21 20:02:42 arkin Exp $
  */
 
 
@@ -108,11 +108,17 @@ import tyrex.services.UUID;
  * creating a new lock set, a unique identifier is assigned to the lock set.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.3 $ $Date: 2001/03/19 17:39:00 $
+ * @version $Revision: 1.4 $ $Date: 2001/03/21 20:02:42 $
  */
 public final class LockSet
     implements Synchronization, Serializable
 {
+
+
+    // TODO:
+    // - Prevent lock from being acquired if transaction aborted.
+    // - Should tryLock just check if the lock can be acquired, but
+    //   not acquire it?
 
 
     /**
@@ -351,12 +357,10 @@ public final class LockSet
      * @param mode The requested lock mode
      * @return True if lock acquired, false if failed to acquire lock
      */
-    /*
     public final boolean tryLock( int mode )
     {
-        internalTryLock( mode, getOwner() );
+        return internalTryLock( mode, getOwner() );
     }
-    */
 
 
     /**
@@ -373,12 +377,10 @@ public final class LockSet
      * @param mode The requested lock mode
      * @return True if lock acquired, false if failed to acquire lock
      */
-    /*
-    public final boolean tryLock( Transcation tx, int mode )
+    public final boolean tryLock( Transaction tx, int mode )
     {
-        internalTryLock( mode, tx );
+        return internalTryLock( mode, tx );
     }
-    */
 
 
     /**

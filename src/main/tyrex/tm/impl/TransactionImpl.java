@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionImpl.java,v 1.15 2001/03/21 03:27:27 arkin Exp $
+ * $Id: TransactionImpl.java,v 1.16 2001/03/21 20:02:48 arkin Exp $
  */
 
 
@@ -88,7 +88,7 @@ import tyrex.util.Messages;
  * they are added.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.15 $ $Date: 2001/03/21 03:27:27 $
+ * @version $Revision: 1.16 $ $Date: 2001/03/21 20:02:48 $
  * @see XAResourceHolder
  * @see TransactionManagerImpl
  * @see TransactionDomain
@@ -945,6 +945,35 @@ final class TransactionImpl
     }
 
 
+    public long getTimeout()
+    {
+        return _timeout;
+    }
+
+
+    public long getStarted()
+    {
+        return _started;
+    }
+
+
+    public Xid getXid()
+    {
+        return _xid;
+    }
+
+
+    public synchronized Control getControl()
+    {
+        if ( _control == null ) {
+            _control = new ControlImpl( this );
+            if ( _txDomain._orb != null )
+                _txDomain._orb.connect( _control );
+        }
+        return _control;
+    }
+
+
     //-------------------------------------------------------------------------
     // Methods used by related classes
     //-------------------------------------------------------------------------
@@ -1728,25 +1757,6 @@ final class TransactionImpl
     protected boolean getTimedOut()
     {
         return _timedOut;
-    }
-
-
-    /**
-     * Called to obtain the {@link Control} interface for this
-     * transaction. A {@link ControlImpl} object is created the
-     * first time this method is called and returned in subsequent
-     * invocations.
-     *
-     * @return The control interface to this transaction
-     */
-    protected synchronized ControlImpl getControl()
-    {
-        if ( _control == null ) {
-            _control = new ControlImpl( this );
-            if ( _txDomain._orb != null )
-                _txDomain._orb.connect( _control );
-        }
-        return _control;
     }
 
 

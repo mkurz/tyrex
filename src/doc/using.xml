@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!-- $Id: using.xml,v 1.4 2001/03/21 03:27:27 arkin Exp $ -->
+<!-- $Id: using.xml,v 1.5 2001/03/21 20:02:40 arkin Exp $ -->
 <document>
   <properties>
     <title>Using Tyrex</title>
@@ -74,7 +74,7 @@ try {
         includes such information as the number of connections created and released over
         a period of time, average duration for using or holding a connection in the pool, etc.</p>
 
-      <p><api>tyrex.resource.ResourceLimits</api> represents limits placed on the connection
+      <p><api>tyrex.resource.PoolLimits</api> represents limits placed on the connection
         pool. These limits restrict the maximum number of connections that can be used at
         any one time, define the minimum number of connections to retain in the pool, the
         duration for retaining connections in the pool between uses, and more.</p>

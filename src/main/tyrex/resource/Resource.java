@@ -62,7 +62,7 @@ import javax.transaction.xa.XAResource;
  * {@link #getPoolMetrics}.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.7 $
  */
 public interface Resource
 {
@@ -108,6 +108,16 @@ public interface Resource
 
 
     /**
+     * Returns the limits placed on the connection pool. This object
+     * can be used to investigate the limits of the connection pool
+     * and to change them at run time.
+     *
+     * @return The limits placed on the connection pool
+     */
+    public abstract PoolLimits getPoolLimits();
+
+
+    /**
      * Called to destory the resource once it is no longer in use.
      * After successful return from this method, all open connections
      * are invalidated and no new connections can be obtained from
@@ -117,11 +127,6 @@ public interface Resource
      * inaccessible to the application before calling this method.
      */
     public abstract void destroy();
-
-
-    /*
-    public abstract ResourceLimits getResourceLimits();
-    */
 
     
 }

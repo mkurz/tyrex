@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionDomainImpl.java,v 1.24 2001/03/21 04:53:08 arkin Exp $
+ * $Id: TransactionDomainImpl.java,v 1.25 2001/03/21 20:02:48 arkin Exp $
  */
 
 
@@ -75,7 +75,6 @@ import tyrex.tm.DomainMetrics;
 import tyrex.tm.Heuristic;
 import tyrex.tm.TransactionDomain;
 import tyrex.tm.TransactionInterceptor;
-import tyrex.tm.TransactionStatus;
 import tyrex.tm.TransactionTimeoutException;
 import tyrex.tm.DomainConfigurationException;
 import tyrex.tm.Journal;
@@ -97,11 +96,11 @@ import tyrex.util.LoggerPrintWriter;
  * Implementation of a transaction domain.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.24 $ $Date: 2001/03/21 04:53:08 $
+ * @version $Revision: 1.25 $ $Date: 2001/03/21 20:02:48 $
  */
 public class TransactionDomainImpl
     extends TransactionDomain
-    implements Runnable
+    implements Runnable, DomainMetrics
 {
 
 
@@ -227,12 +226,6 @@ public class TransactionDomainImpl
 
 
     /**
-     * Transaction domain metrics.
-     */
-    private final DomainMetrics            _metrics;
-
-
-    /**
      * Resources loaded for this transaction domain.
      */
     private final Resources                _resources;
@@ -254,6 +247,30 @@ public class TransactionDomainImpl
      * The next domain in a single linked list of transaction domains.
      */
     private TransactionDomainImpl          _nextDomain;
+
+
+    /**
+     * The accumulated transaction time.
+     */
+    private int                            _accumTime;
+
+    
+    /**
+     * The accumulated count of committed transactions.
+     */
+    private int                            _accumCommitted;
+
+
+    /**
+     * The accumulated count of rollback transactions.
+     */
+    private int                            _accumRolledback;
+
+
+    /**
+     * The number of active transactions.
+     */
+    private int                            _active;
 
 
     /**
@@ -301,7 +318,6 @@ public class TransactionDomainImpl
         _txFactory = new TransactionFactoryImpl( this );
         _category = Category.getInstance( "tyrex." + _domainName );
         _hashTable = new TransactionImpl[ TABLE_SIZE ];
-        _metrics = new DomainMetrics();
 
         // Obtain all the resources. We need to have the transaction manager
         // set up first for the purpose of creating connection pools.
@@ -407,7 +423,7 @@ public class TransactionDomainImpl
 
     public DomainMetrics getDomainMetrics()
     {
-        return _metrics;
+        return this;
     }
 
 
@@ -474,6 +490,43 @@ public class TransactionDomainImpl
                 throw errors;
             }
         }
+    }
+
+
+    //----------------------------------------------------------------
+    // Methods defined for DomainMetrics
+    //----------------------------------------------------------------
+
+
+    public int getTotalCommitted()
+    {
+        return _accumCommitted;
+    }
+
+
+    public int getTotalRolledback()
+    {
+        return _accumRolledback;
+    }
+
+
+    public synchronized float getAvgDuration()
+    {
+        return ( (float) ( _accumTime ) / (float) _accumCommitted + _accumRolledback ) / 10000;
+    }
+
+
+    public int getActive()
+    {
+        return _active;
+    }
+
+
+    public synchronized void reset()
+    {
+        _accumTime = 0;
+        _accumCommitted = 0;
+        _accumRolledback = 0;
     }
 
 
@@ -619,7 +672,7 @@ public class TransactionDomainImpl
                 entry._nextEntry = newTx;
             }
             ++_txCount;
-            _metrics.changeActive( 1 );
+            ++_active;
             
             // If this transaction times out before any other transaction,
             // need to wakeup the background thread so it can update its
@@ -754,7 +807,7 @@ public class TransactionDomainImpl
                 entry._nextEntry = newTx;
             }
             ++_txCount;
-            _metrics.changeActive( 1 );
+            ++_active;
             
             // If this transaction times out before any other transaction,
             // need to wakeup the background thread so it can update its
@@ -821,11 +874,7 @@ public class TransactionDomainImpl
                 return;
         }
         --_txCount;
-        try {
-            _metrics.changeActive( - 1 );
-        } catch ( IllegalStateException except ) {
-            _category.error( "Internal error", except );
-        }
+        --_active;
         
         // If the domain is terminated, we close the transaction
         // journal at this point. Otherwise, we notify any blocking
@@ -942,7 +991,8 @@ public class TransactionDomainImpl
                 _category.error( "Interceptor " + _interceptors[ i ] + " reported error", thrw );
             }
         }
-        _metrics.recordCommitted( (int) ( Clock.clock() - tx._started ) );
+        ++_accumCommitted;
+        _accumTime += (int) ( Clock.clock() - tx._started );
     }
 
 
@@ -957,25 +1007,26 @@ public class TransactionDomainImpl
                 _category.error( "Interceptor " + _interceptors[ i ] + " reported error", thrw );
             }
         }
-        _metrics.recordRolledback( (int) ( Clock.clock() - tx._started ) );
+        ++_accumRolledback;
+        _accumTime += ( Clock.clock() - tx._started );
     }
 
 
-    protected synchronized TransactionStatus[] listTransactions()
+    protected synchronized Transaction[] listTransactions()
     {
-        TransactionStatus[]  txsList;
-        TransactionImpl      entry;
-        int                  index = 0;
+        Transaction[]   txList;
+        TransactionImpl entry;
+        int             index = 0;
         
-        txsList = new TransactionStatus[ _txCount ];
+        txList = new Transaction[ _txCount ];
         for ( int i = _hashTable.length ; i-- > 0 ; ) {
             entry = _hashTable[ i ];
             while ( entry != null ) {
-                txsList[ index++ ] = new TransactionStatusImpl( entry );
+                txList[ index++ ] = entry;
                 entry = entry._nextEntry;
             }
         }
-        return txsList;
+        return txList;
     }
 
 
@@ -1260,8 +1311,8 @@ public class TransactionDomainImpl
             _category.info( "Transaction recovery for domain " + _domainName + ": " +
                             commit + " committed, " + rollback + " rolled back" );
         }
-        _metrics.reset();
-        _metrics.changeActive( _txCount );
+        reset();
+        _active = _txCount;
     }
 
 
@@ -1344,7 +1395,7 @@ public class TransactionDomainImpl
             entry._nextEntry = newTx;
         }
         ++_txCount;
-        _metrics.changeActive( 1 );
+        ++_active;
     }
 
 

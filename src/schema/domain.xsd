@@ -56,6 +56,7 @@
     <xsd:choice>
       <xsd:element ref="dataSource" />
       <xsd:element ref="connector" />
+      <xsd:any processContents="strict" namespace="##any" />
     </xsd:choice>
   </xsd:group>
 
@@ -150,8 +151,8 @@
 
   <xsd:group name="extension">
     <xsd:sequence>
-       <xsd:any processContents="strict" namespace="##any"
-                minOccurs="0" maxOccurs="unbounded" />        
+      <xsd:any processContents="strict" namespace="##any"
+               minOccurs="0" maxOccurs="unbounded" />        
     </xsd:sequence>
   </xsd:group>
 

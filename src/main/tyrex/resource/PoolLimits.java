@@ -47,10 +47,10 @@ package tyrex.resource;
 
 
 /**
- * Represents limits placed on a resource. The limits are read from
- * the configuration file and apply to the connection pool.
+ * Represents limits placed on a connection pool. The limits are
+ * read from the configuration file and apply to the connection pool.
  * <p>
- * The following XML elements are used to specify the resource limits:
+ * The following XML elements are used to specify the pool limits:
  * <ul>
  * <li><tt>maximum</tt> The maximum number of connections supported,
  * zero if no limit is placed on the connection pool.</li>
@@ -64,14 +64,14 @@ package tyrex.resource;
  * connection, specified in seconds, zero to give up immediately.</li>
  * <li><tt>trace</tt> True to log connection usage information.</li>
  * </ul>
- * This object is thread-safe and mutable. Modifying the resource
+ * This object is thread-safe and mutable. Modifying the pool
  * limits associated with an active connection pool will affect the
  * future behavior of the connection pool.
  * 
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.12 $
+ * @version $Revision: 1.1 $
  */
-public final class ResourceLimits
+public final class PoolLimits
 {
 
 
