@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE document SYSTEM "document.dtd">
+<document url="http://tyrex.exolab.org/security.xml">
+  <properties>
+    <title>J2EE Security And Authentication</title>
+    <abstract>Explains the J2EE security and authentication model, how security is
+              implemented in Servlet and EJB servers, the role of JAAS, and details
+              the LDAP security provider.</abstract>
+    <author email="arkin@exoffice.com"
+            ldap="ldap.exoffice.com/uid=arkin,ou=people,dc=exoffice,dc=com">Assaf Arkin</author>
+    <status>Preliminary Draft</status>
+  </properties>
+  <body>
+    <section title="Introduction">
+
+      <p>The information presented here is based on the J2EE role-based security model,
+         the JAAS API, the proposed connector architecture, and the J2EE 1.3 security model.
+         The security provider for Tomcat and OpenEJB is provided as reference implementation
+         for a J2EE security provider SPI.</p>
+
+    </section>
+
+    <section title="End-To-End Authentication Model">
+
+      <p>In an enterprise environment authentication and security must cover all servers and
+         resources being used in the application in a consistent fashion. While in standalone
+         applications authentication is the sole responsibility of the application, and in
+         client-server applications is split between the business logic and database server,
+         in the enterprise server world, security becomes the responsiblity of the middleware.</p>
+
+      <p>Consider a typical deployment scenario. A set of EJB components for managing workflow
+         are purchased and installed on the EJB server, a set of Servlets to handle the UI are
+         installed on the Web server, and a database is populated with tables to represent the
+         information. The Servlets and EJBs have no notion of what users or security mechanisms
+         are available to the user. Different installations will use different methods of
+         authentication, whether flat file, database based, LDAP or even Kerberos. It is not
+         even apparent when authentication occurs, it might occur in the Web server, using the
+         SHTTP protocol, or even when opening a TCP connection (VPN/Kerberos).</p>
+
+      <p>Yet, security information must be carried out and govern both access to Servlets and
+         their resources, EJB beans and their dependent beans, and database access. Extending
+         the Servlet API to deal with VPN authentication, or the EJB API to cover database
+         authentication, complicates the APIs and eventually breaks portaibility.</p>
+
+      <p>Instead, authentication and security is delegated to the middleware which takes care
+         of providing authentication at the start point and carrying the security context
+         across any number of servers and resources (database, LDAP, file access, JMS, etc)
+         used by the application.</p>
+
+    </section>
+
+    <section title="The Point Of Authentication">
+
+      <p>The point of authentication is declared as the point where the user first gains
+         access to the system. The exact point of authentication depends on the type of
+         application we're runing and the available authentication service. Typical points
+         of authentication include:
+
+         <ul>
+           <li>A standalone application presents a GUI-based login interface</li>
+           <li>A Web server may use basic authentication or form-based authentication</li>
+           <li>SHTTP provides certificate-based authentication</li>
+           <li>VPN (SSL, IPSEC, Kerberos) provide authentication upon connection to the network</li>
+         </ul></p>
+
+    </section>
+
+    <section title="Single Sign-On">
+
+      <p>Once a user has been authenticated once, there is no need for the user to re-authenticate.
+         From the end-user perspective, re-authenticating is merely an annoyance. For certain
+         resources that do not include a GUI, re-authenticating is simply impractical (e.g. how can
+         an EJB bean or JDBC connection request authentication).</p>
+
+      <p>By delegating the authentication process to some security provider, the user need to
+         authenticate only once in order to gain access to all the resources available. This
+         approach is also known as <i>single sign-on</i>.</p>
+
+    </section>
+
+    <section title="Security Context Propagation">
+
+      <p>Sharing the same authentication across a number of servers requires some mechanism
+         for propagating the security context. The exact implementation depends on the type
+         of propagation required. Typically, enterprise servers require three types of
+         security propagation:
+
+         <ul>
+           <li><i>Resources</i> - security context is propagated to resources used by the application
+               (e.g. JDBC connections, LDAP, ERP) through the security provider. In the J2EE
+               model all resources are acquired through the JNDI environment naming context (or ENC).
+               The JNDI ENC provider is integrated into the security provider and is able to
+               authenticate each of the resources before handing them back to the application.</li>
+           <li><i>Cross VM</i> - EJB in particular requires the security context to be propagated
+               from one VM to another. When using IIOP this can be achieved through the CORBA
+               Security COS. When using RMI, this is implementation dependent and is part of the RMI
+               stubs generated by the EJB server.</li>
+           <li><i>Cross domains</i> - Propagation across domains is generally handled in the same
+               manner as with resources and cross-VM. For example, when using URLs to access a
+               remote HTTP server, the URL resource manager will provide the proper authentication
+               to the remote HTTP server. When using IIOP to access a remote EJB server, the CORBA
+               Security COS will propagate the security context. Kerberos, IPSEC and SSL can be used
+               as well in a similar manner.</li>
+         </ul></p>
+
+    </section>
+
+    <section title="The Role Of Resource Managers">
+
+      <p>The J2EE model breaks complex servers into three, easy to identify components: the
+         container (e.g. Servlet engine, EJB server) where the application is hosted, the application
+         itself (Servlets, beans, Java libraries) and the resource managers. The container utilizes
+         the security provider to provide security to the application and propagate the security
+         context to the resource managers.</p>
+
+      <p>All access to external resources, be they database servers, LDAP directories, ERP systems,
+         or other connectors, goes through resource managers. Resource managers implement specific
+         interfaces that allow them to connect with the application server in a portable fashion,
+         allowing any resource manager to be deployed on any application server. At this point only
+         databases, URLs, JMS and JavaMail are properly defined, however, the connector architecture
+         will extend the design to include additional services.</p>
+
+      <p>Many client-server applications employ a single account, sometimes two or three, accounts
+         that are shared by all users in the system. 'Bob', 'John' and 'Mary' will all use the same
+         'dbuser' account. While this approach works well in the enterprise Java environment, it
+         does not yield well to other scenarios. For example, consider an EJB server connecting to
+         an ERP system. 'Bob' and 'Mary' have their own account in the ERP system, and cannot share
+         the same account with each other, whether for reasons of security, auditing, or even
+         preferences. Each one is required to open up a connection with their own account.</p>
+
+      <p>Other applications require the same granularity for database access. Imagine if all
+         bank employees were to use the same database account to log into the bank. The J2EE
+         security model is declarative. An EJB bean that attempts to create business accounts
+         might declare itself in the role 'BusinessAccount', but an EJB bean declaring the role
+         'Teller' might still operate on these accounts. True departmental security in such
+         applications can only be offered by the database server itself, and is dependent on
+         proper authentication.</p>
+
+     </section>
+
+     <section title="JNDI">
+
+       <p>Although JNDI is key to the J2EE model and includes support for authentication, it
+          does not provide a sufficient security model. The reason is the different way in which
+          JNDI is used.</p>
+
+       <p>For example, when accessing an LDAP server through JNDI, JNDI acts as the resource
+          manager, and is therefore responsible for authenticating the user that attempts to
+          open the connection and read/modify an LDAP record. In this scenario, JNDI is subject
+          to the overall security and authentication mechanism. (Note: presently JNDI requires
+          it's own authentication step)</p>
+
+       <p>Now consider an application that acquires an EJB bean from the JNDI environment
+          naming context (e.g. 'java:comp/env/ejb/TellerBean'). The application is able to
+          save the reference to the bean over a long period of time, as well as share it with
+          other parts of the application. The exact same reference will be used at different
+          times on behalf of different users, bypassing all security considerations. Instead,
+          security is delegated to the point of actual bean activation, where each business
+          method is checked against the security context of the calling user.</p>
+
+      </section>
+       
+
+
+    <section title="The Security Architecture">
+
+      <p>The security architecture is based on three mechanisms that are used independently,
+         yet are part of the same security provider. Each server may host its own security
+         provider and use the proper ways of security context propagation described above,
+         though typically within the same system we expect to see a single security provider
+         used for efficiency. Different application vendors may share the same security
+         provider through a common SPI (described later on).</p>
+
+      <p><i>Authentication</i> - The process of authentication occurs exactly once when the
+         first access on behalf of a user is made into the system. Exactly where that point
+         is and how users are tracked depends on the mechanisms in use. Here are some common
+         scenarios:
+
+         <ul>
+           <li><i>HTTP</i> - The Web server keeps track of users and authenticates them
+               when they first access the Web site, or after a predefined period of
+               inactivity.</li>
+           <li><i>VPN</i> - The VPN authentication service tracks the user once a secure
+               connection is opened and throughout the lifetime of that connection.</li>
+           <li><i>GUI</i> - A standalone application will authenticate the user once when
+               the application is started, or after a period of inactivity.</li>
+         </ul></p>
+
+      <p><i>Security Context</i> - Once the user has been authenticated a security context
+         exists for that user. The security context is presented in the form of a class
+         called <tt>Subject</tt> which provides all the principals and credentials that
+         might be required by the application to perform activities on behalf of the user.</p>
+
+      <p>The security context is generally associated with the running thread (in Java 1.3
+         through the <tt>AccessControlContext</tt>). The application server can obtain the
+         <tt>Subject</tt> information at any point and expose revelvant information to the
+         application and resource managers.</p>
+
+<!--
+Servlet - may authenticate only once to access all Servlets/contexts within the server
+Servlet - basic, SHTTP, form-based
+Client - GUI based
+JNDI - why not to use JNDI for authentication
+-->
+    </section>
+
+  </body>
+</document>

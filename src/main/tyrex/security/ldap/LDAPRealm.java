@@ -20,11 +20,14 @@ import tyrex.security.container.helper.RolesRealm;
 /**
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2000/02/23 21:22:19 $
+ * @version $Revision: 1.2 $ $Date: 2000/04/10 20:45:18 $
  */
 public class LDAPRealm
     extends RolesRealm
 {
+
+
+    // XXX members: should contain user DNs
    
  
     public static final String DefaultRealmName = "<default>";

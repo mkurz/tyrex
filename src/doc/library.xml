@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<document url="http://tyrex.exolab.org/library.xml">
+  <body>
+    <title>Library</title>
+    <header>
+    <ul>
+      <li><a href="http://java.sun.com/products/jta">Java Transaction API</a></li>
+      <li><a href="http://java.sun.com/products/jts">JTS/OTS for IIOP interoperability</a></li>
+      <li><a href="http://java.sun.com/products/jdbc">JDBC 2.0 and standard extensions</a></li>
+      <li><a href="http://java.sun.com/products/jndi">JNDI for naming and LDAP access</a></li>
+      <li><a href="http://java.sun.com/products/ejb">Enterprise JavaBeans</a></li>
+      <li><a href="http://www.mozilla.org/directory">The Mozilla Directory SDK</a></li>
+    </ul>
+    </header>
+  </body>
+</document>

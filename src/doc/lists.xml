@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<document url="http://tyrex.exolab.org/lists.xml">
+  <body>
+    <title>Tyrex-Dev: Developers' Mailing List</title>
+    <header>
+      <p>Medium volume (possibly more than 5 messages a day) mailing list dedicated to the developers of Tyrex.</p>
+
+      <p><mailing-list name="tyrex-dev" description="The Tyrex Developer's Mailing List"
+                       server="exolab.org" manager="minimalist"/></p>
+
+    </header>
+  </body>
+</document>

@@ -1,28 +1,8 @@
 Manifest-Version: 1.0
-Specification-Title: J2EE (JTA, JTS, JDBC, JNDI)
+Specification-Title: J2EE (JTA, JTS, JDBC, JNDI, JAAS)
 Specification-Vendor: Sun Microsystems, Inc.
 Specification-Version: 1.2
 Implementation-Title: Tyrex Transaction Monitor
 Implementation-Vendor: Exoffice Technologies Inc.
 Implementation-Version: $VERSION$
-
-Name: tyrex.client
-
-Name: tyrex.server
-Sealed: true
-
-Name: tyrex.jdbc
-Sealed: true
-
-Name: tyrex.naming
-Sealed: true
-
-Name: tyrex.conf
-Sealed: true
-
-Name: tyrex.util
-Sealed: true
-
-Name: tyrex.connector
-
 

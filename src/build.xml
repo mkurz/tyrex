@@ -1,38 +1,47 @@
 <project name="Tyrex" default="main" basedir=".">
-  <property name="project" value="tyrex" />
 
-  <property name="source" value="src" />
-  <property name="etc" value="src/etc" />
-  <property name="build" value="build" />
-  <property name="classes" value="${build}/classes" />
-  <property name="dist" value="dist" />
-  <property name="lib" value="lib" />
-  <property name="doc" value="src/doc" />
+  <target name="init">
+    <property name="project" value="tyrex" />
 
-  <property name="classpath" value="c:\cvs\tyrex\lib\jts.jar:${classpath}:${classes}" />
-  <property name="build.compiler" file="classic" />
-  <property name="deprecation" value="true" />
-  <property file="${etc}/VERSION" />
-  <property name="archive" value="${project}-${version}" />
+    <property name="source" value="src" />
+    <property name="main" value="${source}/main" />
+    <property name="etc" value="src/etc" />
+    <property name="build" value="build" />
+    <property name="classes" value="${build}/classes" />
+    <property name="dist" value="dist" />
+    <property name="lib" value="lib" />
+    <property name="doc" value="src/doc" />
+    <property name="schema" value="${source}/schema" />
+
+    <property name="classpath" value="${classpath}:${classes}" />
+    <property name="build.compiler" file="classic" />
+    <property name="deprecation" value="true" />
+    <property file="${etc}/VERSION" />
+    <property name="archive" value="${project}-${version}" />
+  </target>
 
  
+  <!-- Display all the targets -->
   <target name="targets">
-    <echo message="ANT build for ${project} ${version}\n
-\nThe following targets are available:\n
-\n  targets  Lists the build targets
-\n  clean    Cleans the build and distribution directories
-\n  all      Cleans and builds all the packages and examples
-\n  release  Cleans and builds all the release packages
-\n           (JAR, source, doc, tarball) in the dist directory
-\n  main     Builds the main packages (including debugging info)
-\n  examples Builds the example packages (including debugging info)
-\n  tests    Builds the test packages (including debugging info)
-\n  jar      Builds the binary JAR in the dist directory
-\n  doc      Builds the documentation
-\n  javadoc  Builds the API JavaDocs
-\n  source   Builds the source tarball in the dist directory
-\n  tarball  Builds the binary distribution in the dist directory
-\n  cvs      Update the sources from the CVS\n" />
+    <echo message=""/>
+    <echo message="ANT build for ${project} ${version}"/>
+    <echo message=""/>
+    <echo message="The following targets are available:"/>
+    <echo message="  targets  Lists the build targets"/>
+    <echo message="  clean    Cleans the build and distribution directories"/>
+    <echo message="  all      Cleans and builds all the packages"/>
+    <echo message="  release  Cleans and builds all the release packages"/>
+    <echo message="           (JAR, source, doc, tarball) in the dist directory"/>
+    <echo message="  main     Builds the main packages (including debugging info)"/>
+    <echo message="  tests    Builds the test packages (including debugging info)"/>
+    <echo message="  jar      Builds the binary JAR in the dist directory"/>
+    <echo message="  doc      Builds the documentation"/>
+    <echo message="  api      Builds the API JavaDocs"/>
+    <echo message="  javadoc  Builds the full JavaDocs"/>
+    <echo message="  source   Builds the source tarball in the dist directory"/>
+    <echo message="  tarball  Builds the binary distribution in the dist directory"/>
+    <echo message="  cvs      Update the sources from the CVS"/>
+    <echo message=""/>
   </target>
 
 
@@ -41,6 +50,13 @@
     <mkdir dir="${build}"/>
     <mkdir dir="${classes}"/>
     <mkdir dir="${dist}"/>
+
+    <!-- Copy the DTD and schema to the schema directory -->
+    <deltree dir="${schema}" />
+    <mkdir   dir="${schema}" />
+
+    <copydir src="${main}/tyrex/conf/" includes="*.dtd,*.xsd"
+             dest="${schema}" />
   </target>
 
   <!-- Kill all the directories created in prepare -->
@@ -52,140 +68,162 @@
 
   <!-- Build all the sources with debug and deprecation -->
   <target name="main" depends="prepare">
-    <javac srcdir="${source}/main" destdir="${classes}"
-           classpath="${classpath}" debug="on" deprecation="${deprecation}" />
+    <javac srcdir="${main}" destdir="${classes}" excludes="**/package.html"
+           classpath="${classpath}" debug="on" deprecation="${deprecation}"
+           includes="tyrex/concurrency/**,tyrex/resource/**" />
   </target>
 
   <!-- Same as main, but also cleans and additional targets -->
   <target name="all" depends="clean,main,tests"/>
 
-  <!-- Same as main, but no debug and no deprecation -->
-  <target name="no-debug" depends="prepare">
-    <javac srcdir="${source}/main" destdir="${classes}"
-           classpath="${classpath}" debug="off" deprecation="off" optimize="on"/>
-  </target>
-
-
-  <!-- Build the example packages -->
-  <target name="examples" depends="prepare">
-    <mkdir dir="${build}/examples" />
-    <javac srcdir="${source}/examples" destdir="${build}/examples"
-           classpath="${classpath}" debug="on" deprecation="${deprecation}"/>
+  <!-- Same as main, but optimization, no debug and no deprecation -->
+  <target name="main-opt" depends="prepare">
+    <javac srcdir="${main}" destdir="${classes}" excludes="**/package.html"
+           classpath="${classpath}" debug="off" deprecation="off" optimize="on" />
   </target>
 
   <!-- Build the test packages -->
   <target name="tests" depends="prepare">
     <mkdir dir="${build}/tests" />
     <javac srcdir="${source}/tests" destdir="${build}/tests"
-           classpath="${classpath}" debug="on" deprecation="${deprecation}"/>
+           classpath="${classpath}" debug="on" deprecation="${deprecation}" />
   </target>
 
 
-  <!-- Build a full release including JAR, tarball, source and documentation -->
-  <target name="release" depends="clean,jar,tarball,source,doc,javadoc">
-    <jar jarfile="${dist}/${archive}-doc.jar" basedir="${build}" includes="doc/**" />
-  </target>
-
-
-  <!-- Build the JAR file using no-debug -->
-  <target name="jar" depends="no-debug">
-    <deltree dir="${dist}/${archive}.jar" />
+  <!-- Build the JAR file using main-opt -->
+  <target name="jar" depends="main-opt">
+    <delete   file="${dist}/${archive}.jar" />
 
     <copyfile src="${source}/etc/MANIFEST.MF" dest="${classes}/MANIFEST.MF" />
-    <replace file="${classes}/MANIFEST.MF" token="$$VERSION$$" value="${version}"/>
-    <copyfile src="${source}/etc/LICENSE" dest="${classes}/LICENSE" />
-    <copyfile src="${source}/etc/README" dest="${classes}/README" />
-    <copyfile src="${source}/etc/CHANGELOG" dest="${classes}/CHANGELOG" />
+    <replace  file="${classes}/MANIFEST.MF" token="$$VERSION$$" value="${version}" />
+    <copydir  src="${source}/etc" dest="${classes}" includes="LICENSE,README,CHANGELOG" />
 
-    <jar jarfile="${dist}/${archive}.jar" basedir="${classes}"
-         manifest="${classes}/MANIFEST.MF" includes="LICENSE,README,CHANGELOG,tyrex/**" />
+    <jar      jarfile="${dist}/${archive}.jar" basedir="${classes}"
+              manifest="${classes}/MANIFEST.MF" includes="LICENSE,README,CHANGELOG,tyrex/**" />
   </target>
+
 
 
   <!-- Build the documentation -->
   <target name="doc" depends="prepare">
-    <mkdir dir="${build}/doc" />
-    <style basedir="${build}/{doc}" destdir="${build}/doc" style="style/exolab.xsl"
-           includes="**.xml" excludes="style/**,project.xml"/>
-    <copydir  src="${doc}/images" dest="${build}/doc/images"/>
-    <copydir  src="${doc}/style/images" dest="${build}/doc/style/images"/>
-    <copyfile src="${doc}/license.txt" dest="${build}/doc/license.txt"/>
-    <mkdir dir="${build}/doc/print" />
-    <style basedir="${doc}" destdir="${build}/doc/print" style="style/print.xsl"
-           includes="**.xml" excludes="style/**,project.xml"/>
-    <copydir src="${doc}/images" dest="${build}/doc/print/images"/>
-    <copyfile src="${doc}/license.txt" dest="${build}/doc/print/license.txt"/>
+    <mkdir    dir="${build}/doc" />
+    <style    basedir="${doc}" destdir="${build}/doc" style="style/exolab.xsl"
+              includes="**.xml" excludes="style/**,project.xml" />
+    <copydir  src="${doc}" dest="${build}/doc" includes="license.txt,document.dtd" />
+    <copydir  src="${doc}/images" dest="${build}/doc/images" />
+    <copydir  src="${doc}/style" dest="${build}/doc/style" includes="images/**,*.css" />
+
+    <mkdir    dir="${build}/doc/print" />
+    <style    basedir="${doc}" destdir="${build}/doc/print" style="style/print.xsl"
+              includes="**.xml" excludes="style/**,project.xml" />
+    <copydir  src="${doc}" dest="${build}/doc/print" includes="license.txt,document.dtd" />
+    <copydir  src="${doc}/images" dest="${build}/doc/print/images" />
+
+    <copydir  src="${schema}" includes="*.dtd,*.xsd" dest="${build}/doc" />
+    <replace  file="${build}/doc/index.html" token="$$VERSION$$" value="${version}" />
+    <replace  file="${build}/doc/download.html" token="$$VERSION$$" value="${version}" />
+    <replace  file="${build}/doc/print/index.html" token="$$VERSION$$" value="${version}" />
+    <replace  file="${build}/doc/print/download.html" token="$$VERSION$$" value="${version}" />
   </target>
 
-  <!-- Build the API JavaDoc -->
+
+  <!-- Build the full JavaDocs -->
   <target name="javadoc" depends="prepare">
-    <mkdir dir="${build}/doc" />
-    <deltree dir="${build}/doc/javadoc" />
-    <mkdir   dir="${build}/doc/javadoc" />
-    <javadoc sourcepath="${source}/main" destdir="${build}/doc/javadoc" dir="."
-             doctitle="Tyrex" public="true" noindex="true" author="true"
-	     packagenames="tyrex.*" />
+    <mkdir    dir="${build}/doc" />
+    <mkdir    dir="${build}/doc/javadoc" />
+    <property name="copyright"
+              value="Exoffice Technologies, Inc. (C) 2000. All rights reserved  http://tyrex.exolab.org" />
+    <javadoc  sourcepath="${main}" destdir="${build}/doc/javadoc" dir="."
+              doctitle="Tyrex JavaDoc" windowtitle="Tyrex JavaDoc" bottom="${copyright}"
+              package="true" author="true" version="true" noindex="true"
+              packagenames="org.*" />
   </target>
+
+  <!-- Build the API JavaDocs -->
+  <target name="api" depends="prepare">
+    <mkdir    dir="${build}/doc" />
+    <mkdir    dir="${build}/doc/api" />
+    <property name="copyright"
+              value="Exoffice Technologies, Inc. (C) 2000. All rights reserved  http://tyrex.exolab.org" />
+    <javadoc  sourcepath="${main}" destdir="${build}/doc/api" dir="."
+              doctitle="Tyrex API" windowtitle="Tyrex API" bottom="${copyright}"
+              public="true" author="true"
+              packagenames="tyrex.service" />
+  </target>
+
+  <!-- Build the docs, API and full JavaDocs, doc archives -->
+  <target name="docs" depends="doc,api,javadoc">
+    <zip    zipfile="${dist}/${archive}-doc.zip" basedir="${build}" includes="doc/**" />
+    <tar    tarfile="${dist}/${archive}-doc.tar" basedir="${build}" includes="doc/**" />
+    <gzip   src="${dist}/${archive}-doc.tar" zipfile="${dist}/${archive}-doc.tgz" />
+    <delete file="${dist}/${archive}-doc.tar" />
+  </target>
+
 
 
   <!-- Build the source distribution -->
   <target name="source" depends="prepare">
-    <delete file="${dist}/${archive}-src.tgz" />
-    <delete file="${dist}/${archive}-src.zip" />
-    <tar includes="*.sh, *.bat ${source}/** ${lib}/**" basedir="${build}"
-         tarfile="${dist}/${archive}-src.tar" defaultexcludes="true" />	  
-    <gzip src="${dist}/${archive}-src.tar" zipfile="${dist}/${archive}-src.tgz"/>
-    <delete file="${dist}/${archive}-src.tar" />
-    <zip zipfile="${dist}/${archive}-src.zip" basedir="." includes="*.sh *.bat ${source}/** ${lib}/**"
-         defaultexcludes="true" />         
+    <delete  file="${dist}/${archive}-src.tgz" />
+    <delete  file="${dist}/${archive}-src.zip" />
+    <deltree dir="${build}/${archive}" />
+
+    <mkdir   dir="${build}/${archive}" />
+    <mkdir   dir="${build}/${archive}/src" />
+    <copydir src="${source}" dest="${build}/${archive}/src"
+             defaultexcludes="true" />
+    <mkdir   dir="${build}/${archive}/lib" />
+    <copydir src="${lib}" dest="${build}/${archive}/lib"
+             defaultexcludes="true" />
+    <copydir src="." dest="${build}/${archive}"
+             includes="*.sh,*.bat" />
+
+    <tar     includes="${archive}/**" basedir="${build}"
+             tarfile="${dist}/${archive}-src.tar" />
+    <gzip    src="${dist}/${archive}-src.tar" zipfile="${dist}/${archive}-src.tgz"/>
+    <delete  file="${dist}/${archive}-src.tar" />
+    <zip     zipfile="${dist}/${archive}-src.zip" basedir="${build}"
+             includes="${archive}/**" />
+
   </target>
 
 
+
+  <!-- Build a full release including JAR, zip/tarball, source and documentation -->
+  <target name="release" depends="clean,jar,source,docs,tarball">
+  </target>
+
   <!-- Build the tarball including JAR and all dependent packages -->
   <target name="tarball" depends="prepare,jar">
-    <property name="bin" value="${build}/${archive}" />
-    <delete   file="${dist}/${archive}.tgz" />
-    <delete   file="${dist}/${archive}.zip" />
-    <mkdir dir="${bin}" />
-    <copyfile src="${etc}/README"
-              dest="${bin}/README" />
-    <copyfile src="${etc}/LICENSE"
-              dest="${bin}/LICENSE" />
-    <copyfile src="${etc}/CHANGELOG"
-              dest="${bin}/CHANGELOG" />
-    <copyfile src="${dist}/${archive}.jar"
-              dest="${bin}/${archive}.jar" />
-    <copyfile src="${lib}/jdbc-se2.0.jar"
-              dest="${bin}/jdbc-se2.0.jar" />
-    <copyfile src="${lib}/jndi.jar"
-              dest="${bin}/jndi.jar" />
-    <copyfile src="${lib}/ldapjdk.jar"
-              dest="${bin}/ldapjdk.jar" />
-    <copyfile src="${lib}/ldapsp.jar"
-              dest="${bin}/ldapsp.jar" />
-    <copyfile src="${lib}/odmg-3.0.jar"
-              dest="${bin}/odmg-3.0.jar" />
-    <copyfile src="${lib}/xerces.jar"
-              dest="${bin}/xerces.jar" />
-    <copyfile src="${lib}/jta1.0.1.jar"
-              dest="${bin}/jta1.0.1.jar" />
-    <copydir  src="${source}/schema" dest="${bin}/schema" />
+    <delete  file="${dist}/${archive}.tgz" />
+    <delete  file="${dist}/${archive}.zip" />
+    <deltree dir="${build}/${archive}" />
 
-    <tar includes="${archive}/**" basedir="${build}"
-         tarfile="${dist}/${archive}.tar" defaultexcludes="true" />	  
-    <gzip src="${dist}/${archive}.tar" zipfile="${dist}/${archive}.tgz"/>
-    <delete file="${dist}/${archive}.tar" />
+    <mkdir   dir="${build}/${archive}" />
+    <copydir src="${etc}" dest="${build}/${archive}"
+             includes="README,LICENSE,CHANGELOG" />
+    <copydir src="${dist}" dest="${build}/${archive}"
+             includes="${archive}.jar" />
+    <copydir src="${lib}" dest="${build}/${archive}"
+             includes="jdbc-se2.0.jar,jndi.jar,jta1.0.1.jar,jaas.jar,jts.jar,xerces.jar" />
+    <copydir src="${schema}" dest="${build}/${archive}/schema" />
+    <copydir src="${build}/doc" dest="${build}/${archive}/doc" />
+    <deltree dir="${build}/${archive}/doc/javadoc" />
 
-    <zip zipfile="${dist}/${archive}.zip" basedir="${build}" includes="${archive}/**" />
+    <tar     tarfile="${dist}/${archive}.tar" basedir="${build}"
+             includes="${archive}/**" excludes="${archive}/*.tar,${archive}/*.zip" />
+    <gzip    src="${dist}/${archive}.tar" zipfile="${dist}/${archive}.tgz" />
+    <delete  file="${dist}/${archive}.tar" />
+
+    <zip     zipfile="${dist}/${archive}.zip" basedir="${build}" 
+             includes="${archive}/**" excludes="${archive}/*.tar,${archive}/*.tgz" />
   </target>
 
 
   <!-- Update the sources from the CVS -->
   <target name="cvs" depends="clean">
-    <cvs cvsRoot=":pserver:arkin@virtuals.exoffice.com:/cvs/${project}"
+    <cvs cvsRoot=":pserver:anoncvs@virtuals.exoffice.com:/cvs/${project}"
          dest="." package="${project}" />
   </target>
-
 
 </project>
 

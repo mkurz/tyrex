@@ -2,10 +2,6 @@
 
 -- Configuration for logger.
 
--- Reimplement Meter as an Interceptor.
-
--- Reimplement GUI demo as an Interceptor and add Tomcat Interceptor.
-
 -- Revised ServerDataSource and EnabledDataSource.
 
 -- Add asynchronous transaction adaptor to perform asynchronous commit/rollback,

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<project name="Tyrex" repository="tyrex"
+         href="http://tyrex.exolab.org" image="images/tyrex.gif">
+
+  <title>The Tyrex Project</title>
+
+  <links>
+    <link name="Home" href="index.xml"
+          image="style/images/links/home.gif" height="19" width="39"/>
+    <link name="License" href="license.xml"
+          image="style/images/links/license.gif" height="19" width="47"/>
+    <link name="CVS" href="cvs.xml"
+          image="style/images/links/cvs.gif" height="19" width="30"/>
+    <link name="Download" href="download.xml"
+          image="style/images/links/download.gif" height="19" width="64"/>
+    <link name="Lists" href="lists.xml"
+          image="style/images/links/lists.gif" height="19" width="35"/>
+    <link name="Library" href="library.xml"
+          image="style/images/links/library.gif" height="19" width="47"/>
+    <link name="Contact" href="contacts.xml"
+          image="style/images/links/contacts.gif" height="19" width="57"/>
+    <link name="Exolab" href="http://www.exolab.org"
+          image="style/images/links/exolab.gif" height="19" width="47"/>
+  </links>
+
+  <menu name="API">
+    <item name="JavaDoc" href="javadoc/overview-summary.html"/>
+    <item name="TP Monitoring" href="tpmonitor.xml"/>
+  </menu>
+
+  <notice>
+    Java, Enterprise JavaBeans, Java Messaging Server, JDBC, JNDI, JTA, JTS, Sun, Sun Microsystems and other Java
+    related APIs are trademarks or registered trademarks of Sun Microsystems, Inc. in the United States and in other
+    countries. XML and related standards are trademarks or registered trademarks of MIT, INRIA, Keio or others, and a product
+    of the World Wide Web Consortium. ORB, CORBA, and COSS are trademarks of the Object Management Group, Inc.
+    X/Open is a trademark of X/Open Company Ltd.
+  </notice>
+  <notice>
+    <a href="http://www.exoffice.com">Exoffice Technologies, Inc.</a> (C) 2000. All rights reserved
+  </notice>
+
+</project>

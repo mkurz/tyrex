@@ -1,3 +1,12 @@
+Version 0.9.5  April 10, 2000
+-----------------------------
+
+- Added concurrency service based on the OMG Concurrency Control Service.
+  The interfaces are located in tyrex.concurrency, and the engine in the
+  engine package. Automatic dropLocks at end of transaction not yet
+  implemented.
+
+
 Version 0.9.4 February 2 2000
 -----------------------------
 

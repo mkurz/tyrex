@@ -1,6 +1,6 @@
 #! /bin/sh
 
-# $Id: build.sh,v 1.3 2000/02/23 21:19:05 arkin Exp $
+# $Id: build.sh,v 1.4 2000/04/10 20:47:34 arkin Exp $
 
 if [ -z "$JAVA_HOME" ] ; then
   JAVA=`which java`

@@ -1,0 +1,290 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE document SYSTEM "document.dtd">
+<document url="http://tyrex.exolab.org/tpmonitor.xml">
+  <properties>
+    <title>Transaction Processing Monitoring</title>
+    <abstract>Explains the role that TP monitoring plays in the enterprise environment,
+              in particular with regards to EJB and Servlet containers</abstract>
+    <author email="arkin@exoffice.com"
+            ldap="ldap.exoffice.com/uid=arkin,ou=people,dc=exoffice,dc=com">Assaf Arkin</author>
+    <status>Preliminary Draft</status>
+  </properties>
+  <body>
+    <section title="Introduction">
+
+      <p>TP monitoring plays an important role in enterprise applications, affecting both the
+         throughput, scalability and response time. EJB and Servlet containers hide TP monitoring
+         from the application developer through high level APIs, and do little to explain the
+         design choices and development model in regards to performance.</p>
+
+      <p>This document provides a primer to TP monitoring, explains their affect on application
+         performance, and provides a background for some of the design choices behind various
+         application servers.</p>
+
+    </section>
+
+    <section title="TP Monitoring Primer">
+
+      <p>To explain what TP monitoring is all about, I will start with an example from the PC world.
+         Imagine that you're running a PC with not too much RAM on yet, say 48MB, and two typical
+         office applications. In order to work, each of these two applications gobbles up most of
+         that 48MB. When used one by one, you seldom reach the memory limit and the applications
+         perform acceptably. But when you try to load both of them at once and use them at the same
+         time, they eat up all the available memory and then some more.</p>
+
+      <p>As a result, the operating system is forced to swap memory to disk, so that each application
+         gets its share of RAM while the other one is partially swapped out. This process occurs
+         every time you switch from one application to another, and constantly if both are used at
+         the same time. From time to time, the PC stalls as the operating system is busy just
+         swapping memory pages in and out, aka as <i>thrashing</i>.</p>
+
+      <p>Using the two applications at once you typically spend more time staring at the computer
+         than working. So you go out and buy some more RAM. Well, I said this was a simple example,
+         but it illustrates how eating too much of a machine's resources tends to slow it down.</p>
+
+      <p>Memory is not the only issue to deal with. There's an upper limit to how many concurrent
+         threads a server can support efficiently. As more and more users are added to the system,
+         the server will require more threads to address them, to the point where context switching
+         (the switching between one live thread to another) starts eating into the CPU time available
+         to the application itself. Some server operating systems tend to die even before reaching
+         this point.</p>
+
+      <p>I/O operations also follow the rule. More memory, more CPU, better disks only buy you some
+         room, but at the end the system always reaches a point where the load starts decreasing
+         its performance. Obviously the more operations we perform, the less bandwidth each one
+         gets. But the point made in the example above is that too many concurrent operations
+         result in bandwidth wasted on keeping these operations, rather than the application itself.</p>
+
+         <side-bar>Each server has an upper limit of N concurrent operations which it can perform
+                   at 100% utilization. Beyond that point, the cost of each additional operation
+                   decreases the server's utilization below 100%. Transaction processing monitoring
+                   is all about assuring the server stays at 100%.</side-bar>
+
+      <p>What important does TP monitoring play in a scalable, distributed environment like EJB?
+         The answer is: critical. There will always be bottleneck and expensive resources, be they
+         the CPU or the network connecting multiple CPUs, the database or a connector to the order
+         processing system. A scalable EJB server is highly dependent on the availability of a TP
+         monitor.</p>
+
+    </section>
+
+    <section title="What TP Monitoring Does">
+
+      <p>The short version: TP monitoring assures that the server always operates at high efficiency
+         by keeping tabs on resource utilization. The TP monitor is responsible for managing loads,
+         synchronizing operations, pooling connections, recycling threads, and giving performance
+         metrics.</p>
+
+      <p>Traditionally TP monitoring existed in high end systems, where it mostly managed database
+         transactions. EJB and Servlets brought TP monitoring down to medium level systems, where
+         they are used to improve the throughput of Web applications, business processes, and a
+         variety of other services.</p>
+
+      <p>In TP terminology a transaction is defined as an atomic operation, such as adding a product
+         to the shopping cart, processing an order, or even serving the Web page with the product
+         details. Transactions does not necessarily involve database updates, even a simple dynamic
+         Web page can incur a cost when accessed million of types a day, and simple mechanism like
+         thread and connection reusing can result in significant performance improvement.</p>
+
+      <p>When we deal with atomic operations, it is very easy to define metrics for performance
+         measurement and tuning. Simple stress loading of a server by adding more and more client
+         will reveal the server's maximum throughput. The unit of measurement is often the TPM,
+         or transactions per minute.</p>
+
+      <p>If the server is only capable of performing a small number of transactions, typically it
+         will reach maximum TPM before thrashing, context switching, or concurrent I/O takes it
+         toll. It might not be able to service enough connections even before reaching the point
+         of TPM. In such scenarios TP monitoring is typically used to enhance performance through
+         resource pooling and recycling, and to place limits on resource consumption to guarantee
+         some quality of service.</p>
+
+      <p>If the server is capable of performing a large number of transactions, it will reach a
+         point where concurrency is too high and either it slows down due to the overhead of
+         concurrency, or it attempts to consume more resources than are available to it. In these
+         scenarios TP monitoring is used to keep the server at peak utilization and assure it
+         never over consumes on resources.</p>
+
+    </section>
+
+    <section title="Pooling And Recycling">
+
+      <p>Pooling and recycling can improve performance by saving the cost of creating new
+         resources. Resources the benefit from pooling and recycling include threads, JDBC and
+         LDAP connections, and complex objects (e.g. beans).</p>
+
+      <p>To understand the impact of pooling on server performance you can conduct a simple
+         test. Open up a JDBC connection into the database and run SQL selects inside a loop.
+         Now close and reopen the connection in each iteration. Depending on the database server
+         in use, the later might be two to four times slower.</p>
+
+      <p>The TP monitor manages pooling through a special interface that is also responsible
+         for transaction enlistment. Whenever the application requires a resource, it obtains
+         one from the TP monitor, going through the pool. The TP monitor is responsible for
+         actually creating the resource from it's factory and placing it in the pool. In the
+         J2EE world this mechanism is done the the JNDI environment naming context. A request
+         to a JDBC connection in the form of <tt>java:comp/env/jdbc/mydb</tt> does create and
+         return a JDBC DataSource directly, but rather goes through the TP monitor's pool.</p>
+
+      <body-note>In TP terminology, databases, ERP connectors, remote connections and similar
+                 operations which incur a significant overhead compared to the actual application
+                 code, are referred to as <i>resources</i> and <i>resource managers</i>. A database
+                 connection would be the resource, while the database server would be the resource
+                 manager. The TP monitor takes extreme care to never consume more resources than
+                 the resource manager can efficiently handle, and to smartly reuse resources through
+                 pooling. A good TP monitor is never visible to the application, but its presence
+                 is felt under extreme loads.</body-note>
+
+      <p>The term resources is used generically, since the exact same mechanism can be extended
+         to cover JMS, LDAP, ERP, and other resources. The connector architecture provides a
+         uniform API that supports pooling and transaction enlistment across all types of
+         resources.</p>
+
+      <p>The properties of a JDBC connection pool would typically be the maximum number of
+         connections the database server can sustain, the size of the pool we want to maintain
+         at all times (so as not to recreate connections), and the rate in which we release
+         unused connections when the server goes from peak to idle.</p>
+
+      <p>So what happens if our database server can only deal with X connections, but we have
+         X + 1 users knocking on our door? Without a TP monitor, user X + 1 will get some
+         cryptic message as an attempt to open a new connection fails. And yes, database servers
+         have known to crash under extreme loads. The TP monitor narrows down X + 1 users
+         into X resources by queuing incoming requests, a more civilized approach to dealing
+         with load.</p>
+
+      <p>EJB servers implement their internal pools of beans, and Servlet containers perform
+         their own thread recycling. Although not requiring a TP monitor to exist, such form
+         of pooling and recycling is part of the guarantee given by an enterprise server.</p>
+
+    </section>
+
+    <section title="The Resource Limits Model">
+
+      <p>The EJB model allows beans, whether session or entity, to be pooled by the container.
+         Pooling benefits applications where beans are fairly complex objects and bean creation
+         is a heavy process. However, while useful by itself, the EJB pooling approach is
+         insufficient as a TP working model.</p>
+
+      <p>Consider a scenario where the EJB server is known to only support 200 client hits at
+         any given time. Let's assume for the moment that our database server only supports
+         200 concurrent connections, but in our system 201 users hit the server at once.
+         Without setting the proper limits, the 201st user will get some cryptic error message
+         as an attempt to open connection 201 fails.</p>
+
+      <p>The approach taken by most EJB server sets a limit on the size of the bean pool, limiting
+         the number of beans available to service incoming calls at 200. The 201st user will simply
+         wait until a bean is available to service the request, and at no point will more than 200
+         beans be used.</p>
+
+      <p>While simple and elegant, this approach doesn't work well in the real world. Suppose that
+         our application now consists of two types of beans, A and B. If we place a 200 limit on
+         both A and B, we can end up with 400 beans being used at once (200 + 200), while we only
+         have 200 connections to service them. If we place a 100 limit on both A and B, our server
+         will not perform efficiently. Only 100 users can be serviced with A, even if no users are
+         using any of bean B.</p>
+
+      <p>Putting A and B in the same pool subject to the 200 limit is no solution either. Suppose
+         that A also uses B, or B uses A (or both use C). The beans will start blocking each other
+         as they reach the limits of the pool, even though they all share the same JDBC connection.
+         (A connection is created once for all beans that use is within a single thread of
+         execution).</p>
+
+      <p>Initially we were concerned with placing a limit on the number of users that are concurrently
+         services by the server. Rather the resort to pooling beans, we should just look at client
+         servicing as a form of transaction and apply TP monitoring to the problem. Whether serviced
+         by A, B or C, each method invocation from the client will be subject to the same limit,
+         while method invocations between beans will not be subject to any limitation.</p>
+
+      <p>As a side note of this model, consider how we approach limits based on the type of user.
+         We can say, for example, that the server should always reserve at least X threads for
+         serving out must important customers. Maybe we give this priority to paying customers
+         that visit our Web site, or to our business partners or employees. But we make sure that
+         a certain class of users can always be serviced, even as the server is busy serving a
+         different class of users.</p>
+
+      <p>Since both classes of users might end up using the same Servlets and EJB beans, the
+         approach we'll take is to identify them based on some authentication mechanism, perhaps
+         through their role or the security realm. Once authenticated, we can associated them
+         with different limits that affect all the resources they might consume. This is our way
+         to guarantee quality of service (QoS) to our selected users.</p>
+
+    </section>
+
+    <section title="Calculating TP Limits">
+
+      <p>If N<sub>a</sub> is the number of transactions the server is asked to perform in a given
+         minute, below a certain threshold (N), the server will perform N<sub>a</sub> transactions
+         per minute, regardless of how many N<sub>a</sub> there are. Of course, as we place more
+         load, each transaction will take longer to perform as each transaction gets a smaller slice
+         of CPU and I/O time. Beyond the point N, performance will decrease and as we increase
+         N<sub>a</sub> (where N<sub>a</sub> > N) the actual number of transactions will fall further and
+         further below N (actual TPM &lt; N).</p>
+
+      <body-note>Each server has an upper limit of N concurrent transactions at which it can perform
+                 with 100% utilization. Beyond N concurrent transactions, utilization drops below 100%
+                 and overall performance degrades as a result of the cost of handling that many
+                 concurrent transactions.</body-note>
+
+      <p>The first trick in TP monitoring is placing a limit on the number of transactions that will
+         be processed at any given instance. In our case that limit would be N. Placing this limit
+         our server will scale up to maximum utilization at N, but will never degrade in performance
+         beyond that point. This is typically where we rush out and buy some more hardware. With two
+         servers, our limit will now be close to 2 x N (close, since load balancing incurs some overhead).</p>
+
+      <p>Placing a limit is not like placing a quota. If we placed a quota, say on how many number of
+         TCP/IP sockets we have open or threads that are running, any attempt to go beyond that point
+         will result in some runtime exception. In contrast, with TP monitoring, any attempt to go beyond
+         that point will block all the excessive requests until they can be processed. Those, when user
+         501 tries to access a server that only supports 500 concurrent users, instead of getting an
+         error message, that user will wait until the user can be serviced.</p>
+
+      <p>When peak demand happens in bursts, e.g. at 8:00AM when all employees log into the system,
+         this scheme is good enough to let the system service them all without crashing. When peak
+         demand tends to lengthen, e.g. a web site with a growing user base, there is no remedy but
+         adding more hardware (or optimizing the software).</p>
+
+    </section>
+
+    <section title="The Weight System">
+
+      <p>Assume that we learned that the maximum load on our server is N<sub>a</sub> concurrent
+         transactions, given that each transaction performs a typical database operation. Our server
+         is built around a number of Servlets performing database operations through session beans,
+         and in general our N limit seems to work well in extreme loads.</p>
+
+      <p>As our system evolves we start adding new Servlets, not more expensive than the original ones,
+         but these Servlets end up using two or three session beans each. Now at peak time our server
+         is actually performing 1.5 * N<sub>a</sub> transactions, way above it's full utilization point,
+         and we start seeing a degradation in performance. Since peak times are rather short (a minute
+         or less), we don't consider adding another server. But due to inefficient utilization, they
+         tend to drag for up to five minutes at a time.</p>
+
+      <p>What we need is to reduce N<sub>a</sub> to N<sub>a</sub>, such that 1.5 * N<sub>b</sub> &lt;= N.
+         Since our system evolves at a rapid rate (as does our business), keeping track of N<sub>b</sub>
+         becomes an elusive task. This is where the weight system comes in.</p>
+
+      <p>The weight system assigns a weight to each transaction based on the number of resources used
+         in that transaction and the weight of each resource. For example, Servlets that use a single
+         session bean will have a weight of 1, while Servlets that use two session beans a weight of 2.
+         The upper limit, N is now specified in the form of a maximum weight, and the maximum number of
+         transactions running at any given instance is N<sub>b</sub>, such that Avg(weight) * N<sub>b</sub>
+         &lt;= N, and Avg(weight) is the average weight of all transaction combined.</p>
+
+      <p>The weight system is not only efficient, it is very simple to support. We simply let the TP
+         monitor deal with it. For example, we can define that each session bean method, or entity bean
+         load/store operation has a weight of one. As the server runs it will tally all the beans used
+         in the transaction and calculate its weight in run time. We can then extract the average weight
+         over a period of time. But in fact, we don't have to. The TP monitor will make sure that whatever
+         the average weight is, we will never run more than N<sub>b</sub> transactions, such
+         that the total weight will be more than N, regardless of what Avg(weight) happens to be. And the
+         average weight might change from day to day, from hour to hour.</p>
+
+      <p>Once we've identified the cost of an operation with a weight, we can even schedule jobs based
+         on the weight system. For example, if we have a particularly heavy task, such as calculating
+         sales margins with a weight of 20%, we can schedule this operation to occur when the server
+         is below 70% capacity. We can also schedule it to happen during the night, but with the 24 hour
+         nature of our Internet business, it's hard to now when night happens.</p>
+
+    </section>
+
+  </body>
+</document>

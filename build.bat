@@ -1,5 +1,5 @@
 @echo off
-REM $Id: build.bat,v 1.1 2000/02/23 21:19:05 arkin Exp $
+REM $Id: build.bat,v 1.2 2000/04/10 20:47:34 arkin Exp $
 set JAVA=%JAVA_HOME%\bin\java
 set cp=%CLASSPATH%
 for %%i in (lib\*.jar) do call cp.bat %%i

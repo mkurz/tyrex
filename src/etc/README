@@ -1,72 +1,28 @@
-Tyrex Transaction Monitor
+Tyrex J2EE Service Provider
 
-Copyright (c) 1999, Exoffice Technology, Inc.
+Copyright (c) 2000, 1999, Exoffice Technology, Inc.
 
 
 Supported Features
 ------------------
 
-* Full support for JTA and OTS/JTS APIs
+* Full support for JTA and OTS transactions APIs
 
-* Nested and distributed transactions
+* Support for local and distributed transactions
+
+* JAAS-based authentication, LDAP login module
 
 * Configurable transaction processing monitor
 
 * JDBC pooling and automatic JDBC resource enlistment
 
-* Transaction and thread termination on timeout
-
-* Lightweight client transaction demarcation over RMI
-
-* Transaction context propagation over IIOP
-
-* Limits on active and pooled resources
-
-* Thread reuse in EJB and Servlet containers
+* Connector architecture
 
 * XML based configuration
 
 * JNDI environment naming context
 
 * Tomcat 3.0 connector
-
-
-Demo
-----
-
-There is a built in demo simulating a number of concurrent threads
-running transactions with random durations (<5 seconds), random
-supends, etc. The demo provide textual logs as well as a UI.
-
-To run the demo:
-
-  java tyrex.server.Demo
-
-The interesting options are:
-
-  --help     Show a list of options
-  --count n  Changes the number of threads simulated
-  --meter    Dump the meter information textually
-  --activity The server will report the result of each transaction
-  --dump     The server will dump it's current transaction list
-  --choke    Run with limited resources
-
-Trying to run with too many threads on Linux is bound to generate
-a segmentation fault and can be recovered only by killing the parent
-JVM process. The default is 100 threads.
-
-Running in choke mode will limit the number of active transactions
-to 30, the total number of transactions to 50, terminate transactions
-after 10 seconds and only wait for new transactions to be available
-for 5 seconds. This simulates a very high load with only 100 concurrent
-threads.
-
-The logs will show consistent (though somewhat erratic due to the short
-transaction timeout) behavior, as a few threads consume all the
-available transactions, get waiting threads to give up. Often too many
-threads are hanging too long, causing multiple transactions to be
-terminated. This proves that the transaction processing monitor is
-managing the load very well.
 
 
 Security Considerations
