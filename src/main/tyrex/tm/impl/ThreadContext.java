@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: ThreadContext.java,v 1.9 2001/04/24 01:19:24 jdaniel Exp $
+ * $Id: ThreadContext.java,v 1.10 2001/10/05 22:15:34 mohammed Exp $
  */
 
 
@@ -56,6 +56,7 @@ import tyrex.tm.RuntimeContext;
 import tyrex.naming.MemoryContext;
 import tyrex.naming.MemoryContextFactory;
 import tyrex.naming.MemoryBinding;
+import tyrex.tm.XAResourceCallback;
 import tyrex.util.FastThreadLocal;
 
 
@@ -63,7 +64,7 @@ import tyrex.util.FastThreadLocal;
  * Implementation of {@link RuntimeContext}.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.9 $ $Date: 2001/04/24 01:19:24 $
+ * @version $Revision: 1.10 $ $Date: 2001/10/05 22:15:34 $
  */
 public class ThreadContext
     extends RuntimeContext
@@ -75,25 +76,25 @@ public class ThreadContext
      * is in a transaction, or null if the thread is not in a
      * transaction.
      */
-    protected TransactionImpl       _tx;
+    protected TransactionImpl           _tx;
 
 
     /**
-     * The XA resources that have been opened before or during the
+     * The XA resources and callbacks that have been opened before or during the
      * transaction and must be enlisted with the transaction when
      * the transaction starts. Allows null entries, but no duplicates.
      * May be null.
      */
-    protected XAResource[]          _resources;
+    protected InternalXAResourceHolder  _xaResourceHolder;
 
 
-    private final Subject           _subject;
+    private final Subject               _subject;
 
 
-    private final MemoryBinding     _bindings;
+    private final MemoryBinding         _bindings;
 
 
-    private static ThreadEntry[]    _table;
+    private static ThreadEntry[]        _table;
 
 
     /**
@@ -335,7 +336,7 @@ public class ThreadContext
     public void cleanup()
     {
         _tx = null;
-        _resources = null;
+        _xaResourceHolder = null;
     }
 
 
@@ -348,32 +349,27 @@ public class ThreadContext
     /**
      * Adds an XA resource to the association list.
      */
-    protected void add( XAResource xaResource )
+    protected void add( XAResource xaResource, XAResourceCallback callback )
     {
-        XAResource[] newResources;
-        int          next = -1;
-        
+        InternalXAResourceHolder xaResourceHolder;
         if ( xaResource == null )
             throw new IllegalArgumentException( "Argument xaResource is null" );
-        if ( _resources == null )
-            _resources = new XAResource[] { xaResource };
+        if ( _xaResourceHolder == null )
+            _xaResourceHolder = new InternalXAResourceHolder( xaResource, callback );
         else {
-            // Prevent duplicity.
-            for ( int i = _resources.length ; i-- > 0 ; ) {
-                if ( _resources[ i ] == xaResource )
-                    return;
-                else if ( _resources[ i ] == null )
-                    next = i;
-            }
-            if ( next >= 0 )
-                _resources[ next ] = xaResource;
-            else {
-                newResources = new XAResource[ _resources.length * 2 ];
-                for ( int i = _resources.length ; i-- > 0 ; )
-                    newResources[ i ] = _resources[ i ];
-                newResources[ _resources.length ] = xaResource;
-                _resources = newResources;
-            }
+            xaResourceHolder = _xaResourceHolder;
+            
+            do {
+                if ( xaResource == xaResourceHolder._xaResource ) {
+                    return;    
+                }
+
+                xaResourceHolder = xaResourceHolder._next;
+            } while ( null != xaResourceHolder );
+
+            xaResourceHolder = new InternalXAResourceHolder( xaResource, callback );
+            xaResourceHolder._next = _xaResourceHolder;
+            _xaResourceHolder = xaResourceHolder;
         }
     }
     
@@ -386,12 +382,28 @@ public class ThreadContext
      */
     protected boolean remove( XAResource xaResource )
     {
-        if ( _resources != null ) {
-            for ( int i = _resources.length ; i-- > 0 ; )
-                if ( _resources[ i ] == xaResource ) {
-                    _resources[ i ] = null;
+        InternalXAResourceHolder xaResourceHolder;
+        InternalXAResourceHolder previousXAResourceHolder;
+
+        if ( _xaResourceHolder != null ) {
+
+            xaResourceHolder = _xaResourceHolder;
+            previousXAResourceHolder = null;
+            do {
+                if ( xaResource == xaResourceHolder._xaResource ) {
+                    if ( null == previousXAResourceHolder ) {
+                        _xaResourceHolder = xaResourceHolder._next;    
+                    }
+                    else {
+                        previousXAResourceHolder._next = xaResourceHolder._next;
+                    }
+
                     return true;
                 }
+
+                previousXAResourceHolder = xaResourceHolder;
+                xaResourceHolder = xaResourceHolder._next;
+            } while ( null != xaResourceHolder );
         }
         return false;
     }
@@ -403,30 +415,35 @@ public class ThreadContext
      *
      * @return All XA resources, or null
      */
-    protected XAResource[] getResources()
+    protected XAResourceHolder[] getXAResourceHolders()
     {
-        int           count = 0;
-        XAResource[]  resources;
+        int                         count = 0;
+        XAResourceHolder[]          xaResourceHolders;
+        InternalXAResourceHolder    xaResourceHolder;
 
-        if ( _resources == null )
+        if ( _xaResourceHolder == null )
             return null;
-        if ( _resources != null ) {
-            for ( int i = _resources.length ; i-- > 0 ; )
-                if ( _resources[ i ] != null )
-                    ++count;
-        }
-        if ( count == 0 )
-            return null;
+        
+        xaResourceHolder = _xaResourceHolder;
 
-        resources = new XAResource[ count ];
+        do {
+            ++count;
+            xaResourceHolder = xaResourceHolder._next;
+        } while ( null != xaResourceHolder );
+
+        xaResourceHolders = new XAResourceHolder[ count ];
         count = 0;
-        for ( int i = _resources.length ; i-- > 0 ; )
-            if ( _resources[ i ] != null )
-                resources[ count++ ] = _resources[ i ];
-        return resources;
+        
+        xaResourceHolder = _xaResourceHolder;
+
+        do {
+            xaResourceHolders[count++] = xaResourceHolder;
+            xaResourceHolder = xaResourceHolder._next;
+        } while ( null != xaResourceHolder );
+
+        return xaResourceHolders;
     }
-
-
+    
     /**
      * Each entry in the table has a key (thread), a value or null
      * (we don't remove on null) and a reference to the next entry in
@@ -470,9 +487,22 @@ public class ThreadContext
                 _nextEntry = previous._nextEntry;
             }
         }
-
-
     }
 
+    /**
+     * Describes an {@link XAResource} enlisted with this transaction
+     * manager.
+     */
+    private static class InternalXAResourceHolder extends XAResourceHolder
+    {
+        /**
+         * The next XA resource holder
+         */
+        private InternalXAResourceHolder _next;
 
+        InternalXAResourceHolder( XAResource xaResource, XAResourceCallback callback )
+        {
+            super( xaResource, callback );
+        }
+    }
 }

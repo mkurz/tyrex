@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionImpl.java,v 1.40 2001/09/28 18:35:19 jdaniel Exp $
+ * $Id: TransactionImpl.java,v 1.41 2001/10/05 22:15:34 mohammed Exp $
  */
 
 
@@ -72,6 +72,7 @@ import org.omg.CORBA.ORB;
 import org.omg.CORBA.TRANSACTION_ROLLEDBACK;
 import tyrex.tm.Heuristic;
 import tyrex.tm.TyrexTransaction;
+import tyrex.tm.XAResourceCallback;
 import tyrex.tm.xid.BaseXid;
 import tyrex.tm.xid.XidUtils;
 import tyrex.services.Clock;
@@ -89,8 +90,8 @@ import tyrex.util.Messages;
  * they are added.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.40 $ $Date: 2001/09/28 18:35:19 $
- * @see XAResourceHolder
+ * @version $Revision: 1.41 $ $Date: 2001/10/05 22:15:34 $
+ * @see InternalXAResourceHolder
  * @see TransactionManagerImpl
  * @see TransactionDomain
  * @see ResourceImpl
@@ -124,13 +125,13 @@ final class TransactionImpl
     /**
      * Reference to the first enlisted resource (single linked list).
      */
-    private XAResourceHolder           _enlisted;
+    private InternalXAResourceHolder           _enlisted;
 
 
     /**
      * Reference to the first delisted resource (single linked list).
      */
-    private XAResourceHolder           _delisted;
+    private InternalXAResourceHolder           _delisted;
 
 
     /**
@@ -558,12 +559,17 @@ final class TransactionImpl
             throw _sysError;
     }
 
-
-    public synchronized boolean enlistResource( XAResource xaResource )
+    public boolean enlistResource( XAResource xaResource )
         throws IllegalStateException, SystemException, RollbackException
     {
-        XAResourceHolder resHolder;
-        XAResourceHolder previousResHolder;
+        return enlistResource( xaResource, null );
+    }
+
+    synchronized boolean enlistResource( XAResource xaResource, XAResourceCallback callback )
+        throws IllegalStateException, SystemException, RollbackException
+    {
+        InternalXAResourceHolder resHolder;
+        InternalXAResourceHolder previousResHolder;
         
         if ( xaResource == null )
             throw new IllegalArgumentException( "Argument xaResource is null" );
@@ -605,12 +611,6 @@ final class TransactionImpl
                 if ( resHolder._xaResource == xaResource ) {
                     if ( resHolder._endFlag == XAResource.TMSUSPEND ) {
                         try {
-                            if (true) {
-                                synchronized(System.out) {
-                                    ////System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.start(XAResource.TMRESUME) " + xaResource + " with xid " + resHolder._xid);    
-                                }
-                            }
-
                             xaResource.start( resHolder._xid, XAResource.TMRESUME );
                             resHolder._endFlag = XAResource.TMNOFLAGS;
 
@@ -623,11 +623,6 @@ final class TransactionImpl
                             throw new NestedSystemException( except );
                         }
                     } else {
-                        if (true) {
-                            synchronized(System.out) {
-                                //System.out.println(Thread.currentThread() + "Transaction " + toString() + " Transaction.enlist() " + xaResource + " with xid " + resHolder._xid + " failed because xaresource is alread enlisted.");    
-                            }
-                        }
                         return false;
                     }
                 }
@@ -642,12 +637,6 @@ final class TransactionImpl
                 if ( resHolder._xaResource == xaResource ) {
                     if ( resHolder._endFlag == XAResource.TMSUCCESS ) {
                         try {
-                            if (true) {
-                                synchronized(System.out) {
-                                    //System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.start(XAResource.TMJOIN) " + xaResource + " with xid " + resHolder._xid + " because XAResource.end(TMSUCCESS) has already been called.");    
-                                }
-                            }
-
                             xaResource.start( resHolder._xid, XAResource.TMJOIN );
                             resHolder._endFlag = XAResource.TMNOFLAGS;
 
@@ -671,26 +660,21 @@ final class TransactionImpl
                             throw new NestedSystemException( except );
                         }
                     } else {
-                        if (true) {
-                            synchronized(System.out) {
-                                //System.out.println(Thread.currentThread() + "Transaction " + toString() + " Transaction.enlist() " + xaResource + " with xid " + resHolder._xid + " failed because xaresource is failed.");    
-                            }
-                        }
                         return false;
                     }
                 }
                 resHolder = resHolder._nextHolder;
             }
         }
-        return addNewResource( xaResource );
+        return addNewResource( xaResource, callback );
     }
 
 
     public synchronized boolean delistResource( XAResource xaResource, int flag )
         throws IllegalStateException, SystemException
     {
-        XAResourceHolder resHolder;
-        XAResourceHolder lastHolder;
+        InternalXAResourceHolder resHolder;
+        InternalXAResourceHolder lastHolder;
     
         if ( xaResource == null )
             throw new IllegalArgumentException( "Argument xaResource is null" );
@@ -735,12 +719,6 @@ final class TransactionImpl
             // commit/rollback, i.e. it's not removed from the
             // list of enlisted resources.
             try {
-                if (true) {
-                    synchronized(System.out) {
-                        //System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.end(XAResource.TMSUSPEND) " + resHolder._xaResource + " with xid " + resHolder._xid);    
-                    }
-                }
-
                 xaResource.end( resHolder._xid, XAResource.TMSUSPEND );
                 resHolder._endFlag = XAResource.TMSUSPEND;
                 return true;
@@ -768,21 +746,13 @@ final class TransactionImpl
                     lastHolder._nextHolder = resHolder._nextHolder;
                 
                 if ( flag == XAResource.TMFAIL ) {
-                    if (true) {
-                        synchronized(System.out) {
-                            //System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.end(XAResource.TMFAIL) called " + xaResource + " with xid " + resHolder._xid);    
-                        }
-                    }
-
                     xaResource.end( resHolder._xid, XAResource.TMFAIL );
+
+                    if ( null != resHolder._callback ) {
+                        resHolder._callback.fail( resHolder._xid );    
+                    }
                 }
                 else {
-                    if (true) {
-                        synchronized(System.out) {
-                            //System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.end(XAResource.TMSUCCESS) called " + xaResource + " with xid " + resHolder._xid);    
-                        }
-                    }
-
                     xaResource.end( resHolder._xid, XAResource.TMSUCCESS );
                     resHolder._nextHolder = _delisted;
                     _delisted = resHolder;
@@ -1069,7 +1039,7 @@ final class TransactionImpl
      * transaction, or all resources are read only -- there is no need to
      * commit/rollback this transaction
      * <li>{@link #Heuristic.COMMIT} All resources are prepared and those
-     * with a false {@link XAResourceHolder#readOnly} need to be commited.
+     * with a false {@link InternalXAResourceHolder#readOnly} need to be commited.
      * <li>{@link #Heuristic.ROLLBACK} The transaction has been marked for
      * rollback, an error has occured or at least one resource failed to
      * prepare and there were no resources that commited
@@ -1084,7 +1054,7 @@ final class TransactionImpl
     protected void prepare()
         throws IllegalStateException, RollbackException
     {
-        XAResourceHolder resHolder;
+        InternalXAResourceHolder resHolder;
         int              committing;
         Resource         resource;
         int              decision;
@@ -1224,26 +1194,10 @@ final class TransactionImpl
                         // We do not commit/rollback a read-only resource.
                         // If all resources are read only, we can return
                         // a read-only heuristic.
-                        if (true) {
-                            synchronized(System.out) {
-                                //System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.prepare called " + resHolder._xaResource + " with xid " + resHolder._xid);    
-                            }
-                        }
                         if ( resHolder._xaResource.prepare( resHolder._xid ) == XAResource.XA_RDONLY ) {
-                            if (true) {
-                                synchronized(System.out) {
-                                    //System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.prepare called " + resHolder._xaResource + " with xid " + resHolder._xid + " voted read-only.");    
-                                }
-                            }
                             resHolder._readOnly = true;
                         }
                         else {
-                            if (true) {
-                                synchronized(System.out) {
-                                    //System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.prepare called " + resHolder._xaResource + " with xid " + resHolder._xid + " voted commit.");    
-                                }
-                            }
-
                             ++ committing;
                         }
                     }
@@ -1283,28 +1237,10 @@ final class TransactionImpl
                         // We do not commit/rollback a read-only resource.
                         // If all resources are read only, we can return
                         // a read-only heuristic.
-                        if (true) {
-                            synchronized(System.out) {
-                                //System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.prepare called " + resHolder._xaResource + " with xid " + resHolder._xid);    
-                            }
-                        }
-
                         if ( resHolder._xaResource.prepare( resHolder._xid ) == XAResource.XA_RDONLY ) {
-                            if (true) {
-                                synchronized(System.out) {
-                                    //System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.prepare called " + resHolder._xaResource + " with xid " + resHolder._xid + " voted read-only.");    
-                                }
-                            }
-
                             resHolder._readOnly = true;
                         }
                         else {
-                            if (true) {
-                                synchronized(System.out) {
-                                    //System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.prepare called " + resHolder._xaResource + " with xid " + resHolder._xid + " voted commit.");    
-                                }
-                            }
-
                             ++ committing;
                         }
                     }
@@ -1517,7 +1453,7 @@ final class TransactionImpl
     protected void internalRollback()
     {
         Resource         resource;
-        XAResourceHolder resHolder;
+        InternalXAResourceHolder resHolder;
 
         // Check the status of the transaction and act accordingly.
         switch ( _status ) {
@@ -1628,7 +1564,7 @@ final class TransactionImpl
     protected synchronized void suspendResources()
         throws IllegalStateException, SystemException
     {
-        XAResourceHolder resHolder;
+        InternalXAResourceHolder resHolder;
         
         // Check the status of the transaction and act accordingly.
         switch ( _status ) {
@@ -1659,12 +1595,6 @@ final class TransactionImpl
             // list of enlisted resources.
             if ( resHolder._endFlag == XAResource.TMNOFLAGS ) {
                 try {
-                    if (true) {
-                        synchronized(System.out) {
-                            //System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.end(XAResource.TMSUSPEND) called " + resHolder._xaResource + " with xid " + resHolder._xid);    
-                        }
-                    }
-
                     resHolder._xaResource.end( resHolder._xid, XAResource.TMSUSPEND );
                     resHolder._endFlag = XAResource.TMSUSPEND;
                 } catch ( XAException except ) {
@@ -1689,15 +1619,15 @@ final class TransactionImpl
      * @param xaResources The resources to be enlisted in the transaction,
      * may be bull
      */
-    protected synchronized void resumeAndEnlistResources( XAResource[] xaResources )
+    protected synchronized void resumeAndEnlistResources( XAResourceHolder[] xaResourceHolders )
         throws IllegalStateException, SystemException, RollbackException
     {
         /*
           This is not the cleanest way of performing the operation (this operation
           should be split in two) but it is the most efficient.
         */
-        XAResourceHolder resHolder;
-        XAResource       xaResource;
+        InternalXAResourceHolder resHolder;
+        XAResourceHolder         xaResourceHolder;
 
         if ( _enlisted != null ) {
         
@@ -1709,12 +1639,6 @@ final class TransactionImpl
             while ( resHolder != null ) {
                 if ( resHolder._endFlag == XAResource.TMSUSPEND ) {
                     try {
-                        if (true) {
-                            synchronized(System.out) {
-                                //System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.start(XAResource.TMRESUME) " + resHolder._xaResource + " with xid " + resHolder._xid);    
-                            }
-                        }
-
                         resHolder._xaResource.start( resHolder._xid, XAResource.TMRESUME );
                         resHolder._endFlag = XAResource.TMNOFLAGS;
                     } catch ( XAException except ) {
@@ -1726,23 +1650,23 @@ final class TransactionImpl
                 resHolder = resHolder._nextHolder;
             }
         
-            if ( null != xaResources ) {
-                for ( int i = xaResources.length ; i-- > 0 ; ) {
-                    xaResource = xaResources[ i ];
+            if ( null != xaResourceHolders ) {
+                for ( int i = xaResourceHolders.length ; i-- > 0 ; ) {
+                    xaResourceHolder = xaResourceHolders[ i ];
                     resHolder = _enlisted;
                     while ( resHolder != null ) {
-                        if ( resHolder._xaResource == xaResource )
+                        if ( resHolder._xaResource == xaResourceHolder._xaResource )
                             break;
                         resHolder = resHolder._nextHolder;
                     }
                     if ( resHolder == null )
                         // new resource
-                        addNewResource( xaResource );
+                        addNewResource( xaResourceHolder._xaResource, xaResourceHolder._callback );
                 }
             }
-        } else if ( null != xaResources ) {
-            for ( int i = xaResources.length ; i-- > 0 ; )
-                addNewResource( xaResources[ i ] );
+        } else if ( null != xaResourceHolders ) {
+            for ( int i = xaResourceHolders.length ; i-- > 0 ; )
+                addNewResource( xaResourceHolders[ i ]._xaResource, xaResourceHolders[ i ]._callback );
         }
     }
 
@@ -1849,16 +1773,11 @@ final class TransactionImpl
      */
     protected void internalSetTransactionTimeout( int seconds )
     {
-        XAResourceHolder resHolder;
+        InternalXAResourceHolder resHolder;
     
         resHolder = _enlisted;
         while ( resHolder != null ) {
             try {
-                if (true) {
-                    synchronized(System.out) {
-                        //System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.setTransactionTimeout() " + resHolder._xaResource + " with seconds " + seconds);    
-                    }
-                }
                 resHolder._xaResource.setTransactionTimeout( seconds );
             } catch ( XAException except  ) {
                 // We could care less if we managed to set the
@@ -1917,7 +1836,7 @@ final class TransactionImpl
     protected synchronized String[] listResources()
     {
         String[]         resList;
-        XAResourceHolder resHolder;
+        InternalXAResourceHolder resHolder;
         int              index;
 
         resHolder = _enlisted;
@@ -2064,7 +1983,7 @@ final class TransactionImpl
     protected void forget( int ignoreHeuristic )
         throws IllegalStateException
     {
-        XAResourceHolder   resHolder;
+        InternalXAResourceHolder   resHolder;
         Transaction        suspended;
         Resource           resource;
         Synchronization    sync;
@@ -2085,11 +2004,6 @@ final class TransactionImpl
             while ( resHolder != null ) {
                 try {
                     if ( ! resHolder._shared ) {
-                        if (true) {
-                            synchronized(System.out) {
-                                //System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.forget() " + resHolder._xaResource + " with xid " + resHolder._xid);    
-                            }
-                        }
                         resHolder._xaResource.forget( resHolder._xid );
                     }
                 } catch ( XAException except ) {
@@ -2107,11 +2021,6 @@ final class TransactionImpl
             while ( resHolder != null ) {
                 try {
                     if ( ! resHolder._shared ) {
-                        if (true) {
-                            synchronized(System.out) {
-                                //System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.forget() " + resHolder._xaResource + " with xid " + resHolder._xid);    
-                            }
-                        }
                         resHolder._xaResource.forget( resHolder._xid );
                     }
                 } catch ( XAException except ) {
@@ -2205,14 +2114,14 @@ final class TransactionImpl
      */
     protected void addRecovery( XAResource xaResource, Xid xid )
     {
-        XAResourceHolder resHolder;
+        InternalXAResourceHolder resHolder;
     
         if ( xaResource == null )
             throw new IllegalArgumentException( "Argument xaResource is null" );
         if ( xid == null )
             throw new IllegalArgumentException( "Argument xid is null" );
     
-        resHolder = new XAResourceHolder( xaResource, xid, false );
+        resHolder = new InternalXAResourceHolder( xaResource, null, xid, false );
         resHolder._nextHolder = _enlisted;
         resHolder._endFlag = XAResource.TMSUCCESS;
         _enlisted = resHolder;
@@ -2255,7 +2164,7 @@ final class TransactionImpl
      * @return True if all the resources in the specified
      * XA resource holder list are shared
      */
-    private boolean areXaResourcesShared( XAResourceHolder resHolder, 
+    private boolean areXaResourcesShared( InternalXAResourceHolder resHolder, 
                                           boolean isPreviouslyShared )
     {
         // true if an XA resource in the specified XA resource
@@ -2525,7 +2434,7 @@ final class TransactionImpl
      */
     private void endEnlistedResourcesForCommit()
     {
-        XAResourceHolder resHolder;
+        InternalXAResourceHolder resHolder;
 
         // We always end these resources, even if we made a heuristic
         // decision not to commit this transaction.
@@ -2554,23 +2463,13 @@ final class TransactionImpl
      * @throws SystemException if the xa resource is not
      * in the proper state for its work to be ended.
      */
-    private void endForTransactionBoundary( XAResourceHolder resHolder )
+    private void endForTransactionBoundary( InternalXAResourceHolder resHolder )
         throws SystemException, XAException
     {
         if ( ( resHolder._endFlag == XAResource.TMNOFLAGS ) || 
              ( resHolder._endFlag == XAResource.TMSUSPEND ) ) {
             if (resHolder._endFlag == XAResource.TMSUSPEND) {
-                if (true) {
-                    synchronized(System.out) {
-                        //System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.start(XAResource.TMRESUME) " + resHolder._xaResource + " with xid " + resHolder._xid);    
-                    }
-                }
                 resHolder._xaResource.start( resHolder._xid, XAResource.TMRESUME );
-            }
-            if (true) {
-                synchronized(System.out) {
-                    //System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.end(XAResource.TMSUCCESS) " + resHolder._xaResource + " with xid " + resHolder._xid);    
-                }
             }
             resHolder._xaResource.end( resHolder._xid, XAResource.TMSUCCESS );
             resHolder._endFlag = XAResource.TMSUCCESS;
@@ -2588,19 +2487,8 @@ final class TransactionImpl
      * @param resHolder The XA resource holder
      * @param except The XAException that occurred
      */
-    private void xaError( XAResourceHolder resHolder, XAException except )
+    private void xaError( InternalXAResourceHolder resHolder, XAException except )
     {
-
-        if ( except.getClass().getName().equals("oracle.jdbc.xa.OracleXAException") ) {
-            try {
-                synchronized(System.out) {
-                    //System.out.println("\n\n**ORacle error " + except.getClass().getDeclaredMethod("getOracleError", null).invoke(except, null));
-                }
-            }
-            catch(Exception e) {
-                e.printStackTrace();
-            }
-        }
         if ( except.errorCode == XAException.XA_HEURMIX ) {
             _heuristic = _heuristic | Heuristic.MIXED; 
             _txDomain._category.error( "XAResource " + resHolder._xaResource +
@@ -2636,24 +2524,23 @@ final class TransactionImpl
      * @param onePhaseCommit True if the XA resources are 
      * to be committed using one phase commit
      */
-    private void commitXAResources( XAResourceHolder resHolder, boolean onePhaseCommit )
+    private void commitXAResources( InternalXAResourceHolder resHolder, boolean onePhaseCommit )
     {
         while ( resHolder != null ) {
             try {      
                 // Shared resources and read-only resources
                 // are not commited.
                 if ( ! resHolder._shared && ! resHolder._readOnly ) {
-                    if (true) {
-                        synchronized(System.out) {
-                            //System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.commit(" + onePhaseCommit + ") " + resHolder._xaResource + " with xid " + resHolder._xid);    
-                        }
-                    }
-
                     resHolder._xaResource.commit( resHolder._xid, onePhaseCommit );
                     // At least one resource commited, we are either
                     // commit or mixed.
                     _heuristic = _heuristic | Heuristic.COMMIT;
                 }
+
+                if ( null != resHolder._callback ) {
+                    resHolder._callback.boundary( resHolder._xid, true );    
+                }
+
             } catch ( XAException except ) {
                 xaError( resHolder, except );
             } catch ( Exception except ) {
@@ -2672,7 +2559,7 @@ final class TransactionImpl
      *
      * @param resHolder A list of XA resource holders
      */
-    private void rollbackXAResources( XAResourceHolder resHolder )
+    private void rollbackXAResources( InternalXAResourceHolder resHolder )
     {
         // Rollback each of the resources, regardless of
         // error conditions. Shared resources do not require
@@ -2680,17 +2567,16 @@ final class TransactionImpl
         while ( resHolder != null ) {
             try {
                 if ( ! resHolder._shared && ! resHolder._readOnly ) {
-                    if (true) {
-                        synchronized(System.out) {
-                            //System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.rollback() " + resHolder._xaResource + " with xid " + resHolder._xid);    
-                        }
-                    }
-
                     resHolder._xaResource.rollback( resHolder._xid );
                     // Initially we're readonly so we switch to rollback.
                     // If we happen to be in commit, we switch to mixed.
                     _heuristic = _heuristic | Heuristic.ROLLBACK;
                 }
+
+                if ( null != resHolder._callback ) {
+                    resHolder._callback.boundary( resHolder._xid, true );    
+                }
+
             } catch ( XAException except ) {
                 xaError( resHolder, except );
             } catch ( Exception except ) {
@@ -2718,10 +2604,10 @@ final class TransactionImpl
      * @throws SystemException if there is a general problem
      * sharing the resource.
      */
-    private boolean shareResource( XAResource xaResource, XAResourceHolder resHolder )
+    private boolean shareResource( XAResource xaResource, XAResourceCallback callback, InternalXAResourceHolder resHolder )
         throws XAException, SystemException
     {
-        XAResourceHolder newResHolder;
+        InternalXAResourceHolder newResHolder;
         Xid              xid;
         boolean          differentBranches;
         XAResourceHelper helper;
@@ -2734,41 +2620,28 @@ final class TransactionImpl
                     helper = XAResourceHelperManager.getHelper( xaResource );
                     differentBranches = helper.useDifferentBranchesForSharedResources();
                     if ( differentBranches ) {
-                        newResHolder = new XAResourceHolder( xaResource, XAResourceHelperManager.getHelper( xaResource ).getXid( XidUtils.newBranch( resHolder._xid ) ), 
+                        newResHolder = new InternalXAResourceHolder( xaResource, callback, XAResourceHelperManager.getHelper( xaResource ).getXid( XidUtils.newBranch( resHolder._xid ) ), 
                                                              helper.treatDifferentBranchesForSharedResourcesAsShared() );
                     } else {
-                        newResHolder = new XAResourceHolder( xaResource, resHolder._xid, true );
+                        newResHolder = new InternalXAResourceHolder( xaResource, callback, resHolder._xid, true );
                     }
                     
                     if ( differentBranches ) { 
-                        if (true) {
-                            synchronized(System.out) {
-                                //System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.start(XAResource.TMNOFLAGS) " + resHolder._xaResource + " with xid " + resHolder._xid + " with different branches");    
-                            }
-                        }
-
                         newResHolder._xaResource.start( newResHolder._xid, XAResource.TMNOFLAGS );
                     } else {
                         if ( XAResource.TMSUSPEND == resHolder._endFlag ) {
-                            if (true) {
-                                synchronized(System.out) {
-                                    //System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.start(XAResource.TMRESUME) " + resHolder._xaResource + " with xid " + resHolder._xid);    
-                                }
-                            }
-
                             resHolder._xaResource.start( resHolder._xid, XAResource.TMRESUME );
                             resHolder._endFlag = XAResource.TMNOFLAGS;
                         }
-                        if (true) {
-                            synchronized(System.out) {
-                                //System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.start(XAResource.TMJOIN) " + resHolder._xaResource + " with xid " + resHolder._xid);    
-                            }
-                        }
-
                         newResHolder._xaResource.start( newResHolder._xid, XAResource.TMJOIN );
                     }
                     newResHolder._nextHolder = _enlisted;
                     _enlisted = newResHolder;
+
+                    if ( null != callback ) {
+                        callback.enlist( newResHolder._xid );    
+                    }
+
                     return true;
                 }
                 resHolder = resHolder._nextHolder;
@@ -2798,15 +2671,15 @@ final class TransactionImpl
      * @param xa The new resource
      * @return True if the resource has been added.
      */
-    private boolean addNewResource( XAResource xaResource )
+    private boolean addNewResource( XAResource xaResource, XAResourceCallback callback )
         throws SystemException, RollbackException
     {
-        XAResourceHolder resHolder;
+        InternalXAResourceHolder resHolder;
         Xid              xid;
     
         try {
-            if ( shareResource( xaResource, _enlisted ) ||
-                 shareResource( xaResource, _delisted ) )
+            if ( shareResource( xaResource, callback, _enlisted ) ||
+                 shareResource( xaResource, callback, _delisted ) )
                 return true;    
         } catch ( XAException except ) {
             return false;
@@ -2821,15 +2694,9 @@ final class TransactionImpl
         } catch ( XAException except ) {
             throw new NestedSystemException( except );
         }
-        resHolder = new XAResourceHolder( xaResource, xid, false );
+        resHolder = new InternalXAResourceHolder( xaResource, callback, xid, false );
         
         try {
-            if (true) {
-                synchronized(System.out) {
-                    //System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.start(XAResource.TMNOFLAGS) called " + xaResource + " with xid " + resHolder._xid);    
-                }
-            }
-
             xaResource.start( xid, XAResource.TMNOFLAGS );
             resHolder._nextHolder = _enlisted;
             _enlisted = resHolder;
@@ -2971,7 +2838,7 @@ final class TransactionImpl
      * until the transaction timesout or is forgetted. The only way to
      * delist a resource is if it fails.
      */
-    private static class XAResourceHolder
+    private static class InternalXAResourceHolder extends XAResourceHolder
     {
     
 
@@ -2983,12 +2850,6 @@ final class TransactionImpl
          * is dictated by the RM.
          */
         final Xid         _xid;
-    
-
-        /**
-         * The enlisted XA resource.
-         */
-        final XAResource  _xaResource;
     
 
         /**
@@ -3031,12 +2892,12 @@ final class TransactionImpl
          * Reference to the next XA resource holder in a single linked-list
          * of either enlisted or delisted resources.
          */
-        XAResourceHolder  _nextHolder;
+        InternalXAResourceHolder  _nextHolder;
 
 
-        XAResourceHolder( XAResource xaResource, Xid xid, boolean shared )
+        InternalXAResourceHolder( XAResource xaResource, XAResourceCallback callback, Xid xid, boolean shared )
         {
-            _xaResource = xaResource;
+            super( xaResource, callback );
             _xid = xid;
             _shared = shared;
         }

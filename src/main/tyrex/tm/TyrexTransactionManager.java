@@ -119,6 +119,22 @@ public interface TyrexTransactionManager
 
 
     /**
+     * Called to enlist a resource with the current thread.
+     * If this method is called within an active transaction,
+     * the connection will be enlisted in that transaction.
+     * The connection will be enlisted in any future transaction
+     * associated with the same thread context.
+     *
+     * @param xaRes The XA resource
+     * @param callback The callback (optional)
+     * @throws SystemException The resource cannot be enlisted with
+     * the current transaction
+     * @see XAResourceCallback
+     */
+    public abstract void enlistResource( XAResource xaResource, XAResourceCallback callback )
+        throws SystemException;
+
+    /**
      * Called to delist a resource from the current thread.
      * If this method is called within an active transaction,
      * the connection will be delisted using the success flag.

@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionManagerImpl.java,v 1.18 2001/09/28 18:35:19 jdaniel Exp $
+ * $Id: TransactionManagerImpl.java,v 1.19 2001/10/05 22:15:34 mohammed Exp $
  */
 
 
@@ -62,6 +62,7 @@ import javax.transaction.xa.Xid;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.XAException;
 import tyrex.tm.TyrexTransactionManager;
+import tyrex.tm.XAResourceCallback;
 import tyrex.util.Messages;
 
 
@@ -76,7 +77,7 @@ import tyrex.util.Messages;
  * transaction server.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.18 $ $Date: 2001/09/28 18:35:19 $
+ * @version $Revision: 1.19 $ $Date: 2001/10/05 22:15:34 $
  * @see Tyrex#recycleThread
  * @see TransactionDomain
  * @see TransactionImpl
@@ -108,9 +109,9 @@ final class TransactionManagerImpl
     public void begin()
         throws NotSupportedException, SystemException
     {
-        Thread           thread;
-        ThreadContext    context;
-        XAResource[]     resources;
+        Thread                 thread;
+        ThreadContext          context;
+        XAResourceHolder[]     resources;
         TransactionImpl  tx;
 
         thread = Thread.currentThread();
@@ -128,24 +129,13 @@ final class TransactionManagerImpl
             }
         } else
             tx = _txDomain.createTransaction( null, 0 );
-        synchronized(System.out) {
-            //System.out.println(Thread.currentThread() + "TransactionManager " + toString() + " begin " + tx);    
-        }
-
+        
         if ( _txDomain.enlistThread( tx, context, thread ) ) {
             // If there are any resources associated with the thread,
             // we need to enlist them with the transaction.
-            resources = context.getResources();
-            synchronized(System.out) {
-                //System.out.println(Thread.currentThread() + "TransactionManager " + toString() + " enlist " + resources + " " + (null == resources ? "null" : Integer.toString(resources.length)));    
-            }
+            resources = context.getXAResourceHolders();
             if ( resources != null )
                 enlistResources( tx, resources );
-        }
-        else {
-            synchronized(System.out) {
-                //System.out.println(Thread.currentThread() + "TransactionManager " + toString() + " failed to enlist thread ");    
-            }
         }
     }
 
@@ -164,9 +154,6 @@ final class TransactionManagerImpl
         if ( tx == null )
             throw new IllegalStateException( Messages.message( "tyrex.tx.inactive" ) );
         
-        synchronized(System.out) {
-            //System.out.println(Thread.currentThread() + "TransactionManager " + toString() + " commit " + tx);    
-        }
         tx.commit();
         
         _txDomain.delistThread( context, thread );
@@ -185,9 +172,6 @@ final class TransactionManagerImpl
         tx = context._tx;
         if ( tx == null )
             throw new IllegalStateException( Messages.message( "tyrex.tx.inactive" ) );
-        synchronized(System.out) {
-            //System.out.println(Thread.currentThread() + "TransactionManager " + toString() + " rollback " + tx);    
-        }
         tx.rollback();
         
         _txDomain.delistThread( context, thread );
@@ -236,10 +220,7 @@ final class TransactionManagerImpl
             if ( txImpl._status != Status.STATUS_ACTIVE && txImpl._status != Status.STATUS_MARKED_ROLLBACK )
                 throw new InvalidTransactionException( Messages.message( "tyrex.tx.inactive" ) );
             try {
-                synchronized(System.out) {
-                    //System.out.println(Thread.currentThread() + "TransactionManager " + toString() + " resume " + tx);    
-                }
-                ( (TransactionImpl) txImpl.getTopLevel() ).resumeAndEnlistResources( context.getResources() );
+                ( (TransactionImpl) txImpl.getTopLevel() ).resumeAndEnlistResources( context.getXAResourceHolders() );
             } catch ( RollbackException except ) { }
             _txDomain.enlistThread( txImpl, context, thread );
         }
@@ -276,9 +257,6 @@ final class TransactionManagerImpl
                     // the resources associated with the thread is
                     // a subset of the resources associated with the 
                     // transaction.
-                    synchronized(System.out) {
-                        //System.out.println(Thread.currentThread() + "TransactionManager " + toString() + " suspend " + tx);    
-                    }
                     tx.suspendResources();
                 } catch ( SystemException except ) { }
                 return tx;
@@ -362,8 +340,13 @@ final class TransactionManagerImpl
         return ThreadContext.getThreadContext()._tx;
     }
 
-
     public void enlistResource( XAResource xaResource )
+        throws SystemException
+    {
+        enlistResource( xaResource, null );
+    }
+
+    public void enlistResource( XAResource xaResource, XAResourceCallback callback )
         throws SystemException
     {
         ThreadContext   context;
@@ -378,25 +361,17 @@ final class TransactionManagerImpl
         // for the current thread.
         // For the resources all transaction are flat: we always
         // enlist with the top level transaction.
-        synchronized(System.out) {
-            //System.out.println(Thread.currentThread() + "TransactionManager " + toString() + " enlist resournce " + xaResource);    
-        }
-        context.add( xaResource );
+        context.add( xaResource, callback );
         tx = context._tx;
         if ( tx != null ) {
             try {
-                tx.getTopLevel().enlistResource( xaResource );
+                ( ( TransactionImpl ) tx.getTopLevel() ).enlistResource( xaResource, callback );
             } catch ( IllegalStateException except ) {
                 // The transaction is preparing/committing.
                 // We still allow future enlistment.
             } catch ( RollbackException except ) {
                 // The transaction has rolled back.
                 // We still allow future enlistment.
-            }
-        }
-        else {
-            synchronized(System.out) {
-                //System.out.println(Thread.currentThread() + "TransactionManager " + toString() + " no tx to enlist " + xaResource);    
             }
         }
     }
@@ -474,13 +449,13 @@ final class TransactionManagerImpl
      * @throws SystemException if there is a problem enlisting the 
      * resources.
      */
-    private void enlistResources( Transaction tx, XAResource[] xaResources )
+    private void enlistResources( TransactionImpl tx, XAResourceHolder[] xaResourceHolders )
         throws SystemException
     {
-        if ( xaResources != null ) {
+        if ( xaResourceHolders != null ) {
             try {
-                for ( int i = xaResources.length ; i-- > 0 ; ) 
-                    tx.enlistResource( xaResources[ i ] );
+                for ( int i = xaResourceHolders.length ; i-- > 0 ; ) 
+                    tx.enlistResource( xaResourceHolders[ i ]._xaResource, xaResourceHolders[ i ]._callback );
             } catch ( Exception except ) {
                 // Any error that occurs in the enlisting and we
                 // cannot go on with the transaction. Must rollback
