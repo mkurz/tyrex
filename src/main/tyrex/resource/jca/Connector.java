@@ -75,7 +75,7 @@ import tyrex.util.Logger;
 /**
  * 
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  */
 public class Connector
     extends ResourceConfig
@@ -276,7 +276,6 @@ public class Connector
         else {
             jarURL = new URL( "jar:" + url + "!/" + DEPLOYMENT_DESCRIPTOR_PATH );
         }
-        System.out.println("jarurl " + jarURL);
         return jarURL.openStream();
     }
 }
