@@ -2,17 +2,31 @@
 <document url="http://tyrex.sourceforge.net/changelog.xml">
   <body>
     <title>Change log</title>
+<section title="Version 1.0.1  November 11 2003"><pre>
+- Modified domain schema, so data source configuration does not demand jar to be specified explicitly.
+  If datasource jar and / or path not specified - the JVM classpath will simply be used. This change
+  simplifies deployments into containers where URLs are hard to predict. Connector configuration still
+  requires jar URL - because it loads connector descriptors from META-INF (so it needs jar itself not 
+  just a java class). This suggests that the whole jar / path configuration business probably needs to be revisited
+  in the future.
+- Added copies of JCA and JAAS jars as they are now officially released by Sun and available for redistribution.
+- Advanced to Log4j 1.2.8 release and added jar into the distribution.
+- Advanced to Sun Java Web Services Developer Pack 1.1
+- Advanced to Ant 1.5.3.1
+- First official release by MetaBoss crew.
+  May not have much improvements but significant from the handover point of view.
+    </pre></section>    
 <section title="Version 1.0  April 23 2002"><pre>
 - Added Log 4 J code from Sam Ruby.
 - Removed recovery code as it is experimental.
 - Bug fixes
 - Added workaround for Informix
     </pre></section>    
-    <section title="Version 0.9.7.1  January 11 2001"><pre>
+<section title="Version 0.9.7.1  January 11 2001"><pre>
 - Changed the Log system to use Log 4 J.
 - Changed the XID branch and global ID generator by an UUID generator.
     </pre></section>
-    <section title="Version 0.9.7.0  January 11 2001"><pre>
+<section title="Version 0.9.7.0  January 11 2001"><pre>
 - Added Recovery mechanism. Each transactional event is logged
   into a file. When the transaction service fails ( and shutdowns ),
   it is possible to restart it and to activate the recovery. In this
@@ -23,7 +37,7 @@
 - Modified Tyrex OTS interfaces to be compliant with CORBA development rules.
   It is now possible to use Tyrex as an OTS by running it with OpenORB.
     </pre></section>
-    <section title="Version 0.9.6.1  September 25, 2000"><pre>
+<section title="Version 0.9.6.1  September 25, 2000"><pre>
 - Defined Castor mapping file. Ships with updated castor.0.8.8.jar 
   (different from released castor.0.8.8.jar; requires a fix to 
   Castor mapping loader that is in Castor CVS).
@@ -37,7 +51,7 @@
   with a user name and password.
 - Tomcat and Tyrex integration fixed and tested with Tomcat 3.1
     </pre></section>
-    <section title="Version 0.9.6  August 25, 2000"><pre>
+<section title="Version 0.9.6  August 25, 2000"><pre>
 - Split server package into tm and server packages.
   The tm package contains jta specific code and 
   server packages contains transaction server code.

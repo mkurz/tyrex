@@ -1,3 +1,29 @@
+Version 1.0.1  November 11, 2003
+---------------------------
+- Modified domain schema, so data source configuration does not demand jar to be specified explicitly.
+  If datasource jar and / or path not specified - the JVM classpath will simply be used. This change
+  simplifies deployments into containers where URLs are hard to predict. Connector configuration still
+  requires jar URL - because it loads connector descriptors from META-INF (so it needs jar itself not 
+  just a java class). This suggests that the whole jar / path configuration business probably needs to be revisited
+  in the future.
+- Added copies of JCA and JAAS jars as they are now officially released by Sun and available for redistribution.
+- Advanced to Log4j 1.2.8 release and added jar into the distribution.
+- Advanced to Sun Java Web Services Developer Pack 1.1
+- Advanced to Ant 1.5.3.1
+- First official release by MetaBoss crew.
+  May not have much improvements but significant from the handover point of view.
+
+
+Version 1.0  April 23, 2002
+---------------------------
+- Added Log 4 J code from Sam Ruby.
+
+- Removed recovery code as it is experimental.
+
+- Bug fixes
+
+- Added workaround for Informix
+
 Version 0.9.8  Mar 12, 2000
 ---------------------------
 
