@@ -71,7 +71,7 @@ class XAResourceHelperManager
     /**
      * The oracle resource class name
      */
-    private static final String oracleXAResourceClassName = "oracle.jdbc.xa.client.OracleXAResource";
+    private static final String oracleXAResourceClassName = "oracle.jdbc.xa.client.OracleXAResource".intern();
 
 
     /**
@@ -91,7 +91,7 @@ class XAResourceHelperManager
      */
     synchronized static XAResourceHelper getHelper(XAResource xaResource)
     {
-        if (xaResource.getClass().getName().equals(oracleXAResourceClassName)) {
+        if (xaResource.getClass().getName().intern() == oracleXAResourceClassName) {
             if (null == oracleHelper) {
                 oracleHelper = new OracleXAResourceHelper();
             }
