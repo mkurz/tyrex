@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionImpl.java,v 1.21 2001/05/16 23:03:42 arkin Exp $
+ * $Id: TransactionImpl.java,v 1.22 2001/05/16 23:05:20 arkin Exp $
  */
 
 
@@ -88,7 +88,7 @@ import tyrex.util.Messages;
  * they are added.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.21 $ $Date: 2001/05/16 23:03:42 $
+ * @version $Revision: 1.22 $ $Date: 2001/05/16 23:05:20 $
  * @see XAResourceHolder
  * @see TransactionManagerImpl
  * @see TransactionDomain
@@ -1865,8 +1865,10 @@ final class TransactionImpl
         // marked as rollback-only.
         if ( _syncs != null ) {
             beforeCompletion();
-            if ( _status == STATUS_MARKED_ROLLBACK )
+            if ( _status == STATUS_MARKED_ROLLBACK ) {
+                _heuristic = Heuristic.ROLLBACK;
                 return;
+            }
         }
 
         // We begin by having no heuristics at all, but during
