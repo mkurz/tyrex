@@ -1,0 +1,24 @@
+<html>
+  <title>Container Principal And Credentials</title>
+
+  <body>
+    <p>Principal and credentials used by a J2EE container. These principals and
+       credentials are created by a JAAS login module and exposed to the application
+       through the Servlet and EJB APIs in the form of the principal and list of roles.</p>
+
+    <p>{@link RealmPrincipal} represents a J2EE principal. The principal name is equivalent
+       to the account and can be used to access entities associated with that user.
+       The container may use the realm to distinguish users of the same principal name
+       accessing different realms.</p>
+
+    <p>{@link RoleCredentials} represents a J2EE credential listing all the roles of
+       which the principal is a member. The container may determine whether the principal
+       is a member of a particular role, or list all the role names.</p>
+
+    <p>{@link SecureConnection} represents a secure connection between client and server,
+       allowing the application to establish that it is being accessed in a secure
+       fashion. This credential is exposed to the application through the <tt>isSecure</tt>
+       method in the Servlet API.</p>
+
+  </body>
+</html>
