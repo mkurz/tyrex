@@ -5,7 +5,7 @@
 
     <section title="WebCVS, Snapshots, Bugzilla">
 
-      <p><a href="http://tyrex.exolab.org/cgi-bin/cvsweb.cgi/tyrex/?cvsroot=Tyrex">WebCVS access to the repository.</a></p>
+      <p><a href="http://tyrex.exolab.org/cgi-bin/cvsweb.cgi/tyrex/?cvsroot=tyrex">WebCVS access to the repository.</a></p>
 
       <p>Or, <a href="download.xml">download the full source distribution</a>
          containing the latest snapshot of the CVS.</p>
