@@ -40,7 +40,7 @@
  *
  * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionDomainImpl.java,v 1.8 2001/03/03 03:00:56 arkin Exp $
+ * $Id: TransactionDomainImpl.java,v 1.9 2001/03/03 04:38:49 arkin Exp $
  */
 
 
@@ -91,7 +91,7 @@ import tyrex.util.Configuration;
  * Implementation of a transaction domain.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.8 $ $Date: 2001/03/03 03:00:56 $
+ * @version $Revision: 1.9 $ $Date: 2001/03/03 04:38:49 $
  */
 public class TransactionDomainImpl
     extends TransactionDomain
@@ -248,6 +248,8 @@ public class TransactionDomainImpl
         String         factoryName;
         Resource[]     resources;
         XAResource[]   xaResources;
+        int            count;
+        Iterator       iterator;
 
         if ( config == null )
             throw new IllegalArgumentException( "Argument config is null" );
@@ -283,10 +285,17 @@ public class TransactionDomainImpl
         if ( config.getResources() != null ) {
             try {
                 _resources = config.getResources();
-                resources = _resources.createResources( this );
-                xaResources = new XAResource[ resources.length ];
-                for ( int i = 0 ; i < resources.length ; ++i )
-                    xaResources[ i ] = resources[ i ].getXAResource();
+                _resources.setTransactionDomain( this );
+                iterator = _resources.listResources();
+                for ( count = 0 ; iterator.hasNext() ; ++count )
+                    iterator.next();
+                resources = new Resource[ count ];
+                xaResources = new XAResource[ count ];
+                iterator = _resources.listResources();
+                for ( count = 0 ; iterator.hasNext() ; ++count ) {
+                    resources[ count ] = _resources.getResource( (String) iterator.next() );
+                    xaResources[ count ] = resources[ count ].getXAResource();
+                }
             } catch ( Exception except ) {
                 throw new DomainException( except );
             }
