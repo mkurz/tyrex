@@ -99,7 +99,7 @@ public class OTSTest extends TestCase
      *    - commit the transaction
      *    - check its status is StatusNoTransaction
      */
-    public void notestBasicTransaction() throws org.omg.CORBA.UserException {
+    public void testBasicTransaction() throws org.omg.CORBA.UserException {
         stream.writeVerbose("Get the current object'");
         Current current = CurrentHelper.narrow( _orb.resolve_initial_references("TransactionCurrent") );
 
@@ -129,7 +129,7 @@ public class OTSTest extends TestCase
      *    - try to commit a transaction
      *    - catch the expected exception NoTransaction
      */
-    public void notestIsTransaction() throws org.omg.CORBA.UserException {
+    public void testIsTransaction() throws org.omg.CORBA.UserException {
         stream.writeVerbose("Get the current object'");
         Current current = CurrentHelper.narrow( _orb.resolve_initial_references("TransactionCurrent") );
 
@@ -153,7 +153,7 @@ public class OTSTest extends TestCase
      *    - check the results
      *    - commit the transaction
      */
-    public void notestCommitTransaction() throws org.omg.CORBA.UserException {
+    public void testCommitTransaction() throws org.omg.CORBA.UserException {
         stream.writeVerbose("Begin the basic test'");
 
         otstests.Bank bobj = (new BankImpl())._this(_orb);;
@@ -181,7 +181,7 @@ public class OTSTest extends TestCase
      *    - check the results
      *    - rollback the transaction
      */
-    public void notestRollbackTransaction() throws org.omg.CORBA.UserException {
+    public void testRollbackTransaction() throws org.omg.CORBA.UserException {
         stream.writeVerbose("Begin the basic test'");
 
         otstests.Bank bobj = (new BankImpl())._this(_orb);;
@@ -209,7 +209,7 @@ public class OTSTest extends TestCase
      *    - try to commit
      *    - transaction should have been rollbacked
      */
-    public void notestRollbackOnlyTransaction() throws org.omg.CORBA.UserException {
+    public void testRollbackOnlyTransaction() throws org.omg.CORBA.UserException {
         stream.writeVerbose("Begin the basic test'");
 
         otstests.Bank bobj = (new BankImpl())._this(_orb);;
@@ -244,7 +244,7 @@ public class OTSTest extends TestCase
      *    - try to commit
      *    - synchronization should have been invoked
      */
-    public void notestSynchronizationTransaction() throws org.omg.CORBA.UserException {
+    public void testSynchronizationTransaction() throws org.omg.CORBA.UserException {
         stream.writeVerbose("Begin the basic test'");
 
         otstests.Bank bobj = (new BankImpl())._this(_orb);;
@@ -285,7 +285,7 @@ public class OTSTest extends TestCase
      *    - try to commit using 1PC
      *    - check 1PC was used
      */
-    public void notestCommitOnePhaseTransaction() throws org.omg.CORBA.UserException {
+    public void testCommitOnePhaseTransaction() throws org.omg.CORBA.UserException {
         stream.writeVerbose("Begin the test");
 
         ResourceImpl r = new ResourceImpl();
@@ -326,7 +326,7 @@ public class OTSTest extends TestCase
      *    - check the results
      *    - check the resources were commited
      */
-    public void notestCommitResourcesTransaction() throws org.omg.CORBA.UserException {
+    public void testCommitResourcesTransaction() throws org.omg.CORBA.UserException {
         stream.writeVerbose("Begin the test");
 
         ResourceImpl r1 = new ResourceImpl();
@@ -374,7 +374,7 @@ public class OTSTest extends TestCase
      *    - check the results
      *    - check the resources were rollbacked
      */
-    public void notestRollbackResourcesTransaction() throws org.omg.CORBA.UserException {
+    public void testRollbackResourcesTransaction() throws org.omg.CORBA.UserException {
         stream.writeVerbose("Begin the test");
 
         ResourceImpl r1 = new ResourceImpl();
@@ -427,7 +427,7 @@ public class OTSTest extends TestCase
      *    - commit the transaction
      *    - check the resource was commited
      */
-    public void notestReadOnlyTransaction() throws org.omg.CORBA.UserException {
+    public void testReadOnlyTransaction() throws org.omg.CORBA.UserException {
         stream.writeVerbose("Begin the test");
 
         ResourceImpl r1 = new ResourceImpl();
@@ -474,7 +474,7 @@ public class OTSTest extends TestCase
      *    - vote rollback the transaction
      *    - check the resource was rollbacked
      */
-    public void notestRollbackVoteTransaction() throws org.omg.CORBA.UserException {
+    public void testRollbackVoteTransaction() throws org.omg.CORBA.UserException {
         stream.writeVerbose("Begin the test");
 
         ResourceImpl r1 = new ResourceImpl();
@@ -527,7 +527,7 @@ public class OTSTest extends TestCase
      *    - vote rollback the transaction
      *    - check the resources were rollbacked
      */
-    public void notestComplexRollbackVoteTransaction() throws org.omg.CORBA.UserException {
+    public void testComplexRollbackVoteTransaction() throws org.omg.CORBA.UserException {
         stream.writeVerbose("Begin the test");
 
         ResourceImpl r1 = new ResourceImpl();
@@ -581,7 +581,7 @@ public class OTSTest extends TestCase
      *    - vote rollback the transaction
      *    - check the resources were rollbacked
      */
-    public void notestSuspendTransaction() throws org.omg.CORBA.UserException {
+    public void testSuspendTransaction() throws org.omg.CORBA.UserException {
         stream.writeVerbose("Begin the test");
 
         stream.writeVerbose("Get the current object");
@@ -600,7 +600,7 @@ public class OTSTest extends TestCase
 
         stream.writeVerbose("commit the transaction");
 
-        current.commit( true );
+        current.commit( false );
 
         stream.writeVerbose("Resume the first transaction");
 
@@ -622,7 +622,7 @@ public class OTSTest extends TestCase
      *    - vote rollback the transaction
      *    - check the resources were rollbacked
      */
-    public void notestComplexSuspendTransaction() throws org.omg.CORBA.UserException {
+    public void testComplexSuspendTransaction() throws org.omg.CORBA.UserException {
         stream.writeVerbose("Begin the test");
 
         stream.writeVerbose("Get the current object");
@@ -680,7 +680,7 @@ public class OTSTest extends TestCase
      *    - wait 15 secs
      *    - check the transaction was rollbacked
      */
-    public void notestTimeOutTransaction() throws org.omg.CORBA.UserException, InterruptedException {
+    public void testTimeOutTransaction() throws org.omg.CORBA.UserException, InterruptedException {
         stream.writeVerbose("Begin the test");
 
         stream.writeVerbose("Get the current object");
@@ -716,7 +716,7 @@ public class OTSTest extends TestCase
      *    - wait 15 secs
      *    - check the transaction was rollbacked
      */
-    public void notestExplicitTransaction() throws org.omg.CORBA.UserException {
+    public void testExplicitTransaction() throws org.omg.CORBA.UserException {
         stream.writeVerbose("Begin the test");
         
         ResourceImpl r1 = new ResourceImpl();
@@ -759,7 +759,7 @@ public class OTSTest extends TestCase
      *    - get propagation context
      *    - check the propagation context
      */
-    public void notestPropagationContextTransaction() throws org.omg.CORBA.UserException {
+    public void testPropagationContextTransaction() throws org.omg.CORBA.UserException {
         stream.writeVerbose("Begin the test");
 
         stream.writeVerbose("Get the transaction factory");
@@ -844,7 +844,7 @@ public class OTSTest extends TestCase
      *    - rollback the transaction
      *    - check the transaction was rollbacked
      */
-    public void notestSubordinateRollbackTransaction() throws org.omg.CORBA.UserException {
+    public void testSubordinateRollbackTransaction() throws org.omg.CORBA.UserException {
         stream.writeVerbose("Begin the test");
         
         stream.writeVerbose("Get the transaction factory");
@@ -876,7 +876,7 @@ public class OTSTest extends TestCase
         {
             return;
         }
-        catch ( org.omg.CosTransactions.HeuristicHazard  e )
+        catch ( org.omg.CosTransactions.HeuristicMixed e )
         {
             return;
         }
@@ -890,7 +890,7 @@ public class OTSTest extends TestCase
      *    - create a transaction
      *    - compares the 2 transactions
      */
-    public void notestBasicMultipleTransaction() throws org.omg.CORBA.UserException {
+    public void testBasicMultipleTransaction() throws org.omg.CORBA.UserException {
         stream.writeVerbose("Begin the test");
 
         stream.writeVerbose("Get the transaction factory");
@@ -932,7 +932,7 @@ public class OTSTest extends TestCase
      *    - create a transaction
      *    - compares the 2 transactions
      */
-    public void notestMultipleTransaction() throws org.omg.CORBA.UserException {
+    public void testMultipleTransaction() throws org.omg.CORBA.UserException {
         stream.writeVerbose("Begin the test");
 
         stream.writeVerbose("Get the transaction factory");
@@ -974,7 +974,7 @@ public class OTSTest extends TestCase
      *    - commit the sub transaction
      *    - commit the top level transaction
      */
-    public void notestBasicSubTransaction() throws org.omg.CORBA.UserException {
+    public void testBasicSubTransaction() throws org.omg.CORBA.UserException {
         stream.writeVerbose("Begin the test");
 
         stream.writeVerbose("Get the current object");
@@ -987,7 +987,7 @@ public class OTSTest extends TestCase
         current.begin();
 
         stream.writeVerbose("Commit the sub transaction");
-        current.commit( true );
+        current.commit( false );
 
         stream.writeVerbose("Commit the top level transaction");
         current.commit( false );
@@ -1003,7 +1003,7 @@ public class OTSTest extends TestCase
      *    - commit the sub transaction
      *    - commit the top level transaction
      */
-    public void notestSubtransaction() throws org.omg.CORBA.UserException {
+    public void testSubtransaction() throws org.omg.CORBA.UserException {
         stream.writeVerbose("Begin the test");
         
         stream.writeVerbose("Get the transaction factory");
@@ -1049,7 +1049,7 @@ public class OTSTest extends TestCase
      *    - commit the sub transaction
      *    - commit the top level transaction
      */
-    public void notestSubtransactionResource() throws org.omg.CORBA.UserException {
+    public void testSubtransactionResource() throws org.omg.CORBA.UserException {
         stream.writeVerbose("Begin the test");
 
         stream.writeVerbose("Get the current object");
