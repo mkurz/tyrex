@@ -98,6 +98,9 @@
     <javac srcdir="${main}" destdir="${classes}" 
            excludes="**/package.html,**/*.disabled,**/*.disable,**/*.old,tyrex/tools/Tomcat.java,tyrex/jdbc/util/*,tyrex/corba/*"
            classpath="${classpath}" debug="off" deprecation="off" optimize="on" />
+    <copy todir="${classes}/tyrex/conf">
+       <fileset dir="${main}/tyrex/conf" includes="*.xsd,*.dtd,*.xml" />
+    </copy>
   </target>
 
   <target name="main-iiop" depends="init">
@@ -211,7 +214,7 @@
     <mkdir    dir="${build}/doc/javadoc" />
     <property name="copyright"
               value="Intalio, Inc. (C) 2000. All rights reserved  http://tyrex.exolab.org" />
-    <javadoc  sourcepath="${main}" destdir="${build}/doc/javadoc" dir="."
+    <javadoc  sourcepath="${main}" destdir="${build}/doc/javadoc"
               doctitle="Tyrex JavaDoc" windowtitle="Tyrex JavaDoc" bottom="${copyright}"
               package="true" author="true" version="true" noindex="true"
               packagenames="tyrex.*" />
