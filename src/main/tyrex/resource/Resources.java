@@ -49,7 +49,7 @@ package tyrex.resource;
 import java.util.HashMap;
 import java.util.Iterator;
 import tyrex.tm.TransactionDomain;
-
+import tyrex.util.Logger;
 
 /**
  * Represents a collection of installed resources. Resources are
@@ -71,7 +71,7 @@ import tyrex.tm.TransactionDomain;
  * client connection factory available to the application.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.7 $
  */
 public final class Resources
 {
@@ -129,9 +129,14 @@ public final class Resources
     {
         if ( config == null )
             throw new IllegalArgumentException( "Argument config is null" );
-        if ( _config.containsKey( config.getName() ) )
-            throw new ResourceException( "A resource with the name " + config.getName() + " already installed" );
-        _config.put( config.getName(), config );
+        if ( config.getFactory() != NullFactory.INSTANCE ) {
+            if ( _config.containsKey( config.getName() ) )
+                throw new ResourceException( "A resource with the name " + config.getName() + " already installed" );
+            _config.put( config.getName(), config );
+        }
+        else {
+            Logger.resource.debug("Ignoring resource configuration '" + config.getName() + "'");
+        }
     }
 
 

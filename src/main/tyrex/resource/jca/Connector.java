@@ -63,6 +63,7 @@ import org.exolab.castor.xml.ValidationException;
 import org.exolab.castor.xml.MarshalException;
 import tyrex.tm.TransactionDomain;
 import tyrex.tm.TyrexTransactionManager;
+import tyrex.resource.NullFactory;
 import tyrex.resource.ResourceConfig;
 import tyrex.resource.Resource;
 import tyrex.resource.ResourceException;
@@ -75,7 +76,7 @@ import tyrex.util.Logger;
 /**
  * 
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  */
 public class Connector
     extends ResourceConfig
@@ -103,13 +104,14 @@ public class Connector
         try {
             return createFactory_();
         } catch ( ResourceException except ) {
-            Logger.resource.error( "Error", except );
-            throw except;
+            Logger.resource.error( "Error in connector configuration '" + getName() + "'", except );
+            //throw except;
+            return NullFactory.INSTANCE;
         }
     }
 
 
-    public Object createFactory_()
+    private Object createFactory_()
         throws ResourceException
     {
         String                  name;

@@ -58,6 +58,7 @@ import org.apache.log4j.Category;
 import javax.transaction.xa.XAResource;
 import tyrex.tm.TransactionDomain;
 import tyrex.tm.TyrexTransactionManager;
+import tyrex.resource.NullFactory;
 import tyrex.resource.ResourceConfig;
 import tyrex.resource.Resource;
 import tyrex.resource.ResourceException;
@@ -69,7 +70,7 @@ import tyrex.util.Logger;
 /**
  * 
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.7 $
+ * @version $Revision: 1.8 $
  */
 public class DataSourceConfig
     extends ResourceConfig
@@ -124,13 +125,14 @@ public class DataSourceConfig
         try {
             return createFactory_();
         } catch ( ResourceException except ) {
-            Logger.resource.error( "Error", except );
-            throw except;
+            Logger.resource.error( "Error in datasource configuration '" + getName() + "'", except );
+            //throw except;
+            return NullFactory.INSTANCE;
         }
     }
 
 
-    public Object createFactory_()
+    private Object createFactory_()
         throws ResourceException
     {
         String                  name;
