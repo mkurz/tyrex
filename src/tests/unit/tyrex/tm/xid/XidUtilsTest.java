@@ -38,44 +38,73 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
+ * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TmXidSuite.java,v 1.4 2001/09/07 02:39:15 mills Exp $
+ * $Id: XidUtilsTest.java,v 1.1 2001/09/07 02:39:15 mills Exp $
  */
 
 
 package tyrex.tm.xid;
 
-import junit.framework.TestSuite;
+import java.io.PrintWriter;
 
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
 
 /**
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.1 $
  */
 
-public class TmXidSuite
+
+public class XidUtilsTest extends TestCase
 {
-    public TmXidSuite()
+    private PrintWriter _logger = null;
+
+    public XidUtilsTest(String name)
     {
-        // Empty.
+        super(name);
     }
 
-    public static TestSuite suite()
+    public void setUp()
     {
-        TestSuite suite = new TestSuite("TmXidSuite test harness");
-        suite.addTest(BranchXidTest.suite());
-        suite.addTest(ExternalXidTest.suite());
-        suite.addTest(GlobalXidTest.suite());
-        suite.addTest(LocalXidTest.suite());
-        suite.addTest(new TestSuite(XidUtilsTest.class));
-        return suite;
+        _logger= new PrintWriter(System.out);
+    }
+
+    public void tearDown()
+    {
+        _logger.flush();
     }
 
 
+    /**
+     * <p>Since the methods are all static an instance of
+     * XidUtils is not required.</p>
+     *
+     * @result 
+     */
+
+    public void testBasicFunctionality()
+        throws Exception
+    {
+//        assertEquals("Title", "Tyrex", XidUtils.TITLE);
+    }
+
+
+    /** Adds a message in the log (except if the log is null)*/
+    private void logMessage(String message)
+    {
+        if (_logger != null)
+        {
+            _logger.println(message);
+        }
+    }
+
+
+    // Allow this test to be run on its own.
     public static void main(String args[])
     {
-        tyrex.Unit.runTests(args, suite());
+        tyrex.Unit.runTests(args, new TestSuite(XidUtilsTest.class));
     }
 }
