@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionImpl.java,v 1.3 2000/09/08 23:06:13 mohammed Exp $
+ * $Id: TransactionImpl.java,v 1.4 2000/10/11 18:16:48 mohammed Exp $
  */
 
 
@@ -79,7 +79,7 @@ import tyrex.util.Messages;
  * they are added.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.3 $ $Date: 2000/09/08 23:06:13 $
+ * @version $Revision: 1.4 $ $Date: 2000/10/11 18:16:48 $
  * @see XAResourceHolder
  * @see TransactionManagerImpl
  * @see TransactionDomain
@@ -2338,6 +2338,7 @@ final class TransactionImpl
         //except.printStackTrace();
         return false;
 	} catch ( Exception except ) {
+        except.printStackTrace();
         throw new SystemException( except.toString() );
 	}
 
