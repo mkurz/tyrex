@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: MemoryInitialContext_ContextImpl.java,v 1.2 2001/08/10 07:18:01 mills Exp $
+ * $Id: MemoryInitialContext_ContextImpl.java,v 1.3 2001/08/23 09:47:27 mills Exp $
  */
 
 package tyrex.naming;
@@ -65,7 +65,7 @@ import junit.framework.TestSuite;
  * 
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  */
 
 public class MemoryInitialContext_ContextImpl extends ContextTest
@@ -100,13 +100,14 @@ public class MemoryInitialContext_ContextImpl extends ContextTest
         Hashtable env = new Hashtable();
 
         // Ensures that MemoryContext is used.
-        env.put( Context.INITIAL_CONTEXT_FACTORY, tyrex.naming.MemoryContextFactory.class.getName() );
+        env.put(Context.INITIAL_CONTEXT_FACTORY,
+                tyrex.naming.MemoryContextFactory.class.getName());
         initialEnvSize_++;
-        env.put( Context.URL_PKG_PREFIXES, "tyrex.naming" );
+        env.put(Context.URL_PKG_PREFIXES, "tyrex.naming");
         initialEnvSize_++;
-        if ( url != null )
+        if (url != null)
         {
-            env.put( Context.PROVIDER_URL, url );
+            env.put(Context.PROVIDER_URL, url);
             initialEnvSize_++;
         }
         return new InitialContext(env);

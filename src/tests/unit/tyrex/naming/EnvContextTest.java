@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: EnvContextTest.java,v 1.5 2001/08/22 08:28:04 mills Exp $
+ * $Id: EnvContextTest.java,v 1.6 2001/08/23 09:47:27 mills Exp $
  */
 
 
@@ -65,7 +65,7 @@ import java.io.PrintWriter;
 /**
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  */
 
 public class EnvContextTest extends TestCase
@@ -91,7 +91,20 @@ public class EnvContextTest extends TestCase
     /**
      * Tests to improve test coverage of the class.
      *
-     * @result 
+     * @result Create an instance of MemoryBinding.  Add several
+     * objects to the binding with different names (i.e. an Integer, a
+     * LinkRef, another MemoryBinding and a Reference.  All these
+     * should be retrievable using lookup.  Create an EnvContext
+     * instance with a null argument, with the binding as argument and
+     * with the binding and a HashTable as argument.  The context
+     * should return an enumerated list of the bindings set earlier
+     * when list() is called with an empty String argument.
+     *
+     * <p>Calling listBindings() should return the same enumerated
+     * list.  Calling listBindings(), createSubcontext() or
+     * destroySubcontext() should throw a NotContextException,
+     * OperationNotSupportedException and
+     * OperationNotSupportedException respectively.</p>
      */
 
     public void testCoverage()

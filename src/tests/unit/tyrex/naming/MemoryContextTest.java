@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: MemoryContextTest.java,v 1.5 2001/08/22 08:28:04 mills Exp $
+ * $Id: MemoryContextTest.java,v 1.6 2001/08/23 09:47:27 mills Exp $
  */
 
 
@@ -65,7 +65,7 @@ import java.io.PrintWriter;
 /**
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  */
 
 public class MemoryContextTest extends TestCase
@@ -110,6 +110,8 @@ public class MemoryContextTest extends TestCase
      * values.  Test that a shared and a non-shared context do not
      * retrieve the same bound values.  Test that 2 non-shared
      * contexts are different.
+     *
+     * @result 
      */
 
     public void testSharedAndNonShared()
@@ -176,10 +178,22 @@ public class MemoryContextTest extends TestCase
 
 
     /**
-     * 
+     * Improve the test coverage of the class.
      *
-     * @result 
-     */
+     * @result Create an instance of MemoryBinding.  Add several
+     * objects to the binding with different names (i.e. an Integer, a
+     * LinkRef, another MemoryBinding and a Reference.  All these
+     * should be retrievable using lookup.  Create an MemoryContext
+     * instance with a null argument, with the binding as argument and
+     * with the binding and a HashTable as argument.  The context
+     * should return an enumerated list of the bindings set earlier
+     * when list() is called with an empty String argument.
+     *
+     * <p>Calling listBindings() should return the same enumerated
+     * list.  Calling listBindings() should throw a
+     * NotContextException.  Calling createSubcontext() or
+     * destroySubcontext() should create and destroy a
+     * sub-context.</p> */
 
     public void testCoverage()
         throws Exception
@@ -254,9 +268,10 @@ public class MemoryContextTest extends TestCase
 
 
     /**
-     * 
+     * Improve test coverage of methods taking Name as argument.
      *
-     * @result 
+     * @result These tests should produce the same results as the
+     * previous test.
      */
 
     public void testCoverageUsingName()
