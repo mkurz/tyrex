@@ -5,7 +5,7 @@
 	<program type="application">
 		<application
 			args=""
-			working_dir="./build/tests/unit/"
+			working_dir="tyrex"
 			source_dir="./src/main:./src/tests/unit"
 			classname="tyrex.Unit">
 			<classpath>
@@ -29,6 +29,9 @@
 					type="jar"/>
 				<classpath.archive
 					location="./lib/jaas_1.0.jar"
+					type="jar"/>
+				<classpath.archive
+					location="./lib/javamail_1.2.jar"
 					type="jar"/>
 				<classpath.archive
 					location="./lib/jca_1.0.jar"
@@ -60,6 +63,7 @@
 				<classpath.archive
 					location="./lib/xslp_1.1.jar"
 					type="jar"/>
+				<classpath.path location=".src/etc"/>
 				<classpath.path location="./build/classes"/>
 				<classpath.path location="./build/tests"/>
 				<classpath.path location="./build/tests/unit"/>
@@ -89,7 +93,7 @@
 	</program>
 	<vm
 		snapshot_dir="/tmp"
-		location="/usr/lib/jdk1.3.1/bin/java"
+		location="/usr/java/jdk1.3.1/bin/java"
 		args=""
 		type="java2"
 		use_jit="true"/>
