@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: UUID.java,v 1.5 2001/10/18 00:45:13 mohammed Exp $
+ * $Id: UUID.java,v 1.6 2001/10/22 23:26:39 mohammed Exp $
  */
 
 
@@ -138,7 +138,7 @@ import tyrex.util.Messages;
  * The UUID generator is thread-safe and consumes a single thread.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.5 $ $Date: 2001/10/18 00:45:13 $
+ * @version $Revision: 1.6 $ $Date: 2001/10/22 23:26:39 $
  */
 public final class UUID
 {
@@ -575,7 +575,7 @@ public final class UUID
         if ( bytes == null || bytes.length == 0 )
             throw new IllegalArgumentException( "Argument bytes is null or an empty array" );
         buffer = new StringBuffer();
-        for ( int i = bytes.length ; i-- > 0 ; ) {
+        for ( int i = 0 ; i < bytes.length ; ++i ) {
             buffer.append( HEX_DIGITS[ ( bytes[ i ] & 0xF0 ) >> 4 ] );
             buffer.append( HEX_DIGITS[ ( bytes[ i ] & 0x0F ) ] );
         }
