@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: BaseXidTest.java,v 1.5 2001/09/12 13:36:25 mills Exp $
+ * $Id: BaseXidTest.java,v 1.6 2001/09/14 08:56:54 mills Exp $
  */
 
 package tyrex.tm.xid;
@@ -56,7 +56,7 @@ import java.io.PrintWriter;
 
 /**
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  */
 
 public abstract class BaseXidTest extends TestCase
@@ -88,7 +88,8 @@ public abstract class BaseXidTest extends TestCase
 
     /**
      * <p>Whether the class (the test's newBaseXid() method) is
-     * expected to produce unique ids.</p> */
+     * expected to produce unique ids.</p>
+     */
 
     public abstract boolean uniqueIds()
         throws Exception;
@@ -165,7 +166,8 @@ public abstract class BaseXidTest extends TestCase
     {
         public int compare(Object id1, Object id2)
         {
-            return ((BaseXid)id1).toString().compareTo(((BaseXid)id2).toString());
+            return ((BaseXid)id1).toString().compareTo(((BaseXid)id2)
+                                                       .toString());
         }
 
         public boolean equals()
