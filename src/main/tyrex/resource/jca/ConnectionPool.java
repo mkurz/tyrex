@@ -81,7 +81,7 @@ import tyrex.util.LoggerPrintWriter;
 /**
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.7 $
+ * @version $Revision: 1.8 $
  */
 final class ConnectionPool
     extends PoolMetrics
@@ -1293,8 +1293,10 @@ final class ConnectionPool
             synchronized ( ConnectionPool.this ) {
                 entry = _entry;
                 while ( entry != null ) {
-                    if ( entry._available )
+                    if ( entry._available ) {
+                        _entry = entry;
                         return true;
+                    }
                     entry = entry._nextEntry;
                 }
                 pool = _pool;
