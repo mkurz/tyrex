@@ -45,7 +45,7 @@
         using a new XA resource from a new XA connection from either the existing
         XA data source or a new XA data source. Increasing the transaction timeout
         on the XA resource works occasionally. Best results were achieved using
-        <code>Thread.currentThread().sleep(100000);</code>.</li>
+        <code>Thread.currentThread().sleep(100000);</code></li>
         </ul> 
         </p>
 
