@@ -6,10 +6,6 @@
             <body>
                 This document defines unit tests for the Tyrex module.
 
-                <p>The Tyrex unit tests are part of Quality Assurance Release
-Plan for Tyrex which is executed prior to every formal release of the Tyrex
-component.</p>
-
                 <p>The Tyrex unit test suite has the following aims:
                 <ul>    
                     <li>test for basic capabilities</li>
@@ -20,7 +16,6 @@ component.</p>
                     <li>80% source code coverage should be achieved by running the test suite</li>
                 </ul>
                 </p>
-<p>This document must describe why the source code not exercised cannot be tested.</p>
             </body>
         </paragraph>
         <paragraph> 
