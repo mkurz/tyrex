@@ -30,26 +30,7 @@
     </field>
   </class>
 
-  <class name="tyrex.resource.BaseConfiguration">
-    <field name="name" type="string" required="true">
-      <bind-xml name="name" node="element" />
-    </field>
-    <field name="JAR" type="string" required="true">
-      <bind-xml name="jar" node="element" />
-    </field>
-    <field name="paths" type="string">
-      <bind-xml name="paths" node="element" />
-    </field>
-    <field name="config" create-method="createFactory"
-           set-method="setFactory" type="java.io.Serializable">
-      <bind-xml name="config" node="element" />
-    </field>
-    <field name="limits" type="tyrex.resource.ResourceLimits">
-      <bind-xml name="limits" node="element" />
-    </field>
-  </class>
-
-  <class name="tyrex.resource.jdbc.DataSourceConfig" extends="tyrex.resource.BaseConfiguration">
+  <class name="tyrex.resource.jdbc.DataSourceConfig">
     <map-to xml="dataSource" />
     <field name="name" type="string" required="true">
       <bind-xml name="name" node="element" />
@@ -63,29 +44,6 @@
     <field name="class" type="string" required="true"
            get-method="getClassName" set-method="setClassName">
       <bind-xml name="class" node="element" />
-    </field>
-    <field name="twoPhase" type="boolean">
-      <bind-xml name="twoPhase" node="element" />
-    </field>
-    <field name="config" create-method="createFactory"
-           set-method="setFactory" type="java.io.Serializable">
-      <bind-xml name="config" node="element" />
-    </field>
-    <field name="limits" type="tyrex.resource.ResourceLimits">
-      <bind-xml name="limits" node="element" />
-    </field>
-  </class>
-
-  <class name="tyrex.resource.jca.Connector" extends="tyrex.resource.BaseConfiguration">
-    <map-to xml="connector" />
-    <field name="name" type="string" required="true">
-      <bind-xml name="name" node="element" />
-    </field>
-    <field name="JAR" type="string" required="true">
-      <bind-xml name="jar" node="element" />
-    </field>
-    <field name="paths" type="string">
-      <bind-xml name="paths" node="element" />
     </field>
     <field name="twoPhase" type="boolean">
       <bind-xml name="twoPhase" node="element" />
