@@ -14,22 +14,22 @@
  *
  * 3. The name "Exolab" must not be used to endorse or promote
  *    products derived from this Software without prior written
- *    permission of Intalio Inc.  For written permission,
+ *    permission of Intalio.  For written permission,
  *    please contact info@exolab.org.
  *
  * 4. Products derived from this Software may not be called "Exolab"
  *    nor may "Exolab" appear in their names without prior written
- *    permission of Intalio Inc. Exolab is a registered
- *    trademark of Intalio Inc.
+ *    permission of Intalio. Exolab is a registered
+ *    trademark of Intalio.
  *
  * 5. Due credit should be given to the Exolab Project
  *    (http://www.exolab.org/).
  *
- * THIS SOFTWARE IS PROVIDED BY INTALIO INC. AND CONTRIBUTORS
+ * THIS SOFTWARE IS PROVIDED BY INTALIO AND CONTRIBUTORS
  * ``AS IS'' AND ANY EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT
  * NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
  * FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL
- * INTALIO INC. OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ * INTALIO OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
  * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
@@ -38,9 +38,9 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 1999 (C) Intalio Inc. All Rights Reserved.
+ * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TxConnection.java,v 1.4 2000/09/08 23:59:28 test Exp $
+ * $Id: TxConnection.java,v 1.5 2000/09/22 01:16:59 mohammed Exp $
  */
 
 
@@ -83,7 +83,19 @@ final class TxConnection
      */
     Connection                 conn;
     
+
+    /**
+     * The user name for the underlying connection.
+     * Can be null.
+     */
+    String                     userName;
     
+
+    /**
+     * The password for the underlying connection.
+     * Can be null.
+     */
+    String                     password;
 
     /**
      * Indicates the clock time (in ms) when the transaction should

@@ -14,22 +14,22 @@
  *
  * 3. The name "Exolab" must not be used to endorse or promote
  *    products derived from this Software without prior written
- *    permission of Intalio Inc.  For written permission,
+ *    permission of Intalio.  For written permission,
  *    please contact info@exolab.org.
  *
  * 4. Products derived from this Software may not be called "Exolab"
  *    nor may "Exolab" appear in their names without prior written
- *    permission of Intalio Inc. Exolab is a registered
- *    trademark of Intalio Inc.
+ *    permission of Intalio. Exolab is a registered
+ *    trademark of Intalio.
  *
  * 5. Due credit should be given to the Exolab Project
  *    (http://www.exolab.org/).
  *
- * THIS SOFTWARE IS PROVIDED BY INTALIO INC. AND CONTRIBUTORS
+ * THIS SOFTWARE IS PROVIDED BY INTALIO AND CONTRIBUTORS
  * ``AS IS'' AND ANY EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT
  * NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
  * FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL
- * INTALIO INC. OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ * INTALIO OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
  * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
@@ -38,9 +38,9 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 1999 (C) Intalio Inc. All Rights Reserved.
+ * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: XAConnectionImpl.java,v 1.4 2000/09/08 23:59:49 test Exp $
+ * $Id: XAConnectionImpl.java,v 1.5 2000/09/22 01:16:59 mohammed Exp $
  */
 
 
@@ -130,8 +130,21 @@ public final class XAConnectionImpl
      * The resource manager is used to share connections within the
      * same transaction.
      */
-    private XADataSourceImpl           _resManager;
+    private XADataSourceImpl            _resManager;
 
+
+    /**
+     * The user name for the underlying connection. 
+     * Can be null.
+     */
+    private String                      _userName;
+
+
+    /**
+     * The password for the underlying connection.
+     * Can be null.
+     */
+    private String                      _password;
 
     /**
      * This is an identifier we hand to the client connection when we
@@ -153,16 +166,28 @@ public final class XAConnectionImpl
      * Construct a new XA/pooled connection with the underlying JDBC
      * connection suitable for this driver only. This is a one to one
      * mapping between this connection and the underlying connection.
-     * The underlying connection is only provided for pooled
+     * The underlying connection is provided for pooled
      * connections. XA connections are suspect of being enlisted with
      * a global transaction which might already bear an underlying
      * connection. If not, one will be created later on.
+     *
+     * @param resManager the resource manager for the underlying
+     *      connections
+     * @param underlying the underlying connection. Can be null.
+     * @param userName the user name for the underlying connection. 
+     *      Can be null.
+     * @param password the password for the underlying connection. 
+     *      Can be null.
      */
     XAConnectionImpl( XADataSourceImpl resManager,
-		      Connection underlying )
+                      Connection underlying,
+                      String userName,
+                      String password )
     {
-	_underlying = underlying;
+    _underlying = underlying;
 	_resManager = resManager;
+    _userName = userName;
+    _password = password;
     }
 
 
@@ -424,11 +449,13 @@ public final class XAConnectionImpl
 			_txConn.conn = _underlying;
 			_underlying = null;
 		    } else
-			_txConn.conn = _resManager.newConnection();
+			_txConn.conn = _resManager.newConnection( _userName, _password );
 		    _txConn.xid = xid;
 		    _txConn.count = 1;
 		    _txConn.started = System.currentTimeMillis();
 		    _txConn.timeout = _txConn.started + ( _resManager.getTransactionTimeout() * 1000 );
+            _txConn.userName = _userName;
+            _txConn.password = _password;
 		    _resManager.setTxConnection( xid, _txConn );
 		} catch ( SQLException except ) {
 		    // If error occured at this point, we can only
@@ -473,7 +500,7 @@ public final class XAConnectionImpl
 		// expect to), we should release that underlying connection
 		// and make it available to the resource manager.
 		if ( _underlying != null ) {
-		    _resManager.releaseConnection( _underlying );
+		    _resManager.releaseConnection( _underlying, _userName, _password );
 		    _underlying = null;
 		}
 	    } else
@@ -524,7 +551,7 @@ public final class XAConnectionImpl
 			if ( _txConn.conn instanceof TwoPhaseConnection )
 			    ( (TwoPhaseConnection) _txConn.conn ).enableSQLTransactions( true );
 			_txConn.conn.rollback();
-			_resManager.releaseConnection( _txConn.conn );
+			_resManager.releaseConnection( _txConn.conn, _userName, _password );
 		    } catch ( SQLException except ) {
 			// There is a problem with the underlying
 			// connection, but it was not added to the poll.
@@ -572,7 +599,7 @@ public final class XAConnectionImpl
 		_txConn = null;
 	    if ( txConn != null ) {
 		if ( txConn.conn != null ) {
-		    _resManager.releaseConnection( txConn.conn );
+		    _resManager.releaseConnection( txConn.conn, _userName, _password );
 		    txConn.conn = null;
 		}
 		txConn.xid = null;
@@ -842,7 +869,7 @@ public final class XAConnectionImpl
 	    return _txConn.conn;
 	}
 	if ( _underlying == null ) {
-	    _underlying = _resManager.newConnection();
+	    _underlying = _resManager.newConnection( _userName, _password );
 	    _underlying.setAutoCommit( true );
 	}
 	return _underlying;

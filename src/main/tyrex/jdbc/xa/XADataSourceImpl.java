@@ -14,22 +14,22 @@
  *
  * 3. The name "Exolab" must not be used to endorse or promote
  *    products derived from this Software without prior written
- *    permission of Intalio, Inc.  For written permission,
+ *    permission of Intalio.  For written permission,
  *    please contact info@exolab.org.
  *
  * 4. Products derived from this Software may not be called "Exolab"
  *    nor may "Exolab" appear in their names without prior written
- *    permission of Intalio, Inc. Exolab is a registered
- *    trademark of Intalio, Inc.
+ *    permission of Intalio. Exolab is a registered
+ *    trademark of Intalio.
  *
  * 5. Due credit should be given to the Exolab Project
  *    (http://www.exolab.org/).
  *
- * THIS SOFTWARE IS PROVIDED BY INTALIO, INC. AND CONTRIBUTORS
+ * THIS SOFTWARE IS PROVIDED BY INTALIO AND CONTRIBUTORS
  * ``AS IS'' AND ANY EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT
  * NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
  * FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL
- * INTALIO INC. OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ * INTALIO OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
  * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
@@ -38,9 +38,9 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 1999 (C) Intalio Inc. All Rights Reserved.
+ * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: XADataSourceImpl.java,v 1.4 2000/09/08 23:59:49 test Exp $
+ * $Id: XADataSourceImpl.java,v 1.5 2000/09/22 01:16:59 mohammed Exp $
  */
 
 
@@ -49,9 +49,10 @@ package tyrex.jdbc.xa;
 
 import java.io.Serializable;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.Vector;
-import java.util.Stack;
 import java.util.Enumeration;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -89,13 +90,13 @@ public abstract class XADataSourceImpl
 
 
     /**
-     * This is a pool of free underlying JDBC connections. If two
+     * This is a list of free underlying JDBC connections. 
      * XA connections are used in the same transaction, the second
      * one will make its underlying JDBC connection available to
      * the pool. This is not a real connection pool, only a marginal
      * efficiency solution for dealing with shared transactions.
      */
-    private transient Stack     _pool = new Stack();
+    private transient ArrayList     _pool = new ArrayList();
 
 
     /**
@@ -160,7 +161,7 @@ public abstract class XADataSourceImpl
 	// will be created. We don't create the underlying connection
 	// beforehand, as it might be coming from an existing
 	// transaction.
-	return new XAConnectionImpl( this, null );
+	return getXAConnection( null, null );
     } 
 
 
@@ -170,7 +171,8 @@ public abstract class XADataSourceImpl
 	// Since we create the connection on-demand with newConnection
 	// or obtain it from a transaction, we cannot support XA
 	// connections with a caller specified user name.
-	throw new SQLException( "XAConnection does not support connections with caller specified user name" );
+	//throw new SQLException( "XAConnection does not support connections with caller specified user name" );
+    return new XAConnectionImpl( this, null, user, password );
     }
     
     
@@ -179,16 +181,17 @@ public abstract class XADataSourceImpl
     {
 	// Construct a new pooled connection and an underlying JDBC
 	// connection to go along with it.
-	return new XAConnectionImpl( this, getConnection() );
+	return getPooledConnection( null, null );
     }
     
     
     public PooledConnection getPooledConnection( String user, String password )
         throws SQLException
     {
-	// Construct a new pooled connection and an underlying JDBC
+    // Construct a new pooled connection and an underlying JDBC
 	// connection to go along with it.
-	return new XAConnectionImpl( this, getConnection( user, password ) );
+	return new XAConnectionImpl( this, newConnection( user, password ),
+                                 user, password );
     }
 
 
@@ -263,33 +266,76 @@ public abstract class XADataSourceImpl
      * to newly created connections.
      *
      * @param conn An open connection that is no longer in use
+     * @param userName the user name for the connection
+     * @param password the password for the connection
      */
-    void releaseConnection( Connection conn )
+    void releaseConnection( Connection conn, String userName, String password )
     {
-	_pool.push( conn );
+	synchronized ( _pool ) {
+        _pool.add( new ConnectionEntry( conn,
+                                        getAccount( userName, password ) ) );
+    }
     }
 
+
+    /**
+     * In order to deal with connections opened for a specific
+     * account, we record the account name in the pool.
+     * Given the user and password used to open the account,
+     * we get a unique account identifier that combines the two.
+     * The returned account can be encrypted for added security.
+     * 
+     * @param user The user name for creating the connection
+     * @param password The password for creating the connection
+     * @return A unique account name matching the user name
+     *   and password, null if <tt>user</tt> is null
+     */
+    private String getAccount( String user, String password )
+    {
+	if ( user == null )
+	    return null;
+
+	// XXX  We should encrypt this part so as not to hold the
+	//      password in memory
+	if ( password == null )
+	    return user;
+	else
+	    return user + ":" + password;
+    }
 
     /**
      * Creates a new underlying connection. Used by XA connection
      * that lost it's underlying connection when joining a
      * transaction and is now asked to produce a new connection.
      *
+     * @param userName the userName
+     * @param password the password
      * @return An open connection ready for use
      * @throws SQLException An error occured trying to open
      *   a connection
      */
-    Connection newConnection()
+    Connection newConnection( String userName, String password )
 	throws SQLException
     {
-	Connection conn;
+	synchronized ( _pool ) {
+        // Check in the pool first.
+    	if ( ! _pool.isEmpty() ) {
+            String account = getAccount( userName, password );
+            ConnectionEntry entry;
 
-	// Check in the pool first.
-	if ( ! _pool.empty() ) {
-	    conn = (Connection) _pool.pop();
-	    return conn;
-	}
-	return getConnection();
+            for ( Iterator i = _pool.iterator(); i.hasNext(); ) {
+                entry = ( ConnectionEntry )i.next();
+
+                if ( entry._account.equals( account )) {
+                    i.remove();
+
+                    return entry._connection;
+                }
+            }
+    	}
+    }
+
+	return getConnection( userName, password );
     }
 
 
@@ -331,101 +377,112 @@ public abstract class XADataSourceImpl
 	int          reduce;
 	long         timeout;
 	TxConnection txConn;
+    Iterator     iterator;
+    int          size;
 
-	while ( true ) {
-	    // Go to sleep for the duration of a transaction
-	    // timeout. This mean transactions will timeout on average
-	    // at _txTimeout * 1.5.
-	    try {
-		Thread.sleep( _txTimeout * 1000 );
-	    } catch ( InterruptedException except ) {
-	    }
+    while ( true ) {
 
-	    try {
-		// Check to see if there are any pooled connections
-		// we can release. We release 10% of the pooled
-                // connections each time, so in a heavy loaded
-                // environment we don't get to release that many, but
-                // as load goes down we do. These are not actually
-                // pooled connections, but connections that happen to
-                // get in and out of a transaction, not that many.
-		reduce = _pool.size() - ( _pool.size() / 10 ) - 1;
-		if ( reduce >= 0 && _pool.size() > reduce ) {
-		    if ( getLogWriter() != null )
-			getLogWriter().println( "DataSource " + toString() +
-						": Reducing internal connection pool size from " +
-						_pool.size() + " to " + reduce );
-		    while ( _pool.size() > reduce ) {
-			try {
-			    ( (Connection) _pool.pop() ).close();
-			} catch ( SQLException except ) { }
-		    }
-		}
-	    } catch ( Exception except ) { }
-		
-	    // Look for all connections inside a transaction that
-	    // should have timed out by now.
-	    timeout = System.currentTimeMillis();
-	    enum = _txConnections.elements();
-	    while ( enum.hasMoreElements() ) {
-		txConn = (TxConnection) enum.nextElement();
-		// If the transaction timed out, we roll it back and
-		// invalidate it, but do not remove it from the transaction
-		// list yet. We wait for the next iteration, minimizing the
-		// chance of a NOTA exception.
-		if ( txConn.conn == null ) {
-		    _txConnections.remove( txConn.xid );
-		    // Chose not to use an iterator so we must
-		    // re-enumerate the list after removing
-		    // an element from it.
-		    enum = _txConnections.elements();
-		} else if ( txConn.timeout < timeout ) {
-		    
-		    try {
-			Connection underlying;
-			
-			synchronized ( txConn ) {
-			    if ( txConn.conn == null )
-				continue;
-			    if ( getLogWriter() != null )
-				getLogWriter().println( "DataSource " + toString() +
-							": Transaction timed out and being aborted: " +
-							txConn.xid );
-			    // Remove the connection from the transaction
-			    // association. XAConnection will now have
-			    // no underlying connection and attempt to
-			    // create a new one.
-			    underlying = txConn.conn;
-			    txConn.conn = null;
-			    txConn.timedOut = true;
-			    
-			    // Rollback the underlying connection to
-			    // abort the transaction and release the
-			    // underlying connection to the pool.
-			    try {
-				underlying.rollback();
-				releaseConnection( underlying );
-			    } catch ( SQLException except ) {
-				if ( getLogWriter() != null )
-				    getLogWriter().println( "DataSource " + toString() +
-							    ": Error aborting timed out transaction: " + except );
-				try {
-				    underlying.close();
-				} catch ( SQLException e2 ) { }
-			    }
-			}
-		    } catch ( Exception except ) { }
-		    
-		}
-	    }
-	}
+        // Go to sleep for the duration of a transaction
+        // timeout. This mean transactions will timeout on average
+        // at _txTimeout * 1.5.
+        try {
+        Thread.currentThread().sleep( _txTimeout * 1000 );
+        } catch ( InterruptedException except ) {
+        }
+
+        synchronized ( _pool ) {
+            try {
+    		// Check to see if there are any pooled connections
+    		// we can release. We release 10% of the pooled
+                    // connections each time, so in a heavy loaded
+                    // environment we don't get to release that many, but
+                    // as load goes down we do. These are not actually
+                    // pooled connections, but connections that happen to
+                    // get in and out of a transaction, not that many.
+            size = _pool.size();
+    		reduce = size - ( size / 10 ) - 1;
+    		if ( reduce >= 0 && size > reduce ) {
+    		    if ( getLogWriter() != null )
+    			getLogWriter().println( "DataSource " + toString() +
+    						": Reducing internal connection pool size from " +
+    						size + " to " + reduce );
+
+                iterator = _pool.iterator();
+
+                do {
+                    try {
+    			    ( (ConnectionEntry ) iterator.next( ) )._connection.close();
+    			    } catch ( SQLException except ) { }
+                    iterator.remove();
+                } while ( --size > reduce  );
+            }
+    	    } catch ( Exception except ) { }
+        }
+
+        // Look for all connections inside a transaction that
+        // should have timed out by now.
+        timeout = System.currentTimeMillis();
+        enum = _txConnections.elements();
+        while ( enum.hasMoreElements() ) {
+        txConn = (TxConnection) enum.nextElement();
+        // If the transaction timed out, we roll it back and
+        // invalidate it, but do not remove it from the transaction
+        // list yet. We wait for the next iteration, minimizing the
+        // chance of a NOTA exception.
+        if ( txConn.conn == null ) {
+            _txConnections.remove( txConn.xid );
+            // Chose not to use an iterator so we must
+            // re-enumerate the list after removing
+            // an element from it.
+            enum = _txConnections.elements();
+        } else if ( txConn.timeout < timeout ) {
+            
+            try {
+            Connection underlying;
+            
+            synchronized ( txConn ) {
+                if ( txConn.conn == null )
+                continue;
+                if ( getLogWriter() != null )
+                getLogWriter().println( "DataSource " + toString() +
+                            ": Transaction timed out and being aborted: " +
+                            txConn.xid );
+                // Remove the connection from the transaction
+                // association. XAConnection will now have
+                // no underlying connection and attempt to
+                // create a new one.
+                underlying = txConn.conn;
+                txConn.conn = null;
+                txConn.timedOut = true;
+                
+                // Rollback the underlying connection to
+                // abort the transaction and release the
+                // underlying connection to the pool.
+                try {
+                underlying.rollback();
+                releaseConnection( underlying, txConn.userName, txConn.password );
+                } catch ( SQLException except ) {
+                if ( getLogWriter() != null )
+                    getLogWriter().println( "DataSource " + toString() +
+                                ": Error aborting timed out transaction: " + except );
+                try {
+                    underlying.close();
+                } catch ( SQLException e2 ) { }
+                }
+            }
+            } catch ( Exception except ) { }
+            
+        }
+        }
+    	}
     }
 
 
 
     public void debug( PrintWriter writer )
     {
-	Enumeration  enum;
+    Enumeration enum;
+	Iterator  iterator;
 	TxConnection txConn;
 	StringBuffer buffer;
 
@@ -450,10 +507,56 @@ public abstract class XADataSourceImpl
 		buffer.append( " read-only" );
 	    writer.println( buffer.toString() );
 	}
-	enum = _pool.elements();
-	while ( enum.hasMoreElements() )
-	    writer.println( "Pooled underlying: " + enum.nextElement().toString() );
+	iterator = _pool.iterator();
+	while ( iterator.hasNext() )
+	    writer.println( "Pooled underlying: " + iterator.next().toString() );
     }
 
-    
+
+    /**
+     * Object to hold a connection and its user name
+     * and password. This object is immutable.
+     */
+    private static class ConnectionEntry
+    {
+        /**
+         * The account
+         */
+        private final String _account;
+
+
+        /**
+         * The connection
+         */
+        private final Connection _connection;
+
+
+        /**
+         * Create the ConnectionEntry with the specified
+         * arguments
+         *
+         * @param connection the connection
+         * @param userName the userName
+         * @param password the password
+         */
+        private ConnectionEntry( Connection connection, 
+                                 String account )
+        {
+            _connection = connection;
+            _account = account;
+        }
+
+
+        /**
+         * Return the printed representation
+         * of the connection entry.
+         *
+         * @return the printed representation
+         * of the connection entry.
+         */
+        public String toString()
+        {
+            return _connection.toString();
+        }
+    }
 }
