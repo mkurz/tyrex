@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: XADataSourceTestSuite.java,v 1.3 2001/04/24 19:48:00 jdaniel Exp $
+ * $Id: XADataSourceTestSuite.java,v 1.4 2001/06/21 18:02:15 mohammed Exp $
  */
 
 
@@ -179,6 +179,12 @@ public class XADataSourceTestSuite
         return ds;
     }
 
+	/**
+	 * Test that a connection from tyrex.jdbc.xa.EnabledDataSource
+	 * can be enlisted in a transaction and have work committed. This
+	 * test is repeated 10000 times and a check is made that only one
+	 * actual connection is created.
+	 */
     private class EnabledDataSourceTest
         extends TestCase
     {
@@ -258,7 +264,10 @@ public class XADataSourceTestSuite
         }
     }
 
-
+	/**
+	 * Test that tyrex.jdbc.xa.EnabledDataSource removes unused
+	 * connections periodically.
+	 */
     private class PruneTest
         extends TestCase
     {
@@ -337,7 +346,10 @@ public class XADataSourceTestSuite
         }
     }
     
-
+	/**
+	 * Tests that a transaction times out and an exception is thrown 
+	 * when that transaction is tried to be committed.
+	 */
     private class TransactionTimeoutTest
         extends TestCase
     {
