@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: ServicesSuite.java,v 1.1 2001/09/02 21:48:31 mills Exp $
+ * $Id: ServicesSuite.java,v 1.2 2001/09/04 08:21:57 mills Exp $
  */
 
 
@@ -52,7 +52,7 @@ import junit.framework.TestSuite;
 /**
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 
 public class ServicesSuite
@@ -66,7 +66,7 @@ public class ServicesSuite
     {
         TestSuite suite = new TestSuite("ServicesSuite test harness");
         suite.addTest(new TestSuite(ClockTest.class));
-//        suite.addTest(new TestSuite(DaemonMasterTest.class));
+        suite.addTest(new TestSuite(DaemonMasterTest.class));
         suite.addTest(new TestSuite(UUIDTest.class));
         return suite;
     }
