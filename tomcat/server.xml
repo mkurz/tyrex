@@ -69,7 +69,7 @@ file for complete configuration information:
         -->
 
         <!-- Tyrex integration -->
-        <RequestInterceptor className="tyrex.tools.Tomcat" docBase="*" />
+        <RequestInterceptor className="Tomcat" docBase="*" />
         
         <Context path="/tyrex" docBase="webapps/tyrex" debug="0" reloadable="true" > 
         </Context>

@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: tomcat.sh,v 1.2 2000/01/17 22:23:25 arkin Exp $
+# $Id: tomcat.sh,v 1.3 2000/09/25 21:15:27 mohammed Exp $
 
 # Shell script to start and stop the server
 
@@ -66,7 +66,8 @@ CLASSPATH=${TOMCAT_HOME}/webserver.jar
 
 ## [Arkin] Added the following packages to the classpath
 ##         Required to support Tyrex
-CLASSPATH=${CLASSPATH}:${TOMCAT_HOME}/lib/tyrex-0.9.jar:${TOMCAT_HOME}/lib/castor-0.6.jar
+CLASSPATH=${CLASSPATH}:${TOMCAT_HOME}/lib/tyrex-0.9.6.1.jar:${TOMCAT_HOME}/lib/castor-0.8.8.jar
+CLASSPATH=${CLASSPATH}:${TOMCAT_HOME}/lib/tyrex-tomcat.jar
 CLASSPATH=${CLASSPATH}:${TOMCAT_HOME}/lib/xerces.jar:${TOMCAT_HOME}/lib/postgresql-6.3.jar
 ## [Arkin] Added the following packages to the classpath
 ##         Required for J2EE features (JTA, JDBC, JNDI)

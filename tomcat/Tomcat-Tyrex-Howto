@@ -1,7 +1,7 @@
 Tomcat-Tyrex Integration Howto
 ------------------------------
 
-Early Release / December 21, 1999
+Current Release / September 25, 2000
 $Id $
 
 
@@ -28,7 +28,7 @@ Anonymous access to the CVS is available at:
 No password required. The repository name is tyrex.
 
 
-For any questions, please contact me directly arkin@intalio.com.
+For any questions, please contact mohammed@intalio.com.
 
 
 Setting up
@@ -39,7 +39,9 @@ In order to setup Tomcat and Tyrex, you must perform the following steps:
 First, install the required libraries on top of an existing version of
 Tomcat. A modified tomcat.sh is provided that includes all these
 libraries in the classpath. tomcat.sh expects the libraries to be
-present in the lib directory.
+present in the lib directory. 
+Alternatively for Windows 2000/NT users there is a batch file called setTomcatClasspath.bat that sets the classpath appropriately for Tomcat without the nedd for copying jar files and using a modified Tomcat script. If someone wants to contribute a similar file for UNIX please send it to mohammed@intalio.com.
+
 
 Second, install the required configuration files either in the current
 directory or in the Java library directory (e.g. /jdk1.2/lib/).
@@ -61,11 +63,13 @@ xerces.jar
   This version is required in order to run Castor and is not presently
   available from xml.apache.org (the API is still under going testing)
 
-castor-0.6.jar
+castor-0.8.8.jar
   Castor is required for supporting the XML configuration files used
-  in Tyrex
+  in Tyrex. This is a castor jar file built from Castor CVS and includes
+  a fix to the Castor mapping lodaer that is not part of the official
+  0.8.8 release.
 
-tyrex-0.9.jar
+tyrex-0.9.6.1.jar
   Tyrex provides the transaction processing monitor, the JDBC connection
   pool, and the JNDI environment naming context
 
@@ -128,7 +132,7 @@ Connector elements.
 Transaction/ENC support requires that at least one interceptor
 appear in the list:
 
-  <RequestInterceptor className="tyrex.tools.Tomcat"
+  <RequestInterceptor className="Tomcat"
                docBase="*" />
 
 
