@@ -40,11 +40,11 @@
  *
  * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Journal.java,v 1.1 2001/03/02 20:44:23 arkin Exp $
+ * $Id: Journal.java,v 1.1 2001/03/03 00:36:04 arkin Exp $
  */
 
 
-package tyrex.tm.journal;
+package tyrex.tm;
 
 
 import javax.transaction.SystemException;

@@ -40,7 +40,7 @@
  *
  * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionDomain.java,v 1.11 2001/03/02 23:41:54 arkin Exp $
+ * $Id: TransactionDomain.java,v 1.12 2001/03/03 00:35:48 arkin Exp $
  */
 
 
@@ -63,6 +63,7 @@ import javax.transaction.InvalidTransactionException;
 import javax.transaction.xa.Xid;
 import tyrex.tm.impl.TransactionDomainImpl;
 import tyrex.tm.impl.DomainConfig;
+import tyrex.resource.Resources;
 
 
 /**
@@ -74,7 +75,7 @@ import tyrex.tm.impl.DomainConfig;
  * domain.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.11 $ $Date: 2001/03/02 23:41:54 $
+ * @version $Revision: 1.12 $ $Date: 2001/03/03 00:35:48 $
  */
 public abstract class TransactionDomain
 {
@@ -325,6 +326,14 @@ public abstract class TransactionDomain
      * @return The transaction domain name
      */
     public abstract String getDomainName();
+
+
+    /**
+     * Returns resources installed for this transaction domain.
+     *
+     * @return Resources installed for this transaction domain
+     */
+    public abstract Resources getResources();
 
 
 }

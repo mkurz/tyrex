@@ -14,8 +14,8 @@
     <field name="timeout" type="integer">
       <bind-xml name="timeout" node="element" />
     </field>
-    <field name="journaling" type="boolean">
-      <bind-xml name="journaling" node="element" />
+    <field name="journalFactory" type="string">
+      <bind-xml name="journalFactory" node="element" />
     </field>
     <field name="resources" type="tyrex.resource.Resources">
       <bind-xml name="resources" node="element" />

@@ -40,7 +40,7 @@
  *
  * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionDomainImpl.java,v 1.6 2001/03/02 23:41:55 arkin Exp $
+ * $Id: TransactionDomainImpl.java,v 1.7 2001/03/03 00:35:51 arkin Exp $
  */
 
 
@@ -75,8 +75,8 @@ import tyrex.tm.TransactionDomain;
 import tyrex.tm.TransactionInterceptor;
 import tyrex.tm.TransactionStatus;
 import tyrex.tm.TransactionTimeoutException;
-import tyrex.tm.journal.Journal;
-import tyrex.tm.journal.JournalFactory;
+import tyrex.tm.Journal;
+import tyrex.tm.JournalFactory;
 import tyrex.tm.xid.BaseXid;
 import tyrex.tm.xid.XidUtils;
 import tyrex.resource.Resource;
@@ -95,7 +95,7 @@ import tyrex.util.Configuration;
  * domain.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.6 $ $Date: 2001/03/02 23:41:55 $
+ * @version $Revision: 1.7 $ $Date: 2001/03/03 00:35:51 $
  */
 public class TransactionDomainImpl
     extends TransactionDomain
@@ -233,6 +233,12 @@ public class TransactionDomainImpl
 
 
     /**
+     * Resources loaded for this transaction domain.
+     */
+    private final Resources                _resources;
+
+
+    /**
      * Constructs a new transaction domain.
      *
      * @param config The domain configuration object
@@ -256,12 +262,9 @@ public class TransactionDomainImpl
         _maximum = config.getMaximum();
         _txTimeout = config.getTimeout();
 
-        if ( config.getJournaling() ) {
+        factoryName = config.getJournalFactory();
+        if ( factoryName != null && factoryName.trim().length() != 0 ) {
             // Throws SystemException if failed to open journal
-            factoryName = Configuration.getProperty( Configuration.PROPERTY_JOURNAL_FACTORY );
-            if ( factoryName == null || factoryName.trim().length() == 0 )
-                throw new SystemException( "No transaction journal factory specified in property " +
-                                           Configuration.PROPERTY_JOURNAL_FACTORY );
             try {
                 factory = (JournalFactory) getClass().getClassLoader().loadClass( factoryName ).newInstance();
             } catch ( Exception except ) {
@@ -283,12 +286,15 @@ public class TransactionDomainImpl
         // Obtain all the resources. We need to have the transaction manager
         // set up first for the purpose of creating connection pools.
         if ( config.getResources() != null ) {
-            resources = config.getResources().createResources( this );
+            _resources = config.getResources();
+            resources = _resources.createResources( this );
             xaResources = new XAResource[ resources.length ];
             for ( int i = 0 ; i < resources.length ; ++i )
                 xaResources[ i ] = resources[ i ].getXAResource();
-        } else
+        } else {
+            _resources = new Resources();
             xaResources = null;
+        }
         
         // Obtain a transaction journal with the domain name.
         recover( _journal, xaResources );
@@ -548,6 +554,12 @@ public class TransactionDomainImpl
     public String getDomainName()
     {
         return _domainName;
+    }
+
+
+    public Resources getResources()
+    {
+        return _resources;
     }
 
 

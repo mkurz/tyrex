@@ -55,7 +55,7 @@ import tyrex.resource.Resources;
 /**
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2001/03/02 23:07:49 $
+ * @version $Revision: 1.2 $ $Date: 2001/03/03 00:35:51 $
  */
 public final class DomainConfig
 {
@@ -81,7 +81,7 @@ public final class DomainConfig
     private int                 _timeout = DEFAULT_TIMEOUT;
 
 
-    private boolean             _journaling = false;
+    private String              _journalFactory;
 
 
     private TransactionDomain   _txDomain;
@@ -130,15 +130,15 @@ public final class DomainConfig
     }
 
 
-    public boolean getJournaling()
+    public String getJournalFactory()
     {
-        return _journaling;
+        return _journalFactory;
     }
 
 
-    public void setJournaling( boolean journaling )
+    public void setJournalFactory( String factory )
     {
-        _journaling = journaling;
+        _journalFactory = factory;
     }
 
 

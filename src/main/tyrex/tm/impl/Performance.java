@@ -40,7 +40,7 @@
  *
  * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Performance.java,v 1.3 2001/03/02 23:41:55 arkin Exp $
+ * $Id: Performance.java,v 1.4 2001/03/03 00:35:51 arkin Exp $
  */
 
 
@@ -48,6 +48,7 @@ package tyrex.tm.impl;
 
 
 import java.io.PrintWriter;
+import java.io.InputStream;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 import tyrex.util.Logger;
@@ -57,16 +58,19 @@ import tyrex.tm.TransactionDomain;
 /**
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.3 $ $Date: 2001/03/02 23:41:55 $
+ * @version $Revision: 1.4 $ $Date: 2001/03/03 00:35:51 $
  */
 public class Performance
 {
 
 
-    public static TransactionDomain   _txDomain;
+    private static TransactionDomain   _txDomain;
 
 
-    private static TransactionManager _txManager;
+    private static TransactionManager  _txManager;
+
+
+    public static InputStream          _configFile;
 
 
     public static void main( String args[] )
@@ -93,8 +97,9 @@ public class Performance
 	writer = new PrintWriter( System.out, true );
 
 	try {
-            if ( _txDomain == null )
-                _txDomain = TransactionDomain.createDomain( Performance.class.getResourceAsStream( "test.xml" ) );
+            if ( _configFile == null )
+                _configFile = Performance.class.getResourceAsStream( "test.xml" );
+            _txDomain = TransactionDomain.createDomain( _configFile );
             _txManager = _txDomain.getTransactionManager();
 
 	    System.out.println( "Creating transaction locally" );
