@@ -2,11 +2,17 @@
 <!DOCTYPE document SYSTEM "document.dtd">
 <document url="http://tyrex.exolab.org/databases.xml">
   <properties>
-    <title>Databases and XA support</title>
     <author email="mohammed@intalio.com">Riad Mohammed</author>
   </properties>
   <body>
 
+    <section title="Introduction">
+        <p>
+        This document lists various issues involving XA support and
+        databases.
+        </p>
+    </section>
+        
     <section title="Oracle">
         <section title="Tested Versions">
             <ul>

@@ -169,19 +169,12 @@
               includes="**.xml" excludes="style/**,project.xml" />
     <copydir  src="${doc}" dest="${build}/doc" includes="license.txt,document.dtd" />
     <copydir  src="${doc}/images" dest="${build}/doc/images" />
-    <copydir  src="${doc}/style" dest="${build}/doc/style" includes="images/**,*.css" />
-
-    <mkdir    dir="${build}/doc/print" />
-    <style    basedir="${doc}" destdir="${build}/doc/print" style="style/print.xsl"
-              includes="**.xml" excludes="style/**,project.xml" />
-    <copydir  src="${doc}" dest="${build}/doc/print" includes="license.txt,document.dtd" />
-    <copydir  src="${doc}/images" dest="${build}/doc/print/images" />
+    <copydir  src="${doc}/style/images" dest="${build}/doc/images" includes="*.gif" />
+    <copydir  src="${doc}/style" dest="${build}/doc/" includes="*.css" />
 
     <copydir  src="${schema}" includes="*.dtd,*.xsd" dest="${build}/doc" />
     <replace  file="${build}/doc/index.html" token="$$VERSION$$" value="${version}" />
-    <replace  file="${build}/doc/print/index.html" token="$$VERSION$$" value="${version}" />
     <replace  file="${build}/doc/download.html" token="$$VERSION$$" value="${version}" />
-    <replace  file="${build}/doc/print/download.html" token="$$VERSION$$" value="${version}" />
 
   </target>
   
