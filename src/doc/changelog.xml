@@ -2,6 +2,20 @@
 <document url="http://tyrex.exolab.org/changelog.xml">
   <body>
     <title>Change log</title>
+    <section title="Version 0.9.6.1  September 25, 2000"><pre>
+- Defined Castor mapping file. Ships with updated castor.0.8.8.jar 
+  (different from released castor.0.8.8.jar; requires a fix to 
+  Castor mapping loader that is in Castor CVS).
+- tyrex.jdbc.ServerDataSource can be bound in a JNDI context with
+  the underlying data source if the underlying data source implements
+  java.io.Serializable, javax.naming.Referenceable or 
+  javax.naming.Reference.
+- Fixed a bug with user transaction.
+- Fixed connection pooling problem with tyrex.jdbc.XADataSourceImpl
+- XAConnections from tyrex.jdbc.XADataSourceImpl can now be retrieved 
+  with a user name and password.
+- Tomcat and Tyrex integration fixed and tested with Tomcat 3.1
+    </pre></section>
     <section title="Version 0.9.6  August 25, 2000"><pre>
 - Split server package into tm and server packages.
   The tm package contains jta specific code and 
