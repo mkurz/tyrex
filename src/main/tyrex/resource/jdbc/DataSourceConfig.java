@@ -70,7 +70,7 @@ import tyrex.util.Logger;
 /**
  * 
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.12 $
+ * @version $Revision: 1.13 $
  */
 public class DataSourceConfig
     extends ResourceConfig
@@ -186,7 +186,9 @@ public class DataSourceConfig
             throw new ResourceException( except );
         }
 
-        if ( object instanceof DataSource )
+        if ( ( object instanceof DataSource ) ||
+             ( object instanceof XADataSource ) ||
+             ( object instanceof ConnectionPoolDataSource ) )
             return object;
         else
             throw new ResourceException( "Data source is not of type DataSource, XADataSource or ConnectionPoolDataSource" );
