@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: MemoryBinding.java,v 1.9 2001/05/02 00:57:05 mohammed Exp $
+ * $Id: MemoryBinding.java,v 1.10 2001/05/03 17:39:17 mohammed Exp $
  */
 
 
@@ -74,7 +74,7 @@ import javax.naming.spi.NamingManager;
  * This object is thread-safe.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.9 $ $Date: 2001/05/02 00:57:05 $
+ * @version $Revision: 1.10 $ $Date: 2001/05/03 17:39:17 $
  */
 public final class MemoryBinding
 {
@@ -441,7 +441,7 @@ public final class MemoryBinding
      * created based of a {@link MemoryBinding}.
      *
      * @author <a href="arkin@intalio.com">Assaf Arkin</a>
-     * @version $Revision: 1.9 $ $Date: 2001/05/02 00:57:05 $
+     * @version $Revision: 1.10 $ $Date: 2001/05/03 17:39:17 $
      * @see MemoryBinding
      */
     private final class MemoryBindingEnumeration
@@ -475,12 +475,38 @@ public final class MemoryBinding
          */
         private final Context   _context;
 
+        /**
+         * The class name of the context class
+         */
+        private final String    _contextClassName;
 
+        /**
+         * The value of the next element to return. Can be null.
+         */
+        private Object          _nextValue;
+
+        /**
+         * The name of the next element to return. Can be null.
+         * <P>
+         * If the value is null this means that there are no element
+         * to return.
+         *
+         * @see #hasMore
+         */
+        private String          _nextName;
+
+        /**
+         * The class name of the next element to return. Can be null.
+         */
+        private String          _nextClassName;
+
+        
         MemoryBindingEnumeration( Context context, boolean nameOnly )
         {
             if ( context == null )
                 throw new IllegalArgumentException( "Argument context is null" );
             _context = context;
+            _contextClassName = nameOnly ? context.getClass().getName() : null;
             _nameOnly = nameOnly;
             _index = _hashTable.length;
         }
@@ -503,81 +529,126 @@ public final class MemoryBinding
         {
             _entry = null;
             _index = -1;
+            _nextValue = null;
+            _nextName = null;
+            _nextClassName = null;
         }
     
 
         public boolean hasMore()
         {
-            BindingEntry   entry;
-            int            index;
-            BindingEntry[] table;
+            if ( -1 == _index ) {
+                return false;    
+            }
             
-            if ( _entry != null ) {
+            if ( null != _nextName  ) {
                 return true;    
             }
-            
-            table = _hashTable;
-            index = _index;
-            while ( index > 0 ) {
-                entry = table[ --index ];
-                if ( entry != null ) {
-                    _entry = entry;
-                    _index = index;
-                    return true;
-                }
-            }
-            _entry = null;
-            _index = -1;
-            return false;
+
+            return internalHasMore();
         }
         
         
         public Object next()
             throws NoSuchElementException
         {
+            Object value;
+            String name;
+            
+            if ( ! hasMore() ) {
+                throw new NoSuchElementException( "No more elements in enumeration" );    
+            }
+
+            name = _nextName;
+            _nextName = null;
+            
+            if ( _nameOnly )
+                return new NameClassPair( name, _nextClassName, true );
+            
+            value = _nextValue;
+            _nextValue = null;
+            return new Binding( name, _nextClassName, value, true );
+        }
+
+        /**
+         * Return true if there are more elements in the 
+         * enumeration.
+         * <P>
+         * This method has the side effects of setting 
+         * {@link #_nextValue}, {@link #_nextName}, 
+         * {@link #_nextClassName}.
+         *
+         * @return true if there are more elements in the 
+         *      enumeration.
+         */
+        private boolean internalHasMore()
+        {
             BindingEntry  entry;
             Object        value;
             
             entry = nextEntry();
+
+            if ( null == entry ) {
+                return false;    
+            }
+
+            // the variable _nextName is set last in every clause so that
+            // it wont have to be reset to null when making recursive calls.
+            // This is done because the test in #hasMore relys on testing
+            // _nextName for null
+
             value = entry._value;
             if ( value instanceof MemoryBinding ) {
-                if ( _nameOnly )
-                    return new NameClassPair( entry._name, MemoryContext.class.getName(), true );
-                else {
+                if ( _nameOnly ) {
+                    _nextClassName = _contextClassName;
+                } else {
                     try {
                         // If another context, must use lookup to create a duplicate.
-                        value = _context.lookup( entry._name );
-                        return new Binding( entry._name, value.getClass().getName(), value, true );
+                        _nextValue = _context.lookup( entry._name );
+                        _nextClassName = _nextValue.getClass().getName();
                     } catch ( NamingException except ) {
                         // Skip this entry and go immediately to next one.
-                        return next();
-                    }
+                        return internalHasMore();
+                    }    
                 }
+                _nextName = entry._name;
+            } else if ( ( value instanceof LinkRef ) ) {
+                try {
+                    // Need to resolve the link.
+                    _nextValue = _context.lookup( entry._name );
+                    _nextClassName = ( null == _nextValue ) ? null : _nextValue.getClass().getName();
+                } catch ( NamingException except ) {
+                    // Skip this entry and go immediately to next one.
+                    return internalHasMore();
+                }
+                if ( _nameOnly ) {
+                    _nextValue = null;
+                }
+                _nextName = entry._name;
             } else if ( value instanceof Reference ) {
-                if ( _nameOnly )
-                    return new NameClassPair( entry._name, ( (Reference) value ).getClassName(), true );
-                else {
+                if ( !_nameOnly ) {
                     try {
-                        value = NamingManager.getObjectInstance( value, new CompositeName( entry._name ), _context, null );
-                        return new Binding( entry._name, value.getClass().getName(), value, true );
+                        _nextValue = NamingManager.getObjectInstance( value, new CompositeName( entry._name ), _context, null );
                     } catch ( Exception except ) {
                         // Skip this entry and go immediately to next one.
-                        return next();
+                        return internalHasMore();
                     }
                 }
-            } else if ( ! ( value instanceof LinkRef )  ) {
-                if ( _nameOnly )
-                    return new NameClassPair( entry._name, value.getClass().getName(), true );
-                else
-                    return new Binding( entry._name, value.getClass().getName(), value, true );
-            }
-            // Skip this entry and go immediately to next one.
-            return next();
+                _nextClassName = ( ( Reference ) value ).getClassName();
+                _nextName = entry._name;
+                
+            } else {
+                if ( !_nameOnly ) {
+                    _nextValue = value;
+                }
+                _nextClassName = ( null == value ) ? null : value.getClass().getName();
+                _nextName = entry._name;
+            } 
+            return true;
         }
         
         
         private BindingEntry nextEntry()
-            throws NoSuchElementException
         {
             BindingEntry   entry;
             int            index;
@@ -590,7 +661,7 @@ public final class MemoryBinding
             }
             table = _hashTable;
             index = _index;
-            while ( entry == null && index > 0 ) {
+            while ( index > 0 ) {
                 entry = table[ --index ];
                 if ( entry != null ) {
                     _entry = entry._next;
@@ -598,9 +669,7 @@ public final class MemoryBinding
                     return entry;
                 }
             }
-            _entry = null;
-            _index = -1;
-            throw new NoSuchElementException( "No more elements in collection" );
+            return null;
         }
         
         
