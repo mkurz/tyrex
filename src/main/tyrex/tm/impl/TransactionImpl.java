@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionImpl.java,v 1.26 2001/08/31 20:19:01 jdaniel Exp $
+ * $Id: TransactionImpl.java,v 1.27 2001/09/06 15:52:20 jdaniel Exp $
  */
 
 
@@ -88,7 +88,7 @@ import tyrex.util.Messages;
  * they are added.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.26 $ $Date: 2001/08/31 20:19:01 $
+ * @version $Revision: 1.27 $ $Date: 2001/09/06 15:52:20 $
  * @see XAResourceHolder
  * @see TransactionManagerImpl
  * @see TransactionDomain

@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionManagerImpl.java,v 1.12 2001/08/31 21:38:29 jdaniel Exp $
+ * $Id: TransactionManagerImpl.java,v 1.13 2001/09/06 15:52:20 jdaniel Exp $
  */
 
 
@@ -76,7 +76,7 @@ import tyrex.util.Messages;
  * transaction server.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.12 $ $Date: 2001/08/31 21:38:29 $
+ * @version $Revision: 1.13 $ $Date: 2001/09/06 15:52:20 $
  * @see Tyrex#recycleThread
  * @see TransactionDomain
  * @see TransactionImpl
