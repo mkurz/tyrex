@@ -63,7 +63,7 @@
     <javac srcdir="${source.main}"
            destdir="${build.classes}"
            debug="off"
-           excludes="tyrex/corba/*,tyrex/connector/*"
+           excludes="tyrex/corba/**,tyrex/connector/**"
            deprecation="${deprecation}">
     </javac>
     
