@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Transaction.java,v 1.9 2001/07/10 19:12:41 mohammed Exp $
+ * $Id: Transaction.java,v 1.10 2001/07/10 20:26:59 mohammed Exp $
  */
 
 
@@ -436,8 +436,16 @@ public class Transaction
 								statement = connection.createStatement();
 								
 								// ignore if the table exists
-								statement.executeUpdate("delete from " + 
+								try {
+									statement.executeUpdate("delete from " + 
 														entry.getTableName());
+								}
+								catch(SQLException e) {
+									// ignore if this is not create
+									if (create) {
+										throw e;	
+									}
+								}
 							}
 							else {
 								xaConnection = entry.getXAConnectionForCreation();
