@@ -1,4 +1,4 @@
-$Date: 2000/01/11 00:33:46 $ $Revision: 1.1 $
+$Date: 2000/01/17 22:14:54 $ $Revision: 1.2 $
 
 
 Security Policy For Tyrex
@@ -15,27 +15,31 @@ The following permissions are defined and should exist in the
 security policy of the application server or any other component
 interacting with the transaction server:
 
-----------------------------------------------------------------------
-| Start the transaction server               | server.start          |
-|                                            |                       |
-----------------------------------------------------------------------
-| Shutdown the transaction server            | server.shutdown       |
-|                                            |                       |
-----------------------------------------------------------------------
-| Run a meter against the transaction server | server.meter          |
-|                                            |                       |
-----------------------------------------------------------------------
-| Terminate an arbitrary transaction         | transaction.terminate |
-|                                            |                       |
-----------------------------------------------------------------------
-| Obtain information about an arbitrary      | transaction.list      |
-| transaction or list all transactions       |                       |
-|                                            |                       |
-----------------------------------------------------------------------
-| Use the TransactionManager interface to    | transaction.manager   |
-| manage transactions                        |                       |
-|                                            |                       |
-----------------------------------------------------------------------
+-----------------------------------------------------------
+| Start the transaction server                | start     |
+|                                             |           |
+-----------------------------------------------------------
+| Shutdown the transaction server             | shutdown  |
+|                                             |           |
+-----------------------------------------------------------
+| Run a meter against the transaction server  | meter     |
+|                                             |           |
+-----------------------------------------------------------
+| Terminate an arbitrary transaction          | terminate |
+|                                             |           |
+-----------------------------------------------------------
+| Obtain information about an arbitrary       | list      |
+| transaction or list all transactions        |           |
+|                                             |           |
+-----------------------------------------------------------
+| Use the TransactionManager interface to     | manager   |
+| manage transactions                         |           |
+|                                             |           |
+-----------------------------------------------------------
+| Control the JNDI environment naming context | enc       |
+|                                             |           |
+-----------------------------------------------------------
+
 
 In order to terminate the thread associated with a terminated
 transaction, the RuntimePermission "stopThread" must also be present.
@@ -47,17 +51,18 @@ transactions on behalf of the application:
 
 grant codebase "file:/appServer/-" {
     permission java.lang.RuntimePermission "stopThread"
-    permission tyrex.server.TransactionServerPermission "server.start"
-    permission tyrex.server.TransactionServerPermission "server.shutdown"
-    permission tyrex.server.TransactionServerPermission "transaction.manager"
+    permission tyrex.server.TyrexPermission "start"
+    permission tyrex.server.TyrexPermission "shutdown"
+    permission tyrex.server.TyrexPermission "manager"
+    permission tyrex.server.TyrexPermission "enc"
 };
 
 The following permissions would be granted to an administration tool
 reporting about transactions and metering the server:
 
 grant codebase "file:/reportTool/-" {
-  permission tyrex.server.TransactionServerPermission "server.meter"
-  permission tyrex.server.TransactionServerPermission "transaction.list"
+  permission tyrex.server.TyrexPermission "meter"
+  permission tyrex.server.TyrexPermission "list"
 };
 
 The following permissions would be granted to a management thread
@@ -66,8 +71,8 @@ connection with the client:
 
 grant codebase "file:/reportTool/-" {
   permission java.lang.RuntimePermission "stopThread"
-  permission tyrex.server.TransactionServerPermission "transaction.list"
-  permission tyrex.server.TransactionServerPermission "transaction.terminate"
+  permission tyrex.server.TyrexPermission "list"
+  permission tyrex.server.TyrexPermission "terminate"
 };
 
 
