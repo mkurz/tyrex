@@ -7,6 +7,4 @@ all.packages=tyrex.*
 
 vendor.name=Intalio Inc
 vendor.url=http://www.intalio.com
-copyright=Intalio Inc. (C) 1999-2001. All rights reserved.
-
-
+copyright=Original code is Copyright (c) 1999-2001, Intalio, Inc. All Rights Reserved. Contributions by MetaBoss team are Copyright (c) 2003-2004, Softaris Pty. Ltd. All Rights Reserved.
