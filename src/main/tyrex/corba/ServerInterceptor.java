@@ -95,14 +95,7 @@ public class ServerInterceptor
 			
 			ri.set_slot(t_slot, any);						
 		
-			//org.omg.CosTransactions.Current current = org.omg.CosTransactions.CurrentHelper.narrow( info.resolve_initial_references("TransactionCurrent") );
-			
-			//((org.openorb.ots.Impl.Current)current).applyXAConnection( pctx );
 		}
-/*		catch ( org.omg.PortableInterceptor.ORBInitInfoPackage.InvalidName ex )
-		{
-			fatal("TransactionalServerInterceptor", "Invalid name : TransactionService" );
-		}*/
 		catch (org.omg.IOP.CodecFactoryPackage.UnknownEncoding ue) 
 		{
 			fatal("TransactionalServerInterceptor", "Unknown encoding");
@@ -128,7 +121,8 @@ public class ServerInterceptor
 	 */
 	public void receive_request(org.omg.PortableInterceptor.ServerRequestInfo ri)
 		throws org.omg.PortableInterceptor.ForwardRequest
-	{}
+	{
+        }
 
 	/**
 	 * send reply operation

@@ -48,7 +48,7 @@ package tyrex.corba;
  * This is the current interface implementation. This code is extracted from the OpenORB OTS source code.
  * 
  * @author <a href="mailto:jdaniel@intalio.com">Jerome Daniel &lt;daniel@intalio.com&gt;</a>
- * @version $Revision: 1.1 $ $Date: 2001/01/11 23:26:32 $ 
+ * @version $Revision: 1.2 $ $Date: 2001/02/09 00:04:59 $ 
  */
 public class Current extends org.omg.CORBA.LocalObject implements org.omg.CosTransactions.Current				     
 {
@@ -74,6 +74,11 @@ public class Current extends org.omg.CORBA.LocalObject implements org.omg.CosTra
 	 */
 	private int t_slot;
 	
+        /**
+         * Propagation context stack
+         */
+	private static java.util.Hashtable _pctx_stacks = new java.util.Hashtable();
+        
 	/**
 	 * Constructor
 	 */
@@ -105,10 +110,16 @@ public class Current extends org.omg.CORBA.LocalObject implements org.omg.CosTra
 		throws org.omg.CosTransactions.SubtransactionsUnavailable
 	{
 		print("Current", "begin");
+                org.omg.CosTransactions.PropagationContext pctx = null;
 		try
 		{
-			org.omg.CosTransactions.PropagationContext pctx = getPropagationContext();
-			throw new org.omg.CosTransactions.SubtransactionsUnavailable();
+			pctx = getPropagationContext();
+			
+                        // As a previous propagation context has been found, it means that we are
+                        // going to create a sub transaction. Before, we need to save the current
+                        // propagation context.
+                        
+                        push_txcontext( pctx );
 		}
 		catch (org.omg.CORBA.MARSHAL m)
 		{
@@ -116,7 +127,7 @@ public class Current extends org.omg.CORBA.LocalObject implements org.omg.CosTra
 			{
 				org.omg.CosTransactions.Control control = _tfactory.create(_time_out);
 				
-				org.omg.CosTransactions.PropagationContext pctx = control.get_coordinator().get_txcontext();
+				pctx = control.get_coordinator().get_txcontext();
 				
 				org.omg.CORBA.Any pctx_any = org.omg.CORBA.ORB.init().create_any();
 				org.omg.CosTransactions.PropagationContextHelper.insert(pctx_any, pctx);
@@ -135,7 +146,39 @@ public class Current extends org.omg.CORBA.LocalObject implements org.omg.CosTra
 			{ 
 				fatal("Current", "Unable to resolve PICurrent");
 			}
+                        finally
+                        {
+                                return;
+                        }
 		}
+                
+                // here is the case where we have to create the sub transaction                                
+                
+                try
+                {
+                    org.omg.CosTransactions.Control control = pctx.current.coord.create_subtransaction();
+                    
+                    pctx = control.get_coordinator().get_txcontext();
+				
+                    org.omg.CORBA.Any pctx_any = org.omg.CORBA.ORB.init().create_any();
+                    org.omg.CosTransactions.PropagationContextHelper.insert(pctx_any, pctx);
+                    org.openorb.PI.CurrentImpl piCurrent = (org.openorb.PI.CurrentImpl)_info.resolve_initial_references("PICurrent");
+                    piCurrent.set_slot(t_slot, pctx_any);
+                }
+                catch (org.omg.PortableInterceptor.InvalidSlot ins) 
+                {
+                    fatal("Current", "Invalid slot");
+                }
+                catch (org.omg.PortableInterceptor.ORBInitInfoPackage.InvalidName in ) 
+                { 
+                    fatal("Current", "Unable to resolve PICurrent");
+                }
+                catch ( java.lang.Exception ex )
+                {
+                    ex.printStackTrace();
+                    fatal("Current", "Unexpected exception");
+                }
+                
 	}
 
 	/**
@@ -164,24 +207,14 @@ public class Current extends org.omg.CORBA.LocalObject implements org.omg.CosTra
 		}
 		catch (org.omg.CORBA.MARSHAL m) 
 		{
-			m.printStackTrace();
 			throw new org.omg.CosTransactions.NoTransaction();
 		}
 		finally 
 		{
-			try
-			{
-				org.openorb.PI.CurrentImpl piCurrent = (org.openorb.PI.CurrentImpl)_info.resolve_initial_references("PICurrent");
-				piCurrent.set_slot(t_slot, org.omg.CORBA.ORB.init().create_any());
-			}
-			catch (org.omg.PortableInterceptor.InvalidSlot ins) 
-			{
-				fatal("Current", "Invalid slot");
-			}
-			catch (org.omg.PortableInterceptor.ORBInitInfoPackage.InvalidName in ) 
-			{ 
-				fatal("Current", "Unable to resolve PICurrent");
-			}
+                    // Gets the previous propagation context if the current transaction was
+                    // a sub transaction
+
+                    pop_txcontext();    		
 		}
 	}
 
@@ -218,19 +251,10 @@ public class Current extends org.omg.CORBA.LocalObject implements org.omg.CosTra
 		}
 		finally 
 		{
-			try
-			{
-				org.openorb.PI.CurrentImpl piCurrent = (org.openorb.PI.CurrentImpl)_info.resolve_initial_references("PICurrent");
-				piCurrent.set_slot(t_slot, org.omg.CORBA.ORB.init().create_any());
-			}
-			catch (org.omg.PortableInterceptor.InvalidSlot ins) 
-			{
-				fatal("Current", "Invalid slot");
-			}
-			catch (org.omg.PortableInterceptor.ORBInitInfoPackage.InvalidName in ) 
-			{ 
-				fatal("Current", "Unable to resolve PICurrent");
-			}
+                    // Gets the previous propagation context if the current transaction was
+                    // a sub transaction
+
+                    pop_txcontext();    
 		}
 	}
 
@@ -345,7 +369,23 @@ public class Current extends org.omg.CORBA.LocalObject implements org.omg.CosTra
 	 */
 	public org.omg.CosTransactions.Control suspend()
 	{
-		return get_control();
+		org.omg.CosTransactions.Control ctrl = get_control();
+                
+                try
+                {
+                        org.openorb.PI.CurrentImpl piCurrent = (org.openorb.PI.CurrentImpl)_info.resolve_initial_references("PICurrent");
+                        piCurrent.set_slot(t_slot, org.omg.CORBA.ORB.init().create_any());
+                }
+                catch (org.omg.PortableInterceptor.InvalidSlot ins) 
+                {
+                        fatal("Current", "Invalid slot");
+                }
+                catch (org.omg.PortableInterceptor.ORBInitInfoPackage.InvalidName in ) 
+                { 
+                        fatal("Current", "Unable to resolve PICurrent");
+                }
+                
+                return ctrl;
 	}
 
 	/**
@@ -428,6 +468,79 @@ public class Current extends org.omg.CORBA.LocalObject implements org.omg.CosTra
 		org.omg.CosTransactions.PropagationContext mpctx = org.omg.CosTransactions.PropagationContextHelper.extract(any);
 		return mpctx;
 	}
+        
+        /**
+         * This operation is used to push a propagation context in a stack. When a sub transaction
+         * begins, the parent propagation context must be stored in a stack.
+         */
+        public void push_txcontext( org.omg.CosTransactions.PropagationContext pctx )
+        {
+            java.util.Stack stack = ( java.util.Stack ) _pctx_stacks.get( java.lang.Thread.currentThread() );
+            
+            if ( stack == null )
+            {
+                stack = new java.util.Stack();
+                _pctx_stacks.put( java.lang.Thread.currentThread(), stack );
+            }
+            
+            stack.push( pctx );
+        }
+        
+        /**
+         * This operation restores a previously saved propagation context. For example, when a sub transaction
+         * is completed, the parent propagation context is restored.
+         */
+        public void pop_txcontext()
+        {
+            boolean clean = false;
+            
+            java.util.Stack stack = ( java.util.Stack ) _pctx_stacks.get( java.lang.Thread.currentThread() );
+            
+            if ( stack == null )
+                clean = true;
+            else
+            {
+                if ( stack.empty() )
+                    clean = true;
+                else
+                {
+                    org.omg.CosTransactions.PropagationContext pctx = ( org.omg.CosTransactions.PropagationContext ) stack.pop();
+
+                    try
+                    {
+                        org.omg.CORBA.Any pctx_any = org.omg.CORBA.ORB.init().create_any();
+                        org.omg.CosTransactions.PropagationContextHelper.insert(pctx_any, pctx);
+                        org.openorb.PI.CurrentImpl piCurrent = (org.openorb.PI.CurrentImpl)_info.resolve_initial_references("PICurrent");
+                        piCurrent.set_slot(t_slot, pctx_any);
+                    }
+                    catch (org.omg.PortableInterceptor.InvalidSlot ins) 
+                    {
+                           fatal("Current", "Invalid slot");
+                    }
+                    catch (org.omg.PortableInterceptor.ORBInitInfoPackage.InvalidName in ) 
+                    { 
+                           fatal("Current", "Unable to resolve PICurrent");
+                    }
+                }
+            }
+            
+            if ( clean )
+            {
+                try
+                {
+                    org.openorb.PI.CurrentImpl piCurrent = (org.openorb.PI.CurrentImpl)_info.resolve_initial_references("PICurrent");
+	            piCurrent.set_slot(t_slot, org.omg.CORBA.ORB.init().create_any());
+                }
+                catch (org.omg.PortableInterceptor.InvalidSlot ins) 
+                {
+                      fatal("Current", "Invalid slot");
+                }
+                catch (org.omg.PortableInterceptor.ORBInitInfoPackage.InvalidName in ) 
+                { 
+                      fatal("Current", "Unable to resolve PICurrent");
+                }
+            }
+        }
         
         /**
          * Displays a trace

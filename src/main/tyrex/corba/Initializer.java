@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Initializer.java,v 1.1 2001/01/11 23:26:32 jdaniel Exp $
+ * $Id: Initializer.java,v 1.2 2001/02/09 00:04:59 jdaniel Exp $
  *
  * Date         Author  Changes
  */
@@ -80,7 +80,7 @@ public class Initializer extends org.omg.CORBA.LocalObject implements org.omg.Po
 		}
 		catch (org.omg.PortableInterceptor.ORBInitInfoPackage.DuplicateName dn)
 		{
-			exception("Initializer", "Duplicate name when adding the intercptor", dn);
+			exception("Initializer", "Duplicate name when adding the interceptor", dn);
 		}				
 	}
 
