@@ -58,7 +58,7 @@ import junit.extensions.*;
 /**
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  */
 
 
@@ -169,16 +169,24 @@ public class UUIDTest extends TestCase
     public void testUniquness()
         throws Exception
     {
-        final int numIds = 300000;
-        String[] ids = new String[numIds];
+        final int numIds = 200000;
+        String[] ids1 = new String[2 * numIds];
+        String[] ids2 = new String[numIds];
+        IdThread idThread = new IdThread(ids2);
+        idThread.start();
         for (int i = 0; i < numIds; i++)
         {
-            ids[i] = UUID.create();
+            ids1[i] = UUID.create();
         }
-        Arrays.sort(ids);
+        idThread.join();
+        for (int i = 0; i < numIds; i++)
+        {
+            ids1[numIds + i] = ids2[i];
+        }
+        Arrays.sort(ids1);
         for (int i = 1; i < numIds; i++)
         {
-            assert("Unique", ids[i].compareTo(ids[i - 1]) != 0);
+            assert("Unique", ids1[i].compareTo(ids1[i - 1]) != 0);
         }
     }
 
@@ -197,5 +205,23 @@ public class UUIDTest extends TestCase
     public static void main(String args[])
     {
         tyrex.Unit.runTests(args, new TestSuite(UUIDTest.class));
+    }
+
+    private class IdThread extends Thread
+    {
+        private String[] _ids = null;
+
+        public IdThread(String[] ids)
+        {
+            _ids = ids;
+        }
+
+        public void run()
+        {
+            for (int i = 0; i < _ids.length; i++)
+            {
+                _ids[i] = UUID.create();
+            }
+        }
     }
 }
