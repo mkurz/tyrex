@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Configure.java,v 1.5 2000/09/08 23:06:04 mohammed Exp $
+ * $Id: Configure.java,v 1.6 2000/11/01 00:20:27 mohammed Exp $
  */
 
 
@@ -89,7 +89,7 @@ import tyrex.conf.Server;
  *
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.5 $ $Date: 2000/09/08 23:06:04 $
+ * @version $Revision: 1.6 $ $Date: 2000/11/01 00:20:27 $
  */
 public final class Configure
     implements Serializable
@@ -209,7 +209,7 @@ public final class Configure
     /**
      * The pool manager associated with this server.
      */
-    private ResourcePoolManager     _poolManager;
+    //private ResourcePoolManager     _poolManager;
 
 
     /**
@@ -343,13 +343,13 @@ public final class Configure
      * @param poolManager The pool manager to use
      * @see PoolManager
      */
-    public synchronized void setResourcePoolManager( ResourcePoolManager poolManager )
+    /*public synchronized void setResourcePoolManager( ResourcePoolManager poolManager )
     {
 	if ( poolManager == null )
 	    throw new IllegalArgumentException( "Argument 'poolManager' is null" );
 	_poolManager = poolManager;
     }
-
+    */
 
     public synchronized ResourceLimits getResourceLimits()
     {
@@ -374,7 +374,7 @@ public final class Configure
      * @return The pool manager to use, never null
      * @see PoolManager
      */
-    public synchronized ResourcePoolManager getResourcePoolManager()
+    /*public synchronized ResourcePoolManager getResourcePoolManager()
     {
 	if ( _poolManager == null ) {
 	    
@@ -385,12 +385,12 @@ public final class Configure
 	    limits.setDesiredSize( Default.UpperLimit );
 	    limits.setWaitTimeout( Default.Duration );
 	    limits.setCheckEvery( Default.Duration );
-	    limits.setPruneFactor( 0.1F /* 10% */ );
+	    //limits.setPruneFactor( 0.1F  10%  );
         _poolManager = new ResourcePoolManagerImpl(limits);
 	}
 	return _poolManager;
     }
-
+    */
 
     /**
      * Sets the log to which the server will write messages during
