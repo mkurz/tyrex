@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionDomainImpl.java,v 1.17 2001/03/16 19:30:02 arkin Exp $
+ * $Id: TransactionDomainImpl.java,v 1.18 2001/03/16 20:56:57 arkin Exp $
  */
 
 
@@ -96,7 +96,7 @@ import tyrex.util.Configuration;
  * Implementation of a transaction domain.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.17 $ $Date: 2001/03/16 19:30:02 $
+ * @version $Revision: 1.18 $ $Date: 2001/03/16 20:56:57 $
  */
 public class TransactionDomainImpl
     extends TransactionDomain
@@ -400,10 +400,16 @@ public class TransactionDomainImpl
     }
 
 
-    public void terminate()
+    public synchronized void terminate()
     {
-        _state = TERMINATED;
-        DaemonMaster.removeDaemon( this );
+        if ( _state != TERMINATED ) {
+            _state = TERMINATED;
+            // Notify the background thread that we are terminating.
+            // This will cause all transactions to time out.
+            synchronized ( _timeoutLock ) {
+                _timeoutLock.notify();
+            }
+        }
     }
 
 
@@ -780,6 +786,10 @@ public class TransactionDomainImpl
      * Subsequent calls to {@link #findTransaction findTransaction}
      * and {@link #getControl getControl} will not be able to locate the
      * transaction.
+     * <p>
+     * If this is the last transaction in a terminating domain, the
+     * domain will close some of its resources (e.g. journal) after this
+     * method returns.
      *
      * @param tx The transaction to forget about
      */
@@ -842,9 +852,19 @@ public class TransactionDomainImpl
                 entry._threads = null;
             }
 
-            // We notify any blocking thread that it's able to create
-            // a new transaction.
-            notify();
+            // If the domain is terminated, we close the transaction
+            // journal at this point. Otherwise, we notify any blocking
+            // thread that it's able to create a new transaction.
+            if ( _state == TERMINATED ) {
+                if ( _journal != null ) {
+                    try {
+                        _journal.close();
+                    } catch ( SystemException except ) {
+                        _category.error( "Error closing journal for transaction domain " + _domainName, except );
+                    }
+                }
+            } else
+                notify();
         }
     }
 
@@ -1110,48 +1130,49 @@ public class TransactionDomainImpl
     }
 
 
-    //-------------------------------------------------------------------------
-    // Implementation details
-    //-------------------------------------------------------------------------
-
-
     /**
      * Called to terminate a transaction in progress. If the transaction
      * is active, it will be rolled back with a timed-out flag and all
      * threads associated with it will be terminated. This method does
      * not remove the transaction from the hashtable.
+     * <p>
+     * This method must be called with a synchronization block on the
+     * transaction.
      *
      * @param txRec The tranaction record
      */
-    private void terminateThreads( TransactionImpl tx )
+    protected void terminateThreads( TransactionImpl tx )
     {
         Thread[] threads;
         Xid      xid;
 
-        synchronized ( tx ) {
-            if ( tx.getStatus() != Status.STATUS_ACTIVE &&
-                 tx.getStatus() != Status.STATUS_MARKED_ROLLBACK ) {
-                threads = tx._threads;
-                if ( threads != null ) {
-                    xid = tx._xid;
-                    for ( int i = threads.length ; i-- > 0 ; ) {
-                        if ( threads[ i ] != null ) {
-                            for ( int j = _interceptors.length ; j-- > 0 ; ) {
-                                try {
-                                    _interceptors[ j ].suspend( xid, threads[ i ] );
-                                } catch ( Throwable thrw ) {
-                                    _category.error( "Interceptor " + _interceptors[ i ] + " reported error", thrw );
-                                }
+        if ( tx.getStatus() != Status.STATUS_ACTIVE &&
+             tx.getStatus() != Status.STATUS_MARKED_ROLLBACK ) {
+            threads = tx._threads;
+            if ( threads != null ) {
+                xid = tx._xid;
+                for ( int i = threads.length ; i-- > 0 ; ) {
+                    if ( threads[ i ] != null ) {
+                        for ( int j = _interceptors.length ; j-- > 0 ; ) {
+                            try {
+                                _interceptors[ j ].suspend( xid, threads[ i ] );
+                            } catch ( Throwable thrw ) {
+                                _category.error( "Interceptor " + _interceptors[ i ] + " reported error", thrw );
                             }
-                            if ( _threadTerminate )
-                                threads[ i ].stop( new TransactionTimeoutException() );
                         }
+                        if ( _threadTerminate )
+                            threads[ i ].stop( new TransactionTimeoutException() );
                     }
-                    tx._threads = null;
                 }
+                tx._threads = null;
             }
         }
     }
+
+
+    //-------------------------------------------------------------------------
+    // Implementation details
+    //-------------------------------------------------------------------------
 
 
     /**
@@ -1199,7 +1220,6 @@ public class TransactionDomainImpl
     public void run()
     {
         TransactionImpl entry;
-        TransactionImpl next;
         long            nextTimeout;
         long            clock;
 
@@ -1221,36 +1241,35 @@ public class TransactionDomainImpl
                             clock = Clock.clock();
                         }
 
+                        // If we have been notified that the domain is
+                        // terminating, we timeout all the transactions
+                        // in this domain.
+                        if ( _state == TERMINATED ) {
+                            for ( int i = _hashTable.length ; i-- > 0 ; ) {
+                                entry = _hashTable[ i ];
+                                while ( entry != null ) {
+                                    entry.timedOut();
+                                    entry = entry._nextEntry;
+                                }
+                            }
+                            DaemonMaster.removeDaemon( this );
+                            return;
+                        }
+
                         // We synchronize to be able to traverse the transaction
                         // hash table. At this point we synchronize on both
-                        // background thread and domain. !!! May need to reconsider.
+                        // background thread and domain.
                         synchronized ( this ) {
                             if ( _nextTimeout != 0 && _nextTimeout <= clock ) {
                                 nextTimeout = 0;
                                 for ( int i = _hashTable.length ; i-- > 0 ; ) {
-                                    entry = null;
-                                    next = _hashTable[ i ];
-                                    while ( next != null ) {
-                                        if ( next._timeout <= clock ) {
-                                            if ( entry == null )
-                                                _hashTable[ i ] = next._nextEntry;
-                                            else
-                                                entry._nextEntry = next._nextEntry;
-                                            next.timedOut();
-                                            terminateThreads( next );
-                                            --_txCount;
-                                            try {
-                                                _metrics.changeActive( - 1 );
-                                            } catch ( IllegalStateException except ) {
-                                                _category.error( "Internal error", except );
-                                            }
-                                            next = next._nextEntry;
-                                        } else {
-                                            if ( nextTimeout == 0 || nextTimeout > next._timeout )
-                                                nextTimeout = next._timeout;
-                                            entry = next;
-                                            next = next._nextEntry;
-                                        }
+                                    entry = _hashTable[ i ];
+                                    while ( entry != null ) {
+                                        if ( entry._timeout <= clock ) {
+                                            entry.timedOut();
+                                        } else if ( nextTimeout == 0 || nextTimeout > entry._timeout )
+                                            nextTimeout = entry._timeout;
+                                        entry = entry._nextEntry;
                                     }
                                 }
                                 _nextTimeout = nextTimeout;

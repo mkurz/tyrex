@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionDomain.java,v 1.17 2001/03/16 02:00:12 arkin Exp $
+ * $Id: TransactionDomain.java,v 1.18 2001/03/16 20:56:56 arkin Exp $
  */
 
 
@@ -85,7 +85,7 @@ import tyrex.resource.Resources;
  * {@link #terminate terminate}.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.17 $ $Date: 2001/03/16 02:00:12 $
+ * @version $Revision: 1.18 $ $Date: 2001/03/16 20:56:56 $
  */
 public abstract class TransactionDomain
 {
@@ -187,6 +187,7 @@ public abstract class TransactionDomain
         throws DomainConfigurationException
     {
         TransactionDomain domain;
+        TransactionDomain oldDomain;
         DomainConfig      config;
         Mapping           mapping;
         Unmarshaller      unmarshaller;
@@ -202,7 +203,8 @@ public abstract class TransactionDomain
         } catch ( Exception except ) {
             throw new DomainConfigurationException( except );
         }
-        if ( _domains.containsKey( config.getName() ) )
+        oldDomain = (TransactionDomain) _domains.get( config.getName() );
+        if ( oldDomain != null && oldDomain.getState() != TERMINATED )
             throw new DomainConfigurationException( "Transaction domain " + config.getName() + " already exists" );
         domain = config.getDomain();
         _domains.put( domain.getDomainName(), domain );

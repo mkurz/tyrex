@@ -128,11 +128,10 @@
   
 
   <notice>
-    Java, Enterprise JavaBeans, Java Messaging Server, JDBC, JNDI, JTA, JTS, Sun, Sun Microsystems and other Java
-    related APIs are trademarks or registered trademarks of Sun Microsystems, Inc. in the United States and in other
-    countries. XML and related standards are trademarks or registered trademarks of MIT, INRIA, Keio or others, and a product
-    of the World Wide Web Consortium. ORB, CORBA, and COSS are trademarks of the Object Management Group, Inc.
-    X/Open is a trademark of X/Open Company Ltd.
+    Java, Enterprise JavaBeans, JDBC, JNDI, JTA, JTS, JCA and other Java related APIs are trademarks or
+    registered trademarks of Sun Microsystems, Inc. CORBA and IIOP are trademarks or registered trademarks
+    of the Object Management Group, Inc. X/Open is a trademark of X/Open Company Ltd. All other product
+    names mentioned herein are trademarks of their respective owners. 
   </notice>
   <notice>
     <a href="http://www.intalio.com">Intalio, Inc.</a> (C) 1999-2001. All rights reserved

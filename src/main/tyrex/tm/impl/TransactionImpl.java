@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionImpl.java,v 1.8 2001/03/16 03:38:28 arkin Exp $
+ * $Id: TransactionImpl.java,v 1.9 2001/03/16 20:56:57 arkin Exp $
  */
 
 
@@ -88,7 +88,7 @@ import tyrex.util.Messages;
  * they are added.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.8 $ $Date: 2001/03/16 03:38:28 $
+ * @version $Revision: 1.9 $ $Date: 2001/03/16 20:56:57 $
  * @see XAResourceHolder
  * @see TransactionManagerImpl
  * @see TransactionDomain
@@ -1713,10 +1713,14 @@ final class TransactionImpl
      */
     protected synchronized void timedOut()
     {
-        // Let the rollback mechanism know that the transaction has failed.
-        _timedOut = true;
-        // Perform the rollback, ignore the returned heuristics.
-        internalRollback();
+        if ( ! _timedOut ) {
+            // Let the rollback mechanism know that the transaction has failed.
+            _timedOut = true;
+            _txDomain.notifyRollback( this );
+            // Perform the rollback, ignore the returned heuristics.
+            internalRollback();
+            _txDomain.terminateThreads( this );
+        }
     }
     
 
@@ -2010,11 +2014,6 @@ final class TransactionImpl
                 resumeTransaction( suspended );
         }
         
-        // Only top level transaction is registered with the
-        // transaction server and should be unlisted.
-        if ( _parent == null )
-            _txDomain.forgetTransaction( this );
-        
         // If two-phase commit, must record completion of
         // transaction in journal.
         if ( _twoPhase && _txDomain._journal != null ) {
@@ -2024,6 +2023,15 @@ final class TransactionImpl
                 error( except );
             }
         }
+
+        // Only top level transaction is registered with the
+        // transaction server and should be unlisted.
+        // This call must occur after the transaction is
+        // recorded in the journal, since forgetTransaction
+        // will close the journal for the last transaction
+        // in a terminating domain.
+        if ( _parent == null )
+            _txDomain.forgetTransaction( this );
     }
 
 

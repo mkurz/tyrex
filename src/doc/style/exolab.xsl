@@ -85,7 +85,7 @@
 
         <td width="7" bgcolor="#a9a5de" valign="top" align="left">&#160;</td>
         <td width="70" valign="top" align="left">&#160;</td>
-        <td rowspan="4" width="400" valign="top">
+        <td rowspan="1" width="400" valign="top">
           <table cols="2" rows="2" border="0" cellpadding="0" cellspacing="0" width="400">
             <tr>
               <td valign="top" align="left"><br/><img border="0" height="64" hspace="0"
@@ -133,6 +133,7 @@
 
       <!-- line row -->
 
+<!--
       <tr height="5">
         <td width="10" height="5" bgcolor="#7270c2" valign="top" align="left">&#160;</td>
         <td width="115" height="5" bgcolor="#7270c2" valign="top">
@@ -145,13 +146,15 @@
         <td width="70" height="5" valign="top" align="left">&#160;</td>
         <td width="120" height="5" valign="top" align="left">&#160;</td>
       </tr>
+-->
 
       <!-- content row -->
 
+<!--
       <tr>
-        <td width="10" height="5" bgcolor="#7270c2" valign="top" align="left">&#160;</td>
-        <td width="115" bgcolor="#7270c2" valign="top"
-          align="left"><xsl:apply-templates select="searchForm"/></td>
+        <td width="20" height="5" bgcolor="#7270c2" valign="top" align="left">&#160;</td>
+        <td width="95" bgcolor="#7270c2" valign="top"
+          align="left"><xsl:call-template name="searchForm"/></td>
         <td width="7" bgcolor="#a9a5de" valign="top" align="left">
           <img src="images/dotTrans.gif" width="1" height="25" border="0"/>
         </td>
@@ -160,9 +163,11 @@
         </td>
         <td width="120" valign="top" align="left">&#160;</td>
       </tr>
+-->
 
       <!-- final row -->
 
+<!--
       <tr height="5">
         <td width="10" rowspan="2" height="100%" bgcolor="#7270c2" valign="bottom"
           align="left"><img src="images/stripes1.gif" width="10" height="125" border="0"/></td>
@@ -173,14 +178,15 @@
         <td width="70" height="100%" valign="top" align="left">&#160;</td>
         <td width="120" height="100%" valign="top" align="left">&#160;</td>
       </tr>
+-->
 
       <!-- extra  row -->
 
       <tr height="5">
-        <!--td width="10" height="25" valign="top" align="left">&#160;</td>
-        <td width="115" height="25" valign="top" align="left">&#160;</td>
-        <td width="7" height="25" valign="top" align="left">&#160;</td-->
-        <td width="70" height="25" valign="top" align="left">&#160;</td>
+        <td width="10" height="5" bgcolor="#7270c2" valign="top" align="left">&#160;</td>
+        <td width="115" height="5" bgcolor="#7270c2" valign="top">&#160;</td>
+        <td width="7" height="5" bgcolor="#a9a5de" valign="top" align="left">&#160;</td>
+        <td width="70" height="5" valign="top" align="left">&#160;</td>
         <td width="400" height="25" valign="bottom" align="left">
           <br/><br/>
           <img src="images/line_light.gif"  border="0" width="400" height="3"  /><br/>
