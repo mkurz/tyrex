@@ -5,6 +5,8 @@
 <section title="Version 1.0  April 23 2002"><pre>
 - Added Log 4 J code from Sam Ruby.
 - Removed recovery code as it is experimental.
+- Bug fixes
+- Added workaround for Informix
     </pre></section>    
     <section title="Version 0.9.7.1  January 11 2001"><pre>
 - Changed the Log system to use Log 4 J.

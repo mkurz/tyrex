@@ -21,7 +21,7 @@
         
       <p><b>Notes</b>
         <p>Oracle 8.1.7 and above is recommended for XA support.
-          Tyrex provides a workaround (<b><api>tyrex.tm.OracleXAResourceHelper</api></b>) 
+          Tyrex provides a workaround (<b><api>tyrex.tm.impl.OracleXAResourceHelper</api></b>) 
           for known Oracle XA issues:
           <ul>
             <li>Oracle 8.1.6 - Oracle XA resource transaction enlistment requires Oracle's implementation
@@ -70,16 +70,24 @@
         </ul>
       </p>
       
-      <p><b>7.1 Notes</b>
+      <p><b>Notes</b>
+      <p>
         The IBM app driver, that is type 2, provides XA support.
         There a bug in pooling mechanism that causes a NullpointerException when the logical connection is closed.
+        </p>
       </p>
     </section>
     
-    <section title="Interbase">
+    <section title="Informix">
       <p><b>Notes</b>
-        <p>The current JDBC driver (Version 2.0) does not support XA transactions yet.</p>
-      </p>
+        <p>Thanks to Matias Salvador [mhs@sisa.com.ar] for Informix testing</p>
+        <p>Tyrex provides a workaround (<b><api>tyrex.tm.impl.InformixXAResourceHelper</api></b>) 
+          for known Informix XA issues:
+          <ul>
+            <li>XAResource.start(XAResource.TMJOIN) has problems with JDBC driver (Version 2.21)</li>
+          </ul>
+        </p>
+      </p>                  
     </section>
     
     <section title="Interbase">
@@ -96,7 +104,12 @@
       </p>
       
       <p><b>Notes</b>
-        <p>Cloudscape's XA implementation has passed the most Tyrex tests.</p>
+        <p>Tyrex provides a workaround (<b><api>tyrex.tm.impl.InformixXAResourceHelper</api></b>) 
+          for known Informix XA issues:
+          <ul>
+            <li>XAResource.start(XAResource.TMJOIN) has problems</li>
+          </ul>
+        </p>
       </p>                  
       
       <p><b>Issues</b>

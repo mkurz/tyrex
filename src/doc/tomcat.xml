@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<document url="http://tyrex.exolab.org/tomcat.xml">
+  <body>
+    <title>Tomcat</title>
+<section title="Support">    
+<p>
+Tomcat only supports tyrex.resource.jdbc.xa.EnabledDataSource which means that JDBC data sources are not supported and there is limited connection pool support. EnabledDataSource only supports JDBC 1.1 connections.
+</p><p>
+You can set the following EnabledDataSource parameters: user, password, driverClassName, driverName.
+Missing parameters are: pruneFactor (for reducing the size of pooled connections), isolationLevel and transactionTimeout.
+</p>
+<p> 
+To use the Tyrex connection pools you will have to integrate them with Tomcat yourself.
+</p>
+</section>
+</body>
+</document>
