@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionImpl.java,v 1.39 2001/09/25 02:07:12 mohammed Exp $
+ * $Id: TransactionImpl.java,v 1.40 2001/09/28 18:35:19 jdaniel Exp $
  */
 
 
@@ -89,7 +89,7 @@ import tyrex.util.Messages;
  * they are added.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.39 $ $Date: 2001/09/25 02:07:12 $
+ * @version $Revision: 1.40 $ $Date: 2001/09/28 18:35:19 $
  * @see XAResourceHolder
  * @see TransactionManagerImpl
  * @see TransactionDomain
@@ -607,7 +607,7 @@ final class TransactionImpl
                         try {
                             if (true) {
                                 synchronized(System.out) {
-                                    System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.start(XAResource.TMRESUME) " + xaResource + " with xid " + resHolder._xid);    
+                                    ////System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.start(XAResource.TMRESUME) " + xaResource + " with xid " + resHolder._xid);    
                                 }
                             }
 
@@ -625,7 +625,7 @@ final class TransactionImpl
                     } else {
                         if (true) {
                             synchronized(System.out) {
-                                System.out.println(Thread.currentThread() + "Transaction " + toString() + " Transaction.enlist() " + xaResource + " with xid " + resHolder._xid + " failed because xaresource is alread enlisted.");    
+                                //System.out.println(Thread.currentThread() + "Transaction " + toString() + " Transaction.enlist() " + xaResource + " with xid " + resHolder._xid + " failed because xaresource is alread enlisted.");    
                             }
                         }
                         return false;
@@ -644,7 +644,7 @@ final class TransactionImpl
                         try {
                             if (true) {
                                 synchronized(System.out) {
-                                    System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.start(XAResource.TMJOIN) " + xaResource + " with xid " + resHolder._xid + " because XAResource.end(TMSUCCESS) has already been called.");    
+                                    //System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.start(XAResource.TMJOIN) " + xaResource + " with xid " + resHolder._xid + " because XAResource.end(TMSUCCESS) has already been called.");    
                                 }
                             }
 
@@ -673,7 +673,7 @@ final class TransactionImpl
                     } else {
                         if (true) {
                             synchronized(System.out) {
-                                System.out.println(Thread.currentThread() + "Transaction " + toString() + " Transaction.enlist() " + xaResource + " with xid " + resHolder._xid + " failed because xaresource is failed.");    
+                                //System.out.println(Thread.currentThread() + "Transaction " + toString() + " Transaction.enlist() " + xaResource + " with xid " + resHolder._xid + " failed because xaresource is failed.");    
                             }
                         }
                         return false;
@@ -737,7 +737,7 @@ final class TransactionImpl
             try {
                 if (true) {
                     synchronized(System.out) {
-                        System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.end(XAResource.TMSUSPEND) " + resHolder._xaResource + " with xid " + resHolder._xid);    
+                        //System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.end(XAResource.TMSUSPEND) " + resHolder._xaResource + " with xid " + resHolder._xid);    
                     }
                 }
 
@@ -770,7 +770,7 @@ final class TransactionImpl
                 if ( flag == XAResource.TMFAIL ) {
                     if (true) {
                         synchronized(System.out) {
-                            System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.end(XAResource.TMFAIL) called " + xaResource + " with xid " + resHolder._xid);    
+                            //System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.end(XAResource.TMFAIL) called " + xaResource + " with xid " + resHolder._xid);    
                         }
                     }
 
@@ -779,7 +779,7 @@ final class TransactionImpl
                 else {
                     if (true) {
                         synchronized(System.out) {
-                            System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.end(XAResource.TMSUCCESS) called " + xaResource + " with xid " + resHolder._xid);    
+                            //System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.end(XAResource.TMSUCCESS) called " + xaResource + " with xid " + resHolder._xid);    
                         }
                     }
 
@@ -1226,13 +1226,13 @@ final class TransactionImpl
                         // a read-only heuristic.
                         if (true) {
                             synchronized(System.out) {
-                                System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.prepare called " + resHolder._xaResource + " with xid " + resHolder._xid);    
+                                //System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.prepare called " + resHolder._xaResource + " with xid " + resHolder._xid);    
                             }
                         }
                         if ( resHolder._xaResource.prepare( resHolder._xid ) == XAResource.XA_RDONLY ) {
                             if (true) {
                                 synchronized(System.out) {
-                                    System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.prepare called " + resHolder._xaResource + " with xid " + resHolder._xid + " voted read-only.");    
+                                    //System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.prepare called " + resHolder._xaResource + " with xid " + resHolder._xid + " voted read-only.");    
                                 }
                             }
                             resHolder._readOnly = true;
@@ -1240,7 +1240,7 @@ final class TransactionImpl
                         else {
                             if (true) {
                                 synchronized(System.out) {
-                                    System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.prepare called " + resHolder._xaResource + " with xid " + resHolder._xid + " voted commit.");    
+                                    //System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.prepare called " + resHolder._xaResource + " with xid " + resHolder._xid + " voted commit.");    
                                 }
                             }
 
@@ -1285,14 +1285,14 @@ final class TransactionImpl
                         // a read-only heuristic.
                         if (true) {
                             synchronized(System.out) {
-                                System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.prepare called " + resHolder._xaResource + " with xid " + resHolder._xid);    
+                                //System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.prepare called " + resHolder._xaResource + " with xid " + resHolder._xid);    
                             }
                         }
 
                         if ( resHolder._xaResource.prepare( resHolder._xid ) == XAResource.XA_RDONLY ) {
                             if (true) {
                                 synchronized(System.out) {
-                                    System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.prepare called " + resHolder._xaResource + " with xid " + resHolder._xid + " voted read-only.");    
+                                    //System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.prepare called " + resHolder._xaResource + " with xid " + resHolder._xid + " voted read-only.");    
                                 }
                             }
 
@@ -1301,7 +1301,7 @@ final class TransactionImpl
                         else {
                             if (true) {
                                 synchronized(System.out) {
-                                    System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.prepare called " + resHolder._xaResource + " with xid " + resHolder._xid + " voted commit.");    
+                                    //System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.prepare called " + resHolder._xaResource + " with xid " + resHolder._xid + " voted commit.");    
                                 }
                             }
 
@@ -1661,7 +1661,7 @@ final class TransactionImpl
                 try {
                     if (true) {
                         synchronized(System.out) {
-                            System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.end(XAResource.TMSUSPEND) called " + resHolder._xaResource + " with xid " + resHolder._xid);    
+                            //System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.end(XAResource.TMSUSPEND) called " + resHolder._xaResource + " with xid " + resHolder._xid);    
                         }
                     }
 
@@ -1711,7 +1711,7 @@ final class TransactionImpl
                     try {
                         if (true) {
                             synchronized(System.out) {
-                                System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.start(XAResource.TMRESUME) " + resHolder._xaResource + " with xid " + resHolder._xid);    
+                                //System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.start(XAResource.TMRESUME) " + resHolder._xaResource + " with xid " + resHolder._xid);    
                             }
                         }
 
@@ -1856,7 +1856,7 @@ final class TransactionImpl
             try {
                 if (true) {
                     synchronized(System.out) {
-                        System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.setTransactionTimeout() " + resHolder._xaResource + " with seconds " + seconds);    
+                        //System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.setTransactionTimeout() " + resHolder._xaResource + " with seconds " + seconds);    
                     }
                 }
                 resHolder._xaResource.setTransactionTimeout( seconds );
@@ -2087,7 +2087,7 @@ final class TransactionImpl
                     if ( ! resHolder._shared ) {
                         if (true) {
                             synchronized(System.out) {
-                                System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.forget() " + resHolder._xaResource + " with xid " + resHolder._xid);    
+                                //System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.forget() " + resHolder._xaResource + " with xid " + resHolder._xid);    
                             }
                         }
                         resHolder._xaResource.forget( resHolder._xid );
@@ -2109,7 +2109,7 @@ final class TransactionImpl
                     if ( ! resHolder._shared ) {
                         if (true) {
                             synchronized(System.out) {
-                                System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.forget() " + resHolder._xaResource + " with xid " + resHolder._xid);    
+                                //System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.forget() " + resHolder._xaResource + " with xid " + resHolder._xid);    
                             }
                         }
                         resHolder._xaResource.forget( resHolder._xid );
@@ -2562,14 +2562,14 @@ final class TransactionImpl
             if (resHolder._endFlag == XAResource.TMSUSPEND) {
                 if (true) {
                     synchronized(System.out) {
-                        System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.start(XAResource.TMRESUME) " + resHolder._xaResource + " with xid " + resHolder._xid);    
+                        //System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.start(XAResource.TMRESUME) " + resHolder._xaResource + " with xid " + resHolder._xid);    
                     }
                 }
                 resHolder._xaResource.start( resHolder._xid, XAResource.TMRESUME );
             }
             if (true) {
                 synchronized(System.out) {
-                    System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.end(XAResource.TMSUCCESS) " + resHolder._xaResource + " with xid " + resHolder._xid);    
+                    //System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.end(XAResource.TMSUCCESS) " + resHolder._xaResource + " with xid " + resHolder._xid);    
                 }
             }
             resHolder._xaResource.end( resHolder._xid, XAResource.TMSUCCESS );
@@ -2594,7 +2594,7 @@ final class TransactionImpl
         if ( except.getClass().getName().equals("oracle.jdbc.xa.OracleXAException") ) {
             try {
                 synchronized(System.out) {
-                    System.out.println("\n\n**ORacle error " + except.getClass().getDeclaredMethod("getOracleError", null).invoke(except, null));
+                    //System.out.println("\n\n**ORacle error " + except.getClass().getDeclaredMethod("getOracleError", null).invoke(except, null));
                 }
             }
             catch(Exception e) {
@@ -2645,7 +2645,7 @@ final class TransactionImpl
                 if ( ! resHolder._shared && ! resHolder._readOnly ) {
                     if (true) {
                         synchronized(System.out) {
-                            System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.commit(" + onePhaseCommit + ") " + resHolder._xaResource + " with xid " + resHolder._xid);    
+                            //System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.commit(" + onePhaseCommit + ") " + resHolder._xaResource + " with xid " + resHolder._xid);    
                         }
                     }
 
@@ -2682,7 +2682,7 @@ final class TransactionImpl
                 if ( ! resHolder._shared && ! resHolder._readOnly ) {
                     if (true) {
                         synchronized(System.out) {
-                            System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.rollback() " + resHolder._xaResource + " with xid " + resHolder._xid);    
+                            //System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.rollback() " + resHolder._xaResource + " with xid " + resHolder._xid);    
                         }
                     }
 
@@ -2743,7 +2743,7 @@ final class TransactionImpl
                     if ( differentBranches ) { 
                         if (true) {
                             synchronized(System.out) {
-                                System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.start(XAResource.TMNOFLAGS) " + resHolder._xaResource + " with xid " + resHolder._xid + " with different branches");    
+                                //System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.start(XAResource.TMNOFLAGS) " + resHolder._xaResource + " with xid " + resHolder._xid + " with different branches");    
                             }
                         }
 
@@ -2752,7 +2752,7 @@ final class TransactionImpl
                         if ( XAResource.TMSUSPEND == resHolder._endFlag ) {
                             if (true) {
                                 synchronized(System.out) {
-                                    System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.start(XAResource.TMRESUME) " + resHolder._xaResource + " with xid " + resHolder._xid);    
+                                    //System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.start(XAResource.TMRESUME) " + resHolder._xaResource + " with xid " + resHolder._xid);    
                                 }
                             }
 
@@ -2761,7 +2761,7 @@ final class TransactionImpl
                         }
                         if (true) {
                             synchronized(System.out) {
-                                System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.start(XAResource.TMJOIN) " + resHolder._xaResource + " with xid " + resHolder._xid);    
+                                //System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.start(XAResource.TMJOIN) " + resHolder._xaResource + " with xid " + resHolder._xid);    
                             }
                         }
 
@@ -2826,7 +2826,7 @@ final class TransactionImpl
         try {
             if (true) {
                 synchronized(System.out) {
-                    System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.start(XAResource.TMNOFLAGS) called " + xaResource + " with xid " + resHolder._xid);    
+                    //System.out.println(Thread.currentThread() + "Transaction " + toString() + " XAResource.start(XAResource.TMNOFLAGS) called " + xaResource + " with xid " + resHolder._xid);    
                 }
             }
 
