@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<project>
+<project topSelected="6">
 
   <title>Tyrex</title>
-  <logo>images/tyrex.gif</logo>
+  <logo>images/logo_tyrex.gif</logo>
   <repository>tyrex</repository>
   <href>http://tyrex.exolab.org</href>
 
@@ -44,6 +44,10 @@
         <url>index.xml</url>
         <display>Home</display>
       </navLink>
+    </section>
+
+    <section name="Tyrex">
+
       <navLink>
         <url>api/overview-summary.html</url>
         <display>API</display>
@@ -63,38 +67,53 @@
       <navLink>
         <url>databases.xml</url>
         <display>Databases</display>
-      </navLink>
-      
-      <navLink>
-        <url>changelog.xml</url>
-        <display>Changelog</display>
-      </navLink>
-      <navLink>
-        <url>cvs.xml</url>
-        <display>CVS</display>
-      </navLink>
-      <navLink>
-        <url>lists.xml</url>
-        <display>Mailing Lists</display>
-      </navLink>
-      <navLink>
-        <url>library.xml</url>
-        <display>Library</display>
-      </navLink>
-      <navLink>
-        <url>license.xml</url>
-        <display>License</display>
-      </navLink>
+      </navLink>  
       <navLink>
         <url>download.xml</url>
         <display>Download</display>
       </navLink>
       
     </section>
+
+    <section name="Resources">
+
+      <navLink>
+        <url>license.xml</url>
+        <display>License</display>
+      </navLink>
+      <navLink>
+        <url>bugzilla.xml</url>
+        <display>Bugzilla</display>
+      </navLink>
+      <navLink>
+        <url>changelog.xml</url>
+        <display>Changelog</display>
+      </navLink>
+      <navLink>
+        <url>contributors.xml</url>
+        <display>Contributors</display>
+      </navLink>
+      <navLink>
+        <url>library.xml</url>
+        <display>Library</display>
+      </navLink>
+      <navLink>
+        <url>lists.xml</url>
+        <display>Mailing Lists</display>
+      </navLink>
+      <navLink>
+        <url>cvs.xml</url>
+        <display>CVS</display>
+      </navLink>
+      <navLink>
+        <url>contacts.xml</url>
+        <display>Contact</display>
+      </navLink>
+      
+    </section>
+
   </navSections>
   
-  <searchForm>
-  </searchForm>
 
   <notice>
     Java, Enterprise JavaBeans, Java Messaging Server, JDBC, JNDI, JTA, JTS, Sun, Sun Microsystems and other Java
@@ -104,7 +123,7 @@
     X/Open is a trademark of X/Open Company Ltd.
   </notice>
   <notice>
-    <a href="http://www.intalio.com">Intalio, Inc.</a> (C) 2000. All rights reserved
+    <a href="http://www.intalio.com">Intalio, Inc.</a> (C) 1999-2001. All rights reserved
   </notice>
 
 </project>
