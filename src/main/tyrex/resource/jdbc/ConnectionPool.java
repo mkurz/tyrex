@@ -84,7 +84,7 @@ import tyrex.util.LoggerPrintWriter;
 /**
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.16 $
+ * @version $Revision: 1.17 $
  */
 final class ConnectionPool
     extends PoolMetrics
@@ -406,11 +406,7 @@ final class ConnectionPool
         if ( _destroyed )
             throw new SQLException( "Connection pool has been destroyed" );
         entry = allocate( user, password );
-		synchronized(System.out) {
-			//System.out.println(Thread.currentThread() + "Retrieving connection " + toString() + " " + ((entry._xaResource != null) ? "enlist " + entry._xaResource : " no xa resource"));
-			new Throwable().printStackTrace();
-		}
-        // If connection supports XA resource, we need to enlist
+		// If connection supports XA resource, we need to enlist
         // it in this or any future transaction. If this fails,
         // the connection is unuseable.
         if ( entry._xaResource != null ) {
