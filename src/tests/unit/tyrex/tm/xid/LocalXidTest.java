@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: LocalXidTest.java,v 1.3 2001/09/12 11:17:52 mills Exp $
+ * $Id: LocalXidTest.java,v 1.4 2001/09/13 23:51:14 mills Exp $
  */
 
 package tyrex.tm.xid;
@@ -56,7 +56,7 @@ import junit.extensions.*;
 /**
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  */
 
 public class LocalXidTest extends TestCase
@@ -95,6 +95,15 @@ public class LocalXidTest extends TestCase
      * or zero length global value the ExternalXid won't be equal to
      * the first LocalXid but using it in an equals call will further
      * extend the test coverage of the method equals().</p>
+     *
+     * <p>Use TestXid to complete the coverage of equals().  Create
+     * TestXids with a format id not equal to
+     * LocalXid.LOCAL_FORMAT_ID, with a null global transaction id,
+     * with a branch qualifyer that is neither null nor empty, with a
+     * global transaction id that is different from the original.
+     * None of these should be equal to the LocalXid.  Use a non-Xid
+     * Object as argument to equals.  It should return false as
+     * well.</p>
      */
 
     public void testNonBaseXidFunctions()
@@ -118,6 +127,22 @@ public class LocalXidTest extends TestCase
                                            localId1.getBranchQualifier());
         assert("Copy4", !localId1.equals(exId));
         assert("Copy5", !localId1.equals(xid));
+        TestXid tId = new TestXid(LocalXid.LOCAL_FORMAT_ID, null,
+                                   localId1.getBranchQualifier());
+        assert("Copy6", localId1.equals(tId));
+        tId = new TestXid(LocalXid.LOCAL_FORMAT_ID + 1, null,
+                          localId1.getBranchQualifier());
+        assert("Copy7", !localId1.equals(tId));
+        byte[] branch = localId1.getBranchQualifier();
+        byte[] branch1 = new byte[branch.length];
+        for (int i = 0; i < branch.length; i++)
+        {
+            branch1[i] = branch[i];
+        }
+        branch1[branch.length - 1]++;
+        tId = new TestXid(LocalXid.LOCAL_FORMAT_ID, null, branch1);
+        assert("Copy8", !localId1.equals(tId));
+        assert("Copy9", !localId1.equals(new Integer(1)));
     }
 
 

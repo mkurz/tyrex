@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: GlobalXidTest.java,v 1.2 2001/09/12 11:17:52 mills Exp $
+ * $Id: GlobalXidTest.java,v 1.3 2001/09/13 23:51:14 mills Exp $
  */
 
 package tyrex.tm.xid;
@@ -56,7 +56,7 @@ import junit.extensions.*;
 /**
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  */
 
 public class GlobalXidTest extends TestCase
@@ -98,6 +98,15 @@ public class GlobalXidTest extends TestCase
      * as argument in parse().  Create an ExternalXid using the
      * attributes from the first GlobalXid.  Ensure that this
      * ExternalXid is equal to the GlobalXid.</p>
+     *
+     * <p>Use TestXid to complete the coverage of equals().  Create
+     * TestXids with a format id not equal to
+     * GlobalXid.GLOBAL_FORMAT_ID, with a null global transaction id,
+     * with a branch qualifyer that is neither null nor empty, with a
+     * global transaction id that is different from the original.
+     * None of these should be equal to the GloablXid.  Use a non-Xid
+     * Object as argument to equals.  It should return false as
+     * well.</p>
      */
 
     public void testNonBaseXidFunctions()
@@ -114,7 +123,7 @@ public class GlobalXidTest extends TestCase
         BranchXid globalId4 = (BranchXid)globalId1.newBranch();
         assert("Copy2", !globalId1.equals(globalId4));
         assert("Copy3", !globalId2.equals(globalId4));
-        assertEquals("Format id", GlobalXid.FORMAT_ID,
+        assertEquals("Format id", GlobalXid.GLOBAL_FORMAT_ID,
                      globalId3.getFormatId());
         assertEquals("Global", global, globalId3.getGlobalTransactionId());
         byte[] glb = globalId3.getBranchQualifier();
@@ -122,10 +131,34 @@ public class GlobalXidTest extends TestCase
         Xid xid = XidUtils.parse(globalId4.toString());
         assert("Copy4", !globalId1.equals(xid));
         assert("Copy5", globalId4.equals(xid));
-        ExternalXid exId = new ExternalXid(GlobalXid.FORMAT_ID,
+        ExternalXid exId = new ExternalXid(GlobalXid.GLOBAL_FORMAT_ID,
                                            globalId1.getGlobalTransactionId(),
                                            globalId1.getBranchQualifier());
         assert("Copy6", globalId1.equals(exId));
+        TestXid tId = new TestXid(GlobalXid.GLOBAL_FORMAT_ID,
+                                  globalId1.getGlobalTransactionId(),
+                                  globalId1.getBranchQualifier());
+        assert("Copy7", globalId1.equals(tId));
+        tId = new TestXid(GlobalXid.GLOBAL_FORMAT_ID + 1,
+                          globalId1.getGlobalTransactionId(),
+                          globalId1.getBranchQualifier());
+        assert("Copy8", !globalId1.equals(tId));
+        tId = new TestXid(GlobalXid.GLOBAL_FORMAT_ID, null,
+                          globalId1.getBranchQualifier());
+        assert("Copy9", !globalId1.equals(tId));
+        byte[] branch1 = new byte[] {(byte)0xA8, (byte)0xB7, (byte)0xC6,
+                                     (byte)0xD5, (byte)0xE4, (byte)0x43};
+        tId = new TestXid(GlobalXid.GLOBAL_FORMAT_ID, null, branch1);
+        assert("Copy9", !globalId1.equals(tId));
+        byte[] global1 = new byte[] {(byte)0xA8, (byte)0xB7, (byte)0xC6,
+                                     (byte)0xD5, (byte)0xE4, (byte)0x43};
+        tId = new TestXid(GlobalXid.GLOBAL_FORMAT_ID, global1,
+                          globalId1.getBranchQualifier());
+        assert("Copy10", !globalId1.equals(tId));
+        tId = new TestXid(GlobalXid.GLOBAL_FORMAT_ID,
+                          globalId1.getGlobalTransactionId(), null);
+        assert("Copy11", globalId1.equals(tId));
+        assert("Copy12", !globalId1.equals(new Integer(1)));
     }
 
 
