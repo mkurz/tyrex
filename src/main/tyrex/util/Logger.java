@@ -40,32 +40,21 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Logger.java,v 1.15 2001/09/12 00:12:55 omodica Exp $
+ * $Id: Logger.java,v 1.16 2001/09/21 18:15:04 mohammed Exp $
  */
 
 
 package tyrex.util;
 
-
-import java.io.OutputStream;
-import java.util.Properties;
-import java.util.Enumeration;
-import org.apache.log4j.PatternLayout;
 import org.apache.log4j.Category;
-import org.apache.log4j.Appender;
-import org.apache.log4j.FileAppender;
-
 
 /**
  *
  * @author <a href="jdaniel@intalio.com">Jerome DANIEL</a>
- * @version $Revision: 1.15 $ $Date: 2001/09/12 00:12:55 $
+ * @version $Revision: 1.16 $ $Date: 2001/09/21 18:15:04 $
  */
 public class Logger
 {
-
-
-    public static final Appender appender;
 
 
     public static final Category tyrex;
@@ -84,53 +73,11 @@ public class Logger
 
 
     static {
-        PatternLayout layout;
-        Category      category;
-        Properties    props;
-        String        name;
-        Enumeration   enum;
-        FileAppender  nullAppender;        
-        
-        layout = new PatternLayout( "%d{dd MMM yyyy HH:mm:ss}:%c:%p %m%n" );
-        
-        nullAppender = new FileAppender( new PatternLayout(""), new DevNull() );
-
         tyrex = Category.getInstance( "tyrex" );
         resource = Category.getInstance( "tyrex.resource" );
         ots = Category.getInstance( "tyrex.ots" );
         security = Category.getInstance( "tyrex.security" );
         castor = Category.getInstance( "tyrex.resource.castor" );
-        
-        appender = new FileAppender( layout, System.out );
-        tyrex.addAppender( appender );
     }
-
-
-    static private class DevNull
-        extends OutputStream
-    {
-
-        public void close()
-        {
-        }
-
-        public void flush()
-        {
-        }
-
-        public void write( int value )
-        {
-        }
-
-        public void write( byte[] bytes )
-        {
-        }
-
-        public void write( byte[] bytes, int start, int length )
-        {
-        }
-
-    }
-
 }
 
