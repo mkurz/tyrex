@@ -76,10 +76,30 @@
           <xsd:any>
             <xsd:element name="name" type="xsd:string"
                          minOccurs="1" maxOccurs="1" />
-            <xsd:element name="jar" type="xsd:string"
-                         minOccurs="1" maxOccurs="1" />
-            <xsd:element name="paths" type="xsd:string"
-                         minOccurs="0" maxOccurs="1" />
+            <xsd:element name="jar" type="xsd:string" minOccurs="0" maxOccurs="1">
+              <xsd:annotation>
+                <xsd:documentation xml:lang="en">
+                  Specify full path to the Jar file containing the resource driver implementation.
+                  If this entry is present - special class loader will be used to load this archive, 
+                  so it does not need to be present on the java system classpath. The only difference between
+                  this element and "paths" element is that this one only allows to specify a single jar.
+                  If both this element and "paths" element are not specified - load of resource class will be attempted
+                  using system class loader (Class.forName() method)
+                </xsd:documentation>
+              </xsd:annotation>
+            </xsd:element>
+            <xsd:element name="paths" type="xsd:string" minOccurs="0" maxOccurs="1">
+              <xsd:annotation>
+                <xsd:documentation xml:lang="en">
+                  Specify semicolumn separated list of Jar files (full path for each) supporting the resource driver implementation.
+                  If this entry is present - special class loader will be used to load these archives, 
+                  so they do not have to be present on the java system classpath. The only difference between
+                  this element and "jar" element is that this one allows to specify multiple jars.
+                  If both this element and "jar" element are not specified - load of resource class will be attempted
+                  using system class loader (Class.forName() method)
+                </xsd:documentation>
+              </xsd:annotation>
+            </xsd:element>
             <xsd:element name="class" type="xsd:string"
                          minOccurs="1" maxOccurs="1" />
             <xsd:element name="config" type="xsd:anyType"

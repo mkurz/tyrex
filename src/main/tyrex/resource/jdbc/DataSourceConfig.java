@@ -38,7 +38,9 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
+ * Original code is Copyright (c) 1999-2001, Intalio, Inc. All Rights Reserved.
+ *
+ * Contributions by MetaBoss team are Copyright (c) 2003-2004, Softaris Pty. Ltd. All Rights Reserved.
  *
  */
 
@@ -46,31 +48,33 @@
 package tyrex.resource.jdbc;
 
 
-import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.ArrayList;
 import java.util.StringTokenizer;
+
+import javax.sql.ConnectionPoolDataSource;
 import javax.sql.DataSource;
 import javax.sql.XADataSource;
-import javax.sql.ConnectionPoolDataSource;
-import org.apache.log4j.Category;
 import javax.transaction.xa.XAResource;
+
+import org.apache.log4j.Category;
+
+import tyrex.resource.PoolLimits;
+import tyrex.resource.PoolMetrics;
+import tyrex.resource.Resource;
+import tyrex.resource.ResourceConfig;
+import tyrex.resource.ResourceException;
 import tyrex.tm.TransactionDomain;
 import tyrex.tm.TyrexTransactionManager;
-import tyrex.resource.ResourceConfig;
-import tyrex.resource.Resource;
-import tyrex.resource.ResourceException;
-import tyrex.resource.PoolMetrics;
-import tyrex.resource.PoolLimits;
 import tyrex.util.Logger;
 
 
 /**
  * 
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.13 $
+ * @version $Revision: 1.14 $
  */
 public class DataSourceConfig
     extends ResourceConfig
@@ -134,51 +138,48 @@ public class DataSourceConfig
     private Object createFactory_()
         throws ResourceException
     {
-        String                  name;
-        String                  jarName;
-        String                  className;
-        URL[]                   urls;
-        URL                     url;
-        StringTokenizer         tokenizer;
+        String                  name = _name;
+        String                  jarName = _jar;
+        String                  className = _className;
+		String                  paths = _paths;
         Class                   cls;
         Object                  object;
-        String                  paths;
 
-        name = _name;
         if ( name == null || name.trim().length() == 0 )
             throw new ResourceException( "The configuration element is missing the resource manager name" );
-        jarName = _jar;
-        if ( jarName == null || jarName.trim().length() == 0 )
-            throw new ResourceException( "The configuration element is missing the JAR name" );
-        className = _className;
         if ( className == null || className.trim().length() == 0 )
             throw new ResourceException( "The configuration element is missing the data source class name" );
 
-        // Obtain the JAR file and use the paths to create
-        // a list of URLs for the class loader.
-        try {
-            url = getURL( jarName );
-            paths = _paths;
-            if ( paths != null && paths.length() > 0 ) {
-                tokenizer = new StringTokenizer( paths, ",; " );
-                urls = new URL[ tokenizer.countTokens() + 1 ];
-                urls[ 0 ] = url;
-                for ( int i = 1 ; i < urls.length ; ++i ) {
-                    jarName = tokenizer.nextToken();
-                    urls[ i ] = getURL( jarName );
-                }
-            } else
-                urls = new URL[] { url };
-        } catch ( IOException except ) {
-            Logger.resource.error("Could not create url for datasource file: '" + jarName + "'. File may not exist.");
-            
-            throw new ResourceException( except );
-        }
-            
-        // Create a new URL class loader for the data source.
+		// See if we have to use dedicated classloader - this is only the case
+		// if we have <jar> and / or <paths> elements populated
+		ArrayList lURLs = new ArrayList();
+		try
+		{
+			if (jarName != null && jarName.trim().length() > 0)
+				lURLs.add(getURL( jarName));
+			if ( paths != null && paths.length() > 0 )
+			{
+				StringTokenizer tokenizer = new StringTokenizer( paths, ",; " );
+				while(tokenizer.hasMoreTokens())
+				{
+					jarName = tokenizer.nextToken();
+					lURLs.add(getURL(jarName));
+				}
+			}
+		}
+		catch ( IOException except )
+		{
+			Logger.resource.error("Could not create url for datasource file: '" + jarName + "'. File may not exist.");
+			throw new ResourceException( except );
+		}
+
+		// Create a new URL class loader for the data source if necessary.
+		if (lURLs.size() > 0)
+			_classLoader = new URLClassLoader( (URL[])lURLs.toArray(new URL[lURLs.size()]) , getClass().getClassLoader() );
+		else
+			_classLoader = getClass().getClassLoader();
         // Create a new data source using the class names
         // specified in the configuration file.
-        _classLoader = new URLClassLoader( urls, getClass().getClassLoader() );
         try {
             cls = _classLoader.loadClass( className );
             object = cls.newInstance();
@@ -192,7 +193,6 @@ public class DataSourceConfig
             return object;
         else
             throw new ResourceException( "Data source is not of type DataSource, XADataSource or ConnectionPoolDataSource" );
-
     }
 
 

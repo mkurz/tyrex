@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!-- $Id: configuration.xml,v 1.9 2002/05/31 11:26:30 mohammed Exp $ -->
+<!-- $Id: configuration.xml,v 1.10 2003/11/11 06:07:14 metaboss Exp $ -->
 <document>
   <properties>
     <title>Tyrex Configuration</title>
@@ -200,18 +200,18 @@ uuid.clockSequence=100</code></p>
           </tr>
           <tr>
             <td><tt>&#160;&#160;jar</tt></td>
-            <td><i>required</i></td>
-            <td>The name of the data source JAR</td>
+            <td><i>optional</i></td>
+            <td>The name of the data source JAR.</td>
           </tr>
           <tr>
             <td><tt>&#160;&#160;paths</tt></td>
             <td><i>optional</i></td>
-            <td>Paths to additional JARs and dependent files</td>
+            <td>Paths to additional JARs and dependent files.</td>
           </tr>
           <tr>
             <td><tt>&#160;&#160;class</tt></td>
             <td><i>required</i></td>
-            <td>The data source implementation class name</td>
+            <td>The data source implementation class name.</td>
           </tr>
           <tr>
             <td><tt>&#160;&#160;config</tt></td>
@@ -391,6 +391,10 @@ uuid.clockSequence=100</code></p>
 
       <p>This element is only used for JDBC data sources. JCA connectors specify the connection
         factory class in a deployment file contained within the JCA RAR.</p>
+
+      <p>If either dataSource/jar or dataSource/paths elements are specified - special URL class loader is used
+      to load the dataSource class from the specified jars. Otherwise default system classloader is used (i.e. JVM's classpath is expected to have 
+      the data source class).</p>
 
       <h4>[dataSource|connector]/config</h4>
 
