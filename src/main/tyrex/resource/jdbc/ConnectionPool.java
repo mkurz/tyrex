@@ -38,7 +38,9 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
+ * Original code is Copyright (c) 1999-2001, Intalio, Inc. All Rights Reserved.
+ *
+ * Contributions by MetaBoss team are Copyright (c) 2003-2004, Softaris Pty. Ltd. All Rights Reserved.
  *
  */
 
@@ -47,29 +49,20 @@ package tyrex.resource.jdbc;
 
 
 import java.io.PrintWriter;
-import java.util.Set;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.NoSuchElementException;
-import java.lang.reflect.Array;
-import org.apache.log4j.Category;
-import java.sql.SQLException;
 import java.sql.Connection;
-import javax.sql.DataSource;
-import javax.sql.XADataSource;
-import javax.sql.XAConnection;
-import javax.sql.ConnectionPoolDataSource;
-import javax.sql.PooledConnection;
+import java.sql.SQLException;
+
 import javax.sql.ConnectionEvent;
 import javax.sql.ConnectionEventListener;
-import javax.transaction.Transaction;
-import javax.transaction.TransactionManager;
-import javax.transaction.Status;
-import javax.transaction.RollbackException;
-import javax.transaction.xa.Xid;
+import javax.sql.ConnectionPoolDataSource;
+import javax.sql.DataSource;
+import javax.sql.PooledConnection;
+import javax.sql.XAConnection;
+import javax.sql.XADataSource;
 import javax.transaction.xa.XAResource;
-import javax.transaction.xa.XAException;
-import tyrex.tm.TyrexTransactionManager;
+
+import org.apache.log4j.Category;
+
 import tyrex.resource.PoolLimits;
 import tyrex.resource.PoolMetrics;
 import tyrex.resource.Resource;
@@ -77,14 +70,15 @@ import tyrex.resource.ResourceException;
 import tyrex.resource.ReuseOptions;
 import tyrex.services.Clock;
 import tyrex.services.DaemonMaster;
-import tyrex.util.Primes;
+import tyrex.tm.TyrexTransactionManager;
 import tyrex.util.LoggerPrintWriter;
+import tyrex.util.Primes;
 
 
 /**
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.19 $
+ * @version $Revision: 1.20 $
  */
 final class ConnectionPool
     extends PoolMetrics
