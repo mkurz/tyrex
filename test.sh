@@ -1,6 +1,6 @@
 #! /bin/sh
 
-# $Id: test.sh,v 1.11 2001/04/25 22:17:29 jdaniel Exp $
+# $Id: test.sh,v 1.12 2001/12/10 10:34:41 mills Exp $
 
 if [ -z "$JAVA_HOME" ] ; then
   JAVA=`which java`
@@ -17,6 +17,6 @@ JAVA=$JAVA_HOME/bin/java
 CLASSPATH=./build/classes:./build/tests:$CLASSPATH
 CLASSPATH=`echo lib/*.jar | tr ' ' ':'`:$CLASSPATH
 
-$JAVA -cp $CLASSPATH -Dtransaction.configuration=tyrex_configuration.xml tests.TestHarness $1 $2 $3 $4 $5 $6
+$JAVA -cp $CLASSPATH -Dtransaction.configuration=tyrex_configuration.xml TestHarness $1 $2 $3 $4 $5 $6
 
 

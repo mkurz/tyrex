@@ -4,7 +4,7 @@
 <jpl version="1.5">
 	<program type="application">
 		<application
-			args=""
+			args="./dist/tyrex-0.9.8.7.jar"
 			working_dir="tyrex"
 			source_dir="./src/main:./src/tests/unit"
 			classname="tyrex.Unit">
@@ -63,8 +63,10 @@
 				<classpath.archive
 					location="./lib/xslp_1.1.jar"
 					type="jar"/>
+				<classpath.archive
+					location="./dist/tyrex-0.9.8.7.jar"
+					type="jar"/>
 				<classpath.path location=".src/etc"/>
-				<classpath.path location="./build/classes"/>
 				<classpath.path location="./build/tests"/>
 				<classpath.path location="./build/tests/unit"/>
 			</classpath>
