@@ -75,7 +75,7 @@ import tyrex.util.Logger;
 /**
  * 
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  */
 public class Connector
     extends ResourceConfig
@@ -120,8 +120,6 @@ public class Connector
         StringTokenizer         tokenizer;
         String                  paths;
         StringBuffer            info;
-        JarFile                 jarFile;
-        JarEntry                jarEntry;
         DDConnector             ddConnector;
         DDResourceAdapter       ddAdapter;
         String                  txSupport;
