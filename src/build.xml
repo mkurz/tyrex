@@ -102,7 +102,7 @@
     <javac srcdir="${source}/tests" destdir="${build}/tests"
            classpath="${classpath}" debug="on" deprecation="${deprecation}" 
            excludes="cloudscape/*,interbase/*,sybase/*,oracle/*,postgres/*,tests/*,tm/*,
-                    jdbc/CloudscapeJDBCHelper.java,jdbc/PostgresJDBCHelper.java,
+                    jdbc/CloudscapeJDBCHelper.java,jdbc/PostgresqlJDBCHelper.java,
                     jdbc/OracleJDBCHelper.java,jdbc/SybaseJDBCHelper.java" />
   </target>
 
