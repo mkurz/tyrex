@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: FastThreadLocal.java,v 1.3 2000/04/13 22:03:52 arkin Exp $
+ * $Id: FastThreadLocal.java,v 1.4 2000/04/14 21:40:59 arkin Exp $
  */
 
 
@@ -127,7 +127,7 @@ package tyrex.util;
  * 
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.3 $ $Date: 2000/04/13 22:03:52 $
+ * @version $Revision: 1.4 $ $Date: 2000/04/14 21:40:59 $
  */
 public class FastThreadLocal
     //extends java.lang.ThreadLocal
@@ -249,7 +249,7 @@ public class FastThreadLocal
 	while ( entry != null && entry.thread != thread )
 	    entry = entry.next;
 	if ( entry != null ) {
-	    entry = new Entry( value );
+	    entry.value = value;
 	    return;
 	}
 
@@ -421,9 +421,9 @@ public class FastThreadLocal
     static class Entry
     {
 
-	final Object  value;
-
 	final Thread  thread;
+
+	Object        value;
 
 	Entry         next;
 
