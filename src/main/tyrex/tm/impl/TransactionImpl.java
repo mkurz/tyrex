@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionImpl.java,v 1.22 2001/05/16 23:05:20 arkin Exp $
+ * $Id: TransactionImpl.java,v 1.24 2001/06/06 19:06:54 psq Exp $
  */
 
 
@@ -88,7 +88,7 @@ import tyrex.util.Messages;
  * they are added.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.22 $ $Date: 2001/05/16 23:05:20 $
+ * @version $Revision: 1.24 $ $Date: 2001/06/06 19:06:54 $
  * @see XAResourceHolder
  * @see TransactionManagerImpl
  * @see TransactionDomain
@@ -1049,8 +1049,10 @@ final class TransactionImpl
         // marked as rollback-only.
         if ( _syncs != null ) {
             beforeCompletion();
-            if ( _status == STATUS_MARKED_ROLLBACK )
+            if ( _status == STATUS_MARKED_ROLLBACK ) {
+                _heuristic = Heuristic.ROLLBACK;
                 return;
+            }
         }
          
         // We begin by having no heuristics at all, but during
@@ -2429,22 +2431,22 @@ final class TransactionImpl
         if ( except.errorCode == XAException.XA_HEURMIX ) {
             _heuristic = _heuristic | Heuristic.MIXED; 
             _txDomain._category.error( "XAResource " + resHolder._xaResource +
-                                       " reported mixed heuristic on transaction branch " + resHolder._xid );
+                                       " reported mixed heuristic on transaction branch " + resHolder._xid, except );
         } else if ( except.errorCode == XAException.XA_HEURHAZ ) {
             _heuristic = _heuristic | Heuristic.HAZARD; 
             _txDomain._category.error( "XAResource " + resHolder._xaResource +
-                                       " reported hazard heuristic on transaction branch " + resHolder._xid );
+                                       " reported hazard heuristic on transaction branch " + resHolder._xid, except );
         } else if ( except.errorCode == XAException.XA_RDONLY) {
             ; // ignore    
         } else if ( except.errorCode >= XAException.XA_RBBASE &&
                     except.errorCode <= XAException.XA_RBEND ) {
             _txDomain._category.error( "XAResource " + resHolder._xaResource +
-                                       " reported rollback heuristic on transaction branch " + resHolder._xid );
+                                       " reported rollback heuristic on transaction branch " + resHolder._xid, except );
             _heuristic = _heuristic | Heuristic.ROLLBACK;
         } else if ( except.errorCode == XAException.XA_HEURCOM ) {
             _heuristic = _heuristic | Heuristic.COMMIT;
             _txDomain._category.error( "XAResource " + resHolder._xaResource +
-                                       " reported commit heuristic on transaction branch " + resHolder._xid );
+                                       " reported commit heuristic on transaction branch " + resHolder._xid, except );
         } else {
             // Any error will cause us to rollback the entire
             // transaction or at least the remaining part of it.
@@ -2452,7 +2454,7 @@ final class TransactionImpl
             error( except );
             _txDomain._category.error( "XAResource " + resHolder._xaResource +
                                        " reported error " + Util.getXAException( except ) +
-                                       " on transaction branch " + resHolder._xid );
+                                       " on transaction branch " + resHolder._xid, except );
         }
     }
 
@@ -2729,7 +2731,7 @@ final class TransactionImpl
         if ( except instanceof RuntimeException )
             _txDomain._category.error( "Error " + except.toString() + " reported in transaction " + _xid, except );
         else
-            _txDomain._category.error( "Error " + except.toString() + " reported in transaction " + _xid );
+            _txDomain._category.error( "Error " + except.toString() + " reported in transaction " + _xid, except );
        
         // Record the first general exception as a system exception,
         // so it may be returned from commit/rollback.
