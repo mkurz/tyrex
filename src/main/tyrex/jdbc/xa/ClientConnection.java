@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: ClientConnection.java,v 1.4 2000/09/08 23:08:27 mohammed Exp $
+ * $Id: ClientConnection.java,v 1.5 2000/09/26 01:26:37 mohammed Exp $
  */
 
 
@@ -446,7 +446,7 @@ final class ClientConnection
 	try {
 	    return getUnderlying().toString();
 	} catch ( SQLException except ) {
-	    return "XAConnection: Connection closed";
+        return "XAConnection: Connection closed";
 	}
     }
 

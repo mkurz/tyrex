@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: ServerDataSource.java,v 1.8 2000/09/25 23:32:50 mohammed Exp $
+ * $Id: ServerDataSource.java,v 1.9 2000/09/26 01:26:37 mohammed Exp $
  */
 
 
@@ -99,7 +99,7 @@ import tyrex.util.Messages;
  * {@link tyrex.resource.ResourcePool}.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.8 $ $Date: 2000/09/25 23:32:50 $
+ * @version $Revision: 1.9 $ $Date: 2000/09/26 01:26:37 $
  *
  * Date         Author          Changes
  * ?            Assaf Arkin     Created  
@@ -506,7 +506,7 @@ public class ServerDataSource
 	    else
 		return ( (XADataSource) _dataSource ).getXAConnection( user, password );
 	} else {
-	    if ( user == null )
+        if ( user == null )
 		return ( (ConnectionPoolDataSource) _dataSource ).getPooledConnection();
 	    else
 		return ( (ConnectionPoolDataSource) _dataSource ).getPooledConnection( user, password );

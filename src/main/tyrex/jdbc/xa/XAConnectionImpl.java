@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: XAConnectionImpl.java,v 1.5 2000/09/22 01:16:59 mohammed Exp $
+ * $Id: XAConnectionImpl.java,v 1.6 2000/09/26 01:26:37 mohammed Exp $
  */
 
 
@@ -337,12 +337,17 @@ public final class XAConnectionImpl
 		}
 		return;
 	    }
-	}
-	// Notify the listener.
-	if ( _listener != null ) {
-	    event = new ConnectionEvent( this );
-	    _listener.connectionClosed( event );
-	}
+    }
+    try {
+        // Notify the listener.
+    	if ( _listener != null ) {
+    	    event = new ConnectionEvent( this );
+    	    _listener.connectionClosed( event );
+    	}
+    } finally {
+        _resManager.releaseConnection( _underlying, _userName, _password );
+        _underlying = null;
+    }
     }
 
 
@@ -870,7 +875,7 @@ public final class XAConnectionImpl
 	}
 	if ( _underlying == null ) {
 	    _underlying = _resManager.newConnection( _userName, _password );
-	    _underlying.setAutoCommit( true );
+	    _underlying.setAutoCommit( false );
 	}
 	return _underlying;
     }

@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: XADataSourceImpl.java,v 1.5 2000/09/22 01:16:59 mohammed Exp $
+ * $Id: XADataSourceImpl.java,v 1.6 2000/09/26 01:26:37 mohammed Exp $
  */
 
 
@@ -271,7 +271,7 @@ public abstract class XADataSourceImpl
      */
     void releaseConnection( Connection conn, String userName, String password )
     {
-	synchronized ( _pool ) {
+    synchronized ( _pool ) {
         _pool.add( new ConnectionEntry( conn,
                                         getAccount( userName, password ) ) );
     }
@@ -293,7 +293,7 @@ public abstract class XADataSourceImpl
     private String getAccount( String user, String password )
     {
 	if ( user == null )
-	    return null;
+	    return "";
 
 	// XXX  We should encrypt this part so as not to hold the
 	//      password in memory
@@ -328,7 +328,6 @@ public abstract class XADataSourceImpl
 
                 if ( entry._account.equals( account )) {
                     i.remove();
-
                     return entry._connection;
                 }
             }
@@ -411,7 +410,7 @@ public abstract class XADataSourceImpl
 
                 do {
                     try {
-    			    ( (ConnectionEntry ) iterator.next( ) )._connection.close();
+                    ( (ConnectionEntry ) iterator.next( ) )._connection.close();
     			    } catch ( SQLException except ) { }
                     iterator.remove();
                 } while ( --size > reduce  );
