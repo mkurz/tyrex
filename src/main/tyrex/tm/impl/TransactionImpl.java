@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionImpl.java,v 1.37 2001/09/25 00:38:14 mohammed Exp $
+ * $Id: TransactionImpl.java,v 1.38 2001/09/25 00:50:30 mohammed Exp $
  */
 
 
@@ -89,7 +89,7 @@ import tyrex.util.Messages;
  * they are added.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.37 $ $Date: 2001/09/25 00:38:14 $
+ * @version $Revision: 1.38 $ $Date: 2001/09/25 00:50:30 $
  * @see XAResourceHolder
  * @see TransactionManagerImpl
  * @see TransactionDomain
@@ -2553,7 +2553,7 @@ final class TransactionImpl
 
         if ( except.getClass().getName().equals("oracle.jdbc.xa.OracleXAException") ) {
             try {
-                System.out.println("\n\n**ORacle error " + except.getClass().getDeclaredMethod("getOracleError()", null).invoke(except, null));
+                System.out.println("\n\n**ORacle error " + except.getClass().getDeclaredMethod("getOracleError", null).invoke(except, null));
             }
             catch(Exception e) {
                 e.printStackTrace();
