@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<xsl:stylesheet version="1.0">
+<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
   <xsl:output method="html" indent="no"/>
+  <xsl:variable name="project" select="document('../project.xml')/project"/>
 
   <xsl:include href="topNav.xsl"/>
   <xsl:include href="leftNav.xsl"/>
@@ -10,9 +11,7 @@
 
 
   <!-- Template for document -->
-
   <xsl:template match="/">
-  <xsl:variable name="project" select="document('../project.xml')/project"/>
   <html>
 
   <head>
@@ -57,7 +56,7 @@
         <td width="70" valign="top" align="left"><img
           src="images/dotTrans.gif" width="1" height="1" border="0"/></td>
         <td width="400" valign="middle" align="left">
-        <xsl:apply-templates select="$project/topNav"/><br/>
+        <xsl:call-template name="topNav"/><br/>
         <img src="images/dotTrans.gif" width="1" height="2" border="0"/></td>
         <td width="120" height="20" valign="top" align="left">&#160;</td>
       </tr>
@@ -81,7 +80,7 @@
           src="images/dotTrans.gif" width="10" height="10" border="0"/></td>
 
         <td width="115" bgcolor="#7270c2" valign="top" align="left"><img src="images/dotTrans.gif" width="1" height="2" border="0"/><br/>
-<xsl:apply-templates select="$project/navSections"/></td>
+<xsl:call-template name="leftNav"/></td>
 
         <td width="7" bgcolor="#a9a5de" valign="top" align="left">&#160;</td>
         <td width="70" valign="top" align="left">&#160;</td>
@@ -317,15 +316,9 @@
   <xsl:template name="link-convertor">
     <xsl:param name="href" select="empty"/>
     <xsl:choose>
-      <xsl:when test="starts-with($href,'http:')">
-        <xsl:value-of select="$href"/>
-      </xsl:when>
-      <xsl:when test="not(contains($href,'.xml'))">
-        <xsl:value-of select="$href"/>
-      </xsl:when>
-      <xsl:otherwise>
-        <xsl:value-of select="substring-before($href, '.xml')"/>.html
-      </xsl:otherwise>
+      <xsl:when test="starts-with($href,'http:')"><xsl:value-of select="$href"/></xsl:when>
+      <xsl:when test="not(contains($href,'.xml'))"><xsl:value-of select="$href"/></xsl:when>
+      <xsl:otherwise><xsl:value-of select="substring-before($href, '.xml')"/>.html</xsl:otherwise>
     </xsl:choose>
   </xsl:template>
 
@@ -434,10 +427,10 @@
             <td><span class="bodyGrey">
             <xsl:choose>
               <xsl:when test="email">
-                <a href="mailto:{email}"><xsl:value-of select="name@given"/>&#xA0;<xsl:value-of select="name@surname"/></a>
+                <a href="mailto:{email}"><xsl:value-of select="name/@given"/>&#xA0;<xsl:value-of select="name/@surname"/></a>
               </xsl:when>
             <xsl:otherwise>
-              <xsl:value-of select="name@given"/>&#xA0;<xsl:value-of select="name@surname"/>
+              <xsl:value-of select="name/@given"/>&#xA0;<xsl:value-of select="name/@surname"/>
             </xsl:otherwise>
             </xsl:choose>
               
