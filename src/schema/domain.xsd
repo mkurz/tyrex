@@ -11,7 +11,7 @@
       </xsd:documentation>
     </xsd:annotation>
     <xsd:complexType>
-      <xsd:sequence>
+      <xsd:any>
         <xsd:element name="name" type="xsd:string"
                      minOccurs="1" maxOccurs="1" />
         <xsd:element name="maximum" type="xsd:positiveInteger"
@@ -22,6 +22,7 @@
                      minOccurs="0" maxOccurs="1" value="0" />
         <xsd:element name="journalFactory" type="xsd:string"
                      minOccurs="0" maxOccurs="1" />
+
         <xsd:element name="resources">
           <xsd:complexType>
             <xsd:sequence>
@@ -30,7 +31,8 @@
             </xsd:sequence>
           </xsd:complexType>
         </xsd:element>
-      </xsd:sequence>
+        <xsd:group ref="extension" />
+      </xsd:any>
     </xsd:complexType>
   </xsd:element>
 
@@ -59,14 +61,6 @@
 
 
   <xsd:complexType name="resourceType">
-    <xsd:sequence>
-       <xsd:element name="name" type="xsd:string"
-                    minOccurs="1" maxOccurs="1" />
-       <xsd:element name="jar" type="xsd:string"
-                    minOccurs="1" maxOccurs="1" />
-       <xsd:element name="paths" type="xsd:string"
-                    minOccurs="0" maxOccurs="1" />
-    </xsd:sequence>
   </xsd:complexType>
 
 
@@ -79,14 +73,21 @@
     <xsd:complexType>
       <xsd:complexContent>
         <xsd:extension base="resourceType">
-          <xsd:sequence>
+          <xsd:any>
+            <xsd:element name="name" type="xsd:string"
+                         minOccurs="1" maxOccurs="1" />
+            <xsd:element name="jar" type="xsd:string"
+                         minOccurs="1" maxOccurs="1" />
+            <xsd:element name="paths" type="xsd:string"
+                         minOccurs="0" maxOccurs="1" />
             <xsd:element name="class" type="xsd:string"
                          minOccurs="1" maxOccurs="1" />
             <xsd:element name="config" type="xsd:anyType"
                          minOccurs="0" maxOccurs="1" />
             <xsd:element ref="limits"
                          minOccurs="0" maxOccurs="1" />
-          </xsd:sequence>
+            <xsd:group ref="extension" />
+          </xsd:any>
         </xsd:extension>
       </xsd:complexContent>
     </xsd:complexType>
@@ -102,12 +103,19 @@
     <xsd:complexType>
       <xsd:complexContent>
         <xsd:extension base="resourceType">
-          <xsd:sequence>
+          <xsd:any>
+            <xsd:element name="name" type="xsd:string"
+                         minOccurs="1" maxOccurs="1" />
+            <xsd:element name="jar" type="xsd:string"
+                         minOccurs="1" maxOccurs="1" />
+            <xsd:element name="paths" type="xsd:string"
+                         minOccurs="0" maxOccurs="1" />
             <xsd:element name="config" type="xsd:anyType"
                          minOccurs="0" maxOccurs="1" />
             <xsd:element ref="limits"
                          minOccurs="0" maxOccurs="1" />
-          </xsd:sequence>
+            <xsd:group ref="extension" />
+          </xsd:any>
         </xsd:extension>
       </xsd:complexContent>
     </xsd:complexType>
@@ -121,7 +129,7 @@
       </xsd:documentation>
     </xsd:annotation>
     <xsd:complexType>
-      <xsd:sequence>
+      <xsd:any>
         <xsd:element name="maximum" type="xsd:positiveInteger"
                      minOccurs="0" maxOccurs="1" value="0" />
         <xsd:element name="minimum" type="xsd:positiveInteger"
@@ -134,9 +142,18 @@
                      minOccurs="0" maxOccurs="1" value="0" />
         <xsd:element name="trace" type="xsd:boolean"
                      minOccurs="0" maxOccurs="1" value="false" />
-      </xsd:sequence>
+        <xsd:group ref="extension" />
+      </xsd:any>
     </xsd:complexType>
   </xsd:element>
+
+
+  <xsd:group name="extension">
+    <xsd:sequence>
+       <xsd:any processContents="strict" namespace="##any"
+                minOccurs="0" maxOccurs="unbounded" />        
+    </xsd:sequence>
+  </xsd:group>
 
 
 </xsd:schema>

@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionDomainImpl.java,v 1.23 2001/03/19 18:44:47 arkin Exp $
+ * $Id: TransactionDomainImpl.java,v 1.24 2001/03/21 04:53:08 arkin Exp $
  */
 
 
@@ -90,13 +90,14 @@ import tyrex.services.Clock;
 import tyrex.services.DaemonMaster;
 import tyrex.util.Messages;
 import tyrex.util.Configuration;
+import tyrex.util.LoggerPrintWriter;
 
 
 /**
  * Implementation of a transaction domain.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.23 $ $Date: 2001/03/19 18:44:47 $
+ * @version $Revision: 1.24 $ $Date: 2001/03/21 04:53:08 $
  */
 public class TransactionDomainImpl
     extends TransactionDomain
@@ -319,18 +320,6 @@ public class TransactionDomainImpl
         _state = READY;
         if ( Configuration.verbose )
             _category.info( "Created transaction domain " + _domainName );
-
-        // If auto recovery requested, perform it now.
-        if ( config.getAutoRecover() ) {
-            try {
-                recover();
-            } catch ( RecoveryException except ) {
-                while ( except != null ) {
-                    _category.error( "Error recovering domain " + _domainName, except );
-                    except = except.getNextException();
-                }
-            }
-        }
     }
 
 
@@ -449,6 +438,8 @@ public class TransactionDomainImpl
         XAResource[]      xaResources;
         Iterator          iterator;
         RecoveryException errors;
+        RecoveryException next;
+        PrintWriter       writer;
 
         if ( _state == READY ) {
             _state = RECOVERING;
@@ -471,8 +462,17 @@ public class TransactionDomainImpl
             _state = ACTIVE;
             errors = _recoveryErrors;
             _recoveryErrors = null;
-            if ( errors != null )
+            if ( errors != null ) {
+                _category.info( "Transaction recovery for domain " + _domainName +
+                                " reported errors:" );
+                writer = new LoggerPrintWriter( _category, null, true );
+                next = errors;
+                while ( next != null ) {
+                    writer.println( next.toString() );
+                    next = next.getNextException();
+                }
                 throw errors;
+            }
         }
     }
 
@@ -1419,8 +1419,6 @@ public class TransactionDomainImpl
                     last = last.getNextException();
                 last.setNextException( except );
             }
-            _category.info( "Transaction recovery for domain " + _domainName +
-                            " reported: " + except.getMessage());
         }
     }
 

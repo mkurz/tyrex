@@ -57,7 +57,7 @@ import tyrex.resource.Resources;
  * file and used to construct a new transaction domain.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.7 $ $Date: 2001/03/19 18:44:47 $
+ * @version $Revision: 1.8 $ $Date: 2001/03/21 04:53:08 $
  */
 public final class DomainConfig
 {
@@ -121,12 +121,6 @@ public final class DomainConfig
      * Name of the transaction journal factory.
      */
     private String              _journalFactory;
-
-
-    /**
-     * Returns true if auto-recovery is specified.
-     */
-    private boolean             _autoRecover;
 
 
     /**
@@ -289,33 +283,6 @@ public final class DomainConfig
     public void setJournalFactory( String factory )
     {
         _journalFactory = factory;
-    }
-
-
-    /**
-     * Returns true if auto-recovery is specified.
-     *
-     * @return True if auto-recovery is specified
-     */
-    public boolean getAutoRecover()
-    {
-        return _autoRecover;
-    }
-
-
-    /**
-     * Sets auto-recovery for the domain. If this flag is true, the
-     * domain will automatically recover after creation and will be
-     * active immediately. If this flag is false (the default), the
-     * domain must be recovered explicitly by calling {@link
-     * TransactionDomain#recover} on a newly created domain.
-     *
-     * @param autoRecover True if the domain should automatically
-     * recover
-     */
-    public void setAutoRecover( boolean autoRecover )
-    {
-        _autoRecover = autoRecover;
     }
 
 

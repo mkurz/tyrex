@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionDomain.java,v 1.21 2001/03/21 04:22:50 arkin Exp $
+ * $Id: TransactionDomain.java,v 1.22 2001/03/21 04:53:08 arkin Exp $
  */
 
 
@@ -86,7 +86,7 @@ import tyrex.util.Logger;
  * {@link #terminate terminate}.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.21 $ $Date: 2001/03/21 04:22:50 $
+ * @version $Revision: 1.22 $ $Date: 2001/03/21 04:53:08 $
  */
 public abstract class TransactionDomain
 {
@@ -435,6 +435,7 @@ public abstract class TransactionDomain
             throw new DomainConfigurationException( except );
         }
 
+        /*
         try {
         org.exolab.castor.xml.Marshaller marshaller;
         marshaller = new org.exolab.castor.xml.Marshaller( new java.io.OutputStreamWriter( System.out ) );
@@ -443,16 +444,13 @@ public abstract class TransactionDomain
         } catch ( Exception except ) {
             throw new DomainConfigurationException( except );
         }
-
-
+        */
 
         // Check that domain name is valid.
         domainName = config.getName();
         if ( domainName == null || domainName.trim().length() == 0 )
             throw new DomainConfigurationException( "Transaction domain configuration file missing domain name" );
         domainName = domainName.trim();
-        if ( autoRecover )
-            config.setAutoRecover( true );
 
         // Make sure we do not already have a domain with this name.
         // If we do and the domain is terminated, replace it with the
@@ -479,7 +477,6 @@ public abstract class TransactionDomain
         if ( lastDomain == null ) {
             nextDomain = (TransactionDomainImpl) config.getDomain();
             _firstDomain = nextDomain;
-            return nextDomain;
         } else {
             nextDomain = lastDomain.getNextDomain();
             while ( nextDomain != null ) {
@@ -488,8 +485,16 @@ public abstract class TransactionDomain
             }
             nextDomain = (TransactionDomainImpl) config.getDomain();
             lastDomain.setNextDomain( nextDomain );
-            return nextDomain;
         }
+        if ( autoRecover ) {
+            try {
+                nextDomain.recover();
+            } catch ( RecoveryException except ) {
+                // We ignore all errors since these are printed to
+                // the log by TransactionDomainImpl.
+            }
+        }
+        return nextDomain;
     }
 
 
