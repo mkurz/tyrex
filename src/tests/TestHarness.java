@@ -40,19 +40,14 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TestHarness.java,v 1.17 2001/11/12 02:50:40 mills Exp $
+ * $Id: TestHarness.java,v 1.18 2003/11/11 06:09:07 metaboss Exp $
  */
 
 
-import java.util.Vector;
-import java.util.Enumeration;
-
-import junit.framework.*;
-
-//import lock.Lock;
-import naming.Naming;
-
 import jdbc.XADataSourceTestSuite;
+import junit.framework.Test;
+import junit.framework.TestSuite;
+import naming.Naming;
 import transaction.Transaction;
 
 
@@ -68,9 +63,11 @@ public class TestHarness
             // define all the test suites
             TestSuite main = new TestSuite("Tyrex Test Harness");            
             TestSuite naming = new Naming( "JNDI service provider" );
-            if ( args.length != 1 )
+            if ( args.length < 1 )
             {
-               System.out.println("Specify the tyrex configuration file name and path as argument to start the tests...");
+    		   System.out.println("Usage :");
+               System.out.println("    java TestHarness <domainconfig file path and name> [-verbose]");
+			   System.out.println();
                System.exit(0);
             }
             TestSuite jdbc = new XADataSourceTestSuite( "XADataSource test", args[0] );
