@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Lock.java,v 1.1 2001/03/22 20:28:07 arkin Exp $
+ * $Id: Lock.java,v 1.2 2001/03/23 03:57:48 arkin Exp $
  */
 
 
@@ -61,7 +61,7 @@ package tyrex.lock;
  * all locks across all lock sets.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2001/03/22 20:28:07 $
+ * @version $Revision: 1.2 $ $Date: 2001/03/23 03:57:48 $
  */
 final class Lock
 {
@@ -111,8 +111,11 @@ final class Lock
      *
      * @param lockSet The lock set
      * @param owner The lock owner
+     * @throws LockNotGrantedException Attempt to add lock
+     * while in the shrinking phase
      */
     Lock( LockSet lockSet, LockOwner owner )
+        throws LockNotGrantedException
     {
         if ( owner == null )
             throw new IllegalArgumentException( "Argument owner is null" );
@@ -120,10 +123,7 @@ final class Lock
             throw new IllegalArgumentException( "Argument lockSet is null" );
         _owner = owner;
         _lockSet = lockSet;
-        synchronized ( owner ) {
-            _nextInOwner = owner._firstLock;
-            owner._firstLock = this;
-        }
+        owner.add( this );
     }
 
 

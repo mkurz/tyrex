@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: ThreadContext.java,v 1.5 2001/03/22 20:27:28 arkin Exp $
+ * $Id: ThreadContext.java,v 1.6 2001/03/23 03:57:48 arkin Exp $
  */
 
 
@@ -64,7 +64,7 @@ import tyrex.util.FastThreadLocal;
  * Implementation of {@link RuntimeContext}.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.5 $ $Date: 2001/03/22 20:27:28 $
+ * @version $Revision: 1.6 $ $Date: 2001/03/23 03:57:48 $
  */
 public class ThreadContext
     extends RuntimeContext
@@ -487,15 +487,21 @@ public class ThreadContext
     {
 
 
-        public boolean isRelated( LockOwner requesting )
+        public boolean isParentOf( LockOwner requesting )
         {
             return ( requesting == this );
         }
 
 
-        public boolean canAcquire()
+        public String getIdentifier()
         {
-            return true;
+            return null;
+        }
+
+
+        public Object getActualOwner()
+        {
+            return Thread.currentThread();
         }
 
 

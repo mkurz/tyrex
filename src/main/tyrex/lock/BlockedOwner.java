@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: BlockedOwner.java,v 1.1 2001/03/22 20:28:07 arkin Exp $
+ * $Id: BlockedOwner.java,v 1.2 2001/03/23 03:57:48 arkin Exp $
  */
 
 
@@ -48,23 +48,32 @@ package tyrex.lock;
 
 
 /**
+ * Represents a blocked owner. A blocked owner is an owner waiting
+ * to acquire a lock from a lock set. The lock set maintains a FIFO
+ * stack of blocked owners specific to that lock set. The block
+ * owner is represented as a separate class to allows blocks to
+ * be discarded when a transaction aborts.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2001/03/22 20:28:07 $
- * @see LockMode
- * @see LockCoordinator
+ * @version $Revision: 1.2 $ $Date: 2001/03/23 03:57:48 $
  */
 final class BlockedOwner
 {
 
 
-    static final int            BLOCKED = 0;
+    static final int            BLOCKED  = 0;
 
 
-    static final int            DONE    = 1;
+    static final int            ALERT    = 1;
 
 
-    static final int            TIMEOUT = 2;
+    static final int            ABORTED  = 2;
+
+
+    static final int            DEADLOCK = 3;
+
+
+    static final BlockedOwner NULL_BLOCKED = new BlockedOwner();
 
 
     BlockedOwner                _nextInSet;
@@ -94,6 +103,7 @@ final class BlockedOwner
     BlockedOwner( LockOwner owner )
     {
         _owner = owner;
+        owner.addBlock();
         synchronized ( BlockedOwner.class ) {
             if ( _firstBlocked == null ) {
                 _firstBlocked = this;
@@ -107,8 +117,36 @@ final class BlockedOwner
     }
 
 
-    synchronized void remove()
+    private BlockedOwner()
     {
+        _owner = null;
+    }
+
+
+    synchronized void block( long ms )
+        throws InterruptedException
+    {
+        if ( _state == BLOCKED )
+            wait( ms );
+    }
+
+
+    synchronized void alert()
+    {
+        _state = ALERT;
+        notify();
+    }
+
+
+    synchronized void reset()
+    {
+        _state = BLOCKED;
+    }
+
+
+    synchronized BlockedOwner remove()
+    {
+        _owner.removeBlock();
         synchronized ( BlockedOwner.class ) {
             if ( _firstBlocked == this ) {
                 _firstBlocked = _nextBlocked;
@@ -129,6 +167,27 @@ final class BlockedOwner
                     _prevBlocked._nextBlocked = _nextBlocked;
             }
             --_blockedCount;
+        }
+        if ( _nextInSet == null )
+            return BlockedOwner.NULL_BLOCKED;
+        else
+            return _nextInSet;
+    }
+
+
+    static synchronized void terminate( LockOwner owner, boolean deadlock )
+    {
+        BlockedOwner blocked;
+
+        blocked = _firstBlocked;
+        while ( blocked != null ) {
+            if ( blocked._owner == owner ) {
+                blocked._state = deadlock ? DEADLOCK : ABORTED;
+                synchronized ( blocked ) {
+                    blocked.notify();
+                }
+            }
+            blocked = blocked._nextBlocked;
         }
     }
 

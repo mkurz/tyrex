@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Lock.java,v 1.2 2001/03/22 20:27:29 arkin Exp $
+ * $Id: Lock.java,v 1.3 2001/03/23 03:57:48 arkin Exp $
  */
 
 
@@ -58,7 +58,7 @@ import tyrex.lock.LockSet;
 import tyrex.lock.LockMode;
 import tyrex.lock.LockManager;
 import tyrex.lock.LockNotHeldException;
-import tyrex.lock.LockTimeoutException;
+import tyrex.lock.LockNotGrantedException;
 
 
 
@@ -111,19 +111,19 @@ public class Lock extends TestSuite
                 try {
                     lockSet.lock( LockMode.READ );
                     stream.writeVerbose( "Acquired read lock" );
-                } catch ( LockTimeoutException except ) {
+                } catch ( LockNotGrantedException except ) {
                     fail( "Error: Failed to acquire read lock" );
                 }
                 try {
                     lockSet.lock( LockMode.WRITE );
                     stream.writeVerbose( "Acquired 1st write lock, same thread" );
-                } catch ( LockTimeoutException except ) {
+                } catch ( LockNotGrantedException except ) {
                     fail( "Error: Failed to acquire write lock" );
                 }
                 try {
                     lockSet.lock( LockMode.WRITE );
                     stream.writeVerbose( "Acquired 2nd write lock, same thread" );
-                } catch ( LockTimeoutException except ) {
+                } catch ( LockNotGrantedException except ) {
                     fail( "Error: Failed to acquire write lock" );
                 }
 
@@ -185,7 +185,7 @@ public class Lock extends TestSuite
                 try {
                     lockSet.lock( LockMode.READ );
                     fail( "Error: This thread managed to acquire read lock" );
-                } catch ( LockTimeoutException except ) {
+                } catch ( LockNotGrantedException except ) {
                     stream.writeVerbose( "OK: This thread failed to acquire write lock" );
                 }
         
@@ -196,37 +196,39 @@ public class Lock extends TestSuite
         }
 
 
-    }
-
-
-    static class AcquireThread
-        extends Thread
-    {
         
-        LockSet  lockSet;
-        
-        int       mode;
-        
-        boolean  result;
-        
-        AcquireThread( LockSet lockSet, int mode )
+        class AcquireThread
+            extends Thread
         {
-            this.lockSet = lockSet;
-            this.mode = mode;
-            result = false;
-        }
+            
+            LockSet  lockSet;
+            
+            int       mode;
+            
+            boolean  result;
+            
+            AcquireThread( LockSet lockSet, int mode )
+            {
+                this.lockSet = lockSet;
+                this.mode = mode;
+                result = false;
+            }
+            
+            public void run()
+            {
+                try {
+                    lockSet.lock( mode, Integer.MAX_VALUE );
+                    result = true;
+                } catch ( LockNotGrantedException except ) {
+                    fail( "Error: Other thread failed to acquire lock" );
+                }
+            }
+            
+            boolean result()
+            {
+                return result;
+            }
 
-        public void run()
-        {
-            try {
-                lockSet.lock( mode, Integer.MAX_VALUE );
-                result = true;
-            } catch ( LockTimeoutException except ) { }
-        }
-
-        boolean result()
-        {
-            return result;
         }
 
     }
@@ -270,7 +272,7 @@ public class Lock extends TestSuite
                     lockSet1.lock( LockMode.READ );
                     lockSet2.lock( LockMode.READ );
                     stream.writeVerbose( "Main: Acquired read locks" );
-                } catch ( LockTimeoutException except ) {
+                } catch ( LockNotGrantedException except ) {
                     fail( "Error: Main: Could not acquired read locks" );
                 }
                     
@@ -279,9 +281,9 @@ public class Lock extends TestSuite
                 try {
                     lockSet1.lock( LockMode.UPGRADE );
                     stream.writeVerbose( "Main: Acquired upgrade lock (1)" );
-                } catch ( LockTimeoutException except ) {
+                } catch ( LockNotGrantedException except ) {
                     fail( "Error: Main: Could not acquired upgrade lock (1)" );
-                    parent.getCoordinator().dropLocks();
+                    parent.dropLocks();
                     deadlock.join();
                 }
                 Thread.currentThread().sleep( 500 );
@@ -289,11 +291,11 @@ public class Lock extends TestSuite
                 try {
                     lockSet2.lock( LockMode.UPGRADE );
                     fail( "Error: Maing: Acquired upgrade lock (2)" );
-                    parent.getCoordinator().dropLocks();
+                    parent.dropLocks();
                     deadlock.join();
-                } catch ( LockTimeoutException except ) {
+                } catch ( LockNotGrantedException except ) {
                     stream.writeVerbose( "OK: Main: Could not acquired upgrade lock (2) -- deadlock detected" );
-                    parent.getCoordinator().dropLocks();
+                    parent.dropLocks();
                     deadlock.join();
                 }
 
@@ -338,7 +340,7 @@ public class Lock extends TestSuite
                     lockSet1.lock( LockMode.READ );
                     lockSet2.lock( LockMode.READ );
                     stream.writeVerbose( "Second: Acquired read locks" );
-                } catch ( LockTimeoutException except ) {
+                } catch ( LockNotGrantedException except ) {
                     stream.writeVerbose( "Error: Main: Could not acquired read locks" );
                 }
 
@@ -347,9 +349,9 @@ public class Lock extends TestSuite
                 try {
                     lockSet2.lock( LockMode.UPGRADE );
                     stream.writeVerbose( "Second: Acquired upgrade lock (2)" );
-                } catch ( LockTimeoutException except ) {
+                } catch ( LockNotGrantedException except ) {
                     stream.writeVerbose( "Error: Second: Could not acquired upgrade lock (2)" );
-                    parent.getCoordinator().dropLocks();
+                    parent.dropLocks();
                     return;
                 }
                 sleep( 500 );
@@ -357,9 +359,9 @@ public class Lock extends TestSuite
                 try {
                     lockSet1.lock( LockMode.UPGRADE );
                     stream.writeVerbose( "Second: Acquired upgrade lock (1)" );
-                } catch ( LockTimeoutException except ) {
+                } catch ( LockNotGrantedException except ) {
                     stream.writeVerbose( "Error: Second: Could not acquired upgrade lock (1)" );
-                    parent.getCoordinator().dropLocks();
+                    parent.dropLocks();
                     return;
                 }
 
@@ -368,13 +370,13 @@ public class Lock extends TestSuite
                 try {
                     lockSet2.changeMode( LockMode.READ, LockMode.WRITE );
                     lockSet2.unlock( LockMode.UPGRADE );
-                } catch ( LockTimeoutException except ) {
+                } catch ( LockNotGrantedException except ) {
                     stream.writeVerbose( "Error: Could not acquire write lock (2)" );
-                    parent.getCoordinator().dropLocks();
+                    parent.dropLocks();
                     return;
                 } catch ( LockNotHeldException except ) {
                     stream.writeVerbose( "Error: Second: Read lock not held (2)" );
-                    parent.getCoordinator().dropLocks();
+                    parent.dropLocks();
                     return;
                 }
                 stream.writeVerbose( "Second: Upgraded to write lock (2)" );
@@ -382,13 +384,13 @@ public class Lock extends TestSuite
                 try {
                     lockSet1.changeMode( LockMode.READ, LockMode.WRITE );
                     lockSet1.unlock( LockMode.UPGRADE );
-                } catch ( LockTimeoutException except ) {
+                } catch ( LockNotGrantedException except ) {
                     stream.writeVerbose( "Error: Could not acquire write lock (1)" );
-                    parent.getCoordinator().dropLocks();
+                    parent.dropLocks();
                     return;
                 } catch ( LockNotHeldException except ) {
                     stream.writeVerbose( "Error: Second: Read lock not held (1)" );
-                    parent.getCoordinator().dropLocks();
+                    parent.dropLocks();
                     return;
                 }
                 stream.writeVerbose( "Second: Upgraded to write lock (1)" );

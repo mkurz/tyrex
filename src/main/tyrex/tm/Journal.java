@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Journal.java,v 1.2 2001/03/12 19:20:19 arkin Exp $
+ * $Id: Journal.java,v 1.3 2001/03/23 03:57:48 arkin Exp $
  */
 
 
@@ -83,7 +83,7 @@ import javax.transaction.xa.Xid;
  * the transaction should be recovered.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  */
 public abstract class Journal
 {
@@ -161,6 +161,25 @@ public abstract class Journal
      */
     public abstract void forget( Xid xid)
         throws SystemException;
+
+
+    /**
+     * Determines whether the transaction is open.
+     * <p>
+     * The transaction is open if any record was written on behalf
+     * of that transaction. The transaction must be closed explicitly
+     * by calling {@link #forget forget}. If the transaction is not
+     * open, there is no need to call {@link #forget forget}.
+     *
+     * @param xid The transaction identifier
+     * @return True if the transaction is open and must be closed
+     * @throw SystemException An error occured while performing this
+     * operation
+     */
+    /*
+    public abstract boolean isOpen( Xid xid )
+        throws SystemException;
+    */
 
 
     /**

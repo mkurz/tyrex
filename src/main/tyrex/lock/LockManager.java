@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: LockManager.java,v 1.1 2001/03/22 20:28:07 arkin Exp $
+ * $Id: LockManager.java,v 1.2 2001/03/23 03:57:48 arkin Exp $
  */
 
 
@@ -56,7 +56,7 @@ import tyrex.tm.TransactionDomain;
  * A factory for creating new lock sets.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2001/03/22 20:28:07 $
+ * @version $Revision: 1.2 $ $Date: 2001/03/23 03:57:48 $
  */
 public final class LockManager
 {
@@ -118,10 +118,12 @@ public final class LockManager
     }
 
 
+    /*
     public static int getOwnerCount()
     {
         return LockOwner._ownerCount;
     }
+    */
 
 
 }
