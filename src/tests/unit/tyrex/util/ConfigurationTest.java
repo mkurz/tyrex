@@ -45,6 +45,7 @@
 
 package tyrex.util;
 
+import java.util.Properties;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.FileInputStream;
@@ -65,7 +66,7 @@ import junit.extensions.*;
  * documented tests updated accordingly.</p>
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  */
 
 
@@ -92,11 +93,10 @@ public class ConfigurationTest extends TestCase
     /**
      * <p>Since the methods are all static an instance of
      * Configuration is not required.  Ensure that all methods return
-     * the expected values based on the n3.config file.</p>
+     * the expected values based on the tyrex.config file.</p>
      *
-     * @result Call getBoolean(Configuration.PROPERTY_VERBOSE).  It
-     * should return true.  Calling it again with
-     * Configuration.PROPERTY_SILENT should return false.  Calling it
+     * @result Call getBoolean(Configuration.PROPERTY_LOG_VERBOSE).  It
+     * should return true.  Calling it
      * with an unknown configuration name should also return false
      * (the default).  Call
      * getInteger(Configuration.PROPERTY_SLEEP_TICKS) and it should
@@ -111,6 +111,26 @@ public class ConfigurationTest extends TestCase
     public void testBasicFunctionality()
         throws Exception
     {
+        assert(!Configuration.getBoolean(Configuration.PROPERTY_LOG_VERBOSE));
+        assert(!Configuration.getBoolean(Configuration.PROPERTY_LOG_CONSOLE));
+        assertEquals("Unsync", 100, Configuration
+                     .getInteger(Configuration.PROPERTY_UNSYNCH_TICKS));
+        assertEquals("Unsync", "100", Configuration
+                     .getProperty(Configuration.PROPERTY_UNSYNCH_TICKS));
+        assertEquals("Sync", 10, Configuration
+                     .getInteger(Configuration.PROPERTY_SYNCH_EVERY));
+        assertEquals("Sync", "10", Configuration
+                     .getProperty(Configuration.PROPERTY_SYNCH_EVERY));
+        assertEquals("uuid", "uuid.state", Configuration
+                     .getProperty(Configuration.PROPERTY_UUID_STATE_FILE));
+        assertEquals("URL", "http://www.intalio.com",
+                     Configuration.VENDOR_URL);
+        assertEquals("Title", "Tyrex", Configuration.TITLE);
+        assert(!Configuration.getBoolean("Unknown.property"));
+        assertNull(Configuration.getProperty("Unknown.property"));
+        assertEquals("Unknown", "defaultVal", Configuration
+                     .getProperty("Unknown.property", "defaultVal"));
+        Properties props = Configuration.getProperties();
     }
 
 
