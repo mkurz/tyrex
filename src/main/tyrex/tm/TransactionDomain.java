@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionDomain.java,v 1.16 2001/03/16 01:17:05 jdaniel Exp $
+ * $Id: TransactionDomain.java,v 1.17 2001/03/16 02:00:12 arkin Exp $
  */
 
 
@@ -85,7 +85,7 @@ import tyrex.resource.Resources;
  * {@link #terminate terminate}.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.16 $ $Date: 2001/03/16 01:17:05 $
+ * @version $Revision: 1.17 $ $Date: 2001/03/16 02:00:12 $
  */
 public abstract class TransactionDomain
 {
@@ -209,14 +209,6 @@ public abstract class TransactionDomain
         return domain;
     }
 
-    public synchronized static void removeDomain( String name )
-    {
-    	TransactionDomain tdomain = getDomain( name );
-    	
-    	tdomain.terminate();
-    	
-    	_domains.remove( name );
-    }
 
     /**
      * Returns the transaction domain state.
