@@ -1,5 +1,5 @@
 project=tyrex
-version=1.0.1
+version=1.0.2
 title=Tyrex
 
 api.packages=tyrex.tm,tyrex.resource,tyrex.services,tyrex.lock
