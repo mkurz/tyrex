@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionManagerImpl.java,v 1.8 2001/03/17 03:04:45 arkin Exp $
+ * $Id: TransactionManagerImpl.java,v 1.9 2001/03/17 03:34:54 arkin Exp $
  */
 
 
@@ -77,7 +77,7 @@ import tyrex.util.Messages;
  * transaction server.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.8 $ $Date: 2001/03/17 03:04:45 $
+ * @version $Revision: 1.9 $ $Date: 2001/03/17 03:34:54 $
  * @see Tyrex#recycleThread
  * @see TransactionDomain
  * @see TransactionImpl
@@ -109,11 +109,13 @@ final class TransactionManagerImpl
     public void begin()
         throws NotSupportedException, SystemException
     {
+        Thread           thread;
         ThreadContext    context;
         XAResource[]     resources;
         TransactionImpl  tx;
 
-        context = ThreadContext.getThreadContext();
+        thread = Thread.currentThread();
+        context = ThreadContext.getThreadContext( thread );
         tx = context._tx;
         if ( tx != null && tx._status != STATUS_COMMITTED &&
              tx._status != STATUS_ROLLEDBACK ) {
@@ -121,19 +123,20 @@ final class TransactionManagerImpl
                 throw new NotSupportedException( Messages.message( "tyrex.tx.noNested" ) );
             else {
                 // Resources are not enlisted with a nested transaction.
-                tx = _txDomain.createTransaction( tx, Thread.currentThread(), 0 );
+                tx = _txDomain.createTransaction( tx, 0 );
                 context._tx = tx;
                 return;
             }
         } else
-            tx = _txDomain.createTransaction( null, Thread.currentThread(), 0 );
+            tx = _txDomain.createTransaction( null, 0 );
 
-        // If there are any resources associated with the thread,
-        // we need to enlist them with the transaction.
-        resources = context.getResources();
-        if ( resources != null )
-            enlistResources( tx, resources );
-        context._tx = tx;
+        if ( _txDomain.enlistThread( tx, context, thread ) ) {
+            // If there are any resources associated with the thread,
+            // we need to enlist them with the transaction.
+            resources = context.getResources();
+            if ( resources != null )
+                enlistResources( tx, resources );
+        }
     }
 
 

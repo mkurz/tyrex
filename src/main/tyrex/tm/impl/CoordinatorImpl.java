@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: CoordinatorImpl.java,v 1.2 2001/03/12 19:20:20 arkin Exp $
+ * $Id: CoordinatorImpl.java,v 1.3 2001/03/17 03:34:54 arkin Exp $
  */
 
 
@@ -74,7 +74,7 @@ import javax.transaction.xa.Xid;
  * Implements a {@link Coordinator} interface into a transaction.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $ $Date: 2001/03/12 19:20:20 $
+ * @version $Revision: 1.3 $ $Date: 2001/03/17 03:34:54 $
  */
 final class CoordinatorImpl
     extends _CoordinatorImplBase
@@ -281,7 +281,7 @@ final class CoordinatorImpl
             throw new Inactive();
         
         try {
-            tx = _tx._txDomain.createTransaction( _tx, null, 0 );
+            tx = _tx._txDomain.createTransaction( _tx, 0 );
             return tx.getControl();
         } catch ( SystemException except ) {
             throw new Inactive();

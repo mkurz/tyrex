@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Performance.java,v 1.9 2001/03/17 03:04:45 arkin Exp $
+ * $Id: Performance.java,v 1.10 2001/03/17 03:34:54 arkin Exp $
  */
 
 
@@ -59,7 +59,7 @@ import tyrex.tm.TyrexTransactionManager;
 /**
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.9 $ $Date: 2001/03/17 03:04:45 $
+ * @version $Revision: 1.10 $ $Date: 2001/03/17 03:34:54 $
  */
 public class Performance
 {
@@ -118,8 +118,6 @@ public class Performance
             System.out.println( "Transaction: " + tx.toString() );
             
             if ( test == TEST_TM_TIMEOUT ) {
-                //new SecondThread( tx, writer ).start();
-                
                 _txManager.dumpCurrentTransaction( writer );
                 try {
                     Thread.sleep( 3000 );
@@ -132,7 +130,7 @@ public class Performance
             
             if ( test == TEST_PERFORMANCE ) {
                 clock = System.currentTimeMillis();
-                count = 10000;
+                count = 1;
                 for ( int i = 0 ; i < count ; ++i ) {
                     _txManager.begin();
                     _txManager.commit();
@@ -165,40 +163,6 @@ public class Performance
      * timeout exception and rollback the transaction.
      */
     public static final int TEST_TM_TIMEOUT = 1;
-
-
-    static class SecondThread
-        extends Thread
-    {
-
-
-        Transaction tx;
-
-
-        PrintWriter writer;
-
-
-        SecondThread( Transaction tx, PrintWriter writer )
-        {
-            this.tx = tx;
-            this.writer = writer;
-        }
-
-
-        public void run()
-        {
-            try {
-                _txManager.resume( tx );
-                while ( _txManager.getTransaction() != null ) {
-                    sleep( 2000 );
-                }
-            } catch ( Exception except ) {
-                System.out.println( "Second thread reports: " + except.toString() );
-            }
-        }
-
-
-    }
 
 
 }

@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionFactoryImpl.java,v 1.5 2001/03/14 22:36:35 jdaniel Exp $
+ * $Id: TransactionFactoryImpl.java,v 1.6 2001/03/17 03:34:54 arkin Exp $
  */
 
 
@@ -72,7 +72,7 @@ import org.omg.CosTSPortability.Receiver;
  * of remote transactions.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.5 $ $Date: 2001/03/14 22:36:35 $
+ * @version $Revision: 1.6 $ $Date: 2001/03/17 03:34:54 $
  * @see TransactionImpl
  *
  * Changes 
@@ -106,7 +106,7 @@ final class TransactionFactoryImpl
         // Create a new transaction and return the control
         // interface of that transaction.
         try {
-            tx = _txDomain.createTransaction( null, null, timeout );
+            tx = _txDomain.createTransaction( null, timeout );
             Control ctrl = tx.getControl();
             if ( _txDomain._orb != null )
             	_txDomain._orb.connect( ctrl );

@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionImpl.java,v 1.11 2001/03/17 03:04:45 arkin Exp $
+ * $Id: TransactionImpl.java,v 1.12 2001/03/17 03:34:54 arkin Exp $
  */
 
 
@@ -88,7 +88,7 @@ import tyrex.util.Messages;
  * they are added.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.11 $ $Date: 2001/03/17 03:04:45 $
+ * @version $Revision: 1.12 $ $Date: 2001/03/17 03:34:54 $
  * @see XAResourceHolder
  * @see TransactionManagerImpl
  * @see TransactionDomain
@@ -818,7 +818,7 @@ final class TransactionImpl
                 }
             } );
         // enlist the thread
-        _txDomain.enlistThread( this, ThreadContext.getThreadContext( thread ), thread );
+        // _txDomain.enlistThread( this, ThreadContext.getThreadContext( thread ), thread );
         // start the thread
         thread.start();
     }
@@ -1036,7 +1036,7 @@ final class TransactionImpl
         // Call before completion on all the registered synchronizations.
         if ( _syncs != null )
             beforeCompletion();
-        
+         
         // We deal with OTS (remote transactions and subtransactions)
         // first because we expect a higher likelyhood of failure over
         // there, and we can easly recover over here.
@@ -1300,6 +1300,7 @@ final class TransactionImpl
                 }
             }
         }
+
         if ( _enlisted != null )
             commitXAResources( _enlisted, onePhaseCommit );
         if ( _delisted != null)
@@ -1308,6 +1309,7 @@ final class TransactionImpl
         _status = STATUS_COMMITTED;
         _heuristic = normalize( _heuristic );
         _txDomain.notifyCompletion( this, _heuristic );
+
         // We record the transaction only if two-phase commit,
         // or we didn't expect the heuristic decision.
         if ( _txDomain._journal != null ) {
@@ -1843,7 +1845,6 @@ final class TransactionImpl
     {
         int         committing;
         Resource    resource;
-        Transaction suspended;
     
         // Proper notification for transactions that timed out.
         if ( _timedOut )
@@ -1879,26 +1880,14 @@ final class TransactionImpl
             throw new IllegalStateException( Messages.message( "tyrex.tx.inactive" ) );
         }
     
-        // If we are not running in the same thread as
-        // this transaction, need to make this transaction
-        // the current one before calling method.
-        // do in a priveledged block
-        suspended = makeCurrentTransactionIfNecessary();
-        
         // We begin by having no heuristics at all, but during
         // the process we might reach a conclusion to have a
         // commit or rollback heuristic.
         _status = STATUS_COMMITTING;
         _heuristic = Heuristic.READONLY;
        
-        try {
+        if ( _syncs != null )
             beforeCompletion();
-        } finally {
-            // Resume the previous transaction associated with
-            // the thread.
-            if ( suspended != null )
-                resumeTransaction( suspended );
-        }
     
         // We always end these resources, even if we made a heuristic
         // decision not to commit this transaction.

@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionDomainImpl.java,v 1.20 2001/03/17 03:04:45 arkin Exp $
+ * $Id: TransactionDomainImpl.java,v 1.21 2001/03/17 03:34:54 arkin Exp $
  */
 
 
@@ -96,7 +96,7 @@ import tyrex.util.Configuration;
  * Implementation of a transaction domain.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.20 $ $Date: 2001/03/17 03:04:45 $
+ * @version $Revision: 1.21 $ $Date: 2001/03/17 03:34:54 $
  */
 public class TransactionDomainImpl
     extends TransactionDomain
@@ -190,12 +190,6 @@ public class TransactionDomainImpl
      * The log4J category for this transaction domain.
      */
     protected final Category               _category;
-
-
-    /**
-     * True if threads should be terminated on timeout.
-     */
-    private boolean                        _threadTerminate = false;
 
 
     /**
@@ -353,12 +347,6 @@ public class TransactionDomainImpl
     }
 
 
-    public boolean getThreadTerminate()
-    {
-        return _threadTerminate;
-    }
-
-    
     public int getTransactionTimeout()
     {
         return _txTimeout;
@@ -532,23 +520,20 @@ public class TransactionDomainImpl
 
     /**
      * Creates a new transaction. If <tt>parent</tt> is not null,
-     * the transaction is nested within its parent. If <tt>thread</tt>
-     * is not null the transaction will be activated for that thread.
-     * The transaction timeout is specified in seconds, or zero to use
-     * the default transaction timeout. Throws a {@link SystemException}
-     * if we have reached the quota for new transactions or active
+     * the transaction is nested within its parent. The transaction
+     * timeout is specified in seconds, or zero to use the default
+     * transaction timeout. Throws a {@link SystemException} if
+     * we have reached the quota for new transactions or active
      * transactions, or the server has not been started.
      *
      * @param parent The parent transaction
-     * @param thread The thread in which to activate the transaction,
-     * or null
      * @param timeout The default timeout for the new transaction,
      * specified in seconds
      * @return The newly created transaction
      * @throws SystemException Reached the quota for new transactions
      */
     protected TransactionImpl createTransaction( TransactionImpl parent,
-                                                 Thread thread, long timeout )
+                                                 long timeout )
         throws SystemException
     {
         TransactionImpl newTx;
@@ -557,7 +542,6 @@ public class TransactionDomainImpl
         BaseXid         xid;
         int             hashCode;
         int             index;
-        ThreadContext   context;
 
         if ( _state != ACTIVE )
             throw new SystemException( "Transaction domain not active" );
@@ -585,33 +569,6 @@ public class TransactionDomainImpl
                     _interceptors[ i ].begin( xid );
                 } catch ( Throwable thrw ) {
                     _category.error( "Interceptor " + _interceptors[ i ] + " reported error", thrw );
-                }
-            }
-        
-            // If we were requested to activate the transaction,
-            // ask the pool manager whether we can activate it,
-            // then associate it with the current thread.
-            if ( thread != null ) {
-                for ( int i = _interceptors.length ; i-- > 0 ; ) {
-                    try {
-                        _interceptors[ i ].resume( xid, thread );
-                    } catch ( InvalidTransactionException except ) {
-                        for ( ++i ; i < _interceptors.length ; ++i ) {
-                            try {
-                                _interceptors[ i ].suspend( xid, thread );
-                            } catch ( Throwable thrw ) {
-                                _category.error( "Interceptor " + _interceptors[ i ] + " reported error", thrw );
-                            }
-                        }
-                        // Transaction will not be associated with this thread.
-                        thread = null;
-                    } catch ( Throwable thrw ) {
-                        _category.error( "Interceptor " + _interceptors[ i ] + " reported error", thrw );
-                    }
-                }
-                if ( thread != null ) {
-                    context = ThreadContext.getThreadContext( thread );
-                    context._tx = newTx;
                 }
             }
             
@@ -1024,8 +981,9 @@ public class TransactionDomainImpl
      * @param tx The transaction
      * @param context The thread context
      * @param thread The thread
+     * @return True if transaction enlisted in thread, false if failed
      */
-    protected void enlistThread( TransactionImpl tx, ThreadContext context, Thread thread )
+    protected boolean enlistThread( TransactionImpl tx, ThreadContext context, Thread thread )
     {
         Xid       xid;
 
@@ -1049,12 +1007,13 @@ public class TransactionDomainImpl
                         }
                     }
                     // Transaction will not be associated with this thread.
-                    return;
+                    return false;
                 } catch ( Throwable thrw ) {
                     _category.error( "Interceptor " + _interceptors[ i ] + " reported error", thrw );
                 }
             }
             context._tx = tx;
+            return true;
         }
     }
     
