@@ -58,10 +58,9 @@
     
     <section title="Informix (Dynamic Server)">
         <section title="Notes">
-            <p>The "free" Dynamic Server JDBC driver installation requires a serial
-            number and key. If someone knows where to find out this
-            information please send email to 
-            <a href="mailto:tyrex-dev@exolab.org">Tyrex Developer's Mailing List</a>
+            <p>Please send email about the serial number
+            and key required for the Dynamic Server JDBC driver (version 2.11) installation
+            to <a href="mailto:tyrex-dev@exolab.org">Tyrex Developer's Mailing List</a>
             </p>
         </section>
     </section>
@@ -81,7 +80,7 @@
         </section>
         
         <section title="Notes">
-            <p>Cloudscape has a good XA implementation.
+            <p>Cloudscape's XA implementation has passed the most Tyrex tests.
             </p>
         </section>                  
                   
@@ -91,7 +90,7 @@
         <i>javax.transaction.xa.XAResource#TMSUCCESS</i> cannot
         be used in another transaction until the first transaction
         ends.</li>
-        <li>There is a bug in the driver that causes infinite
+        <li>There is a bug in the Cloudscape driver that causes infinite
         recursion during driver registration occasionally.</li>
         </ul> 
         </section>
