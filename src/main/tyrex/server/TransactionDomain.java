@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: TransactionDomain.java,v 1.2 2000/02/23 21:11:26 arkin Exp $
+ * $Id: TransactionDomain.java,v 1.3 2000/03/08 19:47:09 lipkind Exp $
  */
 
 
@@ -60,7 +60,7 @@ import javax.transaction.SystemException;
 import javax.transaction.RollbackException;
 import javax.transaction.InvalidTransactionException;
 import javax.transaction.xa.Xid;
-import tyrex.connector.Interceptor;
+import tyrex.connector.TransactionInterceptor;
 import tyrex.resource.ResourcePool;
 import tyrex.resource.ResourcePoolManager;
 import tyrex.resource.ResourcePoolManagerImpl;
@@ -72,7 +72,7 @@ import tyrex.util.Messages;
 /**
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $ $Date: 2000/02/23 21:11:26 $
+ * @version $Revision: 1.3 $ $Date: 2000/03/08 19:47:09 $
  */
 public class TransactionDomain
     implements ResourcePool, RemoteTransactionServer

@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: InterceptorHolder.java,v 1.1 2000/02/23 21:20:21 arkin Exp $
+ * $Id: InterceptorHolder.java,v 1.2 2000/03/08 19:47:38 lipkind Exp $
  */
 
 
@@ -48,14 +48,14 @@ package tyrex.conf;
 
 
 import java.io.Serializable;
-import tyrex.connector.Interceptor;
+import tyrex.connector.TransactionInterceptor;
 import tyrex.util.Messages;
 import tyrex.util.Logger;
 
 
 /**
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2000/02/23 21:20:21 $
+ * @version $Revision: 1.2 $ $Date: 2000/03/08 19:47:38 $
  */
 public class InterceptorHolder
     implements Serializable

@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: InterceptorMarshalInfo.java,v 1.1 2000/02/23 21:20:21 arkin Exp $
+ * $Id: InterceptorMarshalInfo.java,v 1.2 2000/03/08 19:47:38 lipkind Exp $
  */
 
 
@@ -55,14 +55,14 @@ import org.exolab.castor.xml.MarshalHelper;
 import org.exolab.castor.xml.SimpleMarshalInfo;
 import org.exolab.castor.xml.SimpleMarshalDescriptor;
 import org.exolab.castor.xml.MarshalException;
-import tyrex.connector.Interceptor;
+import tyrex.connector.TransactionInterceptor;
 
 
 /**
  * Marshalling information for {@link InterceptorHolder}.
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2000/02/23 21:20:21 $
+ * @version $Revision: 1.2 $ $Date: 2000/03/08 19:47:38 $
  */
 public class InterceptorMarshalInfo
     extends SimpleMarshalInfo
