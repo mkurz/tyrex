@@ -40,7 +40,7 @@
  *
  * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionDomainImpl.java,v 1.5 2001/03/02 23:06:54 arkin Exp $
+ * $Id: TransactionDomainImpl.java,v 1.6 2001/03/02 23:41:55 arkin Exp $
  */
 
 
@@ -95,7 +95,7 @@ import tyrex.util.Configuration;
  * domain.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.5 $ $Date: 2001/03/02 23:06:54 $
+ * @version $Revision: 1.6 $ $Date: 2001/03/02 23:41:55 $
  */
 public class TransactionDomainImpl
     extends TransactionDomain
@@ -485,64 +485,6 @@ public class TransactionDomainImpl
     }
 
 
-    public synchronized void terminateTransaction( Transaction tx )
-	throws InvalidTransactionException
-    {
-	TransactionImpl entry;
-	TransactionImpl next;
-    	Xid             xid;
-        int             hashCode;
-        int             index;
-
-        if ( tx == null )
-            throw new IllegalArgumentException( "Argument tx is null" );
-	if ( ! ( tx instanceof TransactionImpl ) )
-	    throw new InvalidTransactionException( Messages.message( "tyrex.server.originateElsewhere" ) );
-        entry = (TransactionImpl) tx;
-        xid = entry._xid;
-        hashCode = entry._hashCode;
-        index = ( hashCode & 0x7FFFFFFF ) % _hashTable.length;
-        entry = _hashTable[ index ];
-        if ( entry == null )
-            return;
-        if ( entry._hashCode == hashCode && entry._xid.equals( xid ) ) {
-            _hashTable[ index ] = entry._nextEntry;
-            terminateThreads( entry );
-            --_txCount;
-            try {
-                _metrics.changeActive( - 1 );
-            } catch ( IllegalStateException except ) {
-                _category.error( "Internal error", except );
-            }
-            // We notify any blocking thread that it's able to create
-            // a new transaction.
-            notify();
-            return;
-        } else {
-            next = entry._nextEntry;
-            while ( next != null ) {
-                if ( next._hashCode == hashCode && next._xid.equals( xid ) ) {
-                    entry._nextEntry = next._nextEntry;
-                    terminateThreads( next );
-                    --_txCount;
-                    try {
-                        _metrics.changeActive( - 1 );
-                    } catch ( IllegalStateException except ) {
-                        _category.error( "Internal error", except );
-                    }
-                    // We notify any blocking thread that it's able to create
-                    // a new transaction.
-                    notify();
-                    return;
-                }
-                entry = next;
-                next = next._nextEntry;
-            }
-        }
-        throw new InvalidTransactionException( Messages.message( "tyrex.server.originateElsewhere" ) );
-    }
-
-
     public synchronized void dumpTransactionList( PrintWriter writer )
     {
 	TransactionImpl entry;
@@ -926,8 +868,10 @@ public class TransactionDomainImpl
         synchronized ( _background ) {
             // Timeout is never set back.
             newTimeout = tx._started + timeout * 1000;
-            if ( newTimeout > tx._timeout ) {
+            if ( newTimeout != tx._timeout ) {
+                System.out.println( "Old timeout " + tx._timeout );
                 tx._timeout = newTimeout;
+                System.out.println( "New timeout " + tx._timeout );
                 tx.internalSetTransactionTimeout( timeout );
                 // If this transaction times out before any other transaction,
                 // need to wakeup the background thread so it can update its
@@ -1117,7 +1061,7 @@ public class TransactionDomainImpl
 
     /**
      * Called to terminate a transaction in progress. If the transaction
-     * is active, it will be rolled* back with a timed-out flag and all
+     * is active, it will be rolled back with a timed-out flag and all
      * threads associated with it will be terminated. This method does
      * not remove the transaction from the hashtable.
      *
@@ -1149,12 +1093,6 @@ public class TransactionDomainImpl
                     }
                     tx._threads = null;
                 }
-
-                // This call will cause all the XA resources to
-                // die, will forget the transaction and all its
-                // association by calling TransactionImpl.forget()
-                // and forgetTransaction().
-                tx.timedOut();
             }
         }
     }
@@ -1231,7 +1169,7 @@ public class TransactionDomainImpl
                         // hash table. At this point we synchronize on both
                         // background thread and domain. !!! May need to reconsider.
                         synchronized ( this ) {
-                            if ( _nextTimeout <= clock ) {
+                            if ( _nextTimeout != 0 && _nextTimeout <= clock ) {
                                 nextTimeout = 0;
                                 for ( int i = _hashTable.length ; i-- > 0 ; ) {
                                     entry = null;
@@ -1242,6 +1180,7 @@ public class TransactionDomainImpl
                                                 _hashTable[ i ] = next._nextEntry;
                                             else
                                                 entry._nextEntry = next._nextEntry;
+                                            next.timedOut();
                                             terminateThreads( next );
                                             --_txCount;
                                             try {

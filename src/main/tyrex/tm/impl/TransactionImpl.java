@@ -40,7 +40,7 @@
  *
  * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionImpl.java,v 1.3 2001/03/02 19:01:34 arkin Exp $
+ * $Id: TransactionImpl.java,v 1.4 2001/03/02 23:41:55 arkin Exp $
  */
 
 
@@ -89,7 +89,7 @@ import tyrex.util.Messages;
  * they are added.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.3 $ $Date: 2001/03/02 19:01:34 $
+ * @version $Revision: 1.4 $ $Date: 2001/03/02 23:41:55 $
  * @see XAResourceHolder
  * @see TransactionManagerImpl
  * @see TransactionDomain
@@ -1736,26 +1736,8 @@ final class TransactionImpl
     {
 	// Let the rollback mechanism know that the transaction has failed.
 	_timedOut = true;
-	// We notify all the XA resources that the transaction has failed,
-	// so they will be broken if the application tries to use them.
-	while ( _enlisted != null ) {
-	    try {
-		delistResource( _enlisted._xaResource, XAResource.TMFAIL );
-	    } catch ( Exception except ) { }
-	}
-
-	try {
         // Perform the rollback, ignore the returned heuristics.
-	    internalRollback();
-        } finally {
-            // The transaction will now tell all it's resources to
-            // forget about the transaction and will release all
-            // held resources. Also notifies all the synchronization
-            // objects that the transaction has completed with a status.
-            try {
-                forget( Heuristic.ROLLBACK );
-            } catch ( IllegalStateException except ) { }
-        }
+        internalRollback();
     }
     
 

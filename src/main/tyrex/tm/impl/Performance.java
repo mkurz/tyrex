@@ -40,7 +40,7 @@
  *
  * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Performance.java,v 1.2 2001/03/02 20:43:26 arkin Exp $
+ * $Id: Performance.java,v 1.3 2001/03/02 23:41:55 arkin Exp $
  */
 
 
@@ -57,7 +57,7 @@ import tyrex.tm.TransactionDomain;
 /**
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $ $Date: 2001/03/02 20:43:26 $
+ * @version $Revision: 1.3 $ $Date: 2001/03/02 23:41:55 $
  */
 public class Performance
 {
@@ -113,15 +113,11 @@ public class Performance
 		new SecondThread( tx, writer ).start();
 
 		_txManager.setTransactionTimeout( 1 );
-
-                _txDomain.dumpTransactionList( writer );
                 _txDomain.dumpCurrentTransaction( writer );
-
-                System.out.println( "Suspending from transaction" );
                 try {
-                    Thread.sleep( 2000 );
+                    Thread.sleep( 3000 );
                 } catch ( Exception except ) { }
-                System.out.println( "Resuming transaction" );
+                _txDomain.dumpCurrentTransaction( writer );
 	    }
 
 	    System.out.println( "Aborting transaction" );
@@ -187,7 +183,7 @@ public class Performance
 	    try {
 		_txManager.resume( tx );
 		while ( _txManager.getTransaction() != null ) {
-		    sleep( 1000 );
+		    sleep( 2000 );
 		}
 	    } catch ( Exception except ) {
 		System.out.println( "Second thread reports: " + except.toString() );

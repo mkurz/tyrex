@@ -40,7 +40,7 @@
  *
  * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionDomain.java,v 1.10 2001/03/02 23:06:54 arkin Exp $
+ * $Id: TransactionDomain.java,v 1.11 2001/03/02 23:41:54 arkin Exp $
  */
 
 
@@ -74,7 +74,7 @@ import tyrex.tm.impl.DomainConfig;
  * domain.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.10 $ $Date: 2001/03/02 23:06:54 $
+ * @version $Revision: 1.11 $ $Date: 2001/03/02 23:41:54 $
  */
 public abstract class TransactionDomain
 {
@@ -295,19 +295,6 @@ public abstract class TransactionDomain
      * @return List of all transactions currently registered
      */
     public abstract TransactionStatus[] listTransactions();
-
-
-    /**
-     * Terminates a transaction in progress. The transaction will be rolled
-     * back with a timed-out flag and all threads associated with it will be
-     * terminated.
-     *
-     * @param tx The transaction to terminate
-     * @throws InvalidTransactionException The transaction did not originate
-     * from this domain, or has already been terminated
-     */
-    public abstract void terminateTransaction( Transaction tx )
-	throws InvalidTransactionException;
 
 
     /**
