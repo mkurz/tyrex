@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Initializer.java,v 1.7 2001/04/10 22:39:43 jdaniel Exp $
+ * $Id: Initializer.java,v 1.8 2001/08/31 20:18:59 jdaniel Exp $
  *
  * Date         Author  Changes
  */
@@ -87,17 +87,7 @@ public class Initializer extends org.omg.CORBA.LocalObject implements org.omg.Po
 	{
 		try
 		{	
-		   org.omg.CosTransactions.TransactionFactory _tfactory = null;	   
-		   try
-		   {
-   			org.omg.CORBA.Object obj = info.resolve_initial_references("TransactionService");
-   						
-   			_tfactory = org.omg.CosTransactions.TransactionFactoryHelper.narrow( obj );
-		   }
-		   catch ( java.lang.Exception ex )
-		   { }
-		   
-			tyrex.corba.Current current = new tyrex.corba.Current(_tfactory, info, t_slot);
+			tyrex.corba.Current current = new tyrex.corba.Current(null, info, t_slot);
 			
 			info.register_initial_reference("TransactionCurrent", current);			
 	   }

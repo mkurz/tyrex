@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionImpl.java,v 1.25 2001/07/27 22:31:31 jdaniel Exp $
+ * $Id: TransactionImpl.java,v 1.26 2001/08/31 20:19:01 jdaniel Exp $
  */
 
 
@@ -88,7 +88,7 @@ import tyrex.util.Messages;
  * they are added.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.25 $ $Date: 2001/07/27 22:31:31 $
+ * @version $Revision: 1.26 $ $Date: 2001/08/31 20:19:01 $
  * @see XAResourceHolder
  * @see TransactionManagerImpl
  * @see TransactionDomain
@@ -500,7 +500,7 @@ final class TransactionImpl
     }
 
 
-    public synchronized void commit()
+    public void commit() // removed synchronized for locking between different thread
         throws  RollbackException, HeuristicMixedException, HeuristicRollbackException,
                 SecurityException, SystemException
     {
