@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: XADataSourceImpl.java,v 1.6 2000/09/26 01:26:37 mohammed Exp $
+ * $Id: XADataSourceImpl.java,v 1.7 2000/09/26 17:44:06 mohammed Exp $
  */
 
 
@@ -325,7 +325,6 @@ public abstract class XADataSourceImpl
 
             for ( Iterator i = _pool.iterator(); i.hasNext(); ) {
                 entry = ( ConnectionEntry )i.next();
-
                 if ( entry._account.equals( account )) {
                     i.remove();
                     return entry._connection;
@@ -333,8 +332,7 @@ public abstract class XADataSourceImpl
             }
     	}
     }
-
-	return getConnection( userName, password );
+    return getConnection( userName, password );
     }
 
 
