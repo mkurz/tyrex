@@ -3,6 +3,7 @@
   <body>
     <title>Change log</title>
 <section title="Version 1.0.2  February 10 2005"><pre>
+- Fixed issue SF-815961 TransactionDomainImpl can't be terminated.
 - Moved logging to be based on commons-logging instead of log4j. This enables greater deployment flexibility.
 - Added support for new methods in JDBC interfaces (new in JDK 1.4.x). Changes are courtesy of Ryan Lynch
 - Moved to Ant 1.6.1 and JDK 1.4.2_05 build environment.
