@@ -19,12 +19,12 @@
 - Added one-phase commit. A transaction can now be forced to be
   committed using one-phase commit
   
-- Add asynchronous commit and rollback.
+- Added asynchronous commit and rollback.
 
 - XA resources delisted (using javax.xa.XAResource.TMSUCCESS) can be used
   in other transactions before the current transaction ends.
   (NOTE: not all xa resources support this ie the current transaction has to
-  end before the xa resource can be used in another transaction).
+  end before the delisted xa resource can be used in another transaction).
   
 - Delisting XA resources (using javax.xa.XAResource.TMFAIL) cause the transaction
   to be set as rollback only.
