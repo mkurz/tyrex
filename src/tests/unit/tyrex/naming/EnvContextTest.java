@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: EnvContextTest.java,v 1.4 2001/08/10 11:39:10 mills Exp $
+ * $Id: EnvContextTest.java,v 1.5 2001/08/22 08:28:04 mills Exp $
  */
 
 
@@ -65,7 +65,7 @@ import java.io.PrintWriter;
 /**
  *
  * @author <a href="mailto:mills@intalio.com">David Mills</a>
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  */
 
 public class EnvContextTest extends TestCase
@@ -87,6 +87,12 @@ public class EnvContextTest extends TestCase
         _logger.flush();
     }
 
+
+    /**
+     * Tests to improve test coverage of the class.
+     *
+     * @result 
+     */
 
     public void testCoverage()
         throws Exception
@@ -163,6 +169,104 @@ public class EnvContextTest extends TestCase
         try
         {
             context.destroySubcontext("subcontext");
+        }
+        catch (OperationNotSupportedException e)
+        {
+            // Expected.
+        }
+        assertEquals("", context.toString());
+    }
+
+
+    /**
+     * Repeat the coverage tests using Name arguments rather than
+     * String where possible.
+     *
+     * @result The results should be the same as for testCoverage().
+     */
+
+    public void testCoverageUsingName()
+        throws Exception
+    {
+        MemoryBinding binding = new MemoryBinding();
+        Integer i1 = new Integer(1);
+        binding.put("binding", i1);
+        CompositeName linkName = new CompositeName("link");
+        binding.put("linkRef", new LinkRef(linkName));
+        binding.put("memBind", new MemoryBinding());
+        Reference ref = new Reference("MemoryBinding");
+        binding.put("ref", ref);
+        Hashtable env = new Hashtable();
+        env.put(Context.INITIAL_CONTEXT_FACTORY,
+                tyrex.naming.MemoryContextFactory.class.getName());
+        env.put(Context.URL_PKG_PREFIXES, "tyrex.naming");
+        env.put("key", "value");
+        EnvContext context = new EnvContext(null);
+        context = new EnvContext(binding, null);
+        context = new EnvContext(binding, env);
+        CompositeName bindingName = new CompositeName("binding");
+        assertEquals(i1, context.lookup(bindingName));
+//        context.lookup("linkRef");
+        CompositeName memBindName = new CompositeName("memBind");
+        assertEquals("memBind", context.lookup(memBindName).toString());
+        CompositeName refName = new CompositeName("ref");
+        assertEquals(ref, context.lookup(refName));
+        assertEquals(i1, context.lookupLink(bindingName));
+        CompositeName emptyName = new CompositeName("");
+        Enumeration enum = context.list(emptyName);
+        assert(enum.hasMoreElements());
+        NameClassPair pair = (NameClassPair)enum.nextElement();
+        assertEquals("memBind", pair.getName());
+        assertEquals(context.getClass().getName(), pair.getClassName());
+        assert(enum.hasMoreElements());
+        pair = (NameClassPair)enum.nextElement();
+        assertEquals("ref", pair.getName());
+        assertEquals("MemoryBinding", pair.getClassName());
+        assert(enum.hasMoreElements());
+        pair = (NameClassPair)enum.nextElement();
+        assertEquals("binding", pair.getName());
+        assertEquals(i1.getClass().getName(), pair.getClassName());
+        try
+        {
+            CompositeName keyName = new CompositeName("key");
+            context.list(keyName);
+        }
+        catch (NotContextException e)
+        {
+            // Expected.
+        }
+        enum = context.listBindings(emptyName);
+        pair = (NameClassPair)enum.nextElement();
+        assertEquals("memBind", pair.getName());
+        assertEquals(context.getClass().getName(), pair.getClassName());
+        assert(enum.hasMoreElements());
+        pair = (NameClassPair)enum.nextElement();
+        assertEquals("ref", pair.getName());
+        assertEquals("MemoryBinding", pair.getClassName());
+        assert(enum.hasMoreElements());
+        pair = (NameClassPair)enum.nextElement();
+        assertEquals("binding", pair.getName());
+        assertEquals(i1.getClass().getName(), pair.getClassName());
+        try
+        {
+            context.listBindings(bindingName);
+        }
+        catch (NotContextException e)
+        {
+            // Expected.
+        }
+        CompositeName subContName = new CompositeName("subcontext");
+        try
+        {
+            context.createSubcontext(subContName);
+        }
+        catch (OperationNotSupportedException e)
+        {
+            // Expected.
+        }
+        try
+        {
+            context.destroySubcontext(subContName);
         }
         catch (OperationNotSupportedException e)
         {
