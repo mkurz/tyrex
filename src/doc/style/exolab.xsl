@@ -151,18 +151,9 @@
         align="left"><a href="http://www.exolab.org"><img 
         src="images/exolab_logo_blue.gif" hspace="0" vspace="10" width="134" height="58" border="0"/></a></td>
       </tr>
-      
-      
-      <!-- extra  row -->
-      
-      <tr valign="top" >
-        <td  rowspan="2" height="100%" bgcolor="#7270c2" valign="top" align="left"/>
-        <td  rowspan="2" height="100%" bgcolor="#7270c2" valign="top" align="left"/>
-        <td  rowspan="2" height="100%" bgcolor="#a9a5de" valign="top" align="left"/>
-      </tr>
-      
-      <tr>
-          <table border="0" cellpadding="0" cellspacing="0"  >
+    </table>
+    
+    <table border="0" cellpadding="0" cellspacing="0"  >
               <tr height="5">
                 <td width="20" rowspan="2" height="100%" bgcolor="#7270c2" valign="top" align="left">
                   <br/>
@@ -189,9 +180,6 @@
                 </td>
                 <td width="120" height="25" valign="top" align="left">&#160;</td>
               </tr>
-          </table>
-    </tr>    
-
     </table>
 
   </body>
