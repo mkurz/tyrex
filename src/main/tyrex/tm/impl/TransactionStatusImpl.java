@@ -40,7 +40,7 @@
  *
  * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionStatusImpl.java,v 1.1 2001/02/27 00:37:52 arkin Exp $
+ * $Id: TransactionStatusImpl.java,v 1.2 2001/03/03 03:00:56 arkin Exp $
  */
 
 
@@ -60,7 +60,7 @@ import tyrex.tm.TransactionStatus;
  * the time it was obtained from {@link Tyrex}.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2001/02/27 00:37:52 $
+ * @version $Revision: 1.2 $ $Date: 2001/03/03 03:00:56 $
  * @see Tyrex
  */
 final class TransactionStatusImpl
@@ -75,18 +75,11 @@ final class TransactionStatusImpl
     private final TransactionImpl  _tx;
 
 
-    /**
-     * True if the transaction is associated with one or more threads.
-     */
-    private final boolean          _inThread;
-
-
-    TransactionStatusImpl( TransactionImpl tx, boolean inThread )
+    TransactionStatusImpl( TransactionImpl tx )
     {
         if ( tx == null )
             throw new IllegalArgumentException( "Argument tx is null" );
 	_tx = tx;
-	_inThread = inThread;
     }
 
 
@@ -126,15 +119,15 @@ final class TransactionStatusImpl
     }
 
 
-    public String[] listResources()
+    public String[] getResources()
     {
 	return _tx.listResources();
     }
 
 
-    public boolean isInThread()
+    public Thread[] getThreads()
     {
-	return _inThread;
+	return (Thread[]) _tx._threads.clone();
     }
 
 

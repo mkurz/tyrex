@@ -40,7 +40,7 @@
  *
  * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Performance.java,v 1.4 2001/03/03 00:35:51 arkin Exp $
+ * $Id: Performance.java,v 1.5 2001/03/03 03:00:56 arkin Exp $
  */
 
 
@@ -53,12 +53,13 @@ import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 import tyrex.util.Logger;
 import tyrex.tm.TransactionDomain;
+import tyrex.tm.TyrexTransactionManager;
 
 
 /**
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.4 $ $Date: 2001/03/03 00:35:51 $
+ * @version $Revision: 1.5 $ $Date: 2001/03/03 03:00:56 $
  */
 public class Performance
 {
@@ -67,7 +68,7 @@ public class Performance
     private static TransactionDomain   _txDomain;
 
 
-    private static TransactionManager  _txManager;
+    private static TyrexTransactionManager  _txManager;
 
 
     public static InputStream          _configFile;
@@ -100,7 +101,7 @@ public class Performance
             if ( _configFile == null )
                 _configFile = Performance.class.getResourceAsStream( "test.xml" );
             _txDomain = TransactionDomain.createDomain( _configFile );
-            _txManager = _txDomain.getTransactionManager();
+            _txManager = (TyrexTransactionManager) _txDomain.getTransactionManager();
 
 	    System.out.println( "Creating transaction locally" );
 	    _txManager.begin();
@@ -118,11 +119,11 @@ public class Performance
 		new SecondThread( tx, writer ).start();
 
 		_txManager.setTransactionTimeout( 1 );
-                _txDomain.dumpCurrentTransaction( writer );
+                _txManager.dumpCurrentTransaction( writer );
                 try {
                     Thread.sleep( 3000 );
                 } catch ( Exception except ) { }
-                _txDomain.dumpCurrentTransaction( writer );
+                _txManager.dumpCurrentTransaction( writer );
 	    }
 
 	    System.out.println( "Aborting transaction" );
@@ -144,8 +145,8 @@ public class Performance
 	}
 	System.out.println( "[Test end]" );
             
-        _txDomain.dumpTransactionList( writer );
-        _txDomain.dumpCurrentTransaction( writer );
+        _txManager.dumpTransactionList( writer );
+        _txManager.dumpCurrentTransaction( writer );
 	System.exit( 0 );
     }
 

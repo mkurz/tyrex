@@ -45,16 +45,18 @@
 
 package tyrex.tm;
 
-import javax.transaction.RollbackException;
-import javax.transaction.SystemException;
+
+import java.io.PrintWriter;
+import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
-import javax.transaction.xa.XAResource;
+import javax.transaction.xa.Xid;
 
 
 /**
- * This interface defines methods that allow a transaction manager to
- * be used by a container like an ejb container. It is an extension of 
- * {@link javax.transaction.TransactionManager}.
+ * Tyrex extensions for {@link TransactionManager}. All Tyrex
+ * transaction managers implement this interface, which supports
+ * transaction resolving from an Xid, and means to obtain extended
+ * transaction status.
  *
  * @author <a href="mohammed@intalio.com">Riad Mohammed</a>
  */
@@ -64,30 +66,60 @@ public interface TyrexTransactionManager
 
 
     /**
-     * Called to enlist a resource with the current thread.
-     * If this method is called within an active transaction,
-     * the connection will be enlisted in that transaction.
-     * The connection will be enlisted in any future transaction
-     * associated with the same thread context.
+     * Returns a transaction based on the transaction identifier.
      *
-     * @param xaRes The XA resource
+     * @param xid The transaction identifier
+     * @return The transaction, or null if no such transaction exists
      */
-    public void enlistResource( XAResource xaResource )
-        throws SystemException;
+    public abstract Transaction getTransaction( Xid xid );
 
-    
+
     /**
-     * Called to delist a resource from the current thread.
-     * If this method is called within an active transaction,
-     * the connection will be delisted using the success flag.
-     * The connection will not be enlisted in any future transaction
-     * associated with the same thread context.
+     * Returns the status of the transaction associated with the given thread.
+     * Returns null if the thread is not associated with any transaction
+     * created by this transaction manager.
+     * <p>
+     * This method is equivalent to calling {@link
+     * TransactionManager#getTransaction getTransaction} from within the thread.
      *
-     * @param xaRes The XA resource
-     * @param flag The delist flag
+     * @param thread The thread
+     * @return Status of the transaction currently associated with that thread,
+     * or null
      */
-    public void delistResource( XAResource xaResource, int flag )
-        throws SystemException;
-    
+    public abstract TransactionStatus getTransactionStatus( Thread thread );
+
+
+    /**
+     * Returns the status of all active transactions created by this
+     * transaction manager.
+     * <p>
+     * Each element of the array is a {@link TransactionStatus} providing
+     * information about the transaction, its resources, state and timeout.
+     *
+     * @return Status of all transactions created by this transaction manager
+     */
+    public abstract TransactionStatus[] listTransactions();
+
+
+    /**
+     * Convenience method. Dumps information about all active transactions
+     * created by this transaction manager.
+     *
+     * @param writer The writer to use
+     */
+    public abstract void dumpTransactionList( PrintWriter writer );
+
+
+    /**
+     * Convenience method. Dumps information about the transaction
+     * associated with the current thread.
+     *
+     * @param writer The writer to use
+     */
+    public abstract void dumpCurrentTransaction( PrintWriter writer );
+
+
+
+
 
 }

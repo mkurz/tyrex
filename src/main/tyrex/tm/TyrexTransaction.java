@@ -54,7 +54,9 @@ import javax.transaction.Transaction;
 
 
 /**
- *  Tyrex extensions for {@link Transactions}.
+ * Tyrex extensions for {@link Transaction}. All Tyrex transactions
+ * implement this interface which supports asynchronous commit and
+ * rollback, and one phase commit.
  *
  * @author <a href="mohammed@intalio.com">Riad Mohammed</a>
  */

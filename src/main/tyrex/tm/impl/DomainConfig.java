@@ -46,8 +46,8 @@
 package tyrex.tm.impl;
 
 
-import javax.transaction.SystemException;
 import tyrex.tm.TransactionDomain;
+import tyrex.tm.DomainException;
 import tyrex.tm.impl.TransactionDomainImpl;
 import tyrex.resource.Resources;
 
@@ -55,7 +55,7 @@ import tyrex.resource.Resources;
 /**
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $ $Date: 2001/03/03 00:35:51 $
+ * @version $Revision: 1.3 $ $Date: 2001/03/03 03:00:56 $
  */
 public final class DomainConfig
 {
@@ -143,7 +143,7 @@ public final class DomainConfig
 
 
     public synchronized TransactionDomain getDomain()
-        throws SystemException
+        throws DomainException
     {
         if ( _txDomain == null )
             _txDomain = new TransactionDomainImpl( this );

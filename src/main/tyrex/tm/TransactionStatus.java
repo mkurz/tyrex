@@ -40,7 +40,7 @@
  *
  * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionStatus.java,v 1.3 2001/02/27 00:34:07 arkin Exp $
+ * $Id: TransactionStatus.java,v 1.4 2001/03/03 03:00:55 arkin Exp $
  */
 
 
@@ -53,13 +53,15 @@ import javax.transaction.xa.Xid;
 
 
 /**
- * Provides information about a transaction. Used by {@link Tyrex} to
- * provide information about a transcation to code that is not part
- * of the transaction server. This information is only current for
- * the time it was obtained from {@link Tyrex}.
+ * Provides information about the transaction status.
+ * <p>
+ * Transaction status objects are returned from {@link TransactionDomain}
+ * and provide additional information to that provided by <tt>Transaction</tt>,
+ * such as the transaction identifier (Xid), start time and timeout, 
+ * resources and thread association.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.3 $ $Date: 2001/02/27 00:34:07 $
+ * @version $Revision: 1.4 $ $Date: 2001/03/03 03:00:55 $
  * @see Tyrex
  */
 public abstract class TransactionStatus
@@ -122,17 +124,15 @@ public abstract class TransactionStatus
      *
      * @return A textual description of all the enlisted resources
      */
-    public abstract String[] listResources();
+    public abstract String[] getResources();
 
 
     /**
-     * Returns true if the transaction is currently associated with
-     * any (one or more) threads.
+     * Returns a list of all threads associated with this transaction.
      *
-     * @return True if the transaction is currently associated with
-     * one or more threads
+     * @return A list of all threads associated with this transaction
      */
-    public abstract boolean isInThread();
+    public abstract Thread[] getThreads();
 
 
 }

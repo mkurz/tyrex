@@ -40,13 +40,14 @@
  *
  * Copyright 2000,2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionManagerImpl.java,v 1.2 2001/02/28 18:28:25 arkin Exp $
+ * $Id: TransactionManagerImpl.java,v 1.3 2001/03/03 03:00:56 arkin Exp $
  */
 
 
 package tyrex.tm.impl;
 
 
+import java.io.PrintWriter;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 import javax.transaction.Status;
@@ -61,6 +62,7 @@ import javax.transaction.xa.Xid;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.XAException;
 import tyrex.tm.TyrexTransactionManager;
+import tyrex.tm.TransactionStatus;
 import tyrex.util.Messages;
 
 
@@ -75,7 +77,7 @@ import tyrex.util.Messages;
  * transaction server.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.2 $ $Date: 2001/02/28 18:28:25 $
+ * @version $Revision: 1.3 $ $Date: 2001/03/03 03:00:56 $
  * @see Tyrex#recycleThread
  * @see TransactionDomain
  * @see TransactionImpl
@@ -303,10 +305,96 @@ final class TransactionManagerImpl
 
 
     //-------------------------------------------------------------------------
-    // Extended methods supported by TyrexTransactionManager
+    // Methods defined by TyrexTransactionManager
+    //-------------------------------------------------------------------------
+
+
+    public Transaction getTransaction( Xid xid )
+    {
+        return _txDomain.getTransaction( xid );
+    }
+
+
+    public TransactionStatus getTransactionStatus( Thread thread )
+    {
+        TransactionImpl tx;
+
+        if ( thread == null )
+            throw new IllegalArgumentException( "Argument tx is null" );
+        tx = (TransactionImpl) getTransaction( thread );
+        if ( tx == null )
+            return null;
+        return new TransactionStatusImpl( tx );
+    }
+
+
+    public TransactionStatus[] listTransactions()
+    {
+        return _txDomain.listTransactions();
+    }
+
+
+    public void dumpTransactionList( PrintWriter writer )
+    {
+        _txDomain.dumpTransactionList( writer );
+    }
+
+
+    public void dumpCurrentTransaction( PrintWriter writer )
+    {
+        TransactionImpl  tx;
+        Thread[]         threads;
+        int              count = 0;
+
+        if ( writer == null )
+            throw new IllegalArgumentException( "Argument writer is null" );
+        tx = (TransactionImpl) getTransaction();
+        if ( tx == null )
+            writer.println( "No transaction associated with current thread" );
+        else {
+            threads = tx._threads;
+            if ( threads != null ) {
+                for ( int i = threads.length ; i-- > 0 ; )
+                    if ( threads[ i ] != null )
+                        ++count;
+            }
+            writer.println( "  Transaction " + tx._xid + " " + Util.getStatus( tx._status ) +
+                            ( count != 0 ? ( " " + count + " threads" ) : "" ) );
+            writer.println( "  Started " + Util.fromClock( tx._started ) +
+                            " time-out " + Util.fromClock( tx._timeout ) );
+        }
+    }
+
+
+    /**
+     * Returns the transaction currently associated with the given
+     * thread, or null if the thread is not associated with any
+     * transaction. This method is equivalent to calling {@link
+     * TransactionManager#getTransaction} from within the thread.
+     *
+     * @param thread The thread to lookup
+     * @return The transaction currently associated with that thread
+     */
+    public Transaction getTransaction( Thread thread )
+    {
+        return ThreadContext.getThreadContext()._tx;
+    }
+
+
+    //-------------------------------------------------------------------------
+    // Extended methods used for resource management
     //-------------------------------------------------------------------------
 
     
+    /**
+     * Called to enlist a resource with the current thread.
+     * If this method is called within an active transaction,
+     * the connection will be enlisted in that transaction.
+     * The connection will be enlisted in any future transaction
+     * associated with the same thread context.
+     *
+     * @param xaRes The XA resource
+     */
     public void enlistResource( XAResource xaResource )
 	throws SystemException
     {
@@ -336,6 +424,16 @@ final class TransactionManagerImpl
     }
 
 
+    /**
+     * Called to delist a resource from the current thread.
+     * If this method is called within an active transaction,
+     * the connection will be delisted using the success flag.
+     * The connection will not be enlisted in any future transaction
+     * associated with the same thread context.
+     *
+     * @param xaRes The XA resource
+     * @param flag The delist flag
+     */
     public void delistResource( XAResource xaResource, int flag )
 	throws SystemException
     {
@@ -361,21 +459,6 @@ final class TransactionManagerImpl
                 // We still need to prevent future enlistment.
             }
         }
-    }
-
-
-    /**
-     * Returns the transaction currently associated with the given
-     * thread, or null if the thread is not associated with any
-     * transaction. This method is equivalent to calling {@link
-     * TransactionManager#getTransaction} from within the thread.
-     *
-     * @param thread The thread to lookup
-     * @return The transaction currently associated with that thread
-     */
-    public Transaction getTransaction( Thread thread )
-    {
-        return ThreadContext.getThreadContext()._tx;
     }
 
 

@@ -40,7 +40,7 @@
  *
  * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionDomainImpl.java,v 1.7 2001/03/03 00:35:51 arkin Exp $
+ * $Id: TransactionDomainImpl.java,v 1.8 2001/03/03 03:00:56 arkin Exp $
  */
 
 
@@ -75,6 +75,7 @@ import tyrex.tm.TransactionDomain;
 import tyrex.tm.TransactionInterceptor;
 import tyrex.tm.TransactionStatus;
 import tyrex.tm.TransactionTimeoutException;
+import tyrex.tm.DomainException;
 import tyrex.tm.Journal;
 import tyrex.tm.JournalFactory;
 import tyrex.tm.xid.BaseXid;
@@ -87,15 +88,10 @@ import tyrex.util.Configuration;
 
 
 /**
- * A transaction domain provides centralized management for transactions.
- * A transaction domain defines the policy for all transactions created
- * from that domain, such as default timeout, maximum number of open
- * transactions, IIOP support, and journaling. The application obtains
- * a transaction manager or user transaction object from the transaction
- * domain.
+ * Implementation of a transaction domain.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.7 $ $Date: 2001/03/03 00:35:51 $
+ * @version $Revision: 1.8 $ $Date: 2001/03/03 03:00:56 $
  */
 public class TransactionDomainImpl
     extends TransactionDomain
@@ -173,7 +169,7 @@ public class TransactionDomainImpl
     /**
      * The default timeout for all transactions, in seconds.
      */
-    private int                            _txTimeout = DEFAULT_TIMEOUT;
+    private final int                     _txTimeout;
 
 
     /**
@@ -242,10 +238,10 @@ public class TransactionDomainImpl
      * Constructs a new transaction domain.
      *
      * @param config The domain configuration object
-     * @throws SystemException Failed to create the transaction domain
+     * @throws DomainException Failed to create the transaction domain
      */
     public TransactionDomainImpl( DomainConfig config )
-        throws SystemException
+        throws DomainException
     {
         String         domainName;
         JournalFactory factory;
@@ -257,20 +253,19 @@ public class TransactionDomainImpl
             throw new IllegalArgumentException( "Argument config is null" );
         domainName = config.getName();
         if ( domainName == null || domainName.trim().length() == 0 )
-            throw new SystemException( "The domain name is missing" );
+            throw new DomainException( "The domain name is missing" );
 	_domainName = domainName.trim();
         _maximum = config.getMaximum();
         _txTimeout = config.getTimeout();
 
         factoryName = config.getJournalFactory();
         if ( factoryName != null && factoryName.trim().length() != 0 ) {
-            // Throws SystemException if failed to open journal
             try {
                 factory = (JournalFactory) getClass().getClassLoader().loadClass( factoryName ).newInstance();
             } catch ( Exception except ) {
-                throw new SystemException( "Error obtaining transaction journal factory " + factoryName +
-                                           ": " + except.toString() );
+                throw new DomainException( "Error obtaining transaction journal factory " + factoryName, except );
             }
+            // Throws DomainException if failed to open journal
             _journal = factory.openJournal( _domainName );
         } else
             _journal = null;
@@ -286,11 +281,15 @@ public class TransactionDomainImpl
         // Obtain all the resources. We need to have the transaction manager
         // set up first for the purpose of creating connection pools.
         if ( config.getResources() != null ) {
-            _resources = config.getResources();
-            resources = _resources.createResources( this );
-            xaResources = new XAResource[ resources.length ];
-            for ( int i = 0 ; i < resources.length ; ++i )
-                xaResources[ i ] = resources[ i ].getXAResource();
+            try {
+                _resources = config.getResources();
+                resources = _resources.createResources( this );
+                xaResources = new XAResource[ resources.length ];
+                for ( int i = 0 ; i < resources.length ; ++i )
+                    xaResources[ i ] = resources[ i ].getXAResource();
+            } catch ( Exception except ) {
+                throw new DomainException( except );
+            }
         } else {
             _resources = new Resources();
             xaResources = null;
@@ -335,29 +334,12 @@ public class TransactionDomainImpl
     }
 
 
-    public void setThreadTerminate( boolean terminate )
-    {
-	_threadTerminate = terminate;
-    }
-
-
     public boolean getThreadTerminate()
     {
 	return _threadTerminate;
     }
 
     
-    public void setTransactionTimeout( int timeout )
-    {
-        if ( timeout <= 0 )
-            _txTimeout = DEFAULT_TIMEOUT;
-        else if ( timeout > MAXIMUM_TIMEOUT )
-            _txTimeout = MAXIMUM_TIMEOUT;
-        else
-            _txTimeout = timeout;
-    }
-
-
     public int getTransactionTimeout()
     {
 	return _txTimeout;
@@ -400,33 +382,9 @@ public class TransactionDomainImpl
     }
 
 
-    public Transaction getTransaction( Xid xid )
-    {
-    	TransactionImpl entry;
-        int             hashCode;
-        int             index;
-
-        if ( xid == null )
-            throw new IllegalArgumentException( "Argument xid is null" );
-        hashCode = xid.hashCode();
-        index = ( hashCode & 0x7FFFFFFF ) % _hashTable.length;
-        entry = _hashTable[ index ];
-        if ( entry != null ) {
-            if ( entry._hashCode == hashCode && entry._xid.equals( xid ) )
-                return entry;
-            entry = entry._nextEntry;
-            while ( entry != null ) {
-                if ( entry._hashCode == hashCode && entry._xid.equals( xid ) )
-                    return entry;
-                entry = entry._nextEntry;
-            }
-        }
-        return null;
-    }
-
-
     public void shutdown()
     {
+        // !!! Not implemented yet
         /*
 	Enumeration       enum;
 	TransactionHolder txh;
@@ -441,107 +399,6 @@ public class TransactionDomainImpl
 	    } catch ( Exception except ) { }
 	}
         */
-    }
-
-
-    public TransactionStatus getTransactionStatus( Thread thread )
-    {
-        TransactionImpl tx;
-        Thread[]        threads;
-        int             count = 0;
-
-        if ( thread == null )
-            throw new IllegalArgumentException( "Argument tx is null" );
-        tx = (TransactionImpl) _txManager.getTransaction( thread );
-        if ( tx == null )
-            return null;
-        threads = tx._threads;
-        if ( threads != null ) {
-            for ( int i = threads.length ; i-- > 0 ; )
-                if ( threads[ i ] != null )
-                    ++count;
-        }
-        return new TransactionStatusImpl( tx, count != 0 );
-    }
-
-
-    public synchronized TransactionStatus[] listTransactions()
-    {
-	TransactionStatus[]  txsList;
-	TransactionImpl      entry;
-        Thread[]             threads;
-	int                  count = 0;
-	int                  index = 0;
-
-        txsList = new TransactionStatus[ _txCount ];
-        for ( int i = _hashTable.length ; i-- > 0 ; ) {
-            entry = _hashTable[ i ];
-            while ( entry != null ) {
-                threads = entry._threads;
-                if ( threads != null ) {
-                    for ( int j = threads.length ; j-- > 0 ; )
-                        if ( threads[ j ] != null )
-                            ++count;
-                }
-                txsList[ index++ ] = new TransactionStatusImpl( entry, count != 0 );
-                entry = entry._nextEntry;
-            }
-        }
-        return txsList;
-    }
-
-
-    public synchronized void dumpTransactionList( PrintWriter writer )
-    {
-	TransactionImpl entry;
-        Thread[]        threads;
-        int             count = 0;
-
-        if ( writer == null )
-            throw new IllegalArgumentException( "Argument writer is null" );
-        writer.println( "Transaction domain " + _domainName + " has " + _txCount + " transactions" );
-        for ( int i = _hashTable.length ; i-- > 0 ; ) {
-            entry = _hashTable[ i ];
-            while ( entry != null ) {
-                threads = entry._threads;
-                if ( threads != null ) {
-                    for ( int j = threads.length ; j-- > 0 ; )
-                        if ( threads[ j ] != null )
-                            ++count;
-                }
-                writer.println( "  Transaction " + entry._xid + " " + Debug.getStatus( entry._status ) +
-                                ( count != 0 ? ( " " + count + " threads" ) : "" ) );
-                writer.println( "  Started " + Debug.fromClock( entry._started ) +
-                                " time-out " + Debug.fromClock( entry._timeout ) );
-                entry = entry._nextEntry;
-            }
-        }
-    }
-
-
-    public void dumpCurrentTransaction( PrintWriter writer )
-    {
-        TransactionImpl  tx;
-        Thread[]         threads;
-        int              count = 0;
-
-        if ( writer == null )
-            throw new IllegalArgumentException( "Argument writer is null" );
-        tx = (TransactionImpl) _txManager.getTransaction();
-        if ( tx == null )
-            writer.println( "No transaction associated with current thread" );
-        else {
-            threads = tx._threads;
-            if ( threads != null ) {
-                for ( int i = threads.length ; i-- > 0 ; )
-                    if ( threads[ i ] != null )
-                        ++count;
-            }
-            writer.println( "  Transaction " + tx._xid + " " + Debug.getStatus( tx._status ) +
-                            ( count != 0 ? ( " " + count + " threads" ) : "" ) );
-            writer.println( "  Started " + Debug.fromClock( tx._started ) +
-                            " time-out " + Debug.fromClock( tx._timeout ) );
-        }
     }
 
 
@@ -566,6 +423,31 @@ public class TransactionDomainImpl
     //-------------------------------------------------------------------------
     // Methods used by other classes
     //-------------------------------------------------------------------------
+
+
+    protected Transaction getTransaction( Xid xid )
+    {
+    	TransactionImpl entry;
+        int             hashCode;
+        int             index;
+
+        if ( xid == null )
+            throw new IllegalArgumentException( "Argument xid is null" );
+        hashCode = xid.hashCode();
+        index = ( hashCode & 0x7FFFFFFF ) % _hashTable.length;
+        entry = _hashTable[ index ];
+        if ( entry != null ) {
+            if ( entry._hashCode == hashCode && entry._xid.equals( xid ) )
+                return entry;
+            entry = entry._nextEntry;
+            while ( entry != null ) {
+                if ( entry._hashCode == hashCode && entry._xid.equals( xid ) )
+                    return entry;
+                entry = entry._nextEntry;
+            }
+        }
+        return null;
+    }
 
 
     /**
@@ -1066,6 +948,52 @@ public class TransactionDomainImpl
     }
 
 
+    protected synchronized TransactionStatus[] listTransactions()
+    {
+	TransactionStatus[]  txsList;
+	TransactionImpl      entry;
+	int                  index = 0;
+
+        txsList = new TransactionStatus[ _txCount ];
+        for ( int i = _hashTable.length ; i-- > 0 ; ) {
+            entry = _hashTable[ i ];
+            while ( entry != null ) {
+                txsList[ index++ ] = new TransactionStatusImpl( entry );
+                entry = entry._nextEntry;
+            }
+        }
+        return txsList;
+    }
+
+
+    protected synchronized void dumpTransactionList( PrintWriter writer )
+    {
+	TransactionImpl entry;
+        Thread[]        threads;
+        int             count = 0;
+
+        if ( writer == null )
+            throw new IllegalArgumentException( "Argument writer is null" );
+        writer.println( "Transaction domain " + _domainName + " has " + _txCount + " transactions" );
+        for ( int i = _hashTable.length ; i-- > 0 ; ) {
+            entry = _hashTable[ i ];
+            while ( entry != null ) {
+                threads = entry._threads;
+                if ( threads != null ) {
+                    for ( int j = threads.length ; j-- > 0 ; )
+                        if ( threads[ j ] != null )
+                            ++count;
+                }
+                writer.println( "  Transaction " + entry._xid + " " + Util.getStatus( entry._status ) +
+                                ( count != 0 ? ( " " + count + " threads" ) : "" ) );
+                writer.println( "  Started " + Util.fromClock( entry._started ) +
+                                " time-out " + Util.fromClock( entry._timeout ) );
+                entry = entry._nextEntry;
+            }
+        }
+    }
+
+
     //-------------------------------------------------------------------------
     // Implementation details
     //-------------------------------------------------------------------------
@@ -1254,7 +1182,7 @@ public class TransactionDomainImpl
         if ( journal != null ) {
             try {
                 recoverJournal( journal );
-            } catch ( SystemException except ) {
+            } catch ( DomainException except ) {
                 _category.info( "Error occured reading the transaction journal for domain " + _domainName, except );
             }
         }
@@ -1322,20 +1250,24 @@ public class TransactionDomainImpl
      * recover}.
      *
      * @param journal The transaction journal
-     * @throws SystemException An error occured trying to read the journal
+     * @throws DomainException An error occured trying to read the journal
      */
     private void recoverJournal( Journal journal )
-        throws SystemException
+        throws DomainException
     {
         Journal.RecoveredTransaction[] recovered;
 
-        recovered = journal.recover();
+        try {
+            recovered = journal.recover();
+        } catch ( SystemException except ) {
+            throw new DomainException( except );
+        }
         if ( recovered != null && recovered.length > 0 ) {
             for ( int i = recovered.length ; i-- > 0 ; ) {
                 if ( recovered[ i ] != null ) {
                     try {
                         recoverRecord( recovered[ i ] );
-                    } catch ( SystemException except ) {
+                    } catch ( DomainException except ) {
                         _category.error( "Recovery record " + i + " is invalid: " + except.getMessage() );
                     }
                 }
@@ -1354,10 +1286,10 @@ public class TransactionDomainImpl
      * or rollback.
      *
      * @param recovered The recovered transaction record
-     * @throw SystemException The recovered transaction record is invalid
+     * @throw DomainException The recovered transaction record is invalid
      */
     private void recoverRecord( Journal.RecoveredTransaction recovered )
-        throws SystemException
+        throws DomainException
     {
         TransactionImpl newTx;
         TransactionImpl entry;
@@ -1368,7 +1300,7 @@ public class TransactionDomainImpl
 
         xid = recovered.getXid();
         if ( xid == null )
-            throw new SystemException( "Transaction recovery record missing Xid" );
+            throw new DomainException( "Transaction recovery record missing Xid" );
         // Create a transaction with the specified properties and
         // add it to the transaction list.
         newTx = new TransactionImpl( (BaseXid) XidUtils.importXid( xid ), recovered.getHeuristic(), this );
@@ -1381,7 +1313,7 @@ public class TransactionDomainImpl
             next = entry._nextEntry;
             while ( next != null ) {
                 if ( next._hashCode == hashCode && next._xid.equals( xid ) )
-                    throw new SystemException( "A transaction with the identifier " + xid.toString() + " already exists" );
+                    throw new DomainException( "A transaction with the identifier " + xid.toString() + " already exists" );
                 entry = next;
                 next = next._nextEntry;
             }
@@ -1413,7 +1345,7 @@ public class TransactionDomainImpl
                 xids = resources[ i ].recover( XAResource.TMNOFLAGS );
             } catch ( XAException except ) {
                 _category.error( "Resource manager " + resources[ i ] +
-                                 " failed to recover: " + Debug.getXAException( except ), except );
+                                 " failed to recover: " + Util.getXAException( except ), except );
             }
             if ( xids != null )
                 for ( int j = xids.length ; j-- > 0 ; ) {

@@ -40,27 +40,39 @@
  *
  * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: JournalFactory.java,v 1.1 2001/03/03 00:36:04 arkin Exp $
+ * $Id: JournalFactory.java,v 1.2 2001/03/03 03:00:55 arkin Exp $
  */
 
 
 package tyrex.tm;
 
 
-import javax.transaction.SystemException;
-
-
 /**
+ * Interface for a journal factory. A journal factory is used to open
+ * journals for the purpose of transactional recovery. The journal
+ * factory is an external service that is associated with a transaction
+ * domain using the domain configuration file.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 public interface JournalFactory
 {
 
 
+    /**
+     * Opens a new journal with the specified name. The journal name
+     * is always the transaction domain name.
+     * <p>
+     * The journal name is not guaranteed to be a valid name. The journal
+     * name must map to the same journal across server restarts.
+     *
+     * @param name The journal name
+     * @throws DomainException An error occured while attempting to
+     * open the journal
+     */
     public Journal openJournal( String name )
-        throws SystemException;
+        throws DomainException;
 
 
 }

@@ -54,8 +54,8 @@ package tyrex.resource;
  * used, the average time a connection is used by the application or held
  * in the pool, etc.
  *
- * @author <a href="jdaniel@intalio.com">Jerome Daniel</a>
- * @version $Revision: 1.2 $
+ * @author <a href="arkin@intalio.com">Assaf Arkin</a>
+ * @version $Revision: 1.3 $
  */
 public final class PoolMetrics
 {

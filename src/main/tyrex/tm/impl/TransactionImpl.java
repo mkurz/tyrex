@@ -40,7 +40,7 @@
  *
  * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionImpl.java,v 1.4 2001/03/02 23:41:55 arkin Exp $
+ * $Id: TransactionImpl.java,v 1.5 2001/03/03 03:00:56 arkin Exp $
  */
 
 
@@ -89,7 +89,7 @@ import tyrex.util.Messages;
  * they are added.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.4 $ $Date: 2001/03/02 23:41:55 $
+ * @version $Revision: 1.5 $ $Date: 2001/03/03 03:00:56 $
  * @see XAResourceHolder
  * @see TransactionManagerImpl
  * @see TransactionDomain
@@ -404,7 +404,7 @@ final class TransactionImpl
                 _heuristic = Heuristic.ROLLBACK;
             else
                 _heuristic = Heuristic.OTHER;
-            _sysError = new SystemException( Debug.getHeuristic( heuristic ) );
+            _sysError = new SystemException( Util.getHeuristic( heuristic ) );
             _status = Status.STATUS_ROLLEDBACK;
             break;
         }
@@ -2562,7 +2562,7 @@ final class TransactionImpl
             _heuristic = _heuristic | Heuristic.OTHER;
             error( except );
             _txDomain._category.error( "XAResource " + resHolder._xaResource +
-                                       " reported error " + Debug.getXAException( except ) +
+                                       " reported error " + Util.getXAException( except ) +
                                        " on transaction branch " + resHolder._xid );
         }
     }

@@ -40,7 +40,7 @@
  *
  * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionDomain.java,v 1.12 2001/03/03 00:35:48 arkin Exp $
+ * $Id: TransactionDomain.java,v 1.13 2001/03/03 03:00:55 arkin Exp $
  */
 
 
@@ -50,7 +50,6 @@ package tyrex.tm;
 import java.io.PrintWriter;
 import java.io.InputStream;
 import java.util.HashMap;
-import org.omg.CORBA.ORB;
 import org.omg.CosTransactions.TransactionFactory;
 import org.xml.sax.InputSource;
 import org.exolab.castor.xml.Unmarshaller;
@@ -58,8 +57,6 @@ import org.exolab.castor.mapping.Mapping;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 import javax.transaction.UserTransaction;
-import javax.transaction.SystemException;
-import javax.transaction.InvalidTransactionException;
 import javax.transaction.xa.Xid;
 import tyrex.tm.impl.TransactionDomainImpl;
 import tyrex.tm.impl.DomainConfig;
@@ -68,31 +65,23 @@ import tyrex.resource.Resources;
 
 /**
  * A transaction domain provides centralized management for transactions.
+ * <p>
  * A transaction domain defines the policy for all transactions created
  * from that domain, such as default timeout, maximum number of open
- * transactions, IIOP support, and journaling. The application obtains
- * a transaction manager or user transaction object from the transaction
- * domain.
+ * transactions, IIOP support, and journaling.
+ * <p>
+ * The application server obtains a transaction manager or user transaction
+ * object, and managed resources from the transaction domain.
+ * <p>
+ * Transaction domains are created from a domain configuration file.
+ * For more information about domain configuration files, refer to the
+ * relevant documentation and <tt>domain.xsd</tt>.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.12 $ $Date: 2001/03/03 00:35:48 $
+ * @version $Revision: 1.13 $ $Date: 2001/03/03 03:00:55 $
  */
 public abstract class TransactionDomain
 {
-
-
-    /**
-     * The name of the default transaction domain.
-     */
-    public static final String DEFAULT_DOMAIN = "default";
-
-
-    /**
-     * The default timeout for all transactions, specified in seconds.
-     * This value is used unless the transaction domain, or transaction manager
-     * are requested to use a different value. The default value is 120 seconds.
-     */
-    public static final int    DEFAULT_TIMEOUT = 120;
 
 
     /**
@@ -102,8 +91,8 @@ public abstract class TransactionDomain
 
     
     /**
-     * Returns a transaction domain with the specified name. Returns null if
-     * no transaction domain with that name was created.
+     * Returns a transaction domain with the specified name. Returns null
+     * if no transaction domain with that name was created.
      *
      * @param name The name of the transaction domain
      * @return The transaction domain, or if no such domain
@@ -117,17 +106,20 @@ public abstract class TransactionDomain
 
 
     /**
-     * Creates a new transaction domain with the specified name.
-     * If a transaction domain with the same name exists, it is
-     * returned, otherwise a new transaction domain is created.
+     * Creates a new transaction domain from the specified domain
+     * configuration file.
+     * <p>
+     * This method throws an exception if a transaction domain
+     * with the same name already exists, or the transaction domain
+     * could not be created.
      *
-     * @param url The URL for the transaction domain configuration file
+     * @param url URL for the transaction domain configuration file
      * @return A new transaction domain
-     * @throw SystemException An error occured while attempting
+     * @throw DomainException An error occured while attempting
      * to create the domain
      */
     public static TransactionDomain createDomain( String url )
-        throws SystemException
+        throws DomainException
     {
         if ( url == null )
             throw new IllegalArgumentException( "Argument url is null" );
@@ -136,18 +128,20 @@ public abstract class TransactionDomain
 
 
     /**
-     * Creates a new transaction domain with the specified name.
-     * If a transaction domain with the same name exists, it is
-     * returned, otherwise a new transaction domain is created.
+     * Creates a new transaction domain from the specified domain
+     * configuration file.
+     * <p>
+     * This method throws an exception if a transaction domain
+     * with the same name already exists, or the transaction domain
+     * could not be created.
      *
-     * @param stream The input stream for the transaction domain
-     * configuration file
+     * @param steam Input stream for the transaction domain configuration file
      * @return A new transaction domain
-     * @throw SystemException An error occured while attempting
+     * @throw DomainException An error occured while attempting
      * to create the domain
      */
     public static TransactionDomain createDomain( InputStream stream )
-        throws SystemException
+        throws DomainException
     {
         if ( stream == null )
             throw new IllegalArgumentException( "Argument stream is null" );
@@ -156,18 +150,21 @@ public abstract class TransactionDomain
 
 
     /**
-     * Creates a new transaction domain with the specified name.
-     * If a transaction domain with the same name exists, it is
-     * returned, otherwise a new transaction domain is created.
+     * Creates a new transaction domain from the specified domain
+     * configuration file.
+     * <p>
+     * This method throws an exception if a transaction domain
+     * with the same name already exists, or the transaction domain
+     * could not be created.
      *
-     * @param source The input source for the transaction domain
+     * @param source SAX input source for the transaction domain
      * configuration file
      * @return A new transaction domain
-     * @throw SystemException An error occured while attempting
+     * @throw DomainException An error occured while attempting
      * to create the domain
      */
     public synchronized static TransactionDomain createDomain( InputSource source )
-        throws SystemException
+        throws DomainException
     {
         TransactionDomain domain;
         DomainConfig      config;
@@ -184,10 +181,12 @@ public abstract class TransactionDomain
             config = (DomainConfig) unmarshaller.unmarshal( source );
             domain = config.getDomain();
         } catch ( Exception except ) {
-            throw new SystemException( except.toString() );
+            throw new DomainException( except );
         }
-        if ( _domains.containsKey( domain.getDomainName() ) )
-            throw new SystemException( "Transaction domain " + domain.getDomainName() + " already exists" );
+        if ( _domains.containsKey( domain.getDomainName() ) ) {
+            domain.shutdown();
+            throw new DomainException( "Transaction domain " + domain.getDomainName() + " already exists" );
+        }
         _domains.put( domain.getDomainName(), domain );
         return domain;
     }
@@ -195,9 +194,12 @@ public abstract class TransactionDomain
 
     /**
      * Returns a transaction manager for this transaction domain.
-     * The transaction managed can be used to being, commit and rollback
-     * transactions in this domain only. Calling this method multiple
-     * times will return the same instance of the transaction manager.
+     * <p>
+     * The transaction managed can be used to begin, commit and rollback
+     * transactions in this domain only.
+     * <p>
+     * Calling this method multiple times will return the same instance
+     * of the transaction manager.
      *
      * @return The transaction manager for this domain
      */
@@ -206,9 +208,12 @@ public abstract class TransactionDomain
 
     /**
      * Returns a user transaction for this transaction domain.
-     * The user transaction can be used to being, commit and rollback
-     * transactions in this domain only. Calling this method multiple
-     * times will return the same instance of the user transaction.
+     * <p>
+     * The user transaction can be used to begin, commit and rollback
+     * transactions in this domain only.
+     * <p>
+     * Calling this method multiple times will return the same instance
+     * of the user transaction.
      *
      * @return The user transaction for this domain
      */
@@ -217,25 +222,17 @@ public abstract class TransactionDomain
 
     /**
      * Returns an OTS transaction factory for this transaction domain.
+     * <p>
      * The transaction factory can be used to create and re-create
-     * OTS transactions in this domain only. Calling this method
-     * multiple times will return the same instance of the
-     * transaction factory.
+     * OTS transactions in this domain only. It is also used to identify
+     * the ORB by implementing <tt>TransactionService</tt>.
+     * <p>
+     * Calling this method multiple times will return the same instance
+     * of the transaction factory.
      *
      * @return The transaction factory for this domain
      */
     public abstract TransactionFactory getTransactionFactory();
-
-
-    /**
-     * Sets the default timeout for all transactions created from this
-     * transaction domain. The timeout value is specified in seconds.
-     * Using zero will restore the implementation specific timeout.
-     *
-     * @param timeout The default timeout for all transactions,
-     * specified in seconds
-     */
-    public abstract void setTransactionTimeout( int timeout );
 
 
     /**
@@ -257,59 +254,11 @@ public abstract class TransactionDomain
 
 
     /**
-     * Returns a transaction based on the transaction identifier.
-     *
-     * @param xid The transaction identifier
-     * @return The transaction, or null if no such transaction exists
-     */
-    public abstract Transaction getTransaction( Xid xid );
-
-
-    /**
      * Shuts down the transaction domain. After this method returns, the
      * transaction manager is no longer able to begin new transactions in
      * this domain.
      */
     public abstract void shutdown();
-
-
-    /**
-     * Returns the transaction currently associated with the given thread,
-     * or null if the thread is not associated with any transaction.
-     * <p>
-     * This method is equivalent to calling {@link
-     * TransactionManager#getTransaction getTransaction} from within the thread.
-     *
-     * @param thread The thread to lookup
-     * @return The transaction currently associated with that thread
-     */
-    public abstract TransactionStatus getTransactionStatus( Thread thread );
-
-
-    /**
-     * Returns an enumeration of all the transactions currently registered
-     * in this domain. Each entry is described using the {@link TransactionStatus}
-     * object providing information about the transaction, its resources,
-     * timeout and active state. Some of that information is only current to
-     * the time the list was produced.
-     *
-     * @return List of all transactions currently registered
-     */
-    public abstract TransactionStatus[] listTransactions();
-
-
-    /**
-     * Convenience method. Dumps information about all the transactions
-     * currently registered in this domain to the specified writer.
-     */
-    public abstract void dumpTransactionList( PrintWriter writer );
-
-
-    /**
-     * Convenience method. Dumps information about the current transaction
-     * in this thread to the specified writer.
-     */
-    public abstract void dumpCurrentTransaction( PrintWriter writer );
 
 
     /**
@@ -330,6 +279,10 @@ public abstract class TransactionDomain
 
     /**
      * Returns resources installed for this transaction domain.
+     * <p>
+     * Initially the resource list is based on resources defined in
+     * the domain configuration file. This method can be used to
+     * add new resources or disable existing resources.
      *
      * @return Resources installed for this transaction domain
      */

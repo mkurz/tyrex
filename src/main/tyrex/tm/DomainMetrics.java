@@ -53,8 +53,8 @@ package tyrex.tm;
  * as the accumulated number of transactions committed and rolledback, the
  * average duration of a transaction, etc.
  *
- * @author <a href="jdaniel@intalio.com">Jerome Daniel</a>
- * @version $Revision: 1.1 $
+ * @author <a href="arkin@intalio.com">Assaf Arkin</a>
+ * @version $Revision: 1.2 $
  */
 public final class DomainMetrics
 {

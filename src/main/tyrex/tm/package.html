@@ -1,13 +1,44 @@
-<!-- $Id: package.html,v 1.1 2001/02/27 00:37:09 arkin Exp $ -->
+<!-- $Id: package.html,v 1.2 2001/03/03 03:00:55 arkin Exp $ -->
 <html>
   <body>
     <h1><b>Transaction Manager</b></h1>
 
     <dl>
-      <dt><b>Version: </b></dt><dd>$Revision: 1.1 $ $Date: 2001/02/27 00:37:09 $</dd>
+      <dt><b>Version: </b></dt><dd>$Revision: 1.2 $ $Date: 2001/03/03 03:00:55 $</dd>
       <dt><b>Author: </b></dt><dd><a href="mailto:arkin@intalio.com">Assaf Arkin</a></dd>
     </dl>
 
+    <h2>Transaction Domains</h2>
+
+    <p>A transaction domain provides centralized management for transactions.
+      Transaction domains are created by and obtained from {@link tyrex.tm.TransactionDomain}.</p>
+
+    <p>A transaction domain defines the policy for all transactions created from that domain,
+      such as default timeout, maximum number of open transactions, IIOP support, and journaling.</p>
+    
+    <p>The application server obtains a transaction manager or user transaction object, and
+      managed resources from the transaction domain.</p>
+
+    <p>Transaction domains are created from a domain configuration file. For more information about
+      domain configuration files, refer to the relevant documentation and <tt>domain.xsd</tt>.</p>
+
+    <p>Usage metrics for transactions can be obtained from {@link tyrex.tm.DomainMetrics}.
+      Usage metrics include information such as the accumulated number of transactions committed
+      and rolledback, the average duration of a transaction, etc.</p>
+
+    <p>Transaction domains support interceptors that allow an external engine to hook up into
+     the transaction monitor and either record the outcome of transactions or affect them.</p>
+
+
+    <h2>JTA Extended Interfaces</h2>
+
+    <p>All Tyrex transactions implement the interface {@link tyrex.tm.TyrexTransaction},  which
+      supports asynchronous commit and rollback, and one phase commit. Asynchronous transaction
+      commit and rollback can use the {@link tyrex.tm.AsyncCompletionCallback} interface.</p>
+
+    <p>All Tyrex transaction managed implement the interface {@link tyrex.tm.TyrexTransactionManager},
+      which supports transaction resolving from an Xid, and means to obtain extended transaction status.
+      Extended transaction status information is returned by {@link tyrex.tm.TyrexTransactionStatus}.</p>
 
 
   </body>

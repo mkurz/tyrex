@@ -65,8 +65,8 @@ import tyrex.util.Logger;
 
 /**
  * 
- * @author <a href="jdaniel@intalio.com">Jerome Daniel</a>
- * @version $Revision: 1.2 $
+ * @author <a href="arkin@intalio.com">Assaf Arkin</a>
+ * @version $Revision: 1.3 $
  */
 public class DataSourceConfig
     extends BaseConfiguration

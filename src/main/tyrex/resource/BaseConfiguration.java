@@ -52,8 +52,8 @@ import tyrex.tm.TransactionDomain;
 
 /**
  * 
- * @author <a href="jdaniel@intalio.com">Jerome Daniel</a>
- * @version $Revision: 1.4 $
+ * @author <a href="arkin@intalio.com">Assaf Arkin</a>
+ * @version $Revision: 1.5 $
  */
 public abstract class BaseConfiguration
 {

@@ -55,8 +55,8 @@ import tyrex.resource.jdbc.DataSourceConfig;
 
 /**
  *
- * @author <a href="jdaniel@intalio.com">Jerome Daniel</a>
- * @version $Revision: 1.1 $
+ * @author <a href="arkin@intalio.com">Assaf Arkin</a>
+ * @version $Revision: 1.2 $
  */
 public class Resources
 {

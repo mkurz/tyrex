@@ -40,7 +40,7 @@
  *
  * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionTimeoutException.java,v 1.3 2001/02/27 00:34:07 arkin Exp $
+ * $Id: TransactionTimeoutException.java,v 1.4 2001/03/03 03:00:55 arkin Exp $
  */
 
 
@@ -52,10 +52,10 @@ import tyrex.util.Messages;
 
 /**
  * Thrown to terminate the current thread and indicate that the
- * current transaction has been timed out.
+ * current transaction has timed out.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.3 $ $Date: 2001/02/27 00:34:07 $
+ * @version $Revision: 1.4 $ $Date: 2001/03/03 03:00:55 $
  */
 public class TransactionTimeoutException
     extends RuntimeException

@@ -40,7 +40,7 @@
  *
  * Copyright 2000, 2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionInterceptor.java,v 1.1 2001/02/27 00:37:09 arkin Exp $
+ * $Id: TransactionInterceptor.java,v 1.2 2001/03/03 03:00:55 arkin Exp $
  */
 
 
@@ -55,16 +55,21 @@ import javax.transaction.xa.Xid;
 /**
  * The interceptor interface allows an external engine to hook up into
  * the transaction monitor and either record the outcome of
- * transactions or affect them. The interceptor is notified when
- * transactions are created, attempt to commit, rolled back, and when
- * they are resumed or suspended from threads. The interceptor may
- * affect the outcome of an attempt to commit or resume a transaction.
+ * transactions or affect them.
+ * <p>
+ * The interceptor is notified when transactions are created, attempt
+ * to commit, rolled back, and when they are resumed or suspended from
+ * threads.
+ * <p>
+ * The interceptor may affect the outcome of an attempt to commit or
+ * resume a transaction.
+ * <p>
  * The interceptor is notified of the outcome of each transaction in
  * the form of a heuristic decision made regarding the transaction and
  * all it's resources.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2001/02/27 00:37:09 $
+ * @version $Revision: 1.2 $ $Date: 2001/03/03 03:00:55 $
  */
 public interface TransactionInterceptor
 {

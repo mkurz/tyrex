@@ -62,8 +62,8 @@ package tyrex.resource;
  * information to the log.</li>
  * </ul>
  * 
- * @author <a href="jdaniel@intalio.com">Jerome Daniel</a>
- * @version $Revision: 1.7 $
+ * @author <a href="arkin@intalio.com">Assaf Arkin</a>
+ * @version $Revision: 1.8 $
  */
 public final class ResourceLimits
 {
