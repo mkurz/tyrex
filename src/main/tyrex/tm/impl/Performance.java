@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Performance.java,v 1.8 2001/03/17 01:27:19 arkin Exp $
+ * $Id: Performance.java,v 1.9 2001/03/17 03:04:45 arkin Exp $
  */
 
 
@@ -59,7 +59,7 @@ import tyrex.tm.TyrexTransactionManager;
 /**
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.8 $ $Date: 2001/03/17 01:27:19 $
+ * @version $Revision: 1.9 $ $Date: 2001/03/17 03:04:45 $
  */
 public class Performance
 {
@@ -118,7 +118,7 @@ public class Performance
             System.out.println( "Transaction: " + tx.toString() );
             
             if ( test == TEST_TM_TIMEOUT ) {
-                new SecondThread( tx, writer ).start();
+                //new SecondThread( tx, writer ).start();
                 
                 _txManager.dumpCurrentTransaction( writer );
                 try {
@@ -132,7 +132,7 @@ public class Performance
             
             if ( test == TEST_PERFORMANCE ) {
                 clock = System.currentTimeMillis();
-                count = 100000;
+                count = 10000;
                 for ( int i = 0 ; i < count ; ++i ) {
                     _txManager.begin();
                     _txManager.commit();

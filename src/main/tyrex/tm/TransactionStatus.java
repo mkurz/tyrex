@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionStatus.java,v 1.5 2001/03/12 19:20:19 arkin Exp $
+ * $Id: TransactionStatus.java,v 1.6 2001/03/17 03:04:45 arkin Exp $
  */
 
 
@@ -61,7 +61,7 @@ import javax.transaction.xa.Xid;
  * resources and thread association.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.5 $ $Date: 2001/03/12 19:20:19 $
+ * @version $Revision: 1.6 $ $Date: 2001/03/17 03:04:45 $
  * @see Tyrex
  */
 public abstract class TransactionStatus
@@ -131,6 +131,7 @@ public abstract class TransactionStatus
      * Returns a list of all threads associated with this transaction.
      *
      * @return A list of all threads associated with this transaction
+     * @deprecated This method will not be supported in 0.9.9
      */
     public abstract Thread[] getThreads();
 

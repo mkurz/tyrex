@@ -142,10 +142,4 @@ public final class ArrayEnumeration implements Enumeration
     }
 
 
-    /*
-    public static void main (String args[]) {
-        for (Enumeration e = new ArrayEnumeration(args, 0, args.length - 1); e.hasMoreElements();) {
-            System.out.println(e.nextElement());
-        }
-    }*/
 }

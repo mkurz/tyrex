@@ -13,3 +13,4 @@
 
 - Have all asynch transactions complete in background thread of TransactionDomain
 
+- Update JAAS providers to use Logger

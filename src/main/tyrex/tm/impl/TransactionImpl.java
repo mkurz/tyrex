@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionImpl.java,v 1.10 2001/03/17 01:27:19 arkin Exp $
+ * $Id: TransactionImpl.java,v 1.11 2001/03/17 03:04:45 arkin Exp $
  */
 
 
@@ -88,7 +88,7 @@ import tyrex.util.Messages;
  * they are added.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.10 $ $Date: 2001/03/17 01:27:19 $
+ * @version $Revision: 1.11 $ $Date: 2001/03/17 03:04:45 $
  * @see XAResourceHolder
  * @see TransactionManagerImpl
  * @see TransactionDomain
@@ -213,15 +213,6 @@ final class TransactionImpl
     private boolean                    _twoPhase;
 
     
-    /**
-     * If the transaction is a local transaction it will be
-     * associated with any number of currently running threads.
-     * This association is required in order to stop the running
-     * threads on timeout. This array may contain null entries.
-     */
-    protected Thread[]                 _threads;
-
-
     /**
      * Indicates when the transaction will timeout as system clock.
      */
@@ -827,7 +818,7 @@ final class TransactionImpl
                 }
             } );
         // enlist the thread
-        _txDomain.enlistThread( this, thread );
+        _txDomain.enlistThread( this, ThreadContext.getThreadContext( thread ), thread );
         // start the thread
         thread.start();
     }
@@ -861,7 +852,7 @@ final class TransactionImpl
                 }
             } );
         // enlist the thread
-        _txDomain.enlistThread( this, thread );
+        _txDomain.enlistThread( this, ThreadContext.getThreadContext( thread ), thread );
         // start the thread
         thread.start();
     }
@@ -1751,7 +1742,6 @@ final class TransactionImpl
             _txDomain.notifyRollback( this );
             // Perform the rollback, ignore the returned heuristics.
             internalRollback();
-            _txDomain.terminateThreads( this );
         }
     }
     
@@ -2068,33 +2058,6 @@ final class TransactionImpl
         // in a terminating domain.
         if ( _parent == null )
             _txDomain.forgetTransaction( this );
-    }
-
-
-    /**
-     * Called to check whether the thread is an owner of the transaction.
-     * Only owners are allowed to commit/rollback a transaction.
-     * Owners are all the threads previously associated with the transaction
-     * and the background thread.
-     *
-     * @param tx The transaction
-     * @param thread The thread asking to commit/rollback
-     * @return True if the thread is an owner of the transaction
-     */
-    protected boolean isOwner( Thread thread )
-    {
-        Thread[]  threads;
-
-        if ( thread == null )
-            throw new IllegalArgumentException( "Argument thread is null" );
-        threads = _threads;
-        if ( threads != null ) {
-            for ( int i = threads.length ; i-- > 0 ; ) {
-                if ( threads[ i ] == thread )
-                    return true;
-            }
-        }
-        return false;
     }
 
 

@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionStatusImpl.java,v 1.3 2001/03/12 19:20:20 arkin Exp $
+ * $Id: TransactionStatusImpl.java,v 1.4 2001/03/17 03:04:45 arkin Exp $
  */
 
 
@@ -60,7 +60,7 @@ import tyrex.tm.TransactionStatus;
  * the time it was obtained from {@link Tyrex}.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.3 $ $Date: 2001/03/12 19:20:20 $
+ * @version $Revision: 1.4 $ $Date: 2001/03/17 03:04:45 $
  * @see Tyrex
  */
 final class TransactionStatusImpl
@@ -127,7 +127,7 @@ final class TransactionStatusImpl
 
     public Thread[] getThreads()
     {
-        return (Thread[]) _tx._threads.clone();
+        return new Thread[ 0 ];
     }
 
 

@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionManagerImpl.java,v 1.7 2001/03/17 01:27:19 arkin Exp $
+ * $Id: TransactionManagerImpl.java,v 1.8 2001/03/17 03:04:45 arkin Exp $
  */
 
 
@@ -77,7 +77,7 @@ import tyrex.util.Messages;
  * transaction server.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.7 $ $Date: 2001/03/17 01:27:19 $
+ * @version $Revision: 1.8 $ $Date: 2001/03/17 03:04:45 $
  * @see Tyrex#recycleThread
  * @see TransactionDomain
  * @see TransactionImpl
@@ -114,13 +114,15 @@ final class TransactionManagerImpl
         TransactionImpl  tx;
 
         context = ThreadContext.getThreadContext();
-        if ( context._tx != null && context._tx.getStatus() != STATUS_COMMITTED &&
-             context._tx.getStatus() != STATUS_ROLLEDBACK ) {
+        tx = context._tx;
+        if ( tx != null && tx._status != STATUS_COMMITTED &&
+             tx._status != STATUS_ROLLEDBACK ) {
             if ( ! _txDomain.getNestedTransactions() )
                 throw new NotSupportedException( Messages.message( "tyrex.tx.noNested" ) );
             else {
                 // Resources are not enlisted with a nested transaction.
-                _txDomain.createTransaction( context._tx, Thread.currentThread(), 0 );
+                tx = _txDomain.createTransaction( tx, Thread.currentThread(), 0 );
+                context._tx = tx;
                 return;
             }
         } else
@@ -131,6 +133,7 @@ final class TransactionManagerImpl
         resources = context.getResources();
         if ( resources != null )
             enlistResources( tx, resources );
+        context._tx = tx;
     }
 
 
@@ -138,13 +141,16 @@ final class TransactionManagerImpl
         throws RollbackException, HeuristicMixedException, HeuristicRollbackException,
                SecurityException, IllegalStateException, SystemException
     {
+        Thread          thread;
         ThreadContext   context;
         TransactionImpl tx;
 
-        context = ThreadContext.getThreadContext();
+        thread = Thread.currentThread();
+        context = ThreadContext.getThreadContext( thread );
         tx = context._tx;
         if ( tx == null )
             throw new IllegalStateException( Messages.message( "tyrex.tx.inactive" ) );
+        _txDomain.delistThread( context, thread );
         tx.commit();
     }
 
@@ -152,13 +158,16 @@ final class TransactionManagerImpl
     public void rollback()
         throws IllegalStateException, SecurityException, SystemException
     {
+        Thread          thread;
         ThreadContext   context;
         TransactionImpl tx;
         
-        context = ThreadContext.getThreadContext();
+        thread = Thread.currentThread();
+        context = ThreadContext.getThreadContext( thread );
         tx = context._tx;
         if ( tx == null )
             throw new IllegalStateException( Messages.message( "tyrex.tx.inactive" ) );
+        _txDomain.delistThread( context, thread );
         tx.rollback();
     }
 
@@ -179,16 +188,14 @@ final class TransactionManagerImpl
 
     public Transaction getTransaction()
     {
-        ThreadContext   context;
-
-        context = ThreadContext.getThreadContext();
-        return context._tx;
+        return ThreadContext.getThreadContext()._tx;
     }
 
 
     public void resume( Transaction tx )
         throws InvalidTransactionException, IllegalStateException, SystemException
     {
+        Thread          thread;
         ThreadContext   context;
         TransactionImpl txImpl;
 
@@ -197,7 +204,8 @@ final class TransactionManagerImpl
         if ( ! ( tx instanceof TransactionImpl ) )
             throw new InvalidTransactionException( Messages.message( "tyrex.tx.resumeForeign" ) );
         txImpl = (TransactionImpl) tx;
-        context = ThreadContext.getThreadContext();
+        thread = Thread.currentThread();
+        context = ThreadContext.getThreadContext( thread );
         if ( context._tx != null )
             throw new IllegalStateException( Messages.message( "tyrex.tx.resumeOverload" ) );
         synchronized ( tx ) {
@@ -205,25 +213,22 @@ final class TransactionManagerImpl
                 throw new InvalidTransactionException( Messages.message( "tyrex.tx.timedOut" ) );
             if ( txImpl._status != Status.STATUS_ACTIVE && txImpl._status != Status.STATUS_MARKED_ROLLBACK )
                 throw new InvalidTransactionException( Messages.message( "tyrex.tx.inactive" ) );
-            context._tx = txImpl;
-            txImpl = (TransactionImpl) txImpl.getTopLevel();
             try {
-                txImpl.resumeAndEnlistResources( context.getResources() );
+                ( (TransactionImpl) txImpl.getTopLevel() ).resumeAndEnlistResources( context.getResources() );
             } catch ( RollbackException except ) { }
-            // Enlist the current thread with the transaction so it
-            // may timeout the thread. We always enlist the top
-            // level transaction.
-            _txDomain.enlistThread( txImpl, Thread.currentThread() );
+            _txDomain.enlistThread( txImpl, context, thread );
         }
     }
 
 
     public Transaction suspend()
     {
+        Thread          thread;
         ThreadContext   context;
         TransactionImpl tx;
 
-        context = ThreadContext.getThreadContext();
+        thread = Thread.currentThread();
+        context = ThreadContext.getThreadContext( thread );
         tx = context._tx;
         if ( tx == null )
             return null;
@@ -236,7 +241,7 @@ final class TransactionManagerImpl
             // Delist the current thread form the transaction so it
             // does not attempt to timeout. We always enlist the top
             // level transaction.
-            _txDomain.delistThread( tx, Thread.currentThread() );
+            _txDomain.delistThread( context, thread );
             
             // We do not return an inactive transaction.
             if ( tx._status == STATUS_ACTIVE || tx._status == STATUS_MARKED_ROLLBACK ) {
@@ -314,8 +319,6 @@ final class TransactionManagerImpl
     public void dumpCurrentTransaction( PrintWriter writer )
     {
         TransactionImpl  tx;
-        Thread[]         threads;
-        int              count = 0;
 
         if ( writer == null )
             throw new IllegalArgumentException( "Argument writer is null" );
@@ -323,14 +326,7 @@ final class TransactionManagerImpl
         if ( tx == null )
             writer.println( "No transaction associated with current thread" );
         else {
-            threads = tx._threads;
-            if ( threads != null ) {
-                for ( int i = threads.length ; i-- > 0 ; )
-                    if ( threads[ i ] != null )
-                        ++count;
-            }
-            writer.println( "  Transaction " + tx._xid + " " + Util.getStatus( tx._status ) +
-                            ( count != 0 ? ( " " + count + " threads" ) : "" ) );
+            writer.println( "  Transaction " + tx._xid + " " + Util.getStatus( tx._status ) );
             writer.println( "  Started " + Util.fromClock( tx._started ) +
                             " time-out " + Util.fromClock( tx._timeout ) );
         }
@@ -427,20 +423,20 @@ final class TransactionManagerImpl
     protected void internalResume( TransactionImpl tx )
         throws IllegalStateException, SystemException
     {
+        Thread          thread;
         ThreadContext   context;
 
         if ( tx == null )
             throw new IllegalArgumentException( "Argument tx is null" );
-        context = ThreadContext.getThreadContext();
+        thread = Thread.currentThread();
+        context = ThreadContext.getThreadContext( thread );
         if ( context._tx != null )
             throw new IllegalStateException( Messages.message( "tyrex.tx.resumeOverload" ) );
         synchronized ( tx ) {
-            context._tx = tx;
-            tx = (TransactionImpl) tx.getTopLevel();
-            // Enlist the current thread with the transaction so it
-            // may timeout the thread. We always enlist the top
-            // level transaction.
-            _txDomain.enlistThread( tx, Thread.currentThread() );
+            try {
+                ( (TransactionImpl) tx.getTopLevel() ).resumeAndEnlistResources( context.getResources() );
+            } catch ( RollbackException except ) { }
+            _txDomain.enlistThread( tx, context, thread );
         }
     }
 
@@ -476,6 +472,7 @@ final class TransactionManagerImpl
             }
         }
     }
+
 
 
 }

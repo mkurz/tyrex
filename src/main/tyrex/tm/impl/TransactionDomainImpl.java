@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionDomainImpl.java,v 1.19 2001/03/17 01:27:19 arkin Exp $
+ * $Id: TransactionDomainImpl.java,v 1.20 2001/03/17 03:04:45 arkin Exp $
  */
 
 
@@ -96,7 +96,7 @@ import tyrex.util.Configuration;
  * Implementation of a transaction domain.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.19 $ $Date: 2001/03/17 01:27:19 $
+ * @version $Revision: 1.20 $ $Date: 2001/03/17 03:04:45 $
  */
 public class TransactionDomainImpl
     extends TransactionDomain
@@ -610,7 +610,6 @@ public class TransactionDomainImpl
                     }
                 }
                 if ( thread != null ) {
-                    newTx._threads = new Thread[] { thread };
                     context = ThreadContext.getThreadContext( thread );
                     context._tx = newTx;
                 }
@@ -843,28 +842,6 @@ public class TransactionDomainImpl
                 _category.error( "Internal error", except );
             }
 
-            // If we reach this point, entry points to the transaction we
-            // just removed.
-            threads = entry._threads;
-            if ( threads != null && threads.length > 0 ) {
-                for ( int i = threads.length ; i-- > 0 ; ) {
-                    thread = threads[ i ];
-                    if ( thread  != null ) {
-                        for ( int j = _interceptors.length ; j-- > 0 ; ) {
-                            try {
-                                _interceptors[ j ].suspend( xid, thread );
-                            } catch ( Throwable thrw ) {
-                                _category.error( "Interceptor " + _interceptors[ i ] + " reported error", thrw );
-                            }
-                        }
-                        context = ThreadContext.getThreadContext( thread );
-                        if ( context._tx == tx )
-                            context._tx = (TransactionImpl) tx.getParent();
-                    }
-                }
-                entry._threads = null;
-            }
-
             // If the domain is terminated, we close the transaction
             // journal at this point. Otherwise, we notify any blocking
             // thread that it's able to create a new transaction.
@@ -927,9 +904,7 @@ public class TransactionDomainImpl
             // Timeout is never set back.
             newTimeout = tx._started + timeout * 1000;
             if ( newTimeout > tx._timeout ) {
-                System.out.println( "Old timeout " + tx._timeout );
                 tx._timeout = newTimeout;
-                System.out.println( "New timeout " + tx._timeout );
                 tx.internalSetTransactionTimeout( timeout );
                 // If this transaction times out before any other transaction,
                 // need to wakeup the background thread so it can update its
@@ -954,114 +929,6 @@ public class TransactionDomainImpl
     protected int getTransactionTimeout( TransactionImpl tx )
     {
         return (int) ( tx._timeout - tx._started ) / 1000;
-    }
-
-
-    /**
-     * Called by {@link TransactionImpl#resume resume} to associate
-     * the transaction with the thread. This will allow us to terminate
-     * the thread when the transaction times out. If the transaction
-     * has not been associated with any thread before, it now becomes
-     * active.
-     *
-     * @param tx The transaction
-     * @param thread The thread to associate with the transaction
-     */
-    protected void enlistThread( TransactionImpl tx, Thread thread )
-    {
-        Xid       xid;
-        Thread[]  threads;
-        Thread[]  newList;
-        int       index;
-
-        if ( tx == null )
-            throw new IllegalArgumentException( "Argument tx is null" );
-        if ( thread == null )
-            throw new IllegalArgumentException( "Argument thread is null" );
-        synchronized ( tx ) {
-            xid = tx._xid;
-            for ( int i = _interceptors.length ; i-- > 0 ; ) {
-                try {
-                    _interceptors[ i ].resume( xid, thread );
-                } catch ( InvalidTransactionException except ) {
-                    for ( ++i ; i < _interceptors.length ; ++i ) {
-                        try {
-                            _interceptors[ i ].suspend( xid, thread );
-                        } catch ( Throwable thrw ) {
-                            _category.error( "Interceptor " + _interceptors[ i ] + " reported error", thrw );
-                        }
-                    }
-                    // Transaction will not be associated with this thread.
-                    return;
-                } catch ( Throwable thrw ) {
-                    _category.error( "Interceptor " + _interceptors[ i ] + " reported error", thrw );
-                }
-            }
-                
-            threads = tx._threads;
-            if ( threads == null ) {
-                tx._threads = new Thread[] { thread };
-            } else {
-                // Make sure we do not associate the same thread twice.
-                index = -1;
-                for ( int i = threads.length ; i-- > 0 ; ) {
-                    if ( threads[ i ] == thread )
-                        return;
-                    if ( threads[ i ] == null )
-                        index = i;
-                }
-                if ( index >= 0 )
-                    threads[ index ] = thread;
-                else {
-                    newList = new Thread[ threads.length + 1 ];
-                    for ( int i = threads.length ; i-- > 0 ; )
-                        newList[ i ] = threads[ i ];
-                    newList[ threads.length ] = thread;
-                    tx._threads = newList;
-                }
-            }
-        }
-    }
-    
-
-    /**
-     * Called by {@link TransactionImpl#suspend suspend} to dissociate
-     * the transaction from the thread. If the transaction has only been
-     * associated with this one thread, it becomes inactive.
-     *
-     * @param tx The transaction
-     * @param thread The thread to dissociate from the transaction
-     * @see enlistThread
-     */
-    protected void delistThread( TransactionImpl tx, Thread thread )
-    {
-        Xid       xid;
-        Thread[]  threads;
-
-        if ( tx == null )
-            throw new IllegalArgumentException( "Argument tx is null" );
-        if ( thread == null )
-            throw new IllegalArgumentException( "Argument thread is null" );
-        synchronized ( tx ) {
-            xid = tx._xid;
-            for ( int i = _interceptors.length ; i-- > 0 ; ) {
-                try {
-                    _interceptors[ i ].suspend( xid, thread );
-                } catch ( Throwable thrw ) {
-                    _category.error( "Interceptor " + _interceptors[ i ] + " reported error", thrw );
-                }
-            }
-            
-            threads = tx._threads;
-            if ( threads != null ) {
-                for ( int i = threads.length ; i-- > 0 ; ) {
-                    if ( threads[ i ] == thread ) {
-                        threads[ i ] = null;
-                        return;
-                    }
-                }
-            }
-        }
     }
 
 
@@ -1133,8 +1000,6 @@ public class TransactionDomainImpl
     protected synchronized void dumpTransactionList( PrintWriter writer )
     {
         TransactionImpl entry;
-        Thread[]        threads;
-        int             count = 0;
         
         if ( writer == null )
             throw new IllegalArgumentException( "Argument writer is null" );
@@ -1142,14 +1007,7 @@ public class TransactionDomainImpl
         for ( int i = _hashTable.length ; i-- > 0 ; ) {
             entry = _hashTable[ i ];
             while ( entry != null ) {
-                threads = entry._threads;
-                if ( threads != null ) {
-                    for ( int j = threads.length ; j-- > 0 ; )
-                        if ( threads[ j ] != null )
-                            ++count;
-                }
-                writer.println( "  Transaction " + entry._xid + " " + Util.getStatus( entry._status ) +
-                                ( count != 0 ? ( " " + count + " threads" ) : "" ) );
+                writer.println( "  Transaction " + entry._xid + " " + Util.getStatus( entry._status ) );
                 writer.println( "  Started " + Util.fromClock( entry._started ) +
                                 " time-out " + Util.fromClock( entry._timeout ) );
                 entry = entry._nextEntry;
@@ -1158,42 +1016,77 @@ public class TransactionDomainImpl
     }
 
 
-    /**
-     * Called to terminate a transaction in progress. If the transaction
-     * is active, it will be rolled back with a timed-out flag and all
-     * threads associated with it will be terminated. This method does
-     * not remove the transaction from the hashtable.
-     * <p>
-     * This method must be called with a synchronization block on the
-     * transaction.
-     *
-     * @param txRec The tranaction record
-     */
-    protected void terminateThreads( TransactionImpl tx )
-    {
-        Thread[] threads;
-        Xid      xid;
 
-        if ( tx.getStatus() != Status.STATUS_ACTIVE &&
-             tx.getStatus() != Status.STATUS_MARKED_ROLLBACK ) {
-            threads = tx._threads;
-            if ( threads != null ) {
-                xid = tx._xid;
-                for ( int i = threads.length ; i-- > 0 ; ) {
-                    if ( threads[ i ] != null ) {
-                        for ( int j = _interceptors.length ; j-- > 0 ; ) {
-                            try {
-                                _interceptors[ j ].suspend( xid, threads[ i ] );
-                            } catch ( Throwable thrw ) {
-                                _category.error( "Interceptor " + _interceptors[ i ] + " reported error", thrw );
-                            }
+
+    /**
+     * Called to associate the transaction with the thread.
+     *
+     * @param tx The transaction
+     * @param context The thread context
+     * @param thread The thread
+     */
+    protected void enlistThread( TransactionImpl tx, ThreadContext context, Thread thread )
+    {
+        Xid       xid;
+
+        if ( tx == null )
+            throw new IllegalArgumentException( "Argument tx is null" );
+        if ( context == null )
+            throw new IllegalArgumentException( "Argument context is null" );
+        if ( context._tx != null )
+            delistThread( context, thread );
+        synchronized ( tx ) {
+            xid = tx._xid;
+            for ( int i = _interceptors.length ; i-- > 0 ; ) {
+                try {
+                    _interceptors[ i ].resume( xid, thread );
+                } catch ( InvalidTransactionException except ) {
+                    for ( ++i ; i < _interceptors.length ; ++i ) {
+                        try {
+                            _interceptors[ i ].suspend( xid, thread );
+                        } catch ( Throwable thrw ) {
+                            _category.error( "Interceptor " + _interceptors[ i ] + " reported error", thrw );
                         }
-                        if ( _threadTerminate )
-                            threads[ i ].stop( new TransactionTimeoutException() );
                     }
+                    // Transaction will not be associated with this thread.
+                    return;
+                } catch ( Throwable thrw ) {
+                    _category.error( "Interceptor " + _interceptors[ i ] + " reported error", thrw );
                 }
-                tx._threads = null;
             }
+            context._tx = tx;
+        }
+    }
+    
+
+    /**
+     * Called to dissociatethe transaction from the thread.
+     *
+     * @param tx The transaction
+     * @param context The thread context
+     * @param thread The thread
+     * @see enlistThread
+     */
+    protected void delistThread( ThreadContext context, Thread thread )
+    {
+        Xid             xid;
+        TransactionImpl tx;
+
+        if ( context == null )
+            throw new IllegalArgumentException( "Argument context is null" );
+        tx = context._tx;
+        if ( tx == null )
+            return;
+        synchronized ( tx ) {
+            xid = tx._xid;
+            for ( int i = _interceptors.length ; i-- > 0 ; ) {
+                try {
+                    _interceptors[ i ].suspend( xid, thread );
+                } catch ( Throwable thrw ) {
+                    _category.error( "Interceptor " + _interceptors[ i ] + " reported error", thrw );
+                }
+            }
+            context._tx = null;
         }
     }
 
