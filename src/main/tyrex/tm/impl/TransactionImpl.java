@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionImpl.java,v 1.35 2001/09/24 22:27:32 mohammed Exp $
+ * $Id: TransactionImpl.java,v 1.36 2001/09/25 00:37:33 mohammed Exp $
  */
 
 
@@ -89,7 +89,7 @@ import tyrex.util.Messages;
  * they are added.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.35 $ $Date: 2001/09/24 22:27:32 $
+ * @version $Revision: 1.36 $ $Date: 2001/09/25 00:37:33 $
  * @see XAResourceHolder
  * @see TransactionManagerImpl
  * @see TransactionDomain
@@ -2550,6 +2550,14 @@ final class TransactionImpl
      */
     private void xaError( XAResourceHolder resHolder, XAException except )
     {
+
+        if ( except.getClass().getName().equals("oracle.jdbc.xa.OracleXAException") ) {
+            try {
+                System.out.println("\n\n**ORacle error " + except.getClass().getDeclaredMethod("getOracleError()", null).invoke(except, null));
+            }
+            catch(Exception e) {
+            }
+        }
         if ( except.errorCode == XAException.XA_HEURMIX ) {
             _heuristic = _heuristic | Heuristic.MIXED; 
             _txDomain._category.error( "XAResource " + resHolder._xaResource +
@@ -2574,9 +2582,6 @@ final class TransactionImpl
             // transaction or at least the remaining part of it.
             _heuristic = _heuristic | Heuristic.OTHER;
             error( except );
-            _txDomain._category.error( "XAResource " + resHolder._xaResource +
-                                       " reported error " + Util.getXAException( except ) +
-                                       " on transaction branch " + resHolder._xid, except );
         }
     }
 
