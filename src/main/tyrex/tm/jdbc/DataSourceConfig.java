@@ -43,29 +43,29 @@
  */
 
 
-package tyrex.tm.jca;
+package tyrex.tm.jdbc;
 
 
 /**
  * 
  * @author <a href="jdaniel@intalio.com">Jerome Daniel</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.1 $
  */
-public class Connector
+public class DataSourceConfig
     implements java.io.Serializable
 {
 
 
     /**
-     * The connector name.
+     * The driver name.
      */
     protected String               _name;
 
 
     /**
-     * The RAR (Resource Adapter Archive) file name.
+     * The JAR file name.
      */
-    protected String               _rar;
+    protected String               _jar;
 
 
     /**
@@ -75,16 +75,22 @@ public class Connector
 
 
     /**
+     * The data source class.
+     */
+    protected String               _className;
+
+
+    /**
      * The connection pool limits.
      */
     protected Limits               _limits;
 
 
     /**
-     * Sets the name for this connector. The name is used for logging and
-     * by visual tools. It must be short and unique amongst connectors.
+     * Sets the name for this driver. The name is used for logging and
+     * by visual tools. It must be short and unique amongst drivers.
      *
-     * @param name The connector name
+     * @param name The driver name
      */
     public void setName( String name )
     {
@@ -93,9 +99,9 @@ public class Connector
 
 
     /**
-     * Returns the name for this connector.
+     * Returns the name for this driver.
      *
-     * @return The connector name
+     * @return The driver name
      */
     public String getName()
     {
@@ -104,33 +110,32 @@ public class Connector
 
 
     /**
-     * Sets the RAR file name. The RAR (Resource Adapter Archive) contains
-     * the connector's deployment descriptor and main classes. The RAR file
-     * name must accessible relative to the current directory.
+     * Sets the JAR file name. The JAR file name must accessible
+     * relative to the current directory.
      *
-     * @param rar The RAR file name
+     * @param jar The JAR file name
      */
-    public void setRAR( String rar )
+    public void setJAR( String jar )
     {
-        _rar = rar;
+        _jar = jar;
     }
 
 
     /**
-     * Returns the RAR file name.
+     * Returns the JAR file name.
      *
-     * @return The RAR file name
+     * @return The JAR file name
      */
-    public String getRAR()
+    public String getJAR()
     {
-        return _rar;
+        return _jar;
     }
 
 
     /**
      * Sets additional path names. This is a colon separated list of paths
      * that point to directories and JARs containing dependent files and
-     * resources used by the connector.
+     * resources used by the driver.
      *
      * @param paths Additional path names
      */
@@ -161,6 +166,30 @@ public class Connector
     public void setLimits( Limits limits )
     {
         _limits = limits;
+    }
+
+
+    /**
+     * Sets the name for the data source class. The data source will be
+     * constructed from this class. It can implement <tt>DataSource</tt>,
+     * <tt>XADataSource</tt> or <tt>PooledConnectionDataSource</tt>.
+     *
+     * @param name The data source class name
+     */
+    public void setClassName( String className )
+    {
+        _className = className;
+    }
+
+
+    /**
+     * Returns the name for the data source class.
+     *
+     * @return The data source class
+     */
+    public String getClassName()
+    {
+        return _className;
     }
 
 

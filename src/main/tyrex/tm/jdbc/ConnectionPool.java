@@ -43,7 +43,7 @@
  */
 
 
-package tyrex.tm.jca;
+package tyrex.tm.jdbc;
 
 
 import java.io.PrintWriter;
@@ -53,19 +53,15 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.lang.reflect.Array;
 import org.apache.log4j.Category;
-import javax.resource.ResourceException;
-import javax.resource.NotSupportedException;
-import javax.resource.spi.ManagedConnection;
-import javax.resource.spi.ConnectionRequestInfo;
-import javax.resource.spi.ConnectionEvent;
-import javax.resource.spi.ConnectionEventListener;
-import javax.resource.spi.ManagedConnectionFactory;
-import javax.resource.spi.ConnectionManager;
-import javax.resource.spi.LocalTransaction;
-import javax.resource.spi.ResourceAllocationException;
-import javax.resource.spi.ManagedConnectionMetaData;
-import javax.resource.spi.ApplicationServerInternalException;
-import javax.security.auth.Subject;
+import java.sql.SQLException;
+import java.sql.Connection;
+import javax.sql.DataSource;
+import javax.sql.XADataSource;
+import javax.sql.XAConnection;
+import javax.sql.ConnectionPoolDataSource;
+import javax.sql.PooledConnection;
+import javax.sql.ConnectionEvent;
+import javax.sql.ConnectionEventListener;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 import javax.transaction.Status;
@@ -83,10 +79,10 @@ import tyrex.util.LoggerPrintWriter;
 /**
  *
  * @author <a href="jdaniel@intalio.com">Jerome Daniel</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.1 $
  */
 final class ConnectionPool
-    implements Set, ConnectionEventListener, ConnectionManager
+    implements DataSource, ConnectionEventListener
 {
 
 
@@ -119,19 +115,14 @@ final class ConnectionPool
     /**
      * The connector limits.
      */
-    private final Limits     _limits;
+    private final Limits                  _limits;
+
 
 
     /**
      * The transaction manager used for enlisting connections.
      */
     private final TyrexTransactionManager _txManager;
-
-
-    /**
-     * The connector loader.
-     */
-    private final ConnectorLoader         _loader;
 
 
     /**
@@ -153,31 +144,36 @@ final class ConnectionPool
 
 
     /**
-     * The client connection factory.
-     */
-    private final Object                  _factory;
-
-
-    /**
      * The next time we expect to expire a connection.
      */
     private long                          _nextExpiration;
 
 
-    ConnectionPool( String name, Limits limits, ConnectorLoader loader,
+    /**
+     * The data source to use for XA connections.
+     */
+    private final XADataSource            _xaDataSource;
+
+
+    /**
+     * The data source to use for pooled (non-XA) connections.
+     */
+    private final ConnectionPoolDataSource _poolDataSource;
+
+
+    ConnectionPool( String name, Limits limits, XADataSource xaDataSource,
+                    ConnectionPoolDataSource poolDataSource,
                     TyrexTransactionManager txManager, Category category )
-        throws ResourceException
+        throws SQLException
     {
-        ManagedConnection         managed = null;
-        ManagedConnectionMetaData metaData;
-        StringBuffer              buffer;
+        PooledConnection         pooled = null;
 
         if ( name == null )
             throw new IllegalArgumentException( "Argument name is null" );
         if ( limits == null )
             throw new IllegalArgumentException( "Argument limits is null" );
-        if ( loader == null )
-            throw new IllegalArgumentException( "Argument loader is null" );
+        if ( xaDataSource == null && poolDataSource == null )
+            throw new IllegalArgumentException( "Arguments xaDataSource and poolDataSource are null" );
         if ( txManager == null )
             throw new IllegalArgumentException( "Argument txManager is null" );
         if ( category == null )
@@ -186,7 +182,8 @@ final class ConnectionPool
         // Need to set all these variables before we attempt to
         // create the initial number of connections.
         _name = name;
-        _loader = loader;
+        _xaDataSource = xaDataSource;
+        _poolDataSource = poolDataSource;
         _metrics = new PoolMetrics();
         _category = category;
         _logWriter = new LoggerPrintWriter( _category, null );
@@ -195,8 +192,12 @@ final class ConnectionPool
         // Clone object to prevent changes by caller from affecting the
         // behavior of the pool.
         _limits = (Limits) limits.clone();
-        if ( _limits._trace )
-            _loader.setLogWriter( _logWriter );
+        if ( _limits._trace ) {
+            if ( _xaDataSource != null )
+                _xaDataSource.setLogWriter( _logWriter );
+            else
+                _poolDataSource.setLogWriter( _logWriter );
+        }
 
         // Set the pool table to the optimum size based on the maximum
         // number of connections expected, or a generic size.
@@ -205,51 +206,30 @@ final class ConnectionPool
         else
             _pool = new PoolEntry[ TABLE_SIZE ];
 
-        // We need at least one managed connection to obtain the
+        // We need at least one pooled connection to obtain the
         // connection meta data and XA resource for recovery.
         // An exception occurs if we cannot create this connection,
         // or we can't get the XA resource.
-        managed = _loader.createManagedConnection( null, null );
-        if ( _limits._xaSupported )
-            _xaResource = managed.getXAResource();
-        else
+        pooled = createPooledConnection( null, null );
+        if ( _xaDataSource != null ) {
+            if ( pooled instanceof XAConnection )
+                _xaResource = ( (XAConnection) pooled ).getXAResource();
+            else
+                throw new SQLException( "Connection of type " + pooled.getClass().getName() +
+                                        " does not support XA transactions" );
+        } else
             _xaResource = null;
-        allocate( managed, false );
-
-        // Obtain the maximum number of connections reported by the
-        // meta-data and if necessary, update the maximum number of
-        // connections supported.
-        metaData = managed.getMetaData();
-        if ( metaData != null && metaData.getMaxConnections() > 0 &&
-             metaData.getMaxConnections() < _limits._maximum )
-            _limits._maximum = metaData.getMaxConnections();
-        if ( _limits._maximum > 0 ) {
-            if ( _limits._initial > _limits._maximum )
-                _limits._initial = _limits._maximum;
-            if ( _limits._minimum > _limits._maximum )
-                _limits._minimum = _limits._maximum;
-        }
+        allocate( pooled, null, null, false );
 
         // Allocate as many connection as specified for the initial size
         // (excluding the one we always create before we reach this point).
         for ( int i = _limits._initial - 1 ; i-- > 0 ; ) {
-            managed = _loader.createManagedConnection( null, null );
-            allocate( managed, false );
+            pooled = createPooledConnection( null, null );
+            allocate( pooled, null, null, false );
         }
-        _factory = _loader.createConnectionFactory( this );
-
-        // This string is used to report the EIS product and version
-        buffer = new StringBuffer();
-        if ( metaData.getEISProductName() != null ) {
-            buffer.append( metaData.getEISProductName() );
-            if ( metaData.getEISProductVersion() != null )
-                buffer.append( "  " ).append( metaData.getEISProductVersion() );
-        } else
-            buffer.append( _loader.toString() );
-        _category.info( "Created connection pool for manager " + name +
+        _category.info( "Created connection pool for data source " + name +
                         " with initial size " + _limits._initial +
                         " and maximum size " + _limits._maximum );
-        _category.info( buffer.toString() );
     }
 
 
@@ -266,15 +246,14 @@ final class ConnectionPool
 
 
     /**
-     * Returns the client connection factory. The client connection factory
-     * is enlisted in the JNDI environment naming context for access by the
-     * application.
+     * Returns the client data source. The client data source is enlisted
+     * in the JNDI environment naming context for access by the application.
      *
-     * @return The client connection factory
+     * @return The client data source
      */
-    public Object getConnectionFactory()
+    public DataSource getDataSource()
     {
-        return _factory;
+        return this;
     }
 
 
@@ -284,12 +263,6 @@ final class ConnectionPool
     }
 
     
-    private Subject getSubject()
-    {
-        return null;
-    }
-
-
     /**
      * This method is used during recovery from an XA resource.
      * If the connector does not support the XA interface, it
@@ -334,24 +307,25 @@ final class ConnectionPool
 
 
     //---------------------------------------------
-    // Methods defined by ConnectionManager
+    // Methods defined by DataSource
     //---------------------------------------------
 
 
-    public Object allocateConnection( ManagedConnectionFactory factory,
-                                      ConnectionRequestInfo requestInfo )
-        throws ResourceException
+    public Connection getConnection()
+        throws SQLException
     {
-        Object            connection;
+        return getConnection( null, null );
+    }
+    
+    
+    public Connection getConnection( String user, String password )
+        throws SQLException
+    {
+        Connection        connection;
         XAResource        xaResource;
         PoolEntry         entry;
         
-        if ( factory != _loader.getFactory() ) {
-            _category.error( "Connector error: called allocateConnection with the wrong factory" );
-            throw new ResourceAllocationException( "Connector error: called allocateConnection with the wrong factory" );
-        }
-
-        entry = allocate( requestInfo );
+        entry = allocate( user, password );
         // If connection supports XA resource, we need to enlist
         // it in this or any future transaction. If this fails,
         // the connection is unuseable.
@@ -359,27 +333,27 @@ final class ConnectionPool
             try {
                 _txManager.enlistResource( entry._xaResource );
             } catch ( Exception except ) {
-                release( entry._managed, false );
-                throw new ResourceAllocationException( "Error occured using connection " + entry._managed + ": " + except );
+                release( entry._pooled, false );
+                throw new SQLException( "Error occured using connection " + entry._pooled + ": " + except );
             }
         }
         // Obtain the client connection and register this pool as
         // the event listener. If we failed, the connection is not
         // useable and we discard it and try again.
         try {
-            connection = _loader.getConnection( entry._managed, getSubject(), requestInfo );
+            connection = entry._pooled.getConnection();
             return connection;
         } catch ( Exception except ) {
-            release( entry._managed, false );
-            throw new ResourceAllocationException( "Error occured using connection " + entry._managed + ": " + except );
+            release( entry._pooled, false );
+            throw new SQLException( "Error occured using connection " + entry._pooled + ": " + except );
         }
     }
-
-
-    private synchronized PoolEntry allocate( ConnectionRequestInfo requestInfo )
-        throws ResourceException
+    
+    
+    private synchronized PoolEntry allocate( String user, String password )
+        throws SQLException
     {
-        ManagedConnection managed;
+        PooledConnection  pooled;
         PoolEntry         entry;
         long              clock;
         long              timeout;
@@ -389,49 +363,49 @@ final class ConnectionPool
         // We will keep getting notified as connections are made available to the
         // pool, or discarded.
         while ( true ) {
-
+            
             // If any connections are available we keep trying to match an
             // existing connection. It's possible that a matched connection
             // will not be useable, so we repeat until one (or none) is found.
             while ( _metrics._available > 0 ) {
-                managed = _loader.matchManagedConnections( this, getSubject(), requestInfo );
+                pooled = matchPooledConnections( user, password );
                 // No matched connection, exit loop so we will attempt
                 // to create a new one.
-                if ( managed == null )
+                if ( pooled == null )
                     break;
-                // Managed connection matched by connector. It is an error
-                // if it managed a reserved connection.
-                entry = reserve( managed );
+                // Pooled connection matched by connector. It is an error
+                // if it returns a reserved connection.
+                entry = reserve( pooled );
                 if ( entry == null ) {
-                    release( managed, false );
-                    _category.error( "Connector error: matchManagedConnetions returned an unavailable connection" );
+                    release( pooled, false );
+                    _category.error( "Connector error: matchPooledConnetions returned an unavailable connection" );
                 } else
                     return entry;
             }
-
+            
             // No matched connections, need to create a new one.
             // If we have more room for a new connection, we create
             // a new connection.
             if ( _limits._maximum == 0 && _metrics._total < _limits._maximum ) {
-                managed = _loader.createManagedConnection( getSubject(), requestInfo );
+                pooled = createPooledConnection( user, password );
                 // Need to allocate the connection. It is an error if the
-                // managed connection is already in the pool.
-                entry = allocate( managed, true );
+                // pooled connection is already in the pool.
+                entry = allocate( pooled, user, password, true );
                 if ( entry == null )
-                    throw new ResourceException( "Connector error: createManagedConnetion returned an existing connection" );
+                    throw new SQLException( "Connector error: createPooledConnetion returned an existing connection" );
                 else
                     return entry;
             }
-
+            
             // If we have a connection we do not use (and cannot be matched),
             // release it and make room for a new connection to be created.
             if ( _metrics._available > 0 && discardNext() ) {
-                managed = _loader.createManagedConnection( getSubject(), requestInfo );
+                pooled = createPooledConnection( user, password );
                 // Need to allocate the connection. It is an error if the
-                // managed connection is already in the pool.
-                entry = allocate( managed, true );
+                // pooled connection is already in the pool.
+                entry = allocate( pooled, user, password, true );
                 if ( entry == null )
-                    throw new ResourceAllocationException( "Connector error: createManagedConnetion returned an existing connection" );
+                    throw new SQLException( "Connector error: createPooledConnetion returned an existing connection" );
                 else
                     return entry;
             }
@@ -440,9 +414,9 @@ final class ConnectionPool
             // we go to sleep until timeout occurs or until we are
             // able to create a new connection.
             if ( timeout <= 0 )
-                throw new ResourceAllocationException( "Cannot allocate new connection for " +
-                                                       _name + ": reached limit of " +
-                                                       _limits._maximum + " connections" );
+                throw new SQLException( "Cannot allocate new connection for " +
+                                        _name + ": reached limit of " +
+                                        _limits._maximum + " connections" );
             clock = Clock.clock();
             try {
                 wait ( timeout );
@@ -453,12 +427,51 @@ final class ConnectionPool
                 timeout = 0;
             }
             if ( timeout <= 0 )
-                throw new ResourceAllocationException( "Cannot allocate new connection for " +
-                                                       _name + ": reached limit of " +
-                                                       _limits._maximum + " connections" );
+                throw new SQLException( "Cannot allocate new connection for " +
+                                        _name + ": reached limit of " +
+                                        _limits._maximum + " connections" );
         }
         // We never reach this point;
         // throw new ApplicationServerInternalException( "Internal error" );
+    }
+
+
+    private PooledConnection createPooledConnection( String user, String password )
+        throws SQLException
+    {
+        if ( _xaDataSource != null ) {
+            if ( user != null )
+                return _xaDataSource.getXAConnection( user, password );
+            else
+                return _xaDataSource.getXAConnection();
+        } else {
+            if ( user != null )
+                return _poolDataSource.getPooledConnection( user, password );
+            else
+                return _poolDataSource.getPooledConnection();
+        }
+    }
+
+
+    public PrintWriter getLogWriter()
+    {
+        return _logWriter;
+    }
+
+
+    public void setLogWriter( PrintWriter logWriter )
+    {
+    }
+
+
+    public int getLoginTimeout()
+    {
+        return 0;
+    }
+
+
+    public void setLoginTimeout( int seconds )
+    {
     }
 
 
@@ -469,15 +482,13 @@ final class ConnectionPool
 
     public void connectionClosed( ConnectionEvent event )
     {
-        ManagedConnection managed;
-        Object            connection;
+        PooledConnection pooled;
         
         // Connection closed. Place connection back in pool.
         try {
-            connection = event.getConnectionHandle();
-            managed = (ManagedConnection) event.getSource();
-            if ( managed != null ) {
-                if ( ! release( managed, true ) )
+            pooled = (PooledConnection) event.getSource();
+            if ( pooled != null ) {
+                if ( ! release( pooled, true ) )
                     _category.error( "Connector error: connectionClosed called with invalid connection" );
             } else
                 _category.error( "Connector error: connectionClosed called without reference to connection" );
@@ -489,13 +500,13 @@ final class ConnectionPool
     
     public void connectionErrorOccurred( ConnectionEvent event )
     {
-        ManagedConnection managed;
+        PooledConnection pooled;
         
         // Connection error. Remove connection from pool.
         try {
-            managed = (ManagedConnection) event.getSource();
-            if ( managed != null ) {
-                if ( ! release( managed, false ) )
+            pooled = (PooledConnection) event.getSource();
+            if ( pooled != null ) {
+                if ( ! release( pooled, false ) )
                     _category.error( "Connector error: connectionClosed called with invalid connection" );
             } else
                 _category.error( "Connector error: connectionErrorOccurred called without reference to connection" );
@@ -505,104 +516,74 @@ final class ConnectionPool
     }
     
     
-    public void localTransactionCommitted( ConnectionEvent event )
-    {
-        // Local transactions not supported by this manager.
-    }
-    
-    
-    public void localTransactionRolledback( ConnectionEvent event )
-    {
-        // Local transactions not supported by this manager.
-    }
-    
-
-    public void localTransactionStarted( ConnectionEvent event )
-    {
-        // Local transactions not supported by this manager.
-    }
-                                        
-                                        
     //---------------------------------------------
     // Methods used to manage the pool
     //---------------------------------------------
-
-    /**
-     * Appends a new connection. This method does not complain if the connection
-     * pool is at maximum capacity, the connection cannot be used, or the
-     * connection already exists in the pool.
-     *
-     * @param managed The managed connection to allocate
-     * @param reserve True if the connection must be reserved
-     * @return True if the managed connection has been added
-     */
-    private boolean append( ManagedConnection managed )
-    {
-        try {
-            return ( allocate( managed, false ) != null );
-        } catch ( ResourceException except ) {
-            return false;
-        }
-    }
 
 
     /**
      * Allocates a new connection. This method adds a new connection to the pool.
      * If <tt>reserve</tt> is true, the connection is reserved (not available).
-     * This method will obtain the <tt>XAResource</tt> or <tt>LocalTransaction</tt>,
-     * if required for using the connection. The connection will be added exactly
-     * once. If the connection already exists, this method returns null.
+     * This method will obtain the <tt>XAResource</tt>, if required for using the
+     * connection. The connection will be added exactly once. If the connection
+     * already exists, this method returns null.
      *
-     * @param managed The managed connection to allocate
+     * @param pooled The pooled connection to allocate
+     * @param user The user name or null
+     * @param password The password or null
      * @param reserve True if the connection must be reserved
      * @return The connection entry
-     * @throws ResourceException An error occured with the managed connection
+     * @throws SQLException An error occured with the pooled connection
      */
-    private synchronized PoolEntry allocate( ManagedConnection managed, boolean reserve )
-        throws ResourceException
+    private synchronized PoolEntry allocate( PooledConnection pooled, String user,
+                                             String password, boolean reserve )
+        throws SQLException
     {
         PoolEntry        entry;
         PoolEntry        next;
         int              hashCode;
         int              index;
         XAResource       xaResource = null;
-        LocalTransaction localTx = null;
         long             nextExpiration;
 
-        if ( managed == null )
-            throw new IllegalArgumentException( "Argument managed is null" );
+        if ( pooled == null )
+            throw new IllegalArgumentException( "Argument pooled is null" );
 
-        // If XA or local transactions used, must obtain these objects and
-        // record them in the connection pool entry. If an exception occurs,
-        // we throw it to the caller.
-        if ( _limits._xaSupported )
-            xaResource = managed.getXAResource();
-        if ( _limits._localSupported )
-            localTx = managed.getLocalTransaction();
+        // If XA transactions used, must obtain these objects and record them
+        // in the connection pool entry. If an exception occurs, we throw it to
+        // the caller.
+        if ( _xaDataSource != null ) {
+            if ( pooled instanceof XAConnection )
+                xaResource = ( (XAConnection) pooled ).getXAResource();
+            else
+                throw new SQLException( "Connection of type " + pooled.getClass().getName() +
+                                        " does not support XA transactions" );
+        }
+
         // This code assures that the connection does not exist in the pool
         // before adding it. It throws an exception if the connection is
         // alread in the pool.
-        hashCode = managed.hashCode();
+        hashCode = pooled.hashCode();
         index = ( hashCode & 0x7FFFFFFF ) % _pool.length;
         entry = _pool[ index ];
         if ( entry == null ) {
-            entry = new PoolEntry( managed, hashCode, xaResource, localTx );
+            entry = new PoolEntry( pooled, hashCode, xaResource, user, password );
             _pool[ index ] = entry;
         } else {
-            if ( entry._hashCode == hashCode && entry._managed.equals( managed ) )
+            if ( entry._hashCode == hashCode && entry._pooled.equals( pooled ) )
                 return null;
             next = entry._nextEntry;
             while ( next != null ) {
-                if ( next._hashCode == hashCode && next._managed.equals( managed ) )
+                if ( next._hashCode == hashCode && next._pooled.equals( pooled ) )
                     return null;
                 entry = next;
                 next = entry._nextEntry;
             }
-            next = new PoolEntry( managed, hashCode, xaResource, localTx );
+            next = new PoolEntry( pooled, hashCode, xaResource, user, password );
             entry._nextEntry = next;
             entry = next;
         }
-        entry._managed.addConnectionEventListener( this );
+        entry._pooled.addConnectionEventListener( this );
         // Record that a new connection has been created. This will increase
         // the total pool size. If not reserved, mark the connection as
         // available and increase the available count.
@@ -631,23 +612,23 @@ final class ConnectionPool
      * can be reserved, it is returned. If the connection does not exist
      * in the pool, or is already reserved, this method returns null.
      *
-     * @param managed The managed connection to reserve
+     * @param pooled The pooled connection to reserve
      * @return The connection entry if reserved, or null
      */
-    private synchronized PoolEntry reserve( ManagedConnection managed )
+    private synchronized PoolEntry reserve( PooledConnection pooled )
     {
         PoolEntry entry;
         int       hashCode;
         int       index;
         long      clock;
         
-        if ( managed == null )
+        if ( pooled == null )
             return null;
-        hashCode = managed.hashCode();
+        hashCode = pooled.hashCode();
         index = ( hashCode & 0x7FFFFFFF ) % _pool.length;
         entry = _pool[ index ];
         while ( entry != null && entry._hashCode != hashCode &&
-                ! entry._managed.equals( managed ) )
+                ! entry._pooled.equals( pooled ) )
             entry = entry._nextEntry;
         if ( entry != null && entry._available ) {
             entry._available = false;
@@ -676,12 +657,12 @@ final class ConnectionPool
      * been released due to an error. There is no need to discard a
      * connection released with an error.
      *
-     * @param managed The managed connection to release
+     * @param pooled The pooled connection to release
      * @param success True if the connection is useable, false if
      * the connection is released due to an error
      * @return True if the connection has been released
      */
-    private synchronized boolean release( ManagedConnection managed, boolean success )
+    private synchronized boolean release( PooledConnection pooled, boolean success )
     {
         PoolEntry entry;
         int       hashCode;
@@ -689,19 +670,19 @@ final class ConnectionPool
         long      clock;
         long      nextExpiration;
 
-        if ( managed == null )
+        if ( pooled == null )
             return false;
-        hashCode = managed.hashCode();
+        hashCode = pooled.hashCode();
         index = ( hashCode & 0x7FFFFFFF ) % _pool.length;
         entry = _pool[ index ];
         if ( entry != null ) {
-            if ( hashCode == entry._hashCode && entry._managed.equals( managed ) ) {
+            if ( hashCode == entry._hashCode && entry._pooled.equals( pooled ) ) {
                 if ( entry._available )
                     return false;
             } else {
                 entry = entry._nextEntry;
                 while ( entry != null && hashCode != entry._hashCode &&
-                        ! entry._managed.equals( managed ) )
+                        ! entry._pooled.equals( pooled ) )
                     entry = entry._nextEntry;
                 if ( entry == null || entry._available ) 
                     return false;
@@ -722,7 +703,6 @@ final class ConnectionPool
                 _txManager.delistResource( entry._xaResource, success ? XAResource.TMSUCCESS : XAResource.TMFAIL );
             if ( success ) {
                 ++_metrics._available;
-                entry._managed.cleanup();
 
                 // Calculate the next expiration time based on this connection.
                 if ( _limits._maxRetain > 0 ) {
@@ -734,13 +714,13 @@ final class ConnectionPool
                 // get a new connection.
                 notifyAll();
             } else
-                discard( managed, false );
+                discard( pooled, false );
         } catch ( Exception except ) {
             // An error occured when attempting to clean up the connection.
             // Log the error and discard the connection.
-            _category.error( "Error attempting to release connection " + entry._managed +
+            _category.error( "Error attempting to release connection " + entry._pooled +
                              " by connection pool " + this, except );
-            discard( entry._managed, false );
+            discard( entry._pooled, false );
         }
         return true;
     }
@@ -798,12 +778,12 @@ final class ConnectionPool
             clock = Clock.clock();
             _metrics.recordUnusedDuration( (int) ( clock - entry._timeStamp ) );
             _metrics.recordDiscard();
-            entry._managed.removeConnectionEventListener( this );
-            entry._managed.destroy();
+            entry._pooled.removeConnectionEventListener( this );
+            entry._pooled.close();
         } catch ( Exception except ) {
             // An error occured when attempting to destroy up the connection.
             // Log the error and discard the connection.
-            _category.error( "Error attempting to destory connection " + entry._managed +
+            _category.error( "Error attempting to destory connection " + entry._pooled +
                              " by connection pool " + this, except );
         }
         notifyAll();
@@ -822,12 +802,12 @@ final class ConnectionPool
      * If <tt>success</tt> is false, it assumes the connection has
      * been discarded due to an error.
      *
-     * @param managed The managed connection to discard
+     * @param pooled The pooled connection to discard
      * @param success True if the connection is useable, false if
      * the connection is discarded due to an error
      * @return True if the connection has been discarded
      */
-    private synchronized boolean discard( ManagedConnection managed, boolean success )
+    private synchronized boolean discard( PooledConnection pooled, boolean success )
     {
         PoolEntry entry;
         PoolEntry next;
@@ -835,21 +815,21 @@ final class ConnectionPool
         int       index;
         long      clock;
 
-        if ( managed == null )
+        if ( pooled == null )
             return false;
-        hashCode = managed.hashCode();
+        hashCode = pooled.hashCode();
         index = ( hashCode & 0x7FFFFFFF ) % _pool.length;
         entry = _pool[ index ];
         if ( entry == null )
             return false;
-        if ( hashCode == entry._hashCode && entry._managed.equals( managed ) ) {
+        if ( hashCode == entry._hashCode && entry._pooled.equals( pooled ) ) {
             _pool[ index ] = entry._nextEntry;
             if ( ! entry._available )
                 return false;
         } else {
             next = entry._nextEntry;
             while ( next != null ) {
-                if ( hashCode == next._hashCode && next._managed.equals( managed ) ) {
+                if ( hashCode == next._hashCode && next._pooled.equals( pooled ) ) {
                     if ( ! next._available )
                         return false;
                     entry._nextEntry = next._nextEntry;
@@ -872,12 +852,12 @@ final class ConnectionPool
                 _metrics.recordDiscard();
             else
                 _metrics.recordError();
-            entry._managed.removeConnectionEventListener( this );
-            entry._managed.destroy();
+            entry._pooled.removeConnectionEventListener( this );
+            entry._pooled.close();
         } catch ( Exception except ) {
             // An error occured when attempting to destroy up the connection.
             // Log the error and discard the connection.
-            _category.error( "Error attempting to destory connection " + entry._managed +
+            _category.error( "Error attempting to destory connection " + entry._pooled +
                              " by connection pool " + this, except );
         }
         // We notify any blocking thread that it can attempt to
@@ -928,12 +908,12 @@ final class ConnectionPool
                             _metrics.recordUnusedDuration( (int) ( clock - next._timeStamp ) );
                             _metrics.recordDiscard();
                             try {
-                                next._managed.removeConnectionEventListener( this );
-                                next._managed.destroy();
+                                next._pooled.removeConnectionEventListener( this );
+                                next._pooled.close();
                             } catch ( Exception except ) {
                                 // An error occured when attempting to destroy up the connection.
                                 // Log the error and discard the connection.
-                                _category.error( "Error attempting to destory connection " + next._managed +
+                                _category.error( "Error attempting to destory connection " + next._pooled +
                                                  " by connection pool " + this, except );
                             }
                             next = next._nextEntry;
@@ -959,339 +939,38 @@ final class ConnectionPool
         // nextExpiration.
         return _nextExpiration;
     }
-    
-
-    //---------------------------------------------
-    // Methods defined by java.util.Set
-    //---------------------------------------------
-
-
-    public synchronized boolean add( Object object )
-    {
-        if ( object == null )
-            throw new IllegalArgumentException( "Argument object is null" );
-        if ( object instanceof ManagedConnection )
-            return append( (ManagedConnection) object );
-        else
-            throw new ClassCastException( "Object not of type ManagedConnection" );
-    }
-
-
-    public boolean addAll( Collection collection )
-    {
-        Iterator iterator;
-        Object   object;
-        boolean  changed = false;
-        
-        if ( collection == null )
-            throw new IllegalArgumentException( "Argument collection is null" );
-        iterator = collection.iterator();
-        while ( iterator.hasNext() ) {
-            object = iterator.next();
-            if ( object instanceof ManagedConnection ) {
-                if ( append( (ManagedConnection) object ) )
-                    changed = true;
-            } else
-                throw new ClassCastException( "Object not of type ManagedConnection" );
-        }
-        return changed;
-    }
-
-
-    public void clear()
-    {
-        Iterator iterator;
-        Object   object;
-        
-        iterator = iterator();
-        while ( iterator.hasNext() ) {
-            object = iterator.next();
-            discard( (ManagedConnection) object, true );
-        }
-    }
-
-
-    public synchronized boolean contains( Object object )
-    {
-        int       index;
-        int       hashCode;
-        PoolEntry entry;
-        
-        if ( object == null )
-            return false;
-        hashCode = object.hashCode();
-        index = ( hashCode & 0x7FFFFFFF ) % _pool.length;
-        entry = _pool[ index ];
-        while ( entry != null ) {
-            if ( entry._hashCode == hashCode && entry._managed.equals( object ) )
-                return entry._available;
-            entry = entry._nextEntry;
-        }
-        return false;
-    }
-    
-    
-    public boolean containsAll( Collection collection )
-    {
-        Iterator iterator;
-        
-        if ( collection == null )
-            throw new IllegalArgumentException( "Argument collection is null" );
-        iterator = collection.iterator();
-        while ( iterator.hasNext() ) {
-            if ( ! contains( iterator.next() ) )
-                return false;
-        }
-        return true;
-    }
-    
-
-    public boolean equals( Object object )
-    {
-        if ( object == this )
-            return true;
-        if ( ! ( object instanceof Set ) )
-            return false;
-        if ( ( (Set) object ).size() != _metrics._available )
-            return false;
-        return containsAll( (Set) object );
-    }
-    
-    
-    public synchronized int hashCode()
-    {
-        int         hashCode;
-        PoolEntry   entry;
-        PoolEntry[] pool;
-        
-        pool = _pool;
-        hashCode = 0;
-        for ( int i = 0 ; i < pool.length ; ++i ) {
-            entry = pool[ i ];
-            while ( entry != null ) {
-                if ( entry._available )
-                    hashCode += entry._hashCode;
-                entry = entry._nextEntry;
-            }
-        }
-        return hashCode;
-    }
-    
-    
-    public boolean isEmpty()
-    {
-        // The set size is the number of available connections.
-        return ( _metrics._available == 0 );
-    }
-
-
-    public Iterator iterator()
-    {
-        return new PoolIterator();
-    }
-
-
-    public boolean remove( Object object )
-    {
-        if ( object == null )
-            throw new IllegalArgumentException( "Argument object is null" );
-        if ( object instanceof ManagedConnection )
-            return discard( (ManagedConnection) object, true );
-        else
-            throw new ClassCastException( "Object not of type ManagedConnection" );
-    }
-
-
-    public boolean removeAll( Collection collection )
-    {
-        Iterator iterator;
-        Object   object;
-        boolean  changed = false;
-        
-        if ( collection == null )
-            throw new IllegalArgumentException( "Argument collection is null" );
-        iterator = collection.iterator();
-        while ( iterator.hasNext() ) {
-            object = iterator.next();
-            if ( object instanceof ManagedConnection ) {
-                if ( discard( (ManagedConnection) object, true ) )
-                    changed = true;
-            } else
-                throw new ClassCastException( "Object not of type ManagedConnection" );
-        }
-        return changed;
-    }
-
-
-    public boolean retainAll( Collection collection )
-    {
-        Iterator iterator;
-        Object   object;
-        boolean  changed = false;
-        
-        if ( collection == null )
-            throw new IllegalArgumentException( "Argument collection is null" );
-        iterator = iterator();
-        while ( iterator.hasNext() ) {
-            object = iterator.next();
-            if ( ! collection.contains( object ) )
-                if ( discard( (ManagedConnection) object, true ) )
-                    changed = true;
-        }
-        return changed;
-    }
-
-
-    public int size()
-    {
-        // The set size is the number of available connections.
-        return _metrics._available;
-    }
-
-
-    public synchronized Object[] toArray()
-    {
-        Object[]    array;
-        int         index;
-        PoolEntry   entry;
-        PoolEntry[] pool;
-        
-        array = new Object[ _metrics._available ];
-        index = 0;
-        pool = _pool;
-        for ( int i = 0 ; i < pool.length ; ++i ) {
-            entry = pool[ i ];
-            while ( entry != null ) {
-                if ( entry._available )
-                    array[ index++ ] = entry._managed;
-                entry = entry._nextEntry;
-            }
-        }
-        return array;
-    }
-    
-
-    public synchronized Object[] toArray( Object[] array )
-    {
-        int         index;
-        PoolEntry   entry;
-        PoolEntry[] pool;
-        
-        if ( array == null )
-            throw new IllegalArgumentException( "Argument array is null" );
-        if ( array.length < _metrics._available )
-            array = (Object[]) Array.newInstance( array.getClass().getComponentType(), _metrics._available );
-        index = 0;
-        pool = _pool;
-        for ( int i = 0 ; i < pool.length ; ++i ) {
-            entry = pool[ i ];
-            while ( entry != null ) {
-                if ( entry._available )
-                    array[ index++ ] = entry._managed;
-                entry = entry._nextEntry;
-            }
-        }
-            return array;
-    }
 
 
     /**
-     * Iterator over the pool returns from the connection pool set.
+     * Returns the next available pooled connection that
+     * mathces these criteria. If <tt>user</tt> is null, returns
+     * a pooled connection that has no user name and password,
+     * otherwise returns a pooled conneciton with the same user
+     * name and password. Returns null if no matching connection
+     * is found.
+     *
+     * @param user The user name, or null
+     * @param password The password, or null
+     * @return A matching connection, or null if no connection matched
      */
-    private class PoolIterator
-        implements Iterator
+    private synchronized PooledConnection matchPooledConnections( String user, String password )
     {
+        PoolEntry  entry;
 
-
-	/**
-	 * Holds a reference to the next entry to be returned by
-	 * {@link next}. Becomes null when there are no more
-	 * entries in the pool.
-	 */
-        private PoolEntry _entry;
-
-
-	/**
-	 * Index to the current position in the pool. This is the
-	 * index where we retrieved {@link #_chain} from.
-	 */
-        private int       _index = _pool.length;
-
-
-        public boolean hasNext()
-        {
-            PoolEntry   entry;
-            int         index;
-            PoolEntry[] pool;
-            
-            synchronized ( ConnectionPool.this ) {
-                entry = _entry;
-                while ( entry != null ) {
-                    if ( entry._available )
-                        return true;
-                    entry = entry._nextEntry;
-                }
-                pool = _pool;
-                index = _index;
-                while ( entry == null && index > 0 ) {
-                    entry = pool[ --index ];
-                    while ( entry != null ) {
-                        if ( entry._available ) {
-                            _entry = entry;
-                            _index = index;
-                            return true;
-                        }
-                        entry = entry._nextEntry;
-                    }
-                }
-                _entry = null;
-                _index = -1;
-                return false;
+        for ( int i = _pool.length ; i-- > 0 ; ) {
+            entry = _pool[ i ];
+            while ( entry != null ) {
+                if ( user == null && entry._user == null )
+                    return entry._pooled;
+                else if ( user != null && entry._user != null && user.equals( entry._user ) &&
+                          ( ( password == null && entry._password == null ) ||
+                            ( password != null && entry._password != null &&
+                              password.equals( entry._password ) ) ) )
+                    return entry._pooled;
+                entry = entry._nextEntry;
             }
         }
-
-        
-        public Object next()
-        {
-            PoolEntry   entry;
-            int         index;
-            PoolEntry[] pool;
-
-            synchronized ( ConnectionPool.this ) {
-                entry = _entry;
-                while ( entry != null ) {
-                    if ( entry._available ) {
-                        _entry = entry._nextEntry;
-                        return entry;
-                    }
-                    entry = entry._nextEntry;
-                }
-                pool = _pool;
-                index = _index;
-                while ( entry == null && index > 0 ) {
-                    entry = pool[ --index ];
-                    while ( entry != null ) {
-                        if ( entry._available ) {
-                            _entry = entry._nextEntry;
-                            _index = index;
-                            return entry;
-                        }
-                        entry = entry._nextEntry;
-                    }
-                }
-                _entry = null;
-                _index = -1;
-            }
-            throw new NoSuchElementException( "No more elements in collection" );
-        }
-        
-        
-        public void remove()
-        {
-            throw new UnsupportedOperationException( "This set is immutable" );
-        }
-
-
+        return null;
     }
     
     
