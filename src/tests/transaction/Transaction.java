@@ -38,15 +38,13 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
+ * Original code is Copyright (c) 1999-2001, Intalio, Inc. All Rights Reserved.
  *
- * $Id: Transaction.java,v 1.14 2003/11/10 23:27:26 metaboss Exp $
+ * Contributions by MetaBoss team are Copyright (c) 2003-2004, Softaris Pty. Ltd. All Rights Reserved.
+ *
+ * $Id: Transaction.java,v 1.15 2004/12/15 06:26:27 metaboss Exp $
  */
-
-
 package transaction;
-
-import VerboseStream;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -78,6 +76,7 @@ import transaction.configuration.Datasource;
 import transaction.configuration.Performance;
 import transaction.configuration.types.Type;
 import tyrex.resource.jdbc.xa.EnabledDataSource;
+import util.VerboseStream;
 
 /**
  * Performs various tests with transactions using databases.

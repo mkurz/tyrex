@@ -38,21 +38,23 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
+ * Original code is Copyright (c) 1999-2001, Intalio, Inc. All Rights Reserved.
  *
+ * Contributions by MetaBoss team are Copyright (c) 2003-2004, Softaris Pty. Ltd. All Rights Reserved.
+ *
+ * $Id: TransactionTestSuite.java,v 1.10 2004/12/15 06:25:56 metaboss Exp $
  */
 
 package transaction;
 
-import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.sql.Connection;
 import java.sql.ResultSet;
-import java.sql.Statement;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
+
 import javax.sql.XAConnection;
-import javax.sql.XADataSource;
 import javax.transaction.HeuristicRollbackException;
 import javax.transaction.RollbackException;
 import javax.transaction.Status;
@@ -61,15 +63,11 @@ import javax.transaction.SystemException;
 import javax.transaction.TransactionManager;
 import javax.transaction.xa.XAResource;
 
-import junit.framework.*;
-//import org.exolab.testing.Timing;
-
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
 import transaction.configuration.Performance;
-//import tyrex.tm.AsyncCompletionCallback;
-//import tyrex.tm.Tyrex;
 import tyrex.tm.TyrexTransaction;
-
-import VerboseStream;
+import util.VerboseStream;
 
 
 /**

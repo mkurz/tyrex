@@ -38,26 +38,38 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
+ * Original code is Copyright (c) 1999-2001, Intalio, Inc. All Rights Reserved.
  *
- * $Id: Naming.java,v 1.8 2001/11/12 02:50:42 mills Exp $
+ * Contributions by MetaBoss team are Copyright (c) 2003-2004, Softaris Pty. Ltd. All Rights Reserved.
+ *
+ * $Id: Naming.java,v 1.9 2004/12/15 06:21:18 metaboss Exp $
  */
 
 
 package naming;
 
-import VerboseStream;
-
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.Hashtable;
-import java.util.Enumeration;
-import java.util.Vector;
 
-import junit.framework.*;
-
-import javax.naming.*;
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import javax.naming.Name;
+import javax.naming.NameNotFoundException;
+import javax.naming.NamingException;
+import javax.naming.NotContextException;
+import javax.naming.OperationNotSupportedException;
+import javax.naming.Reference;
+import javax.naming.Referenceable;
+import javax.naming.StringRefAddr;
 import javax.naming.spi.ObjectFactory;
+
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
 import tyrex.tm.RuntimeContext;
+import util.VerboseStream;
 
 
 /**

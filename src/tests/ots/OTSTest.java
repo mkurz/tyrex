@@ -1,16 +1,86 @@
+/**
+ * Redistribution and use of this software and associated documentation
+ * ("Software"), with or without modification, are permitted provided
+ * that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain copyright
+ *    statements and notices.  Redistributions must also contain a
+ *    copy of this document.
+ *
+ * 2. Redistributions in binary form must reproduce the
+ *    above copyright notice, this list of conditions and the
+ *    following disclaimer in the documentation and/or other
+ *    materials provided with the distribution.
+ *
+ * 3. The name "Exolab" must not be used to endorse or promote
+ *    products derived from this Software without prior written
+ *    permission of Intalio Technologies.  For written permission,
+ *    please contact info@exolab.org.
+ *
+ * 4. Products derived from this Software may not be called "Exolab"
+ *    nor may "Exolab" appear in their names without prior written
+ *    permission of Intalio Technologies. Exolab is a registered
+ *    trademark of Intalio Technologies.
+ *
+ * 5. Due credit should be given to the Exolab Project
+ *    (http://www.exolab.org/).
+ *
+ * THIS SOFTWARE IS PROVIDED BY EXOFFICE TECHNOLOGIES AND CONTRIBUTORS
+ * ``AS IS'' AND ANY EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT
+ * NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
+ * FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL
+ * EXOFFICE TECHNOLOGIES OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+ * OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Original code is Copyright (c) 1999-2001, Intalio, Inc. All Rights Reserved.
+ *
+ * Contributions by MetaBoss team are Copyright (c) 2003-2004, Softaris Pty. Ltd. All Rights Reserved.
+ *
+ * $Id: OTSTest.java,v 1.10 2004/12/15 06:22:01 metaboss Exp $
+ */
 package ots;
 
-import VerboseStream;
-import org.omg.CosTransactions.*;
-import junit.framework.*;
+import java.util.Properties;
+
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
+
 import org.omg.CORBA.Policy;
 import org.omg.CORBA.PolicyManager;
 import org.omg.CORBA.SetOverrideType;
-import org.omg.PortableServer.POA;
-import java.util.Properties;
 import org.omg.CosNaming.NamingContextExt;
+import org.omg.CosTransactions.Control;
+import org.omg.CosTransactions.Coordinator;
+import org.omg.CosTransactions.Current;
+import org.omg.CosTransactions.CurrentHelper;
+import org.omg.CosTransactions.HeuristicCommit;
+import org.omg.CosTransactions.HeuristicHazard;
+import org.omg.CosTransactions.HeuristicMixed;
+import org.omg.CosTransactions.HeuristicRollback;
+import org.omg.CosTransactions.NoTransaction;
+import org.omg.CosTransactions.NotPrepared;
+import org.omg.CosTransactions.PropagationContext;
+import org.omg.CosTransactions.Resource;
+import org.omg.CosTransactions.ResourcePOA;
+import org.omg.CosTransactions.Status;
+import org.omg.CosTransactions.SubtransactionAwareResource;
+import org.omg.CosTransactions.SubtransactionAwareResourcePOA;
+import org.omg.CosTransactions.Synchronization;
+import org.omg.CosTransactions.SynchronizationPOA;
+import org.omg.CosTransactions.TransactionFactory;
+import org.omg.CosTransactions.TransactionFactoryHelper;
+import org.omg.CosTransactions.Vote;
+import org.omg.PortableServer.POA;
 import org.openorb.util.MapNamingContext;
+
 import tyrex.corba.OTSServer;
+import util.VerboseStream;
 
 public class OTSTest extends TestCase
 {
