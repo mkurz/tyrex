@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: ClientConnection.java,v 1.8 2000/10/07 01:53:37 mohammed Exp $
+ * $Id: ClientConnection.java,v 1.9 2000/10/10 01:02:49 mohammed Exp $
  */
 
 
@@ -49,7 +49,10 @@ package tyrex.jdbc.xa;
 
 import java.util.*;
 import java.sql.*;
-
+import tyrex.jdbc.AbstractTyrexConnectionImpl;
+import tyrex.jdbc.TyrexCallableStatementImpl;
+import tyrex.jdbc.TyrexPreparedStatementImpl;
+import tyrex.jdbc.TyrexStatementImpl;
 
 /**
  * Encapsulates an application's view of an XA/pooled connection.
@@ -68,6 +71,7 @@ import java.sql.*;
  * @see Connection
  */
 final class ClientConnection
+    extends AbstractTyrexConnectionImpl
     implements Connection
 {
 
@@ -129,9 +133,8 @@ final class ClientConnection
         throws SQLException
     {
 	try {
-	    return new ClientStatementImpl(getUnderlying().createStatement(), 
-                                       this, 
-                                       _xaDataSource);
+	    return new TyrexStatementImpl(getUnderlying().createStatement(), 
+                                       this);
 	} catch ( SQLException except ) {
 	    notifyError( except );
 	    throw except;
@@ -143,9 +146,8 @@ final class ClientConnection
         throws SQLException
     {
 	try {
-	    return new ClientStatementImpl(getUnderlying().createStatement( resultSetType, resultSetConcurrency ),
-                                       this, 
-                                       _xaDataSource);
+	    return new TyrexStatementImpl(getUnderlying().createStatement( resultSetType, resultSetConcurrency ),
+                                       this);
 	} catch ( SQLException except ) {
 	    notifyError( except );
 	    throw except;
@@ -157,9 +159,8 @@ final class ClientConnection
         throws SQLException
     {
 	try {
-	    return new ClientPreparedStatementImpl(getUnderlying().prepareStatement( sql ),
-                                               this,
-                                               _xaDataSource);
+	    return new TyrexPreparedStatementImpl(getUnderlying().prepareStatement( sql ),
+                                               this);
 	} catch ( SQLException except ) {
 	    notifyError( except );
 	    throw except;
@@ -171,9 +172,8 @@ final class ClientConnection
         throws SQLException
     {
 	try {
-	    return new ClientPreparedStatementImpl(getUnderlying().prepareStatement( sql, resultSetType, resultSetConcurrency ),
-                                               this,
-                                               _xaDataSource);
+	    return new TyrexPreparedStatementImpl(getUnderlying().prepareStatement( sql, resultSetType, resultSetConcurrency ),
+                                               this);
 	} catch ( SQLException except ) {
 	    notifyError( except );
 	    throw except;
@@ -185,9 +185,8 @@ final class ClientConnection
         throws SQLException
     {
 	try {
-	    return new ClientCallableStatementImpl(getUnderlying().prepareCall( sql ),
-                                               this,
-                                               _xaDataSource);
+	    return new TyrexCallableStatementImpl(getUnderlying().prepareCall( sql ),
+                                               this);
 	} catch ( SQLException except ) {
 	    notifyError( except );
 	    throw except;
@@ -199,9 +198,8 @@ final class ClientConnection
         throws SQLException
     {
 	try {
-	    return new ClientCallableStatementImpl(getUnderlying().prepareCall( sql, resultSetType, resultSetConcurrency ),
-                                           this,
-                                           _xaDataSource);
+	    return new TyrexCallableStatementImpl(getUnderlying().prepareCall( sql, resultSetType, resultSetConcurrency ),
+                                              this);
 	} catch ( SQLException except ) {
 	    notifyError( except );
 	    throw except;
@@ -431,6 +429,7 @@ final class ClientConnection
 	_xaConn.notifyClose( _clientId );
 	_xaConn = null;
     _xaDataSource = null;
+    notifyConnectionClosed();
     }
 
 

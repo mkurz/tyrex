@@ -40,7 +40,7 @@
  *
  * Copyright 2000 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: EnabledDataSource.java,v 1.12 2000/10/07 01:53:37 mohammed Exp $
+ * $Id: EnabledDataSource.java,v 1.13 2000/10/10 01:02:49 mohammed Exp $
  */
 
 
@@ -205,13 +205,15 @@ public class EnabledDataSource
     }
 
 
-    public /*synchronized*/ Connection getConnection( String user, String password )
+    public synchronized Connection getConnection( String user, String password )
         throws SQLException
     {
 	Connection conn;
 	Properties info;
     
 	if ( _driver == null ) {
+
+        _driverName = createJDBCURL();
 
         if ( null == _driverName ) {
             throw new SQLException ( "The driver name is not set." );
@@ -253,7 +255,7 @@ public class EnabledDataSource
     // Attempt to establish a connection. Report a successful
 	// attempt or a failure.
 	try {
-        conn = _driver.connect( constructJDBCURL(), info );
+        conn = _driver.connect( _driverName, info );
 	} catch ( SQLException except ) {
 	    if ( _logWriter != null )
 		_logWriter.println( "DataSource: getConnection failed " + except );
@@ -270,12 +272,12 @@ public class EnabledDataSource
      *
      * @return the JDBC URL used to connect to the database.
      */
-    private String constructJDBCURL()
+    protected String createJDBCURL()
     {
     // Construct the URL suitable for this driver.
     if ( ( null == _driverName ) ||
          ( 0 == _driverName.length() ) ) {
-        return "jdbc:subprotocol:subname";        
+        return null;        
     } 
     
     if ( _driverName.startsWith( "jdbc:" ) ) {
@@ -518,7 +520,7 @@ public class EnabledDataSource
     {
 	if ( other == this )
 	    return true;
-	if ( other == null || ! ( other instanceof EnabledDataSource ) )
+	if ( other == null || ! ( other.getClass() != getClass() ) )
 	    return false;
 
 	EnabledDataSource with;
@@ -529,14 +531,7 @@ public class EnabledDataSource
         return null == with._driverName;    
     }
 
-    if ( null == with._driverName ) {
-        return false;    
-    }
-
-	if ( constructJDBCURL().equals( with.constructJDBCURL() ) )
-	    return true;
-
-	return false;
+    return _driverName.equals(with._driverName);
     }
 
 
