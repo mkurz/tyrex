@@ -40,7 +40,7 @@
  *
  * Copyright 1999 (C) Exoffice Technologies Inc. All Rights Reserved.
  *
- * $Id: Messages.java,v 1.1 2000/01/11 00:33:46 roro Exp $
+ * $Id: Messages.java,v 1.2 2000/01/17 22:21:34 arkin Exp $
  */
 
 
@@ -55,13 +55,13 @@ import java.util.*;
  *
  *
  * @author <a href="arkin@exoffice.com">Assaf Arkin</a>
- * @version $Revision: 1.1 $ $Date: 2000/01/11 00:33:46 $
+ * @version $Revision: 1.2 $ $Date: 2000/01/17 22:21:34 $
  */
 public class Messages
 {
 
 
-    public static final String MESSAGES_RESOURCE = "tyrex.util.messages";
+    public static final String ResourceName = "tyrex.util.resources.messages";
     
 
     private static ResourceBundle   _messages;
@@ -133,11 +133,17 @@ public class Messages
     
     public static void setLocale( Locale locale )
     {
-        if ( locale == null )
-            _messages = ResourceBundle.getBundle( MESSAGES_RESOURCE ); 
-        else
-            _messages = ResourceBundle.getBundle( MESSAGES_RESOURCE, locale ); 
-        _formats = new Hashtable();
+	try {
+	    if ( locale == null )
+		_messages = ResourceBundle.getBundle( ResourceName ); 
+	    else
+		_messages = ResourceBundle.getBundle( ResourceName, locale ); 
+	    _formats = new Hashtable();
+	} catch ( Exception except ) {
+	    _messages = new EmptyResourceBundle();
+	    Logger.getSystemLogger().println( "Failed to locate messages resource " +
+					      ResourceName );
+	}
     }
     
     
@@ -145,6 +151,34 @@ public class Messages
     {
         setLocale( Locale.getDefault() );
     }
-    
-    
+
+
+    static class EmptyResourceBundle
+	extends ResourceBundle
+	implements Enumeration
+    {
+
+	public Enumeration getKeys()
+	{
+	    return this;
+	}
+
+	protected Object handleGetObject( String name )
+	{
+	    return "[Missing message " + name + "]";
+	}
+
+	public boolean hasMoreElements()
+	{
+	    return false;
+	}
+
+	public Object nextElement()
+	{
+	    return null;
+	}
+
+    }
+
+
 }
