@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: Logger.java,v 1.17 2001/10/18 00:45:28 mohammed Exp $
+ * $Id: Logger.java,v 1.18 2001/10/24 22:39:04 mohammed Exp $
  */
 
 
@@ -50,11 +50,13 @@ import java.io.OutputStream;
 import org.apache.log4j.PatternLayout;
 import org.apache.log4j.Category;
 import org.apache.log4j.FileAppender;
+import org.apache.log4j.Priority;
+//import org.apache.log4j.WriterAppender;
 
 /**
  *
  * @author <a href="jdaniel@intalio.com">Jerome DANIEL</a>
- * @version $Revision: 1.17 $ $Date: 2001/10/18 00:45:28 $
+ * @version $Revision: 1.18 $ $Date: 2001/10/24 22:39:04 $
  */
 public class Logger
 {
@@ -79,18 +81,36 @@ public class Logger
         tyrex = Category.getInstance( "tyrex" );
 
         // add an appender to tyrex if necessary
-        /*if ( ! tyrex.getDefaultHierarchy().getRoot().getAllAppenders().hasMoreElements() ) {
-            tyrex.addAppender( new FileAppender( new PatternLayout( "%d{dd MMM yyyy HH:mm:ss}:%c:%p %m%n" ), 
-                                                   System.out ) );
-        }*/
+        /*
+        if ( ! tyrex.getHierarchy().getRoot().getAllAppenders().hasMoreElements() ) {
+            if ( ! Configuration.getBoolean( Configuration.PROPERTY_LOG_CONSOLE ) )  
+                tyrex.addAppender( new WriterAppender( new PatternLayout( "%d{dd MMM yyyy HH:mm:ss}:%c:%p %m%n" ), new DevNull() ) );
+            else {
+                tyrex.addAppender( new WriterAppender( new PatternLayout( "%d{dd MMM yyyy HH:mm:ss}:%c:%p %m%n" ), System.out ) );
+                if ( ! Configuration.getBoolean( Configuration.PROPERTY_LOG_VERBOSE ) )  
+                    tyrex.getHierarchy().disableDebug();
+            }
+        }
+        */
+        if ( ! tyrex.getAllAppenders().hasMoreElements() ) {
+            if ( ! Configuration.getBoolean( Configuration.PROPERTY_LOG_CONSOLE ) )  
+                tyrex.addAppender( new FileAppender( new PatternLayout( "%d{dd MMM yyyy HH:mm:ss}:%c:%p %m%n" ), new DevNull() ) );
+            else {
+                tyrex.addAppender( new FileAppender( new PatternLayout( "%d{dd MMM yyyy HH:mm:ss}:%c:%p %m%n" ), System.out ) );
+                if ( ! Configuration.getBoolean( Configuration.PROPERTY_LOG_VERBOSE ) )  
+                    tyrex.setPriority(Priority.INFO);
+                else
+                    tyrex.setPriority(Priority.DEBUG);
+            }
+        }
 
         resource = Category.getInstance( "tyrex.resource" );
         ots = Category.getInstance( "tyrex.ots" );
         security = Category.getInstance( "tyrex.security" );
         castor = Category.getInstance( "tyrex.resource.castor" );
 
-        tyrex.getDefaultHierarchy().getRoot().removeAllAppenders();
-        tyrex.addAppender( new FileAppender( new PatternLayout( "" ), new DevNull() ) );
+        //tyrex.getDefaultHierarchy().getRoot().removeAllAppenders();
+        //tyrex.addAppender( new FileAppender( new PatternLayout( "" ), new DevNull() ) );
     }
 
     static private class DevNull
