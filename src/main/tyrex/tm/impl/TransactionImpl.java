@@ -40,7 +40,7 @@
  *
  * Copyright 1999-2001 (C) Intalio Inc. All Rights Reserved.
  *
- * $Id: TransactionImpl.java,v 1.49 2004/09/08 00:15:00 metaboss Exp $
+ * $Id: TransactionImpl.java,v 1.50 2005/11/30 13:20:14 metaboss Exp $
  */
 
 
@@ -91,7 +91,7 @@ import tyrex.util.Messages;
  * they are added.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.49 $ $Date: 2004/09/08 00:15:00 $
+ * @version $Revision: 1.50 $ $Date: 2005/11/30 13:20:14 $
  * @see InternalXAResourceHolder
  * @see TransactionManagerImpl
  * @see TransactionDomain
@@ -2835,7 +2835,7 @@ final class TransactionImpl
                 except = new SystemException( Messages.message( "tyrex.xa.nota" ) );
                 break;
             default:
-                except = new SystemException( Messages.format( "tyrex.xa.unknown", except ) );
+                except = new SystemException( Messages.format( "tyrex.xa.unknown", new Integer(((XAException) except).errorCode)));
                 break;
             }
         }
