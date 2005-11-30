@@ -42,7 +42,7 @@
  *
  * Contributions by MetaBoss team are Copyright (c) 2003-2004, Softaris Pty. Ltd. All Rights Reserved.
  *
- * $Id: TransactionDomainImpl.java,v 1.33 2004/04/30 06:35:47 metaboss Exp $
+ * $Id: TransactionDomainImpl.java,v 1.34 2005/11/30 13:21:03 metaboss Exp $
  */
 
 
@@ -51,6 +51,9 @@ package tyrex.tm.impl;
 
 import java.io.PrintWriter;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Properties;
 
 import javax.transaction.InvalidTransactionException;
@@ -94,7 +97,7 @@ import tyrex.util.logging.Category;
  * Implementation of a transaction domain.
  *
  * @author <a href="arkin@intalio.com">Assaf Arkin</a>
- * @version $Revision: 1.33 $ $Date: 2004/04/30 06:35:47 $
+ * @version $Revision: 1.34 $ $Date: 2005/11/30 13:21:03 $
  */
 public class TransactionDomainImpl
     extends TransactionDomain
@@ -1176,62 +1179,74 @@ public class TransactionDomainImpl
      * synchronizes on itself (thread instance) to be notified of
      * a changed in the next timeout.
      */
-    public synchronized void run()
+    public void run()
     {
         TransactionImpl entry;
         TransactionImpl next;
+        List            timedOutEntries = new ArrayList();
         long            nextTimeout;
         long            clock;
+        boolean         stillAlive = true;
 
-        while ( true ) {
-            try {
-                // We synchronize to be notified when the timeout of any
-                // transaction changes on the hashtable object, and we will
-                // need to remove records from the hashtable.
-                // No transaction to time out, wait forever. Otherwise,
-                // wait until the next transaction times out.
-                clock = Clock.clock();
-                while ((_state != TERMINATED) && (_nextTimeout == 0 || _nextTimeout > clock) ) {
-                    if ( _nextTimeout > clock )
-                        wait( _nextTimeout - clock );
-                    else
-                        wait();
-                    clock = Clock.clock();
-                }
-                    
-                // If we have been notified that the domain is
-                // terminating, we timeout all the transactions
-                // in this domain.
-                if ( _state == TERMINATED ) {
-                    for ( int i = _hashTable.length ; i-- > 0 ; ) {
-                        entry = _hashTable[ i ];
-                        while ( entry != null ) {
-                            next = entry._nextEntry;;
-                            entry.timedOut();
-                            entry = next;
-                        }
-                    }
-                    DaemonMaster.removeDaemon( this );
-                    return;
-                }
-                
-                if ( _nextTimeout != 0 && _nextTimeout <= clock ) {
-                    nextTimeout = 0;
-                    for ( int i = _hashTable.length ; i-- > 0 ; ) {
-                        entry = _hashTable[ i ];
-                        while ( entry != null ) {
-                            if ( entry._timeout <= clock ) {
-                                entry.timedOut();
-                            } else if ( nextTimeout == 0 || nextTimeout > entry._timeout )
-                                nextTimeout = entry._timeout;
-                            entry = entry._nextEntry;
-                        }
-                    }
-                    _nextTimeout = nextTimeout;
-                }
-            } catch ( InterruptedException except ) {
-                return;
-            }
+        while ( stillAlive ) {
+        	synchronized (this) {
+	            try {
+	                // We synchronize to be notified when the timeout of any
+	                // transaction changes on the hashtable object, and we will
+	                // need to remove records from the hashtable.
+	                // No transaction to time out, wait forever. Otherwise,
+	                // wait until the next transaction times out.
+	                clock = Clock.clock();
+	                while ((_state != TERMINATED) && (_nextTimeout == 0 || _nextTimeout > clock) ) {
+	                    if ( _nextTimeout > clock )
+	                        wait( _nextTimeout - clock );
+	                    else
+	                        wait();
+	                    clock = Clock.clock();
+	                }
+	                    
+	                // If we have been notified that the domain is
+	                // terminating, we timeout all the transactions
+	                // in this domain.
+	                if ( _state == TERMINATED ) {
+	                    for ( int i = _hashTable.length ; i-- > 0 ; ) {
+	                        entry = _hashTable[ i ];
+	                        while ( entry != null ) {
+	                            next = entry._nextEntry;
+	                            timedOutEntries.add(entry);
+	                            entry = next;
+	                        }
+	                    }
+	                    DaemonMaster.removeDaemon( this );
+	                    stillAlive = false;
+	                }
+	                
+	                if ( _nextTimeout != 0 && _nextTimeout <= clock ) {
+	                    nextTimeout = 0;
+	                    for ( int i = _hashTable.length ; i-- > 0 ; ) {
+	                        entry = _hashTable[ i ];
+	                        while ( entry != null ) {
+	                            if ( entry._timeout <= clock ) {
+		                            timedOutEntries.add(entry);
+	                            } else if ( nextTimeout == 0 || nextTimeout > entry._timeout )
+	                                nextTimeout = entry._timeout;
+	                            entry = entry._nextEntry;
+	                        }
+	                    }
+	                    _nextTimeout = nextTimeout;
+	                }
+	            } catch ( InterruptedException except ) {
+                    stillAlive = false;
+	            }
+        	}
+        	// Iterate through timed out entries and execute timedOut() method outside of the synchronisation block
+        	if (timedOutEntries.isEmpty() == false)
+        	{
+        		for (Iterator lIter = timedOutEntries.iterator();lIter.hasNext();)
+        			((TransactionImpl)lIter.next()).timedOut();
+        		// Clear them out
+        		timedOutEntries.clear();
+        	}
         }
     }
 
