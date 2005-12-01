@@ -2,6 +2,11 @@
 <document url="http://tyrex.sourceforge.net/changelog.xml">
   <body>
     <title>Change log</title>
+<section title="Version 1.0.3  December 01 2005"><pre>
+- Fixed issue SF-1099701 Deadlock on transaction timeout.
+- Slight improvement to the reporting of the unrecognised XAError.
+- Moved to Ant 1.6.5 build environment.
+    </pre></section>    
 <section title="Version 1.0.2  February 10 2005"><pre>
 - Fixed issue SF-815961 TransactionDomainImpl can't be terminated.
 - Moved logging to be based on commons-logging instead of log4j. This enables greater deployment flexibility.
