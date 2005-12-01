@@ -1,0 +1,22 @@
+- ============================
+- Updating version
+- ============================
+
+1. Update version in the src\etc\VERSION
+
+
+- ============================
+- Updating documentation
+- ============================
+
+1. Put descriptions of all changes into the src\etc\CHANGELOG
+2. Put descriptions of all changes into the src\doc\changelog.xml
+3. Put release name and date into the src\doc\index.xml
+
+- ============================
+- Labelling the release
+- ============================
+
+1. Ensure that everything is checked in
+2. Put descriptions of all changes into the src\doc\changelog.xml
+3. Put release name and date into the src\doc\index.xml
